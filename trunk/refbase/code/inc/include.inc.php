@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   27-Feb-05, 13:25
+	// Modified:   27-Feb-05, 20:52
 
 	// This file contains important
 	// functions that are shared
@@ -261,7 +261,7 @@
 				{
 					$loginLinks .= "<a href=\"search.php?formType=myRefsSearch&amp;showQuery=0&amp;showLinks=1&amp;myRefsRadio=1\" title=\"display all of your records\">My Refs</a>&nbsp;&nbsp;|&nbsp;&nbsp;";
 
-					if (isset($_SESSION['user_permissions']) AND ereg("allow_change_personinfo", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_change_personinfo'...
+					if (isset($_SESSION['user_permissions']) AND ereg("allow_modify_options", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_modify_options'...
 					// ... include a link to 'user_receipt.php':
 						$loginLinks .= "<a href=\"user_receipt.php?userID=" . $loginUserID . "\" title=\"view and modify your account details and options\">Options</a>&nbsp;&nbsp;|&nbsp;&nbsp;";
 				}
@@ -1676,7 +1676,7 @@ EOF;
 
 		// CONSTRUCT SQL QUERY:
 		// Fetch all permission settings from the 'user_permissions' (or 'group_permissions') table for the current user:
-		$query = "SELECT allow_add, allow_edit, allow_delete, allow_download, allow_upload, allow_details_view, allow_print_view, allow_cite, allow_import, allow_batch_import, allow_export, allow_batch_export, allow_user_groups, allow_user_queries, allow_rss_feeds, allow_sql_search, allow_change_personinfo FROM " . $permissionType . "_permissions WHERE " . $permissionType . "_id = '$user_OR_groupID'";
+		$query = "SELECT allow_add, allow_edit, allow_delete, allow_download, allow_upload, allow_details_view, allow_print_view, allow_sql_search, allow_user_groups, allow_user_queries, allow_rss_feeds, allow_import, allow_export, allow_cite, allow_batch_import, allow_batch_export, allow_modify_options FROM " . $permissionType . "_permissions WHERE " . $permissionType . "_id = '$user_OR_groupID'";
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 
