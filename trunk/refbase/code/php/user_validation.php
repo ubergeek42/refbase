@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   31-May-04, 00:39
+	// Modified:   17-Oct-04, 20:50
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -454,7 +454,12 @@
 
 	// Get all user groups specified by the current user
 	// and (if some groups were found) save them as semicolon-delimited string to the session variable 'userGroups':
-	getUserGroups($loginUserID); // function 'getUserGroups()' is defined in 'include.inc.php'
+	getUserGroups("user_data", $loginUserID); // function 'getUserGroups()' is defined in 'include.inc.php'
+
+	if ($loginEmail == $adminLoginEmail) // ('$adminLoginEmail' is specified in 'ini.inc.php')
+		// Get all user groups specified by the admin
+		// and (if some groups were found) save them as semicolon-delimited string to the session variable 'adminUserGroups':
+		getUserGroups("users", $loginUserID); // function 'getUserGroups()' is defined in 'include.inc.php'
 
 	// Similarly, get all queries that were saved previously by the current user
 	// and (if some queries were found) save them as semicolon-delimited string to the session variable 'userQueries':
