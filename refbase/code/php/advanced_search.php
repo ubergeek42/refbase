@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./advanced_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   30-May-04, 17:16
+	// Modified:   12-Oct-04, 14:02
 
 	// Search form providing access to all fields of the database.
 	// It offers some output options (like how many records to display per page)
@@ -17,11 +17,11 @@
 	*/
 	
 	// Incorporate some include files:
-	include 'db.inc.php'; // 'db.inc.php' is included to hide username and password
-	include 'header.inc.php'; // include header
-	include 'footer.inc.php'; // include footer
-	include 'include.inc.php'; // include common functions
-	include "ini.inc.php"; // include common variables
+	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
+	include 'includes/header.inc.php'; // include header
+	include 'includes/footer.inc.php'; // include footer
+	include 'includes/include.inc.php'; // include common functions
+	include 'initialize/ini.inc.php'; // include common variables
 
 	// --------------------------------------------------------------------
 
@@ -1184,7 +1184,7 @@
 	// Retrieve all distinct values
 	$i = 0;
 	while ($row = @ mysql_fetch_array($resultId))
-		if ($SplitValues == true) // If desired, split field contents into substrings
+		if ($SplitValues) // If desired, split field contents into substrings
 			{
 				// split field data on the pattern specified in $SplitPattern:
 				$splittedFieldData = split($SplitPattern, $row[$columnName]); // yields an array as a result
@@ -1195,7 +1195,7 @@
 		else // copy field data (as is) to end of $resultBuffer:
 			$resultBuffer[$i++] = $row[$columnName];
 
-	if ($SplitValues == true) // (otherwise, data are already DISTINCT and ORDERed BY!)
+	if ($SplitValues) // (otherwise, data are already DISTINCT and ORDERed BY!)
 		{
 			// remove duplicate values from array:
 			$resultBuffer = array_unique($resultBuffer);
