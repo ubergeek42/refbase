@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   07-Sep-03, 14:40
+	// Modified:   31-May-04, 00:39
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -23,47 +23,41 @@
 
 	// --------------------------------------------------------------------
 
-	// Initialize a session
-	session_start();
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session();
 
-	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
-
-//	if (session_is_registered("loginEmail"))
-//		// Read session variable (only necessary if register globals is OFF!)
-//		$loginEmail = $HTTP_SESSION_VARS['loginEmail'];
-//
-//	// Register an error array - just in case!
-//	if (session_is_registered("errors"))
-//		// Read session variable (only necessary if register globals is OFF!)
-//		$errors = $HTTP_SESSION_VARS['errors']; // redundant, since errors will be cleared anyhow
-//	else
-//		session_register("errors");
-//
-//	// Clear any errors that might have been found previously
-//	$errors = array();
-//
-//	// Set up a $formVars array with the POST variables and register with the session.
-//	if (session_is_registered("formVars"))
-//		// Read session variable (only necessary if register globals is OFF!)
-//		$formVars = $HTTP_SESSION_VARS['formVars'];
-//	else 
-//		session_register("formVars");
-
-	// Register an error array - just in case!
-	if (!session_is_registered("errors"))
-		session_register("errors");
-	
 	// Clear any errors that might have been found previously:
 	$errors = array();
 	
-	// Set up a $formVars array with the POST variables and register with the session:
-	if (!session_is_registered("formVars"))
-		session_register("formVars");
-
-	// Write the form variables into an array:
-	foreach($HTTP_POST_VARS as $varname => $value)
+	// Write the (POST) form variables into an array:
+	foreach($_POST as $varname => $value)
 		$formVars[$varname] = $value;
 //		$formVars[$varname] = trim(clean($value, 50)); // the use of the clean function would be more secure!
+
+	// --------------------------------------------------------------------
+
+	// First of all, check if this script was called by something else than 'user_details.php':
+	if (!ereg(".+/user_details.php", $_SERVER['HTTP_REFERER']))
+	{
+		// save an appropriate error message:
+		$HeaderString = "<b><span class=\"warning\">Invalid call to script 'user_validation.php'!</span></b>";
+
+		// Write back session variables:
+		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+		
+		if (!empty($_SERVER['HTTP_REFERER'])) // if the referer variable isn't empty
+			header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to calling page
+		else
+			header("Location: index.php"); // redirect to main page ('index.php')
+
+		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	}
+
+	// --------------------------------------------------------------------
+
+	// (1) OPEN CONNECTION, (2) SELECT DATABASE
+	connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 
@@ -173,7 +167,7 @@
 	// Only validate email if this is an INSERT:
 	// Validation is triggered for NEW USERS (visitors who aren't logged in) as well as the ADMIN
 	// (the email field isn't shown to logged in non-admin-users anyhow)
-	if (!session_is_registered("loginEmail") | (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == "")))
+	if (!isset($_SESSION['loginEmail']) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == "")))
 	{
 		// Check syntax
 		$validEmailExpr = "^[0-9a-z~!#$%&_-]([.]?[0-9a-z~!#$%&_-])*@[0-9a-z~!#$%&_-]([.]?[0-9a-z~!#$%&_-])*$";
@@ -198,30 +192,17 @@
 		{
 			$query = "SELECT * FROM auth WHERE email = '" . $formVars["email"] . "'"; // CONSTRUCT SQL QUERY
 	
-			if (!($connection = @ mysql_connect($hostName, $username, $password))) // (1) OPEN the database connection (variables are set by include file 'db.inc.php'!)
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-					showErrorMsg("The following error occurred while trying to connect to the host:", "");
-
-			if (!(mysql_select_db($databaseName, $connection))) // (2) SELECT the database (variables are set by include file 'db.inc.php'!)
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-					showErrorMsg("The following error occurred while trying to connect to the database:", "");
-
-			if (!($result = @ mysql_query($query, $connection))) // (3) RUN the query on the database through the connection:
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-					showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+			// (3) RUN the query on the database through the connection:
+			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 			if (mysql_num_rows($result) == 1) // (4) Interpret query result: Is it taken?
 				$errors["email"] = "A user already exists with this email address as login name.\n\t\t<br>\n\t\tPlease enter a different one:";
-
-			if (!(mysql_close($connection))) // (5) CLOSE the database connection
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-					showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
 		}
 	}
 
 	// If this was an INSERT, we do not allow the password field to be blank:
 	// Validation is triggered for NEW USERS (visitors who aren't logged in) as well as the ADMIN
-	if (!session_is_registered("loginEmail") | (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == "")))
+	if (!isset($_SESSION['loginEmail']) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == "")))
 		if (empty($formVars["loginPassword"]))
 			// Password cannot be a null string
 			$errors["loginPassword"] = "The password field cannot be blank:";
@@ -233,7 +214,7 @@
 		$errors["loginPassword"] = "The password can be no longer than 15 characters:";
 
 	// alternatively, only validate password if it's length is between 6 and 8 characters
-//	elseif (!session_is_registered("loginEmail") && (strlen($formVars["loginPassword"]) < 6 || strlen($formVars["loginPassword"] > 8)))
+//	elseif (!isset($_SESSION['loginEmail']) && (strlen($formVars["loginPassword"]) < 6 || strlen($formVars["loginPassword"] > 8)))
 //		$errors["loginPassword"] = "The password must be between 6 and 8 characters in length:";
 
 	// --------------------------------------------------------------------
@@ -241,11 +222,9 @@
 	// Now the script has finished the validation, check if there were any errors:
 	if (count($errors) > 0)
 	{
-
-		// Write back session variables (only necessary if register globals is OFF!)
-//		$HTTP_SESSION_VARS['loginEmail'] = $loginEmail;
-//		$HTTP_SESSION_VARS['formVars'] = $formVars;
-//		$HTTP_SESSION_VARS['errors'] = $errors;
+		// Write back session variables:
+		saveSessionVariable("errors", $errors); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+		saveSessionVariable("formVars", $formVars);
 
 		// There are errors. Relocate back to the client form:
 		header("Location: user_details.php?userID=" . $_REQUEST['userID']); // 'userID' got included as hidden form tag by 'user_details.php' (for new users 'userID' will be empty but will get ignored by 'INSERT...' anyhow)
@@ -265,10 +244,10 @@
 
 	// If a user is logged in and has submitted 'user_details.php' with a 'userID' parameter:
 	// (while the admin has no restrictions, a normal user can only submit 'user_details.php' with his own 'userID' as parameter!)
-	if (session_is_registered("loginEmail") && ($_REQUEST['userID'] != "")) // -> perform an update:
+	if (isset($_SESSION['loginEmail']) && ($_REQUEST['userID'] != "")) // -> perform an update:
 	{
 		if ($loginEmail != $adminLoginEmail) // if not admin logged in
-			$userID = getUserID($loginEmail, $connection); // Get the 'user_id' using 'loginEmail' (function 'getUserID()' is defined in 'include.inc.php')
+			$userID = getUserID($loginEmail); // Get the 'user_id' using 'loginEmail' (function 'getUserID()' is defined in 'include.inc.php')
 		else // if the admin is logged in he should be able to make any changes to account data of _other_ users...
 			$userID = $_REQUEST['userID']; // ...in this case we accept 'userID' from the GET/POST request (it got included as hidden form tag by 'user_details.php')
 
@@ -300,7 +279,7 @@
 	//            (Note that this feature is actually only meant to add the very first user to the users table.
 	//             After you've done so, it is highly recommended to change the value of '$addNewUsers' to 'admin'!)
 	//   -or-  2. the ADMIN only (if variable '$addNewUsers' in 'ini.inc.php' is set to "admin")
-	elseif ((!session_is_registered("loginEmail") && ($addNewUsers == "everyone") && ($_REQUEST['userID'] == "")) | (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == ""))) // -> perform an insert:
+	elseif ((!isset($_SESSION['loginEmail']) && ($addNewUsers == "everyone") && ($_REQUEST['userID'] == "")) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == ""))) // -> perform an insert:
 	{
 		// INSERT - construct a query to add data as new record
 		$query = "INSERT INTO users SET "
@@ -337,23 +316,10 @@
 		// First, we have to query for the proper admin name, so that we can include this name within the emails:
 		$query = "SELECT first_name, last_name FROM users WHERE email = '" . $adminLoginEmail . "'"; // CONSTRUCT SQL QUERY ('$adminLoginEmail' is specified in 'ini.inc.php')
 
-		if (!($connection = @ mysql_connect($hostName, $username, $password))) // (1) OPEN the database connection (variables are set by include file 'db.inc.php'!)
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("The following error occurred while trying to connect to the host:", "");
-
-		if (!(mysql_select_db($databaseName, $connection))) // (2) SELECT the database (variables are set by include file 'db.inc.php'!)
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("The following error occurred while trying to connect to the database:", "");
-
-		if (!($result = @ mysql_query($query, $connection))) // (3a) RUN the query on the database through the connection:
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+		// (3a) RUN the query on the database through the connection:
+		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		$row = mysql_fetch_array($result); // (3b) EXTRACT results: fetch the current row into the array $row
-
-		if (!(mysql_close($connection))) // (5) CLOSE the database connection
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
 
 		// 1) Mail feedback to user, i.e., send the person who wants to be added as new user a notification email:
 		$emailRecipient = $formVars["firstName"] . " " . $formVars["lastName"] . " <" . $formVars["email"] . ">";
@@ -403,33 +369,17 @@
 
 	// --------------------------------------------------------------------
 
-	// (1) OPEN CONNECTION, (2) SELECT DATABASE, (3) RUN QUERY, (4) DISPLAY RECEIPT, (5) CLOSE CONNECTION
-
-	// (1) OPEN the database connection:
-	//      (variables are set by include file 'db.inc.php'!)
-	if (!($connection = @ mysql_connect($hostName, $username, $password)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to connect to the host:", "");
-
-	// (2) SELECT the database:
-	//      (variables are set by include file 'db.inc.php'!)
-	if (!(mysql_select_db($databaseName, $connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to connect to the database:", "");
-
 	// (3) RUN the query on the database through the connection:
-	if (!($result = @ mysql_query($query, $connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+	$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 	// ----------------------------------------------
 
 	// If this was an UPDATE - we save possible name changes to the session file (so that this new user name can be displayed by the 'showLogin()' function):
-	if (session_is_registered("loginEmail") && ($_REQUEST['userID'] != ""))
+	if (isset($_SESSION['loginEmail']) && ($_REQUEST['userID'] != ""))
 	{
 		// We only save name changes if a normal user is logged in -OR- the admin is logged in AND the updated user data are his own!
 		// (We have to account for that the admin is allowed to view and edit account data from other users)
-		if (($loginEmail != $adminLoginEmail) | (($loginEmail == $adminLoginEmail) && ($userID == getUserID($loginEmail, $connection))))
+		if (($loginEmail != $adminLoginEmail) | (($loginEmail == $adminLoginEmail) && ($userID == getUserID($loginEmail))))
 		{
 			$loginFirstName = $formVars["firstName"];
 			$loginLastName = $formVars["lastName"];
@@ -451,9 +401,7 @@
 					. "password = '" . $stored_password . "' "
 					. "WHERE user_id = $userID";
 	
-			if (!($result = @ mysql_query($query, $connection)))
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-					showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 		}
 	}
 
@@ -463,7 +411,7 @@
 	//            (Note that this feature is actually only meant to add the very first user to the users table.
 	//             After you've done so, it is highly recommended to change the value of '$addNewUsers' to 'admin'!)
 	//   -or-  2. the ADMIN only (if variable '$addNewUsers' in 'ini.inc.php' is set to "admin")
-	elseif ((!session_is_registered("loginEmail") && ($addNewUsers == "everyone") && ($_REQUEST['userID'] == "")) | (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == ""))) // -> perform an insert:
+	elseif ((!isset($_SESSION['loginEmail']) && ($addNewUsers == "everyone") && ($_REQUEST['userID'] == "")) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == ""))) // -> perform an insert:
 	{
 		// Get the user id that was created
 		$userID = @ mysql_insert_id($connection);
@@ -480,22 +428,15 @@
 				. "email = '" . $formVars["email"] . "', "
 				. "password = '" . $stored_password . "'";
 
-		if (!($result = @ mysql_query($query, $connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		// if EVERYONE who's not logged in is able to add a new user (which is the case if the variable '$addNewUsers' in 'ini.inc.php'
 		// is set to "everyone", see note above!), then we have to make sure that this visitor gets logged into his new
 		// account - otherwise the following receipt page ('users_receipt.php') will generate an error:
 		if ($addNewUsers == "everyone")
 		{
-			// Log the user into his new account:
-			session_register("loginEmail");
-			session_register("loginUserID");
-			session_register("loginFirstName");
-			session_register("loginLastName");
-			session_register("abbrevInstitution");
-	
+			// Log the user into his new account by assigning his information to
+			// those variables that will be written to the '$_SESSION' variable below:
 			$loginEmail = $formVars["email"];
 			$loginUserID = $userID;
 			$loginFirstName = $formVars["firstName"];
@@ -504,14 +445,24 @@
 		}
 	}
 
-//	// Write back session variables (only necessary if register globals is OFF!)
-//	$HTTP_SESSION_VARS['loginEmail'] = $loginEmail;
-//	$HTTP_SESSION_VARS['formVars'] = $formVars;
-//	$HTTP_SESSION_VARS['errors'] = $errors;
+	// Write back session variables:
+	saveSessionVariable("loginEmail", $loginEmail); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+	saveSessionVariable("loginUserID", $loginUserID);
+	saveSessionVariable("loginFirstName", $loginFirstName);
+	saveSessionVariable("loginLastName", $loginLastName);
+	saveSessionVariable("abbrevInstitution", $abbrevInstitution);
 
-	// Clear the formVars so a future <form> is blank
-	session_unregister("formVars");
-	session_unregister("errors");
+	// Get all user groups specified by the current user
+	// and (if some groups were found) save them as semicolon-delimited string to the session variable 'userGroups':
+	getUserGroups($loginUserID); // function 'getUserGroups()' is defined in 'include.inc.php'
+
+	// Similarly, get all queries that were saved previously by the current user
+	// and (if some queries were found) save them as semicolon-delimited string to the session variable 'userQueries':
+	getUserQueries($loginUserID); // function 'getUserQueries()' is defined in 'include.inc.php'
+
+	// Clear the 'errors' and 'formVars' session variables so a future <form> is blank:
+	deleteSessionVariable("errors"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+	deleteSessionVariable("formVars");
 
 	// ----------------------------------------------
 
@@ -519,9 +470,7 @@
 	header("Location: user_receipt.php?userID=$userID");
 
 	// (5) CLOSE the database connection:
-	if (!(mysql_close($connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
+	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 ?>
