@@ -1,0 +1,29 @@
+Suggestions for improving refbase:
+
+* Data import from MODS XML and other common bibliographic formats, like
+  BibTeX, EndNote, ISI Web of Science, RIS, and Pubmed XML.
+
+* Enhanced export using bibutils to BibTex, EndNote, and RIS.
+
+* Simplify manual data input by providing record type specific forms.
+  These forms will guide a user by only showing those fields that are
+  required for a particular record type (like journal articles, book
+  chapters or whole books).
+
+* Provide additional citation formats on export - preferably via the use
+  of a plugin structure which would make it easy to add your own citation
+  citation styles.
+
+* User customization: provide a user specific preferences page where one
+  can specify the default columns that are visible in query results or
+  the default fields that are visible in particular search forms.
+
+* Offer the user means for handling duplicate database entries.
+
+* Validation of data entered by the user.
+
+* Provide administrative interface to deleted records and user data.
+
+* Enable remembering of marked records across different requests.
+
+* More user-specific and record-specific rights management.

@@ -1,0 +1,2174 @@
+2004-11-09  Jochen Wendebaum <wendebaum@users.sourceforge.net>
+
+	* code/php/advanced_search.php: exchanged "All" in
+	selectDistinct()-calls to use localised word.
+
+2004-11-09  Jochen Wendebaum <wendebaum@users.sourceforge.net>
+
+	* code/php/advanced_search.php, code/php/locales/de/common.inc,
+	code/php/locales/en/common.inc: translation of advanced search
+	finished
+
+2004-11-05  Jochen Wendebaum <wendebaum@users.sourceforge.net>
+
+	* code/php/advanced_search.php, code/php/locales/de/common.inc,
+	code/php/locales/en/common.inc: advanced_search "localised" (~70%
+	done)
+
+2004-11-05  Jochen Wendebaum <wendebaum@users.sourceforge.net>
+
+	* code/php/simple_search.php, code/php/sql_search.php,
+	code/php/locales/de/common.inc, code/php/locales/en/common.inc:
+	simple_search "localised"
+
+2004-11-02  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/index.php: - added a now required parameter to
+	'buildSelectMenuOptions()' function call
+
+2004-11-02  Matthias Steffens <refbase@extracts.de>
+
+	* lit/install.sql: - removed table specs & data for tables
+	'group_permissions', 'groups', 'help' and   'help_cats'
+
+2004-11-02  Matthias Steffens <refbase@extracts.de>
+
+	* note/user_data_table_info.txt: - renamed field 'bibtex_id' to
+	'cite_key'
+
+2004-11-02  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_receipt.php: - the user's account options are now
+	displayed within a separate table on the right	 side of the page -
+	fiddled with wording "details" vs "options"
+
+2004-11-02  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_login.php: - we now save the user's preferred
+	language as a session variable on login - renamed function
+	'getUserFormatsStylesTypes()' to
+	'getVisibleUserFormatsStylesTypes()'
+
+2004-11-02  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_details.php: - added support for fields 'keywords',
+	'notes', 'marked' - changed size of 'phone ' and 'url' form fields
+	from 30 to 50 - removed some commented code which was outdated
+	anyhow
+
+2004-11-02  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: - renamed field 'bibtex_id' to 'cite_key' -
+	function 'extractFormElementsAdvanced': added support for new form
+	fields	 "User Groups" and "Cite Key" - '$loginEmail' wasn't
+	resolved within function 'extractFormElementsAdvanced'	 with
+	register globals = OFF (now it gets passed to this function as
+	parameter)
+
+2004-11-02  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/record.php: - renamed field 'bibtex_id' to 'cite_key' -
+	added a now required parameter to 'buildSelectMenuOptions()'
+	function call
+
+2004-11-02  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_validation.php: - added support for fields
+	'keywords', 'notes', 'marked' and 'language' - we now save the
+	user's preferred language as a session variable when   auto-logging
+	a newly created users into his new account
+
+2004-11-02  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_logout.php: - we now clear the user's
+	'userLanguage' session variable on logout - a logout action that
+	originates from 'user_options.php' will locate back   to the main
+	page
+
+2004-11-02  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/modify.php, code/php/receipt.php: - renamed field
+	'bibtex_id' to 'cite_key'
+
+2004-11-02  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/extract.php: - added a now required parameter to
+	'buildSelectMenuOptions()' function call
+
+2004-11-02  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/advanced_search.php: - added form fields for
+	'user_groups' and 'cite_key' (formerly named 'bibtex_id) - the user
+	keys popup was only populated with keywords from records of type
+	'journal'. Fixed.  - changed order of user-specific fields in sort
+	popups
+
+2004-10-31  Matthias Steffens <refbase@extracts.de>
+
+	* img/options.gif: initial checkin
+
+2004-10-31  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/users.php: - added fields 'language', 'keywords',
+	'notes' and 'marked' to field popups   in results header of admin
+	interface - added icon in links column which points to
+	'user_options.php' - adopted link titles to the new setup - added a
+	now required parameter to 'buildSelectMenuOptions()' function call
+
+2004-10-31  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_options_modify.php: - initial checkin (validates
+	and sets user options that were selected by   use of
+	'user_options.php')
+
+2004-10-31  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_options.php: - initial checkin (provides options
+	which are individual for each user)
+
+2004-10-31  Matthias Steffens <refbase@extracts.de>
+
+	* lit/install.sql: - table 'users': removed field 'group_id' and
+	added field 'user_groups'
+
+2004-10-26  Jochen Wendebaum <wendebaum@users.sourceforge.net>
+
+	* code/php/index.php, code/php/search.php, code/php/sql_search.php,
+	code/php/locales/de/common.inc, code/php/locales/en/common.inc: -
+	exchanged some more language strings
+
+2004-10-26  Jochen Wendebaum <wendebaum@users.sourceforge.net>
+
+	* code/php/index.php, code/php/locales/de/common.inc,
+	code/php/locales/en/common.inc: - exchanged some more language
+	strings
+
+2004-10-25  Matthias Steffens <refbase@extracts.de>
+
+	* lit/install.sql: - table 'users': removed field 'address' (which
+	was never used) - table 'users': reset counter in 'logins' field -
+	table 'users': changed date & time values to '2004-11-01 12:00:00'
+
+2004-10-25  Matthias Steffens <refbase@extracts.de>
+
+	* note/users_table_info.txt: - removed field 'address' (which was
+	never used)
+
+2004-10-24  Matthias Steffens <refbase@extracts.de>
+
+	* lit/install.sql: - added table 'languages' - table 'users': field
+	'language' is now set to 'en' by default
+
+2004-10-24  Matthias Steffens <refbase@extracts.de>
+
+	* note/languages_table_info.txt: - initial checkin (the 'languages'
+	table holds language identifiers   for all available display
+	languages)
+
+2004-10-22  Jochen Wendebaum <wendebaum@users.sourceforge.net>
+
+	* code/php/index.php, code/php/locales/de/common.inc,
+	code/php/locales/en/common.inc: - exchanged some language strings
+
+2004-10-22  Jochen Wendebaum <wendebaum@users.sourceforge.net>
+
+	* code/php/index.php, code/php/locales/de/common.inc,
+	code/php/locales/en/common.inc: - moved the headerstring into the
+	locales and - removed $scientificFieldDescriptor from ini.inc.php
+
+2004-10-20  Jochen Wendebaum <wendebaum@users.sourceforge.net>
+
+	* code/php/locales/core.php: got rid of $refbaseDir, using local
+	path now (as suggested by Matthias)
+
+2004-10-19  Matthias Steffens <refbase@extracts.de>
+
+	* note/users_table_info.txt: - renamed field 'group_id' to
+	'user_groups' and changed its description   and type accordingly
+
+2004-10-19  Matthias Steffens <refbase@extracts.de>
+
+	* note/user_data_table_info.txt: - changed description for field
+	'user_groups'
+
+2004-10-19  Matthias Steffens <refbase@extracts.de>
+
+	* note/deleted_field_info.txt: - added fields 'date',
+	'publication_status' and 'series_volume_numeric' - changed type of
+	field 'series_volume' from numeric to text
+
+2004-10-19  Matthias Steffens <refbase@extracts.de>
+
+	* note/db_field_info.txt: - renamed field 'month' to 'date'
+
+2004-10-19  Matthias Steffens <refbase@extracts.de>
+
+	* note/db_field_info.txt: - added fields 'publication_status' and
+	'series_volume_numeric' - changed type of field 'series_volume'
+	from numeric to text
+
+2004-10-19  Jochen Wendebaum <wendebaum@users.sourceforge.net>
+
+	* code/php/index.php: startet the localisation by exchanging
+	strings into $loc[]-fields (there are still many more to go).
+
+2004-10-19  Jochen Wendebaum <wendebaum@users.sourceforge.net>
+
+	* code/php/locales/de/common.inc, code/php/locales/en/common.inc:
+	added several language strings (still many more to go)
+
+2004-10-18  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/users.php: - adopted results header and footer to the
+	new layout used by 'search.php' - similar to 'search.php',
+	'users.php' now supports to gather particular	database users into
+	groups (which can be easily re-displayed using the   'Show User
+	Group' form in the results header) - function
+	'extractFormElementsRefine' is now replaced by function
+	'extractFormElementsRefineDisplay()' from 'include.inc.php' - added
+	functions 'extractFormElementsGroup()', 'buildUserResultsFooter()'
+	and 'extractFormElementsQueryResults()' to support the new forms
+	within	 the results header and footer - the code that processes
+	'$rowOffset' is now in sync with that from   'search.php'
+
+2004-10-18  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_validation.php: - we now save user groups defined
+	by the admin to a new session variable	 'adminUserGroups' (note
+	that these 'user groups' are groups of	 *database users* saved by
+	the admin using the user management interface,	 not groups of
+	*references* saved by a particular user) - 'getUserGroups()'
+	function calls now require an additional parameter to
+	descriminate between calls originating from 'search.php' and calls
+	coming from 'users.php'
+
+2004-10-18  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_removal.php: - fixed bug where the 'userID'
+	parameter wasn't extracted from the request   (which is necessary
+	if register_globals is OFF)
+
+2004-10-18  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_login.php: - we now save user groups defined by the
+	admin to a new session variable   'adminUserGroups' (note that
+	these 'user groups' are groups of   *database users* saved by the
+	admin using the user management interface,   not groups of
+	*references* saved by a particular user) - 'getUserGroups()'
+	function calls now require an additional parameter to
+	descriminate between calls originating from 'search.php' and calls
+	coming from 'users.php'
+
+2004-10-18  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: - moved functions
+	'extractFormElementsRefineDisplay()' and 'modifyUserGroups()'	to
+	'include.inc.php' since they'll now get used by 'users.php' as well
+	- added additional parameters to function calls for functions
+	'modifyUserGroups()',	'extractFormElementsRefineDisplay()' and
+	'displayResultsHeader()' since they'll	 now get used for
+	'users.php' as well - we'll now perform search & replace actions on
+	the contents of the 'address' field   (since it may come in handy
+	to mark particular address items in **bold** or   _italics_)
+
+2004-10-18  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/modify.php: - supports new field 'series_volume_numeric'
+	- 'getUserGroups()' function calls now require an additional
+	parameter to   descriminate between calls originating from
+	'search.php' and calls	 coming from 'users.php'
+
+2004-10-18  Matthias Steffens <refbase@extracts.de>
+
+	* lit/install.sql: - added field 'series_volume_numeric' to tables
+	'refs' and 'deleted' - changed type of field 'series_volume' from
+	numeric to text
+
+2004-10-14  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: - adopted include specifications to the new
+	directory structure - added include file 'modsxml.inc.php' - we
+	read out "$_SERVER['HTTP_REFERER']" earlier in the script so that
+	we can always	make use of the '$referer' variable - a lot of
+	messing around with whitespace - fixed problem where the script
+	would incorrectly return: "You have no permission   to perform
+	custom SQL searches" - added a 'return as' popup to the line of
+	export form elements. This popup lets you   control how exported
+	data shall be returned - added code to support the new 'return as'
+	functionality on export ('exportType') - supports now variable
+	'$fileVisibilityException' being empty - displays now the 'No
+	records selected...' feedback, if the user clicked on	'Export'
+	but didn't select any records - function 'generateExport()' will
+	now adjust the mime type and return exported data   based on the
+	key given in '$exportType' - moved code from function
+	'generateExport()' to function 'modsCollection()' (in
+	'modsxml.inc.php'). Looping over individual records will now be
+	done by function   'modsCollection()'.	- added support for new
+	'$librarySearchPattern' option from 'ini.inc.php' in   function
+	'extractFormElementsLibrary()' - function
+	'extractFormElementsQueryResults()': the display types 'Display'
+	and   'Export' get handled together now - function
+	'extractFormElementsGroup()': we'll now keep any previous sort
+	order	if the user chooses a new group from the 'Show My Group'
+	popup within the results   header of any search results page
+
+2004-10-14  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/library_search.php: - added support for new
+	'$librarySearchPattern' option from 'ini.inc.php'
+
+2004-10-14  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/record.php: - removed 'confirmDelete...' function call
+	from <form...> tag
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/install.php: - adopted include specifications to the new
+	directory structure
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/rss.php: - adopted include specifications to the new
+	directory structure - we now set the mime type to 'text/plain' and
+	the character encoding to   the one given in '$contentTypeCharset'
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/advanced_search.php: - adopted include specifications to
+	the new directory structure
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/record.php: - adopted include specifications to the new
+	directory structure - removed file 'confirmDelete.js' from
+	'displayHTMLhead()' function call   since it didn't work anyhow -
+	changed variable name from '$exportTypeDisabled' to
+	'documentTypeDisabled'
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_login.php: - adopted include specifications to the
+	new directory structure - added '$formatType' parameter to
+	'getUserFormatsStylesTypes()' function	 calls
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/users.php: - adopted include specifications to the new
+	directory structure
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/error.php, code/php/extract.php,
+	code/php/import_csa.php, code/php/import_csa_modify.php,
+	code/php/index.php, code/php/library_search.php,
+	code/php/modify.php, code/php/queries.php,
+	code/php/query_manager.php, code/php/query_modify.php,
+	code/php/receipt.php, code/php/show.php,
+	code/php/simple_search.php, code/php/sql_search.php,
+	code/php/user_details.php, code/php/user_logout.php,
+	code/php/user_receipt.php, code/php/user_removal.php,
+	code/php/user_validation.php: - adopted include specifications to
+	the new directory structure
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* lit/install.sql: - added table structure and data for table
+	'depends' - added fields 'format_type' and 'depends_id' to table
+	'formats' - added field 'depends_id' to table 'styles' - fixed
+	incorrect value for 'AUTO_INCREMENT' for some of the tables - added
+	additional formats (mostly bibutils) to the 'formats' table -
+	changed file names of citation styles in table 'styles' - removed
+	'test' group from entries in table 'user_data' - added entries to
+	table 'user_formats' to match the new entries in table	 'formats'
+	- table 'user_permissions': changed default value of permission
+	setting   'allow_sql_search' to 'no' for user_id = 0 (i.e., not
+	logged in)
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/cite/cite_DeepSeaRes.php: - renamed and moved this file
+	from 'code/inc/styles/DeepSeaRes.inc.php'   to this location -
+	adjusted header description to the new directory structure
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/cite/cite_PolarBiol_MarBiol_MEPS.php: - renamed and
+	moved this file from
+	'code/inc/styles/PolarBiol_MarBiol_MEPS.inc.php'   to this location
+	- adjusted header description to the new directory structure - if
+	there's no abbreviated journal name (or series title), we'll now
+	use the full   journal name (or series title) instead
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/cite/cite_TextCitation.php: - renamed and moved this
+	file from 'code/inc/styles/TextCitation.inc.php'   to this location
+	- adjusted header description to the new directory structure
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/export/bibutils/export_xml2ris.php: - initial checkin
+	(exports found records in RIS format)
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/export/bibutils/export_xml2end.php: - initial checkin
+	(exports found records in Endnote format)
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/export/bibutils/export_xml2bib.php: - initial checkin
+	(exports found records in BibTeX format)
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/export/export_modsxml.php: - moved function
+	'exportRecord()' from 'code/inc/styles/MODS_XML.inc.php'   to this
+	file and renamed it to 'exportRecords()' since it will now export
+	all found records _at once_ (it was exporting each record
+	individually   before)
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* note/styles_table_info.txt: - added field 'depends_id'
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* note/formats_table_info.txt: - added fields 'format_type' and
+	'depends_id' - changed wording of descriptions so that they fit
+	both cases, export as well as import
+
+2004-10-13  Matthias Steffens <refbase@extracts.de>
+
+	* note/depends_table_info.txt: - initial checkin (the 'depends'
+	table lists external utilities that are required for particular
+	import or export formats)
+
+2004-10-12  Jochen Wendebaum <wendebaum@users.sourceforge.net>
+
+	* code/php/locales/core.php: - file header included
+
+2004-10-04  Richard Karnesky <karnesky@gmail.com>
+
+	* code/php/search.php, lit/install.sql: - added primitive export
+	capabilities (based on citeStyle) - initial import of
+	MODS_XML.inc.php, a MODS XML generator - added MODS_XML citeStyle
+	(HTML record entries in a cite array) and exportFormat (actual XML
+	given to the browser) - added MODS_XML citeStyle as a comment to
+	install.sql.  Uncomment to use.
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* note/user_permissions_table_info.txt,
+	note/group_permissions_table_info.txt: - changed default value for
+	permission setting 'allow_edit_call_number'   from 'yes' to 'no'
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/users.php: - now uses case insensitive comparisons where
+	appropriate
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: - now uses case insensitive comparisons
+	where appropriate - attempts to prevent a user from hacking the SQL
+	query by providing the	 string "FROM refs" within the SELECT
+	statement
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/rss.php: - we'll now also call the 'generateRSS()'
+	function when there was nothing   found (in order to generate at
+	least the RSS channel info)
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/record.php: - now uses '$row['location']' instead of
+	'$locationName' to test if the	 location field contains more than
+	one user. This is done since for   '$locationName' high ASCII
+	characters were converted into	 HTML entities which, in turn,
+	srews up the comparison
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/query_modify.php: - now uses case insensitive
+	comparisons where appropriate
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* lit/install.sql: - changed default name for "MODS XML" format
+	from 'export_format_1.inc.php'	 to 'MODS_XML.inc.php' - tables
+	'group_permissions' & 'user_permissions': changed default value for
+	permission setting 'allow_edit_call_number' from 'yes' to 'no'
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: - sessions work now with 'register_globals =
+	OFF'; plus: - uses now the 'start_session()' function from
+	'include.inc.php' - renamed 'displayRows()' function to
+	'displayDetails()' to better reflect   its purpose - renamed
+	'exportRows()' function to 'generateCitations()' to better reflect
+	its purpose - renamed all occurrences of 'export' to 'cite' to
+	better reflect its purpose - renamed variables
+	'$exportFormatSelector' and '$exportFormat' to
+	'$citeStyleSelector' and '$citeStyle', respectively - completely
+	redesigned the results header (which gets displayed on	 every
+	search results page) - moved the basic HTML layout of the results
+	header into a new function   'displayResultsHeader()' which resides
+	within a new include file   ('results_header.inc.php') -
+	restructured the HTML output so that all main elements (page
+	header,   results header, results, results footer, page footer) are
+	located within	 their own tables - added function
+	'extractFormElementsGroup()' that processes the new 'Show My
+	Group' form (which occurs on 'index.php' and above any query
+	results list) - added fields 'user_groups' & 'bibtex_id' to details
+	view - instead of hard-coding background colors for HTML table
+	cells, these can   now be set globally by modifying the appropriate
+	CSS classes within   'style.css' and 'style_print.css' - added code
+	to support the print view feature - added code to support
+	user-specific permissions - added code to support the new file
+	visibility features from 'ini.inc.php' - '$sqlQuery' gets
+	rawurldecoded right away (outside of any functions) - added some
+	experimental code for keeping the selection state of records
+	across different pages/logins (code is disabled since it isn't done
+	yet) - replaced "$HTTP_REFERER" with "$_SERVER['HTTP_REFERER']" -
+	we now properly read out checkbox variable values from the request
+	- added code that attempts to prevent a user from providing
+	malicious SQL	queries in the request (note that this isn't 100%
+	safe yet!) - replaced "session_is_registered("...")" with
+	"isset($_SESSION['...']" - replaced direct use of functions
+	'mysql_connect()' & 'mysql_select_db()'   with custom function
+	'connectToMySQLDatabase()' from 'include.inc.php' - replaced direct
+	use of 'mysql_query()' function with custom function
+	'queryMySQLDatabase()' from 'include.inc.php' - replaced direct use
+	of 'mysql_close()' function with custom function
+	'disconnectFromMySQLDatabase()' from 'include.inc.php' - moved code
+	that validates any custom SQL query passed by the user into   a
+	separate function 'verifySQLQuery()' in 'include.inc.php' (since it
+	will   be also used by 'rss.php') - we now use case insensitive
+	comparisons where appropriate (note that   replacement of
+	case-sensitive functions with their case-insensitive
+	counter-parts isn't completed yet) - provided some magic when
+	processing the '$rowOffset' parameter to ensure   that browse links
+	behave as expected - added code to support the new user groups
+	feature - moved code that performs search+replace actions on
+	particular fields   into new function 'searchReplaceText()' (within
+	'include.inc.php') - the generation of citations based on
+	particular styles was moved into   a separate function
+	'citeRecord()' where each style defines its own copy   of this
+	function. The 'citeRecord()' function is located within a citation
+	style file (which, in turn, must reside in the 'styles' directory
+	of the	 refbase root directory) - moved function
+	'reArrangeAuthorContents()' to 'include.inc.php' - added function
+	'modifyUserGroups()' which will add (remove) selected	records to
+	(from) the specified user group - changed stupid use of '"$..."' to
+	'$...' (i.e., removed quotation marks	enclosing variables) -
+	renamed function 'extractFormElementsRefine()' to
+	'extractFormElementsRefineDisplay()' and adopted its code to the
+	new design - moved code which informs the user that no results were
+	found for the current	query/action into a separate function
+	'nothingFound()'
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_validation.php, code/php/users.php: - the
+	'start_session()' function now requires a boolean parameter that
+	specifies whether available export formats, citation styles,
+	document   types and permissions should be queried.
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_login.php, code/php/user_logout.php,
+	code/php/user_receipt.php, code/php/user_removal.php: - the
+	'start_session()' function now requires a boolean parameter that
+	specifies whether available export formats, citation styles,
+	document   types and permissions should be queried.
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/show.php, code/php/simple_search.php,
+	code/php/sql_search.php, code/php/user_details.php: - the
+	'start_session()' function now requires a boolean parameter that
+	specifies whether available export formats, citation styles,
+	document   types and permissions should be queried.
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/receipt.php, code/php/record.php, code/php/rss.php: -
+	the 'start_session()' function now requires a boolean parameter
+	that   specifies whether available export formats, citation styles,
+	document   types and permissions should be queried.
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/modify.php, code/php/queries.php,
+	code/php/query_manager.php, code/php/query_modify.php: - the
+	'start_session()' function now requires a boolean parameter that
+	specifies whether available export formats, citation styles,
+	document   types and permissions should be queried.
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/index.php, code/php/library_search.php: - the
+	'start_session()' function now requires a boolean parameter that
+	specifies whether available export formats, citation styles,
+	document   types and permissions should be queried.
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/advanced_search.php, code/php/extract.php,
+	code/php/import_csa_modify.php, code/php/import_csa.php: - the
+	'start_session()' function now requires a boolean parameter that
+	specifies whether available export formats, citation styles,
+	document   types and permissions should be queried.
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/error.php: - the 'start_session()' function now requires
+	a boolean parameter that   specifies whether available export
+	formats, citation styles, document   types and permissions should
+	be queried. 'error.php' won't query   them so that the script can
+	be called even when the database doesn't   exist yet.
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/install.php: - the 'start_session()' function now
+	requires a boolean parameter that   specifies whether available
+	export formats, citation styles, document   types and permissions
+	should be queried. 'install.php' won't query   them since the
+	database likely doesn't exist yet.
+
+2004-10-03  Matthias Steffens <refbase@extracts.de>
+
+	* note/user_permissions_table_info.txt,
+	note/group_permissions_table_info.txt: - added permission setting
+	'allow_edit_call_number'
+
+2004-10-02  Matthias Steffens <refbase@extracts.de>
+
+	* lit/install.sql: - 'queries' table: renamed fields
+	'export_format_selector' & 'export_order'   to
+	'cite_style_selector' & 'cite_order', respectively - 'users' table:
+	removed fields 'records', 'queries' & 'permissions' which   are now
+	obsolete - 'users' table: added field 'group_id' - added tables:
+	'queries', 'groups', 'group_permissions', 'user_permissions',
+	'formats', 'styles', 'types', 'user_formats', 'user_styles',
+	'user_types',	'help' and 'help_cats' (the latter two may be
+	removed again) - added refbase file header
+
+2004-10-01  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/record.php: - sessions work now with 'register_globals =
+	OFF'; plus: - uses now the 'start_session()' function from
+	'include.inc.php' - replaced "session_is_registered("...")" with
+	"isset($_SESSION['...']" - replaced direct use of
+	'session_unregister()' function with   custom function
+	'deleteSessionVariable()' from 'include.inc.php' - if a validation
+	error occurred we'll now re-load the form data	 entered by the
+	user - added support for new user-specific fields 'user_groups',
+	'bibtex_id' and   'related' - replaced direct use of functions
+	'mysql_connect()' & 'mysql_select_db()'   with custom function
+	'connectToMySQLDatabase()' from 'include.inc.php' - replaced direct
+	use of 'mysql_query()' function with custom function
+	'queryMySQLDatabase()' from 'include.inc.php' - replaced direct use
+	of 'mysql_close()' function with custom function
+	'disconnectFromMySQLDatabase()' from 'include.inc.php' - changed
+	case in '$OrigTitleName' to '$origTitleName' for consistency
+	reasons - instead of hard-coding background colors for HTML table
+	cells, these can   now be set globally by modifying the appropriate
+	of CSS classes within	'style.css' and 'style_print.css' -
+	document types will be now loaded individually for each user -
+	added code to support user-specific permissions - renamed variable
+	'$locationSelector' to '$locationSelectorName' for   consistency
+	reasons
+
+2004-10-01  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/users.php: - sessions work now with 'register_globals =
+	OFF'; plus: - uses now the 'start_session()' function from
+	'include.inc.php' - replaced "session_is_registered("...")" with
+	"isset($_SESSION['...']" - replaced "$HTTP_REFERER" with
+	"$_SERVER['HTTP_REFERER']" - replaced direct use of
+	'session_unregister()' function with   custom function
+	'deleteSessionVariable()' from 'include.inc.php' - replaced direct
+	use of 'session_register()' function with   custom function
+	'saveSessionVariable()' from 'include.inc.php' - renamed all
+	occurrences of 'export' to 'cite' to better reflect its purpose -
+	added code to support the print view feature - replaced direct use
+	of functions 'mysql_connect()' & 'mysql_select_db()'   with custom
+	function 'connectToMySQLDatabase()' from 'include.inc.php' -
+	replaced direct use of 'mysql_query()' function with custom
+	function   'queryMySQLDatabase()' from 'include.inc.php' - replaced
+	direct use of 'mysql_close()' function with custom function
+	'disconnectFromMySQLDatabase()' from 'include.inc.php' - re-ordered
+	HTML output slightly
+
+2004-10-01  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/modify.php: - sessions work now with 'register_globals =
+	OFF'; plus: - uses now the 'start_session()' function from
+	'include.inc.php' - replaced "session_is_registered("...")" with
+	"isset($_SESSION['...']" - replaced direct use of
+	'session_register()' function with   custom function
+	'saveSessionVariable()' from 'include.inc.php' - form variables
+	given in $_POST will now be saved within the '$formVars'   array,
+	so that they can be inserted again, wehn reloading 'record.php'
+	in case of any errors.	- prevent script execution if the script
+	was called by something else than   'record.php' - added code to
+	support user-specific permissions - renamed variable
+	'$locationSelector' to '$locationSelectorName' for   consistency
+	reasons - we now check whether the 'ini_get' function exists prior
+	to using it - Validation of 'uploadFile' field: inserted some
+	clumsy workarounds that   try to prevent hacking the system (Note
+	that this is in NO way safe yet!) - replaced "$HTTP_REFERER" with
+	"$_SERVER['HTTP_REFERER']" - replaced direct use of functions
+	'mysql_connect()' & 'mysql_select_db()'   with custom function
+	'connectToMySQLDatabase()' from 'include.inc.php' - replaced direct
+	use of 'mysql_query()' function with custom function
+	'queryMySQLDatabase()' from 'include.inc.php' - replaced direct use
+	of 'mysql_close()' function with custom function
+	'disconnectFromMySQLDatabase()' from 'include.inc.php' - we now
+	remove any meaningless delimiter(s) from the beginning or end of a
+	field string for fields that may contain sub-elements: 'author',
+	'keywords',   'place', 'language', 'summary_language', 'area',
+	'user_keys' and 'user_groups' - changed case in '$OrigTitleName' to
+	'$origTitleName' for consistency reasons - added support for new
+	user-specific fields 'user_groups', 'bibtex_id' and   'related'
+
+2004-10-01  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/install.php: - sessions work now with 'register_globals
+	= OFF'; plus: - uses now the 'start_session()' function from
+	'include.inc.php' - replaced "session_is_registered("...")" with
+	"isset($_SESSION['...']" - replaced direct use of
+	'session_unregister()' function with   custom function
+	'deleteSessionVariable()' from 'include.inc.php' - replaced direct
+	use of 'session_register()' function with   custom function
+	'saveSessionVariable()' from 'include.inc.php' - added code to
+	support the print view feature - the checks for whether the
+	function is executable or whether it is   mysql have been commented
+	out, since they don't seem to work on windows
+
+2004-10-01  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/rss.php: - added some explanatory text to the script
+	file description
+
+2004-09-30  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/rss.php: - initial checkin (generates a dynamic RSS feed
+	for the current query)
+
+2004-09-30  Jochen Wendebaum <wendebaum@users.sourceforge.net>
+
+	* code/php/locales/core.php, code/php/locales/index.html,
+	code/php/locales/de/common.inc, code/php/locales/en/common.inc: -
+	added core language handling - added english and german language
+	files
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* note/queries_table_info.txt: - renamed all occurrences of
+	'export' to 'cite' to better reflect its purpose
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_validation.php: - sessions work now with
+	'register_globals = OFF'; plus: - uses now the 'start_session()'
+	function from 'include.inc.php' - replaced
+	"session_is_registered("...")" with "isset($_SESSION['...']" -
+	replaced direct use of 'session_register()' function with   custom
+	function 'saveSessionVariable()' from 'include.inc.php' - replaced
+	direct use of 'mysql_query()' function with custom function
+	'queryMySQLDatabase()' from 'include.inc.php' - replaced direct use
+	of 'mysql_close()' function with custom function
+	'disconnectFromMySQLDatabase()' from 'include.inc.php' - added some
+	error checking in the case that the script was called by
+	something else than 'user_details.php'
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_receipt.php: - sessions work now with
+	'register_globals = OFF'; plus: - uses now the 'start_session()'
+	function from 'include.inc.php' - replaced
+	"session_is_registered("...")" with "isset($_SESSION['...']" -
+	replaced direct use of 'session_unregister()' function with
+	custom function 'deleteSessionVariable()' from 'include.inc.php' -
+	replaced direct use of 'session_register()' function with   custom
+	function 'saveSessionVariable()' from 'include.inc.php' - replaced
+	"$HTTP_REFERER" with "$_SERVER['HTTP_REFERER']" - added code to
+	support the print view feature - replaced direct use of functions
+	'mysql_connect()' & 'mysql_select_db()'   with custom function
+	'connectToMySQLDatabase()' from 'include.inc.php' - replaced direct
+	use of 'mysql_query()' function with custom function
+	'queryMySQLDatabase()' from 'include.inc.php' - replaced direct use
+	of 'mysql_close()' function with custom function
+	'disconnectFromMySQLDatabase()' from 'include.inc.php'
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_details.php: - sessions work now with
+	'register_globals = OFF'; plus: - uses now the 'start_session()'
+	function from 'include.inc.php' - replaced
+	"session_is_registered("...")" with "isset($_SESSION['...']" -
+	replaced direct use of 'session_unregister()' function with
+	custom function 'deleteSessionVariable()' from 'include.inc.php' -
+	replaced direct use of 'session_register()' function with   custom
+	function 'saveSessionVariable()' from 'include.inc.php' - replaced
+	"$HTTP_REFERER" with "$_SERVER['HTTP_REFERER']" - added code to
+	support the print view feature - replaced direct use of functions
+	'mysql_connect()' & 'mysql_select_db()'   with custom function
+	'connectToMySQLDatabase()' from 'include.inc.php' - replaced direct
+	use of 'mysql_query()' function with custom function
+	'queryMySQLDatabase()' from 'include.inc.php' - replaced direct use
+	of 'mysql_close()' function with custom function
+	'disconnectFromMySQLDatabase()' from 'include.inc.php'
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_login.php: - sessions work now with
+	'register_globals = OFF'; plus: - uses now the 'start_session()'
+	function from 'include.inc.php' - improved logic that attempts to
+	extract the referring URL - replaced "session_is_registered("...")"
+	with "isset($_SESSION['...']" - replaced direct use of
+	'session_unregister()' function with   custom function
+	'deleteSessionVariable()' from 'include.inc.php' - replaced direct
+	use of 'session_register()' function with   custom function
+	'saveSessionVariable()' from 'include.inc.php' - added code to
+	support the print view feature - replaced direct use of functions
+	'mysql_connect()' & 'mysql_select_db()'   with custom function
+	'connectToMySQLDatabase()' from 'include.inc.php' - replaced direct
+	use of 'mysql_query()' function with custom function
+	'queryMySQLDatabase()' from 'include.inc.php' - replaced direct use
+	of 'mysql_close()' function with custom function
+	'disconnectFromMySQLDatabase()' from 'include.inc.php' - added
+	support for new session variables 'userGroups', 'userQueries',
+	'user_formats', 'user_styles', 'user_types' and 'user_permissions'
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_removal.php: - sessions work now with
+	'register_globals = OFF'; plus: - uses now the 'start_session()'
+	function from 'include.inc.php' - replaced
+	"session_is_registered("...")" with "isset($_SESSION['...']" -
+	replaced direct use of 'session_register()' function with   custom
+	function 'saveSessionVariable()' from 'include.inc.php' - replaced
+	direct use of functions 'mysql_connect()' & 'mysql_select_db()'
+	with custom function 'connectToMySQLDatabase()' from
+	'include.inc.php' - replaced direct use of 'mysql_query()' function
+	with custom function   'queryMySQLDatabase()' from
+	'include.inc.php' - replaced direct use of 'mysql_close()' function
+	with custom function   'disconnectFromMySQLDatabase()' from
+	'include.inc.php'
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_logout.php: - added support for session variables
+	'user_formats', 'user_styles',	 'user_types' and
+	'user_permissions'
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/sql_search.php: - sessions work now with
+	'register_globals = OFF'; plus: - uses now the 'start_session()'
+	function from 'include.inc.php' - replaced
+	"session_is_registered("...")" with "isset($_SESSION['...']" -
+	replaced direct use of 'session_unregister()' function with
+	custom function 'deleteSessionVariable()' from 'include.inc.php' -
+	'Display SQL query' is now unchecked by default - added code to
+	support the print view feature - changed string "Output Options" to
+	"Display Options" - renamed all occurrences of 'export' to 'cite'
+	to better reflect its purpose - added code to support user-specific
+	permissions
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/simple_search.php: - sessions work now with
+	'register_globals = OFF'; plus: - uses now the 'start_session()'
+	function from 'include.inc.php' - replaced
+	"session_is_registered("...")" with "isset($_SESSION['...']" -
+	replaced direct use of 'session_unregister()' function with
+	custom function 'deleteSessionVariable()' from 'include.inc.php' -
+	replaced direct use of functions 'mysql_connect()' &
+	'mysql_select_db()'   with custom function
+	'connectToMySQLDatabase()' from 'include.inc.php' - replaced direct
+	use of 'mysql_query()' function with custom function
+	'queryMySQLDatabase()' from 'include.inc.php' - replaced direct use
+	of 'mysql_close()' function with custom function
+	'disconnectFromMySQLDatabase()' from 'include.inc.php' - added code
+	to support the print view feature - changed string "Output Options"
+	to "Display Options"
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/show.php: - sessions work now with 'register_globals =
+	OFF'; plus: - uses now the 'start_session()' function from
+	'include.inc.php' - replaced "session_is_registered("...")" with
+	"isset($_SESSION['...']" - replaced direct use of
+	'session_register()' function with   custom function
+	'saveSessionVariable()' from 'include.inc.php' - replaced direct
+	use of 'session_unregister()' function with   custom function
+	'deleteSessionVariable()' from 'include.inc.php' - added code to
+	support the print view feature - added code to support
+	user-specific permissions - renamed all occurrences of 'export' to
+	'cite' to better reflect its purpose - we now use the citation
+	style given in 'ini.inc.php' (instead of using a   hard coded
+	citation style)
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/receipt.php: - sessions work now with 'register_globals
+	= OFF'; plus: - uses now the 'start_session()' function from
+	'include.inc.php' - replaced "session_is_registered("...")" with
+	"isset($_SESSION['...']" - added code to support the print view
+	feature - moved code that re-activates the previous query stored in
+	'$oldQuery'   to 'include.inc.php' (function
+	'reactivateOldQuery()')
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/query_modify.php: - renamed all occurrences of 'export'
+	to 'cite' to better reflect its purpose
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/queries.php, code/php/query_manager.php: - renamed all
+	occurrences of 'export' to 'cite' to better reflect its purpose
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/library_search.php: - sessions work now with
+	'register_globals = OFF'; plus: - uses now the 'start_session()'
+	function from 'include.inc.php' - replaced
+	"session_is_registered("...")" with "isset($_SESSION['...']" -
+	replaced direct use of 'session_unregister()' function with
+	custom function 'deleteSessionVariable()' from 'include.inc.php' -
+	replaced direct use of functions 'mysql_connect()' &
+	'mysql_select_db()'   with custom function
+	'connectToMySQLDatabase()' from 'include.inc.php' - replaced direct
+	use of 'mysql_close()' function with custom function
+	'disconnectFromMySQLDatabase()' from 'include.inc.php' - added code
+	to support the print view feature - changed string "Output Options"
+	to "Display Options"
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/index.php: - sessions work now with 'register_globals =
+	OFF'; plus: - uses now the 'start_session()' function from
+	'include.inc.php' - replaced "session_is_registered("...")" with
+	"isset($_SESSION['...']" - replaced direct use of
+	'session_unregister()' function with   custom function
+	'deleteSessionVariable()' from 'include.inc.php' - replaced direct
+	use of functions 'mysql_connect()' & 'mysql_select_db()'   with
+	custom function 'connectToMySQLDatabase()' from 'include.inc.php' -
+	replaced direct use of 'mysql_query()' function with custom
+	function   'queryMySQLDatabase()' from 'include.inc.php' - replaced
+	direct use of 'mysql_close()' function with custom function
+	'disconnectFromMySQLDatabase()' from 'include.inc.php' - added code
+	to support the print view feature - modified HTML table design
+	slightly - added code to support user-specific permissions
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/import_csa_modify.php, code/php/import_csa.php: - added
+	code to support user-specific permissions
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/extract.php: - added code to support user-specific
+	permissions - the style popup containing citation style names is
+	now loaded individually for each user - added title strings to some
+	of the form elements
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* note/user_permissions_table_info.txt: - initial checkin (the
+	'user_permissions' table holds permission settings for individual
+	users)
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* note/group_permissions_table_info.txt: - initial checkin (the
+	'group_permissions' table holds permission settings for user
+	groups)
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* note/groups_table_info.txt: - initial checkin (the 'groups' table
+	holds group names that are used to categorize database users)
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* note/user_types_table_info.txt: - initial checkin (the
+	'user_types' table holds document types visible to the individual
+	user)
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* note/user_styles_table_info.txt: - initial checkin (the
+	'user_styles' table holds citation styles visible to the individual
+	user)
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* note/user_formats_table_info.txt: - initial checkin (the
+	'user_formats' table holds export formats visible to the individual
+	user)
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* note/types_table_info.txt: - initial checkin (the 'types' table
+	holds names and base type specs of document types)
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* note/styles_table_info.txt: - initial checkin (the 'styles' table
+	holds names and file specs of citation style files)
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* note/formats_table_info.txt: - initial checkin (the 'formats'
+	table holds names and file specs for export formats)
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* note/users_table_info.txt: - removed the fields 'records',
+	'queries' and 'permissions' - added field 'group_id'
+
+2004-09-29  Matthias Steffens <refbase@extracts.de>
+
+	* note/user_data_table_info.txt: supplemented description for field
+	'user_groups'
+
+2004-08-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_logout.php: - sessions work now with
+	'register_globals = OFF'; plus: - uses now the 'start_session()'
+	function from 'include.inc.php' - improved logic that attempts to
+	extract the referring URL - replaced "session_is_registered("...")"
+	with "isset($_SESSION['...']" - replaced direct use of
+	'session_unregister()' function with   custom function
+	'deleteSessionVariable()' from 'include.inc.php' - replaced direct
+	use of 'session_register()' function with   custom function
+	'saveSessionVariable()' from 'include.inc.php' - added support for
+	new session variables "userGroups" & "userQueries" - 'error.php' &
+	'query_manager.php' will now always re-locate back to	'index.php'
+
+2004-08-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/import_csa.php: - sessions work now with
+	'register_globals = OFF'; plus: - uses now the 'start_session()'
+	function from 'include.inc.php' - replaced
+	"session_is_registered("...")" with "isset($_SESSION['...']" -
+	replaced direct use of 'session_unregister()' function with
+	custom function 'deleteSessionVariable()' from 'include.inc.php' -
+	added code to support the print view feature
+
+2004-08-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/import_csa_modify.php: - sessions work now with
+	'register_globals = OFF'; plus: - uses now the 'start_session()'
+	function from 'include.inc.php' - replaced
+	"session_is_registered("...")" with "isset($_SESSION['...']" -
+	replaced "$HTTP_REFERER" with "$_SERVER['HTTP_REFERER']" - replaced
+	direct use of 'session_register()' function with   custom function
+	'saveSessionVariable()' from 'include.inc.php' - the (commented)
+	debugging code was adopted to support the new session	management
+	as well as the print view
+
+2004-08-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/extract.php: - sessions work now with 'register_globals
+	= OFF'; plus: - uses now the 'start_session()' function from
+	'include.inc.php' - replaced "session_is_registered("...")" with
+	"isset($_SESSION['...']" - replaced direct use of
+	'session_unregister()' function with   'deleteSessionVariable()'
+	function from 'include.inc.php' - the wording of the page title &
+	header text was changed slightly - added code to support the print
+	view feature - changed string "Output Options" to "Display Options"
+	- the user can now choose whether links should be displayed or not
+	- modified some HTML code to make room for the new "Display Links"
+	checkbox   and "View type" popup
+
+2004-08-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/advanced_search.php: - sessions work now with
+	'register_globals = OFF'; plus: - uses now the 'start_session()'
+	function from 'include.inc.php' - replaced
+	"session_is_registered("...")" with "isset($_SESSION['...']" -
+	replaced direct use of 'session_unregister()' function with
+	'deleteSessionVariable()' function from 'include.inc.php' -
+	replaced direct use of functions 'mysql_connect()' &
+	'mysql_select_db()'   with custom function
+	'connectToMySQLDatabase()' from 'include.inc.php' - replaced direct
+	use of 'mysql_query()' function with custom function
+	'queryMySQLDatabase()' from 'include.inc.php' - replaced direct use
+	of 'mysql_close()' function with custom function
+	'disconnectFromMySQLDatabase()' from 'include.inc.php' - added code
+	to support the print view feature - changed string "Output Options"
+	to "Display Options" - added new user-specific fields to
+	'$userSpecificSortFields' variable
+
+2004-08-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/error.php: - removed incorrect '$viewType' parameter
+	from 'showPageHeader()' function call
+
+2004-08-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/error.php: - uses now the 'start_session()' function
+	from 'include.inc.php'; plus: - added code to support the print
+	view feature - replaced "$HTTP_REFERER" with
+	"$_SERVER['HTTP_REFERER']" - modified the code that actually
+	displays the error no/message	(as a result, the
+	'showErrorMessage()' function was removed)
+
+2004-08-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/queries.php, code/php/query_manager.php,
+	code/php/query_modify.php: - initial checkin
+
+2004-08-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/css/style.css: - updated & added some CSS classes
+
+2004-08-29  Matthias Steffens <refbase@extracts.de>
+
+	* code/css/style_print.css: - initial checkin
+
+2004-08-29  Matthias Steffens <refbase@extracts.de>
+
+	* img/print.gif, img/related.gif, img/web.gif: - initial checkin
+
+2004-08-29  Matthias Steffens <refbase@extracts.de>
+
+	* note/user_data_table_info.txt: - generalized path spec & wording
+	within 'load data code' section
+
+2004-08-29  Matthias Steffens <refbase@extracts.de>
+
+	* note/users_table_info.txt: - generalized path spec & wording
+	within 'load data code' section
+
+2004-08-29  Matthias Steffens <refbase@extracts.de>
+
+	* note/queries_table_info.txt: - initial checkin
+
+2004-08-29  Matthias Steffens <refbase@extracts.de>
+
+	* note/db_field_info.txt, note/auth_table_info.txt: - generalized
+	path spec & wording within 'load data code' section
+
+2004-02-28  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/install.php: The checks for whether the function is
+	executable or whether it is mysql have been commented out, since
+	they don't seem to work on windows.
+
+2004-01-13  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/record.php, code/php/search.php, code/php/show.php: -
+	added code to initialize variables when their respective form
+	parameters aren't set.	  This helps to prevent 'Undefined
+	index/variable' notification messages.
+
+2004-01-13  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/advanced_search.php: - corrected typos: changed
+	'OrigTitleName' to 'origTitleName' and 'OrigTitleSelector' to
+	'origTitleSelector'
+
+2004-01-12  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/advanced_search.php, code/php/error.php,
+	code/php/extract.php, code/php/import_csa.php,
+	code/php/import_csa_modify.php, code/php/index.php,
+	code/php/install.php, code/php/library_search.php,
+	code/php/modify.php, code/php/receipt.php, code/php/record.php,
+	code/php/search.php, code/php/show.php, code/php/simple_search.php,
+	code/php/sql_search.php, code/php/user_details.php,
+	code/php/user_login.php, code/php/user_logout.php,
+	code/php/user_receipt.php, code/php/user_removal.php,
+	code/php/user_validation.php, code/php/users.php: - renamed *.inc
+	files to *.inc.php
+
+2004-01-11  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/install.php: - the script now presents any errors that
+	occurred during execution of the 'exec()' command - form fields now
+	get validated before attempting to install the database - provided
+	a short description for each of the form elements
+
+2004-01-10  Matthias Steffens <refbase@extracts.de>
+
+	* note/refbase_history.txt: - changed publication date to
+	'11-Jan-2004' - added note about the installation web interface
+	('install.php')   as well as the database structure file
+	('install.sql')
+
+2004-01-10  Matthias Steffens <refbase@extracts.de>
+
+	* note/refbase_readme.txt: - updated to refbase 0.7
+
+2004-01-10  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_details.php: - The validation error message now
+	prints in bold and with class = "warning"
+
+2004-01-09  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/install.php: - initial checkin: web interface for
+	installation of refbase 0.7
+
+2004-01-08  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_login.php, code/php/user_logout.php: - if the
+	calling page is 'install.php' we'll redirect to 'index.php' now
+
+2004-01-08  Matthias Steffens <refbase@extracts.de>
+
+	* lit/install.sql: - initial checkin: mysql dump file for use with
+	refbase 0.7
+
+2004-01-05  Matthias Steffens <refbase@extracts.de>
+
+	* note/refbase_history.txt: initial file storage
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* note/grep_patterns.txt: added comments to entry: "Script:
+	Find/Replace in Chosen Records"
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* note/users_table_info.txt: updated to refbase v0.7
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* note/db_field_info.txt, note/user_data_table_info.txt: updated to
+	refbase v0.7
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/users.php: - if parameters aren't set, we now set their
+	corresponding variables to ""	in order to prevent any 'Undefined
+	variable...' messages - by default, we now show the 'last_login'
+	and 'logins' fields instead of the   'institution' field - if a
+	search result consists of only one user, the header string now
+	reads	'1 user found' instead of '1 users found' - added
+	'$oldQuery' parameter to 'showPageHeader()' function call -
+	'buildBrowseLinks()' function call: the last 3 fields
+	('$exportOrder', '$orderBy'   and $headerMsg') are set to "" since
+	they aren't (yet) required there
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_validation.php: - added fields 'last_login' and
+	'logins' to INSERT query - the '$abbrevInstitution' variable now
+	gets registered as session variable
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_removal.php: - changed typo in comment: the correct
+	script name is 'user_receipt.php', not 'receipt.php'
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_receipt.php: - if the 'userAction' parameter isn't
+	set, we now set the '$userAction' variable to ""   in order to
+	prevent any 'Undefined variable...' messages - added '$oldQuery'
+	parameter to 'showPageHeader()' function call
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_login.php: - if '$HTTP_REFERER' isn't set, it will
+	be set to 'index.php' now - 'login_page()' function: defined
+	'$officialDatabaseName' variable as global - added '$oldQuery'
+	parameter to 'showPageHeader()' function call
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_details.php: - now we assign 'NULL' to the
+	'$userID' variable if the 'userID' parameter isn't set - the test,
+	that a normal user matches the specified userID, has been moved
+	upwards - the check if a userID is set now reads 'isset($userID) &&
+	!empty($userID)', instead   of just 'isset($userID)' - added
+	'$oldQuery' parameter to 'showPageHeader()' function call - if no
+	userID was specified we set all form variables to "" to prevent
+	'Undefined   variable...' messages
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/sql_search.php: - moved functions 'showLogin()',
+	'displayHTMLhead()' and 'showPageHeader()'   further down in the
+	script - now we assign '0' to the '$customQuery' variable if the
+	'customQuery'	parameter isn't set - changed 'oldQuery' parameter
+	in 'displayfooter()' function call from   an empty string to its
+	variable form '$oldQuery'
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/simple_search.php: - added '$oldQuery' parameter to
+	'showPageHeader()' function call
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: - common variables from "ini.inc.php" are
+	now included - if parameters aren't set, we now set their
+	corresponding variables to "" in order to   prevent any 'Undefined
+	variable...' messages - provided support for the new database
+	fields 'thesis', 'selected', 'online_publication',
+	'online_citation' and 'orig_record' (where appropriate) - fixed a
+	(potentially disastrous) security hole where non-admin users were
+	allowed to   execute custom queries other than SELECT queries - the
+	admin user is allowed to execute custom SQL statements other than
+	SELECT queries	 (according to his GRANT privileges). This will
+	enable him to make batch changes to   the database, e.g., update or
+	delete multiple records at once. Although the	subsequent results
+	page is not able to show the modified records, it will report the
+	number of records that were affected by the SQL statement - added
+	'$oldQuery' parameter to 'showPageHeader()' function call - similar
+	to the 'url' and 'doi' fields, the 'file' field will get included
+	in every SQL   query in order to enable direct download links
+	within the links column - like the 'serial' field, 'orig_record'
+	gets also included in every search query (which   is required in
+	order to present visual feedback on duplicate records) - depending
+	on the contents of the 'orig_record' field, records will get marked
+	as   'original record' or 'duplicate record' (by placing an
+	appropriate image next to   the record in list view). This is a
+	first step in handling duplicate record entries - provided support
+	for rich text display (like italics, super-/subscript or greek
+	symbols) within the title, keywords and abstract fields by use of a
+	configurable,	extensible and human readable markup syntax. The
+	syntax can be modified/extended by   changing the search & replace
+	actions defined in the '$markupSearchReplacePatterns'	variable in
+	'ini.inc.php' - for records that link to a file, a direct download
+	link will be presented within the   links column in list and
+	details view - when displaying details the order of fields matches
+	again the re-arranged field order   in 'record.php' - re-arranged
+	code so that an unsuccessful query which resulted from 'show.php'
+	won't	return 'No records selected! Please select one or more
+	records...' but instead will   cause the generic message 'Sorry,
+	but your query didn't produce any results' to be   returned -
+	modified the export citation styles to support the new fields
+	'online_publication',	'online_citation' and thesis - moved
+	function 'extractAuthorsLastName()' to 'include.inc' (since this
+	function is   also used by 'modify.php' now)
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/record.php: - provided support for the 'import_csa.php'
+	script - if the 'serialNo' parameter isn't set, we now set the
+	'$serialNo' variable to ""   in order to prevent any 'Undefined
+	variable...' messages - if a user isn't logged in or any normal
+	user is logged in we'll lock the 'location'   and 'file' fields to
+	prevent non-admin users from messing with these fields - provided
+	support for the new database fields 'thesis', 'selected',
+	'contribution_id',   'online_publication', 'online_citation',
+	'orig_record' and 'volume_numeric' - added '$oldQuery' parameter to
+	'showPageHeader()' function call - added file upload support - when
+	adding/updating a record the fields 'created_date', 'created_time',
+	'created_by',	'modified_date', 'modified_time' and 'modified_by'
+	will be set (and remembered)   correctly now - provided support for
+	a page's login status (which indicates the user's login status	 at
+	the time the page was loaded). Now, a page that requires a user to
+	be logged in   must explicitly state that a user IS logged in - it
+	won't suffice that the user did   actually login within another
+	browser window. This will prevent a user from submitting   a
+	'record' form that is in an out-dated state (the page must be
+	reloaded to update its	 form data and login status first) -
+	non-admin users will be only shown their own call number
+	information. This is done to   ease data entry and to prevent
+	non-admin users from messing with other user's call   number
+	information. The data entered by the user will be automatically
+	completed with	 the user's correct call number prefix - again
+	re-arranged elements of the 'record' form
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/receipt.php: - added '$oldQuery' parameter to
+	'showPageHeader()' function call - added new fields 'thesis' and
+	'selected' to sql query strings (where appropriate)
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/modify.php: - common variables from "ini.inc.php" are
+	now included - provided support for a page's login status (which
+	indicates the user's login status   at the time the page was
+	loaded). Now, a page that requires a user to be logged in   must
+	explicitly state that a user IS logged in - it won't suffice that
+	the user did   actually login within another browser window. This
+	will prevent a user from submitting   a page which is in an
+	out-dated state (the page must be reloaded to update its data	and
+	login status first) - re-arranged order in which form values get
+	extracted (matching more closely the field   order of the 'record'
+	form) - provided support for the new database fields 'thesis',
+	'selected', 'contribution_id',	 'online_publication',
+	'online_citation', 'orig_record' and 'volume_numeric' - added
+	'getUploadInfo()' function call that checks if a file was uploaded
+	- added validation of the <upload file> field - for normal users
+	being logged in, we also validate the 'call_number' field now -
+	enhanced the processing code for the fields 'location' and
+	'call_number' - added processing code for the fields <upload file>,
+	'contribution_id' and	'online_publication' - Instead of deleting
+	data, deleted records will now be moved to the 'deleted' table.
+	Data will be stored within the 'deleted' table until they are
+	removed manually. This	  is to provide the admin with a simple
+	recovery method in case a user did delete some	  data by accident
+	- added code for sending a notification email to a (mailing list)
+	email address when a   new record has been added to the database
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/library_search.php: - added '$oldQuery' parameter to
+	'showPageHeader()' function call
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/index.php: - replaced the fixed string 'polar & marine'
+	with the '$scientificFieldDescriptor'	variable (which is defined
+	in 'ini.inc.php') - added '$oldQuery' parameter to
+	'showPageHeader()' function call - added link to 'import_csa.php'
+	in features list - added 'selected' field selector to
+	'myRefsSearch' form - modified the section containing pre-defined
+	search links: the links now make   use of search features provided
+	by the new 'show.php' script
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/extract.php: - added '$oldQuery' parameter to
+	'showPageHeader()' function call - now we provide a hidden default
+	value for the 'submit' form tag
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/error.php: - if '$HTTP_REFERER' isn't set, it will be
+	set to 'index.php' now - added '$oldQuery' parameter to the
+	'showPageHeader()' and 'showErrorMessage()'   function calls - the
+	'Add Record' link provided by the 'showErrorMessage()' function now
+	includes   the '$oldQuery' parameter - 'showErrorMessage()'
+	function: changed function call date(r) to date('r')
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/advanced_search.php: - added form fields for the new
+	database fields 'thesis' and 'selected' - similarly, 'thesis' and
+	'selected' were added to the sort menues - popup contents of the
+	'created_by' and 'modified_by' fields are now split by	 ' *[,;()]
+	*' (so that names and email addresses get separated from each
+	other) - added 'All' as additional non-database value to the
+	'user_keys' popup - added '$oldQuery' parameter to
+	'showPageHeader()' function call
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/css/style.css: - added classes '.smaller', '.small',
+	'.smallup', '.footer' and '.warning2'	(note that, currently, only
+	the classes '.header', '.smallup', '.warning'	and '.warning2' are
+	actually used)
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* img/doi.gif: the doi icon now includes an arrow indicating that
+	its an external link
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* img/ok.gif, img/caution.gif: initial file storage
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* img/file.gif, img/www.gif: initial file storage
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* note/deleted_field_info.txt, img/file_PDF.gif: initial file
+	storage
+
+2004-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/import_csa.php, code/php/import_csa_modify.php,
+	code/php/show.php: initial file storage
+
+2003-09-07  Matthias Steffens <refbase@extracts.de>
+
+	* note/users_table_info.txt: - changed 'last_login' column type to
+	'DATETIME'
+
+2003-09-07  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/users.php: - enabled 'Search within Results'
+	functionality - logic whether to display a delete link or not is
+	now based on 'user_id'	 (which circumvents a problem when 'email'
+	wasn't included in the query) - similar to 'search.php', we now
+	display divider lines above and below search results data
+
+2003-09-07  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_validation.php: - UPDATE and INSERT now populate
+	the fields 'created_date', 'created_time',   'created_by',
+	'modified_date', 'modified_time', 'modified_by' (if necessary)
+
+2003-09-07  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_login.php: - re-arranged code so that all queries
+	can be rooted thru *one* database connection - the 'last_login' and
+	'logins' fields will now get properly calculated on login
+
+2003-09-07  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: - for non-admin users we now ensure that
+	custom queries cannot contain anything	 else but SELECT queries
+	(i.e., disallow 'drop table...' or other evil stuff) - moved
+	function 'buildRefineSearchElements()' to 'include.inc' and adopted
+	the   relevant function call to match its new incarnation - moved
+	function 'splitAndMerge()' to 'include.inc' - function
+	'extractFormElementsRefine()': fixed buggy grep patterns that 1)
+	check	whether a particular field is already displayed or not, 2)
+	remove a column - changed header info slightly
+
+2003-09-06  Matthias Steffens <refbase@extracts.de>
+
+	* note/users_table_info.txt: (update)
+
+2003-09-06  Matthias Steffens <refbase@extracts.de>
+
+	* note/db_field_info.txt: - removed the user specific fields
+	'marked', 'copy', 'user_file', 'user_keys' and 'user_notes' - added
+	field 'orig_record' - changed column types for some fields
+
+2003-09-06  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/users.php: - the 'buildBrowseLinks' function call
+	includes the now required variables   '$exportOrder', '$orderBy',
+	'$headerMsg'
+
+2003-09-06  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_logout.php: - now accepts a referer passed to the
+	script as parameter
+
+2003-09-06  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/sql_search.php: - added processing of parameters
+	'displayType', 'exportFormat', 'exportOrder'   and 'oldQuery'
+	(which all now get passed to the script and will then get   written
+	back into hidden form tags)
+
+2003-09-06  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: - character encoding of 'search.php' was set
+	to 'Western (Iso Latin 1)' aka	 'ISO-8859-1' (see
+	'reArrangeAuthorContents()' function for details) - re-arranged
+	parts of the script so that variables are correctly set when needed
+	- added processing of fields '$exportOrder', '$orderBy' and
+	'$headerMsg' - display and querying of user specific fields is now
+	handled depending on whether   a user is logged in or not - made
+	sure that a user can only display his own user specific fields -
+	renamed field 'reprint_status' to 'copy' - added the parameters
+	'$displayType', '$exportFormat', '$exportOrder' and   '$oldQuery'
+	to the 'your query' link so that they are passed to
+	'sql_search.php' - added the parameters '$displayType',
+	'$exportFormat' and '$exportOrder' to the   '$oldQuery' variable -
+	'$orderBy' wasn't rawurlencoded before embedding into any hidden
+	form tag - added '$exportOrder', '$orderBy' and '$headerMsg'
+	parameters to browse links - when displaying details the order of
+	fields matches the re-arranged field order   in 'record.php' -
+	export output can now optionally list records in blocks sorted by
+	year - by default, exported records will now feature a 'show
+	details' link to the right - added 'sort by author|year' popup at
+	bottom of page that controls export output - added processing of
+	missing/new fields to the 'extractFormElementsAdvanced()'   and
+	'extractFormElementsMyRefs()' functions - values of the 'marked'
+	field are now 'yes' and 'no' (instead of 'Y' and 'N')
+
+2003-09-06  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/record.php: - we only append user specific fields to any
+	sql query if a user is logged in - if a user is logged in, the FROM
+	statement of any sql query now includes the   necessary 'LEFT JOIN
+	user_data...' part in order to join columns from both tables -
+	renamed field 'reprint_status' to 'copy' - added new elements to
+	the 'record' form (field 'user_file', 'is Editor' check box   and
+	'locationSelector' popup) - re-arranged elements of the 'record'
+	form so that user specific fields now group   together at the
+	bottom of the form - user specific fields are now indicated by a
+	light yellow background - the 'call_number' and 'serial' fields get
+	a grey background, while the 'type'   field was moved to the header
+	block (in both cases to emphasize their importance)
+
+2003-09-06  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/receipt.php: - we only append user specific fields to
+	any sql query if a user is logged in - if a user is logged in, the
+	FROM statement of any sql query now includes the   necessary 'LEFT
+	JOIN user_data...' part in order to join columns from both tables
+
+2003-09-06  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/modify.php: - added processing of new items (field
+	'user_file', 'is Editor' check box   and 'locationSelector' popup)
+	- renamed field 'reprint_status' to 'copy' - re-arranged parts of
+	the script - provided some magic that figures out what do to
+	depending on the state of the	'is Editor' check box and the
+	content of the 'author', 'editor' and 'type' fields - the
+	calculation fields 'first_author', 'author_count' and 'first_page'
+	will be   setup correctly now (Note: proper handling of the 'pages'
+	field is still missing!) - depending on the value of the
+	'locationSelector' popup, the user's name and	email address will
+	be added/removed from the 'location' field automatically - the user
+	specific fields will be now written to the 'user_data' table
+
+2003-09-06  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/library_search.php: - the 'Display Links' checkbox is
+	now marked by default
+
+2003-09-06  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/index.php: - added 'copy' and 'user_file' fields to the
+	'Show My Refs' form - extended the width of the right table column
+	to make room for the new fields
+
+2003-09-06  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/extract.php: - we now include the '$showLinks' variable
+	within the 'extractSearch' form   so that links get displayed on
+	any 'display details' page - added 'sort by author|year' popup that
+	controls export output
+
+2003-09-06  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/error.php: - improved handling of quotes in
+	'$HeaderString' variable
+
+2003-09-06  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/advanced_search.php: - if a user is logged in, the form
+	(as well as the sort popups) will include   any user specific
+	fields, otherwise not - re-arranged elements of the
+	'advancedSearch' form so that user specific fields   now group
+	together at the bottom of the form - adopted the 'selectDistinct()'
+	function so that it handles querying of user   specific fields
+	correctly
+
+2003-09-06  Matthias Steffens <refbase@extracts.de>
+
+	* note/user_data_table_info.txt: initial checkin
+
+2003-07-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_receipt.php: - now 'user_receipt.php' also works as
+	feedback page before deleting a user
+
+2003-07-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_removal.php: - now we save an informative message
+	before redirecting to 'users.php'
+
+2003-07-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/users.php: - added 'delete user' link; plus: - removed
+	commented code
+
+2003-07-04  Matthias Steffens <refbase@extracts.de>
+
+	* img/delete.gif: - Initial file storage: Trash Icon
+
+2003-07-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/users.php: - Initial file storage: This script shows the
+	admin a list of all user entries   available within the 'users'
+	table. User data will be shown in the familiar	 column view,
+	complete with links to show a user's details and add, edit   or
+	delete a user.
+
+2003-07-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_removal.php: - Initial file storage: This script
+	deletes a user from the 'users' and 'auth' tables.    The script
+	can be only called by the admin. If the removal succeeds,    it
+	redirects to 'users.php'.
+
+2003-07-04  Matthias Steffens <refbase@extracts.de>
+
+	* note/refbase_readme.txt: updated to release version 0.6.1b1
+
+2003-06-30  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_receipt.php: - For admins, the 'Edit User Data'
+	link will be always shown now (formerly, it wasn't shown for the
+	admin's own account details); plus: - variable settings from
+	'ini.inc.php' are now honoured correctly
+
+2003-06-30  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_validation.php: - password validation now happens
+	for UPDATEs as well; plus: - email validation now happens for
+	admins as well - if the user provided a new password, the 'auth'
+	table will be updated accordingly - now, INSERTs will be allowed to
+	any visitor who isn't logged in IF the variable '$addNewUsers' in
+	'ini.inc.php' is set to 'everyone'!   Note that this feature is
+	actually only meant to add the very first user to the users table.
+	After you've done so, it is highly recommended to change the
+	value of '$addNewUsers' to 'admin'!
+
+2003-06-30  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_details.php: - '$HeaderString' now reads "Add a new
+	user..." if the admin calls 'user_details.php' w/o any 'userID';
+	plus:	(the same applies for a visitor who's not logged in when
+	'$addNewUsers' is set to 'everyone' in 'ini.inc.php') - the submit
+	button now reads "Add User" if the admin calls 'user_details.php'
+	w/o any 'userID'   (the same applies for a visitor who's not logged
+	in when '$addNewUsers' is set to 'everyone' in 'ini.inc.php') - a
+	user can now change his password later on - when specifying a
+	password the user now needs to type it twice (will be rejected if
+	different) - the session variables 'errors' & 'formVars' will now
+	get unregistered after reading their values - variable settings
+	from 'ini.inc.php' are now honoured correctly
+
+2003-06-30  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_logout.php: - added parsing of 'users.php' when
+	redirecting the user to the calling page - corrected wrong wording
+	in '$HeaderString'
+
+2003-06-30  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_login.php, code/php/library_search.php,
+	code/php/advanced_search.php, code/php/receipt.php,
+	code/php/extract.php, code/php/simple_search.php,
+	code/php/sql_search.php, code/php/error.php, code/php/record.php: -
+	variable settings from 'ini.inc.php' are now honoured correctly
+
+2003-06-30  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: - added function
+	'extractFormElementsMyRefs()'; plus: - similar to $showRows,
+	$rowOffset is now set to 0 if a wrong number (<=0) was given - the
+	functions 'buildBrowseLinks(), 'buildFieldNameLinks()' &
+	'newORDERclause()' were moved to 'include.inc' - variable settings
+	from 'ini.inc.php' are now honoured correctly
+
+2003-06-30  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/index.php: - added 'Show My Refs' form which gets
+	displayed after successful login; plus: - variable settings from
+	'ini.inc.php' are now honoured correctly
+
+2003-06-30  Matthias Steffens <refbase@extracts.de>
+
+	* code/css/style.css: - added 'A:hover' definition to the css file
+
+2003-06-02  Matthias Steffens <refbase@extracts.de>
+
+	* note/GNU_general_public_license.txt: initial checkin
+
+2003-06-02  Matthias Steffens <refbase@extracts.de>
+
+	* note/refbase_readme.txt: initial checkin (refbase package release
+	0.6)
+
+2003-06-02  Matthias Steffens <refbase@extracts.de>
+
+	* code/css/style.css, code/php/advanced_search.php,
+	code/php/confirmDelete.js, code/php/error.php,
+	code/php/extract.php, code/php/index.php,
+	code/php/library_search.php, code/php/modify.php,
+	code/php/receipt.php, code/php/record.php, code/php/search.php,
+	code/php/simple_search.php, code/php/sql_search.php,
+	code/php/user_details.php, code/php/user_login.php,
+	code/php/user_logout.php, code/php/user_receipt.php,
+	code/php/user_validation.php: - refbase package release 0.6  \n-
+	added file header with project and copyright information
+
+2003-06-02  Matthias Steffens <refbase@extracts.de>
+
+	* note/copyright_notice.txt: initial checkin
+
+2003-06-02  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: - clicking on 'edit details' caused a SQL
+	syntax error when invoked   from the results page that gets
+	diplayed as a result of clicking   the 'added/edited most recently'
+	links on the main page; fixed.
+
+2003-06-02  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_validation.php: - now user data will be sent to the
+	database admin for approval
+
+2003-01-20  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/advanced_search.php, code/php/index.php,
+	code/php/library_search.php, code/php/modify.php,
+	code/php/record.php, code/php/search.php,
+	code/php/simple_search.php, code/php/user_details.php,
+	code/php/user_login.php, code/php/user_receipt.php,
+	code/php/user_validation.php: - worked around mysql_errno = 0
+	messages that get returned by the Roxen server on success
+
+2003-01-19  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: - introduced sessions to provide login
+	awareness; plus: - standardized file header + inital code - error
+	messages are now redirected to 'error.php' by use of
+	'showErrorMsg()'   (from 'include.inc') instead of using
+	'showerror()' (from 'error.inc') - any error messages now get
+	displayed in the header via '$HeaderString' - the HTML header and
+	the visible header now get displayed by the functions
+	'displayHTMLhead()' and 'showPageHeader()', respectively (both from
+	'header.inc') - Removed the local 'showheader()' function which
+	isn't needed anymore - '$showMaxRow' now gets calculated outside
+	any function so that its available to	both, '$HeaderString' as
+	well as the 'displayRows()' function - changed request method of
+	'queryResults' form to 'GET' in order to avoid referrer   problems
+	when the user clicks on login/logout. Consequently, variables in
+	function   'extractFormElementsQueryResults()' now get extracted
+	via '$_REQUEST' - added 'call_number' to the 'search within
+	results' popup
+
+2003-01-19  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/record.php: - introduced sessions to provide login
+	awareness; plus: - standardized file header + inital code - error
+	messages are now redirected to 'error.php' by use of
+	'showErrorMsg()'   (from 'include.inc') instead of using
+	'showerror()' (from 'error.inc') - any error messages now get
+	displayed in the header via '$HeaderString' - the HTML header and
+	the visible header now get displayed by the functions
+	'displayHTMLhead()' and 'showPageHeader()', respectively (both from
+	'header.inc') - Removed the local 'showheader()' function which
+	isn't needed anymore - inserted (yet non-functional!) 'onsubmit'
+	form code which is meant to popup   a javascript confirmation
+	dialog before deleting any record - inserted code to prepare for
+	data validation (which is still disabled in 'modify.php'!)
+
+2003-01-19  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/receipt.php: - introduced sessions to provide login
+	awareness; plus: - standardized file header + inital code - error
+	messages are not displayed by 'receipt.php' anymore (but by
+	'error.php'),	so that the (now redundant) custom function
+	'showReceiptError()' was removed - any error messages now get
+	displayed in the header via '$HeaderString' - the HTML header and
+	the visible header now get displayed by the functions
+	'displayHTMLhead()' and 'showPageHeader()', respectively (both from
+	'header.inc') - Removed the local 'showheader()' function which
+	isn't needed anymore
+
+2003-01-19  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/modify.php: - introduced sessions to provide login
+	awareness; plus: - standardized file header + inital code - error
+	messages are now redirected to 'error.php' by use of
+	'showErrorMsg()'   (from 'include.inc') instead of using
+	'showerror()' (from 'error.inc') - inserted code to provide data
+	validation features (but it's still disabled!) - now fills
+	automatic fields on 'edit' (modified_date, modified_time,
+	modified_by)   and 'add' (the latter plus: created_date,
+	created_time, created_by) - 'add': meaningful values will get
+	inserted for 'location' and 'call_number' fields
+
+2003-01-19  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/index.php: - introduced sessions to provide login
+	awareness; plus: - standardized file header + inital code - error
+	messages are now redirected to 'error.php' by use of
+	'showErrorMsg()'   (from 'include.inc') instead of using
+	'showerror()' (from 'error.inc') - any error messages now get
+	displayed in the header via '$HeaderString' - the HTML header and
+	the visible header now get displayed by the functions
+	'displayHTMLhead()' and 'showPageHeader()', respectively (both from
+	'header.inc') - Removed the local 'showheader()' function which
+	isn't needed anymore - login form: fixed incorrect action and input
+	names - the login form will only get displayed if the user isn't
+	logged in - modified URL of the link that displays the ten lastly
+	created records - added a link that displays the ten lastly
+	modified records
+
+2003-01-19  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/extract.php: - introduced sessions to provide login
+	awareness; plus: - standardized file header + inital code - any
+	error messages now get displayed in the header via '$HeaderString'
+	- the HTML header and the visible header now get displayed by the
+	functions   'displayHTMLhead()' and 'showPageHeader()',
+	respectively (both from 'header.inc') - Removed the local
+	'showheader()' function which isn't needed anymore
+
+2003-01-19  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/sql_search.php: - introduced sessions to provide login
+	awareness; plus: - standardized file header + inital code - error
+	messages are now redirected to 'error.php' by use of
+	'showErrorMsg()'   (from 'include.inc') instead of using
+	'showerror()' (from 'error.inc') - any error messages now get
+	displayed in the header via '$HeaderString' - the HTML header and
+	the visible header now get displayed by the functions
+	'displayHTMLhead()' and 'showPageHeader()', respectively (both from
+	'header.inc') - Removed the local 'showheader()' function which
+	isn't needed anymore
+
+2003-01-19  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/advanced_search.php, code/php/simple_search.php,
+	code/php/library_search.php: - introduced sessions to provide login
+	awareness; plus: - standardized file header + inital code - error
+	messages are now redirected to 'error.php' by use of
+	'showErrorMsg()'   (from 'include.inc') instead of using
+	'showerror()' (from 'error.inc') - any error messages now get
+	displayed in the header via '$HeaderString' - the HTML header and
+	the visible header now get displayed by the functions
+	'displayHTMLhead()' and 'showPageHeader()', respectively (both from
+	'header.inc') - Removed the local 'showheader()' function which
+	isn't needed anymore
+
+2003-01-19  Matthias Steffens <refbase@extracts.de>
+
+	* note/db_field_info.txt: changed the file header slightly
+
+2003-01-19  Matthias Steffens <refbase@extracts.de>
+
+	* note/auth_table_info.txt, note/users_table_info.txt: initial
+	checkin
+
+2003-01-19  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/user_details.php, code/php/user_validation.php,
+	code/php/user_receipt.php, code/php/confirmDelete.js: initial
+	checkin
+
+2003-01-19  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/error.php, code/php/user_login.php,
+	code/php/user_logout.php: initial checkin
+
+2003-01-19  Matthias Steffens <refbase@extracts.de>
+
+	* code/css/style.css: added '.warning' class
+
+2003-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/modify.php: - performs adding/editing/deleting of
+	records
+
+2003-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/receipt.php: - displays a feedback page after
+	adding/editing/deleting a record
+
+2003-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/sql_search.php: - widened table/hr width from 80% to
+	95%; plus: - enhanced processing of '\' in sql queries
+
+2003-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/index.php: - widened table/hr width from 80% to 95%;
+	plus: - changed title of 'loginName' form field to 'Email Address'
+
+2003-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/extract.php: - widened table/hr width from 80% to 95%
+
+2003-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/record.php: - added support for previously displayed
+	results page; plus: - enhanced display of serial number - added a
+	'Delete Record' button - added code to avoid erroneous reaction on
+	already deleted records - form contents get sent to 'modify.php'
+	which performs the actual modifications (add/edit/delete) - widened
+	table/hr width from 80% to 95%
+
+2003-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/advanced_search.php, code/php/library_search.php,
+	code/php/simple_search.php: - widened table/hr width from 80% to
+	95%
+
+2003-01-04  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: - generates the query URL of the currently
+	displayed results page (which will get included into various
+	links); plus: - removed 'x' column title; widened table width from
+	80% to 95% - added 'abbrev_journal' and 'issue' to 'search within
+	results' popup - enhanced processing of '\' in sql queries
+
+2002-12-08  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: function 'extractFormElementsRefine' now
+	properly strips 'AND serial RLIKE \".+\"' from newly created WHERE
+	clause
+
+2002-12-08  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/advanced_search.php, code/php/extract.php,
+	code/php/library_search.php, code/php/record.php,
+	code/php/simple_search.php, code/php/sql_search.php: updated header
+	table layout
+
+2002-12-08  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: reworked layout of 'Search within Results'
+	form: features now radio buttons to show/hide columns and
+	include/exclude matched records / we now use a divider line instead
+	of white space to separate results header/footer and results data
+
+2002-12-08  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: removed spacer rows before and after header
+	divider line
+
+2002-12-08  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/index.php: removed spacer row before header divider line
+
+2002-12-08  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/index.php: modified header table layout
+
+2002-12-08  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: a checkbox now controls optional display of
+	the field that was used for refining search results / modified
+	header table layout
+
+2002-12-07  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: SEARCH WITHIN RESULTS functionality:
+	re-organized 'displayColumns' function / inserted spacer rows
+	between browse links and results data columns / added functions
+	'buildRefineSearchElements' and 'extractFormElementsRefine' / added
+	processing code for formType 'refineSearch' / REMOVED BUGS: for
+	quickSearch results: when building the appropriate SQL query, we
+	now strip the first WHERE clause (WHERE serial RLIKE '.+' AND) as
+	is done for simpleSearch results / added the 'showQuery' value in
+	hidden tag to 'queryResults' form so that it is available on
+	'display details' (batch display)
+
+2002-10-28  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/record.php, img/details.gif, img/edit.gif: initial
+	checkin
+
+2002-10-28  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: added links 'show details' and 'edit
+	records' to the links column
+
+2002-10-28  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/advanced_search.php: location field: enabled splitting
+	of field contents into substrings
+
+2002-10-24  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: added function 'extractAuthorsLastName',
+	completed parsing of exportFormat 'Text Citation', removed
+	'first_author' + added 'serial' to Export query in function
+	'extractFormElementsQueryResults', added 'author_count' + 'serial'
+	to query in function 'extractFormElementsExtract'
+
+2002-10-24  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/extract.php: synchronized exportFormat options with
+	those currently available in 'search.php'
+
+2002-10-24  Matthias Steffens <refbase@extracts.de>
+
+	* code/css/style.css: removed 'background' attribute from link and
+	heading specifications
+
+2002-10-23  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: Display of details: removed spacer row &
+	divider line, main fields now print with a light grey background,
+	fixed buggy if-statement that handles display of divider lines
+	between records
+
+2002-10-23  Matthias Steffens <refbase@extracts.de>
+
+	* img/refbase_credit.gif: changed red color tone to hex 990000
+	matching the color of css headings
+
+2002-10-20  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/library_search.php: added again info comment 'Searches
+	will be restricted...' that got deleted by accident
+
+2002-10-20  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/library_search.php: fixed false SELECT query in
+	selectDistinct function
+
+2002-10-20  Matthias Steffens <refbase@extracts.de>
+
+	* img/logo.gif, img/refbase_credit.gif: initial checkin
+
+2002-10-20  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: added hidden 'orderBy' + 'showLinks' form
+	fields, changed 'link.jpg' to 'link.gif', fixed error on submitting
+	empty 'quick search'. Display of details ('displayRows'): made all
+	fields visible - no matter if empty or not, re-arranged fields +
+	added divider line, removed display of 'created/modified' fields,
+	enabled 'Links' column + bold display of author/title/year fields
+
+2002-10-20  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/index.php: changed type of pwd entry field to
+	'password', changed login form action to 'index.php', changed
+	'images' dir to 'img'
+
+2002-10-18  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: changed name of 'images' dir to 'img',
+	changed names of arrow picts from german to english
+
+2002-10-18  Matthias Steffens <refbase@extracts.de>
+
+	* code/css/style.css: changed line break encoding from 'Macintosh'
+	to 'Unix'
+
+2002-10-18  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: added 'extractFormElementsQuick()' function
+	which parses the 'quick search' form provided by the main page
+	('index.php')
+
+2002-10-18  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/index.php: added table column with login & quick search
+	forms plus refbase logo
+
+2002-10-18  Matthias Steffens <refbase@extracts.de>
+
+	* code/css/style.css: replaced ".toolname" class with ".header"
+	class, added "h5,h6" attribute
+
+2002-10-17  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/index.php: added refbase info and link to the about
+	section
+
+2002-10-15  Matthias Steffens <refbase@extracts.de>
+
+	* code/css/style.css, code/php/advanced_search.php,
+	code/php/extract.php, code/php/index.php,
+	code/php/library_search.php, code/php/search.php,
+	code/php/simple_search.php, code/php/sql_search.php, img/doi.gif,
+	img/link.gif, img/logo.jpg, img/sort_asc.gif, img/sort_desc.gif,
+	note/db_field_info.txt, note/grep_patterns.txt: Initial revision
+
+2002-10-15  Matthias Steffens <refbase@extracts.de>
+
+	* code/css/style.css, code/php/advanced_search.php,
+	code/php/extract.php, code/php/index.php,
+	code/php/library_search.php, code/php/search.php,
+	code/php/simple_search.php, code/php/sql_search.php, img/doi.gif,
+	img/link.gif, img/logo.jpg, img/sort_asc.gif, img/sort_desc.gif,
+	note/db_field_info.txt, note/grep_patterns.txt: initial checkin
+
