@@ -686,9 +686,15 @@
       }
       // name
       //   editor
-      if (!empty($row['editor']))
-        $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $row['editor'], "personal",
-                                   "editor");
+      if (!empty($row['editor'])) {
+        $editor=$row['editor'];
+        if (ereg(" *\(eds?\)$", $editor))
+          $editor = ereg_replace("[ \r\n]*\(eds?\)", "", $editor);
+        $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $editor,
+                                   "personal", "editor");
+        foreach ($nameArray as $singleName)
+          $record->addXMLBranch($singleName);
+      }
 
       // series
       if ((!empty($row['series_editor'])) || (!empty($row['series_title'])) ||
