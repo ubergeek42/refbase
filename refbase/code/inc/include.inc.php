@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   02-Oct-04, 01:11
+	// Modified:   02-Oct-04, 19:29
 
 	// This file contains important
 	// functions that are shared
@@ -33,7 +33,7 @@
 	// --------------------------------------------------------------------
 
 	// Start a session:
-	function start_session()
+	function start_session($updateUserFormatsStylesTypesPermissions)
 	{
 		global $loginEmail;
 		global $loginUserID;
@@ -54,7 +54,8 @@
 			$loginLastName = $_SESSION['loginLastName'];
 			$abbrevInstitution = $_SESSION['abbrevInstitution'];
 		}
-		else // if the user isn't logged in we set the available export formats, citation styles, document types and permissions to
+		elseif ($updateUserFormatsStylesTypesPermissions)
+			// if the user isn't logged in we set the available export formats, citation styles, document types and permissions to
 			// the defaults which are specified in the 'formats', 'styles', 'types' and 'user_permissions' tables for 'user_id = 0'.
 			// (a 'user_id' of zero is used within these tables to indicate the default settings if the user isn't logged in)
 		{
@@ -359,21 +360,21 @@
 
 		if ("$orig_fieldname" == "pages") // when original field name = 'pages' then...
 			{
-				$newORDER = str_replace("ORDER BY pages", "ORDER BY first_page DESC", $newORDER); // ...sort by 'first_page' instead
+				$newORDER = eregi_replace("ORDER BY pages", "ORDER BY first_page DESC", $newORDER); // ...sort by 'first_page' instead
 				$orig_fieldname = "first_page"; // adjust '$orig_fieldname' variable accordingly
 			}
 
 		if ("$orig_fieldname" == "volume") // when original field name = 'volume' then...
 			{
-				$newORDER = str_replace("ORDER BY volume", "ORDER BY volume_numeric DESC", $newORDER); // ...sort by 'volume_numeric' instead
+				$newORDER = eregi_replace("ORDER BY volume", "ORDER BY volume_numeric DESC", $newORDER); // ...sort by 'volume_numeric' instead
 				$orig_fieldname = "volume_numeric"; // adjust '$orig_fieldname' variable accordingly
 			}
 
 		if ("$orig_fieldname" == "marked") // when original field name = 'marked' then...
-			$newORDER = str_replace("ORDER BY marked", "ORDER BY marked DESC", $newORDER); // ...sort 'marked' column in DESCENDING order (so that 'yes' sorts before 'no')
+			$newORDER = eregi_replace("ORDER BY marked", "ORDER BY marked DESC", $newORDER); // ...sort 'marked' column in DESCENDING order (so that 'yes' sorts before 'no')
 
 		if ("$orig_fieldname" == "last_login") // when original field name = 'last_login' (defined in 'users' table) then...
-			$newORDER = str_replace("ORDER BY last_login", "ORDER BY last_login DESC", $newORDER); // ...sort 'last_login' column in DESCENDING order (so that latest date+time sorts first)
+			$newORDER = eregi_replace("ORDER BY last_login", "ORDER BY last_login DESC", $newORDER); // ...sort 'last_login' column in DESCENDING order (so that latest date+time sorts first)
 
 		$orderBy = ereg_replace("ORDER BY ", "", $newORDER); // remove 'ORDER BY ' phrase in order to store just the 'ORDER BY' field spec within the 'orderBy' variable
 
@@ -421,8 +422,8 @@
 	//	REPLACE ORDER CLAUSE IN SQL QUERY
 	function newORDERclause($newORDER, $query)
 	{
-		$queryNewOrder = str_replace('LIMIT','¥LIMIT',$query); // put a unique delimiter in front of the 'LIMIT'... parameter (in order to keep any 'LIMIT' parameter)
-		$queryNewOrder = ereg_replace('ORDER BY [^¥]+',$newORDER,$queryNewOrder); // replace old 'ORDER BY'... parameter by new one
+		$queryNewOrder = eregi_replace('LIMIT','¥LIMIT',$query); // put a unique delimiter in front of the 'LIMIT'... parameter (in order to keep any 'LIMIT' parameter)
+		$queryNewOrder = eregi_replace('ORDER BY [^¥]+',$newORDER,$queryNewOrder); // replace old 'ORDER BY'... parameter by new one
 		$queryNewOrder = str_replace('¥',' ',$queryNewOrder); // remove the unique delimiter again
 		$queryURLNewOrder = rawurlencode($queryNewOrder); // URL encode query
 		return $queryURLNewOrder;
@@ -1339,10 +1340,10 @@ EOF;
 		if (!isset($_SESSION['loginEmail'])) // if NO user is logged in...
 		{
 			// ... and any user specific fields are part of the SELECT or ORDER BY statement...
-			if (ereg("(SELECT|ORDER BY|,) (marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)",$sqlQuery))
+			if (eregi("(SELECT|ORDER BY|,) (marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)",$sqlQuery))
 			{
 				// if the 'SELECT' clause contains any user specific fields:
-				if (preg_match("/SELECT(.(?!FROM))+?(marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)/",$sqlQuery))
+				if (preg_match("/SELECT(.(?!FROM))+?(marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)/i",$sqlQuery))
 				{
 					// save an appropriate error message:
 					$HeaderString = "<b><span class=\"warning\">Display of user specific fields was ommitted!</span></b>";
@@ -1352,26 +1353,26 @@ EOF;
 					saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 				}
 	
-				$sqlQuery = ereg_replace("(SELECT|ORDER BY) (marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)( DESC)?", "\\1 ", $sqlQuery); // ...delete any user specific fields from beginning of 'SELECT' or 'ORDER BY' clause
-				$sqlQuery = ereg_replace(", (marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)( DESC)?", "", $sqlQuery); // ...delete any remaining user specific fields from 'SELECT' or 'ORDER BY' clause
-				$sqlQuery = ereg_replace("(SELECT|ORDER BY) *, *", "\\1 ", $sqlQuery); // ...remove any field delimiters that directly follow the 'SELECT' or 'ORDER BY' terms
+				$sqlQuery = eregi_replace("(SELECT|ORDER BY) (marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)( DESC)?", "\\1 ", $sqlQuery); // ...delete any user specific fields from beginning of 'SELECT' or 'ORDER BY' clause
+				$sqlQuery = eregi_replace(", (marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)( DESC)?", "", $sqlQuery); // ...delete any remaining user specific fields from 'SELECT' or 'ORDER BY' clause
+				$sqlQuery = eregi_replace("(SELECT|ORDER BY) *, *", "\\1 ", $sqlQuery); // ...remove any field delimiters that directly follow the 'SELECT' or 'ORDER BY' terms
 	
-				$sqlQuery = preg_replace("/SELECT *(?=FROM)/", "SELECT author, title, year, publication, volume, pages ", $sqlQuery); // ...supply generic 'SELECT' clause if it did ONLY contain user specific fields
-				$sqlQuery = preg_replace("/ORDER BY *(?=LIMIT|GROUP BY|HAVING|PROCEDURE|FOR UPDATE|LOCK IN|$)/", "ORDER BY author, year DESC, publication", $sqlQuery); // ...supply generic 'ORDER BY' clause if it did ONLY contain user specific fields
+				$sqlQuery = preg_replace("/SELECT *(?=FROM)/i", "SELECT author, title, year, publication, volume, pages ", $sqlQuery); // ...supply generic 'SELECT' clause if it did ONLY contain user specific fields
+				$sqlQuery = preg_replace("/ORDER BY *(?=LIMIT|GROUP BY|HAVING|PROCEDURE|FOR UPDATE|LOCK IN|$)/i", "ORDER BY author, year DESC, publication", $sqlQuery); // ...supply generic 'ORDER BY' clause if it did ONLY contain user specific fields
 			}
 	
-			if ((ereg(".+search.php",$referer)) AND (ereg("LEFT JOIN user_data",$sqlQuery))) // if the calling script ends with 'search.php' (i.e., is NOT 'show.php', see note below!) AND the 'LEFT JOIN...' statement is part of the 'FROM' clause...
-				$sqlQuery = ereg_replace("FROM refs LEFT JOIN.+WHERE","FROM refs WHERE",$sqlQuery); // ...delete 'LEFT JOIN...' part from 'FROM' clause
+			if ((eregi(".+search.php",$referer)) AND (eregi("LEFT JOIN user_data",$sqlQuery))) // if the calling script ends with 'search.php' (i.e., is NOT 'show.php', see note below!) AND the 'LEFT JOIN...' statement is part of the 'FROM' clause...
+				$sqlQuery = eregi_replace("FROM refs LEFT JOIN.+WHERE","FROM refs WHERE",$sqlQuery); // ...delete 'LEFT JOIN...' part from 'FROM' clause
 	
-			if ((ereg(".+search.php",$referer) OR $displayType == "RSS") AND (ereg("WHERE.+(marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)",$sqlQuery))) // if a user who's NOT logged in tries to query user specific fields (by use of 'sql_search.php')...
+			if ((eregi(".+search.php",$referer) OR $displayType == "RSS") AND (eregi("WHERE.+(marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)",$sqlQuery))) // if a user who's NOT logged in tries to query user specific fields (by use of 'sql_search.php')...
 			// Note that the script 'show.php' may query the user specific field 'selected' (e.g., by URLs of the form: 'show.php?author=...&userID=...&only=selected')
 			// but since (in that case) the '$referer' variable is either empty or does not end with 'search.php' this if clause will not apply (which is ok since we want to allow 'show.php' to query the 'selected' field)
 			{
 				// ...delete 'LEFT JOIN...' part from 'FROM' clause -> this is already accomplished by the code above!
-				$sqlQuery = preg_replace("/WHERE (marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related).+?(?= AND| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/","WHERE",$sqlQuery); // ...delete any user specific fields from 'WHERE' clause
-				$sqlQuery = preg_replace("/( AND)? (marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related).+?(?= AND| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/","",$sqlQuery); // ...delete any user specific fields from 'WHERE' clause
-				$sqlQuery = ereg_replace("WHERE AND","WHERE",$sqlQuery); // ...delete any superfluous 'AND' that wasn't removed properly by the two regex patterns above
-				$sqlQuery = preg_replace("/WHERE(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/","WHERE serial RLIKE \".+\"",$sqlQuery); // ...supply generic 'WHERE' clause if it did ONLY contain user specific fields
+				$sqlQuery = preg_replace("/WHERE (marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related).+?(?= AND| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","WHERE",$sqlQuery); // ...delete any user specific fields from 'WHERE' clause
+				$sqlQuery = preg_replace("/( AND)? (marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related).+?(?= AND| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","",$sqlQuery); // ...delete any user specific fields from 'WHERE' clause
+				$sqlQuery = eregi_replace("WHERE AND","WHERE",$sqlQuery); // ...delete any superfluous 'AND' that wasn't removed properly by the two regex patterns above
+				$sqlQuery = preg_replace("/WHERE(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","WHERE serial RLIKE \".+\"",$sqlQuery); // ...supply generic 'WHERE' clause if it did ONLY contain user specific fields
 	
 				// save an appropriate error message:
 				$HeaderString = "<b><span class=\"warning\">Querying of user specific fields was ommitted!</span></b>"; // save an appropriate error message
@@ -1383,39 +1384,39 @@ EOF;
 	
 		else // if a user is logged in...
 		{
-			if (ereg("LEFT JOIN user_data",$sqlQuery)) // if the 'LEFT JOIN...' statement is part of the 'FROM' clause...
+			if (eregi("LEFT JOIN user_data",$sqlQuery)) // if the 'LEFT JOIN...' statement is part of the 'FROM' clause...
 			{
 				// ...and any user specific fields other(!) than just the 'selected' field are part of the 'SELECT' or 'WHERE' clause...
 				// Note that we exclude the 'selected' field here (although it is user specific). By that we allow the 'selected' field to be queried by every user that's logged in.
 				// This is done to support the 'show.php' script which may query the user specific field 'selected' (e.g., by URLs of the form: 'show.php?author=...&userID=...&only=selected')
-				if (ereg(", (marked|copy|user_keys|user_notes|user_file|user_groups|bibtex_id|related)",$sqlQuery) OR ereg("WHERE.+(marked|copy|user_keys|user_notes|user_file|user_groups|bibtex_id|related)",$sqlQuery))
+				if (eregi(", (marked|copy|user_keys|user_notes|user_file|user_groups|bibtex_id|related)",$sqlQuery) OR eregi("WHERE.+(marked|copy|user_keys|user_notes|user_file|user_groups|bibtex_id|related)",$sqlQuery))
 				{
-					$sqlQuery = ereg_replace("user_id *= *[0-9]+","user_id = $loginUserID",$sqlQuery); // ...replace any other user ID with the ID of the currently logged in user
-					$sqlQuery = ereg_replace("location RLIKE [^ ]+","location RLIKE \"$loginEmail\"",$sqlQuery); // ...replace any other user email address with the login email address of the currently logged in user
+					$sqlQuery = eregi_replace("user_id *= *[0-9]+","user_id = $loginUserID",$sqlQuery); // ...replace any other user ID with the ID of the currently logged in user
+					$sqlQuery = eregi_replace("location RLIKE [^ ]+","location RLIKE \"$loginEmail\"",$sqlQuery); // ...replace any other user email address with the login email address of the currently logged in user
 				}
 			}
 	
 			// if we're going to display record details for a logged in user, we have to ensure the display of user specific fields (which may have been deleted from a query due to a previous logout action);
 			// in 'Display Details' view, the 'call_number' and 'serial' fields are the last generic fields before any user specific fields:
-			if (($displayType == "Display") AND (ereg(", call_number, serial FROM refs",$sqlQuery))) // if the user specific fields are missing from the SELECT statement...
-				$sqlQuery = str_replace(', call_number, serial FROM refs',', call_number, serial, marked, copy, selected, user_keys, user_notes, user_file, user_groups, bibtex_id, related FROM refs',$sqlQuery); // ...add all user specific fields to the 'SELECT' clause
+			if (($displayType == "Display") AND (eregi(", call_number, serial FROM refs",$sqlQuery))) // if the user specific fields are missing from the SELECT statement...
+				$sqlQuery = eregi_replace(', call_number, serial FROM refs',', call_number, serial, marked, copy, selected, user_keys, user_notes, user_file, user_groups, bibtex_id, related FROM refs',$sqlQuery); // ...add all user specific fields to the 'SELECT' clause
 	
-			if (($displayType == "Display" OR $displayType == "RSS") AND (!ereg("LEFT JOIN user_data",$sqlQuery))) // if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
-				$sqlQuery = ereg_replace(" FROM refs"," FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = $loginUserID",$sqlQuery); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
+			if (($displayType == "Display" OR $displayType == "RSS") AND (!eregi("LEFT JOIN user_data",$sqlQuery))) // if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
+				$sqlQuery = eregi_replace(" FROM refs"," FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = $loginUserID",$sqlQuery); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
 		}
 	
-		if (ereg("^SELECT",$sqlQuery)) // restrict adding of columns to SELECT queries (so that 'DELETE FROM refs ...' statements won't get modified as well):
+		if (eregi("^SELECT",$sqlQuery)) // restrict adding of columns to SELECT queries (so that 'DELETE FROM refs ...' statements won't get modified as well):
 		{
-			$sqlQuery = str_replace(' FROM refs',', orig_record FROM refs',$sqlQuery); // add 'orig_record' column (which is required in order to present visual feedback on duplicate records)
-			$sqlQuery = str_replace(' FROM refs',', serial FROM refs',$sqlQuery); // add 'serial' column (which is required in order to obtain unique checkbox names)
+			$sqlQuery = eregi_replace(' FROM refs',', orig_record FROM refs',$sqlQuery); // add 'orig_record' column (which is required in order to present visual feedback on duplicate records)
+			$sqlQuery = eregi_replace(' FROM refs',', serial FROM refs',$sqlQuery); // add 'serial' column (which is required in order to obtain unique checkbox names)
 	
 			if ($showLinks == "1")
-				$sqlQuery = str_replace(' FROM refs',', file, url, doi FROM refs',$sqlQuery); // add 'file', 'url' & 'doi' columns
+				$sqlQuery = eregi_replace(' FROM refs',', file, url, doi FROM refs',$sqlQuery); // add 'file', 'url' & 'doi' columns
 		}
 	
 		// fix escape sequences within the SQL query:
 		$query = str_replace('\"','"',$sqlQuery); // replace any \" with "
-		$query = ereg_replace('(\\\\)+','\\\\',$query);
+		$query = eregi_replace('(\\\\)+','\\\\',$query);
 
 
 		return $query;
@@ -1503,7 +1504,7 @@ EOF;
 		$currentDateTimeStamp = date('r'); // get the current date & time (in UNIX time stamp format => "date('D, j M Y H:i:s O')")
 
 		// write RSS header:
-		$rssData = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>"
+		$rssData = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"\?>"
 					. "\n<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">";
 
 		// write channel info:
