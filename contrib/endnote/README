@@ -19,12 +19,14 @@ Use
     On win32 systems, this is typically:
       C:\Program Files\Endnote\Styles
     On Mac systems, this is typically:
-      Macintosh HD\Applications\EndNote
+      Macintosh HD\Applications\EndNote #\Styles
+    (where # corresponds to a version #)
   - Open the Endnote file you wish to import into refbase.
   - Choose the refbase Output Syle
   - Export to endnote.txt
   Part II: PHP
-  - 'php endnote2mysql.php' will produce 'import.txt'
+  - Executing 'php endnote2mysql.php' will produce 'import.txt'
+    ('php' must be in your path or you should prefix it with the path to php)
   Part III: Check it!
   - As this is a preliminary script that has undergone little testing, it is
     suggested that you look at 'import.txt' in spreadsheet software.
