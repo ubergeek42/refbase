@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 0:25 Uhr
-	// Modified:   28-Aug-03, 14:07 Uhr
+	// Modified:   07-Sep-03, 18:13 Uhr
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -74,11 +74,20 @@
 
 	// CONSTRUCT SQL QUERY:
 
-	// --- embedded sql query: ----------------------
-	if ("$sqlQuery" != "") // the admin used a link with an embedded sql query for searching...
-		$query = str_replace(' FROM users',', user_id FROM users',$sqlQuery); // add 'user_id' column (which is required in order to obtain unique checkbox names)
+	// --- Embedded sql query: ----------------------
+	if ("$formType" == "sqlSearch") // the admin used a link with an embedded sql query for searching...
+	{
+		$query = str_replace(' FROM users',', user_id FROM users',$sqlQuery); // add 'user_id' column (which is required in order to obtain unique checkbox names as well as for use in the 'getUserID()' function)
+		$query = str_replace('\"','"',$query); // replace any \" with "
+		$query = str_replace('\\\\','\\',$query);
+	}
+
+	// --- Form within 'search.php': ---------------
+	elseif ("$formType" == "refineSearch") // the user used the "Search within Results" form above the query results list (that was produced by 'users.php')
+		$query = extractFormElementsRefine($displayType, $sqlQuery, $showLinks);
+
 	else
-		$query = "SELECT first_name, last_name, abbrev_institution, institution, email, user_id FROM users ORDER BY last_name, first_name"; // build the default query
+		$query = "SELECT first_name, last_name, abbrev_institution, institution, email, user_id FROM users WHERE user_id RLIKE \".+\" ORDER BY last_name, first_name"; // build the default query
 
 	// ----------------------------------------------
 
@@ -105,6 +114,8 @@
 
 	// (4a) DISPLAY header:
 	$query = str_replace(', user_id FROM users',' FROM users',$query); // strip 'user_id' column from SQL query (so that it won't get displayed in query strings)
+
+	$queryURL = rawurlencode($query); // URL encode SQL query
 
 	// First, find out how many rows are available:
 	$rowsFound = @ mysql_num_rows($result);
@@ -158,7 +169,7 @@
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
 
 	// (4b) DISPLAY results:
-	showUsers($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $exportFormat, $showMaxRow); // show all users
+	showUsers($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $exportFormat, $showMaxRow); // show all users
 
 	// ----------------------------------------------
 
@@ -170,8 +181,9 @@
 	// --------------------------------------------------------------------
 	
 	// Display all users listed within the 'users' table
-	function showUsers($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $exportFormat, $showMaxRow)
+	function showUsers($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $exportFormat, $showMaxRow)
 	{
+		global $connection;
 		global $HeaderString;
 		global $loginWelcomeMsg;
 		global $loginStatus;
@@ -179,11 +191,8 @@
 		global $loginEmail;
 		global $adminLoginEmail;
 
-		if ($rowsFound > 0) 
+		if ($rowsFound > 0) // If the query has results ...
 		{
-			// Start a TABLE
-			echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays all users of this database\">";
-		
 			// BEGIN RESULTS HEADER --------------------
 			// 1) First, initialize some variables that we'll need later on
 			// Note: In contrast to 'search.php', we don't hide any columns but the user_id column (see below)
@@ -201,10 +210,29 @@
 			else
 				$NoColumns = (1+$fieldsToDisplay); // add checkbox column
 
+			// 2) Build a FORM & TABLE containing options to refine the search results as well as the diplayed columns
+			//    First, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
+			//    Since 'users.php' can be only called by the admin we simply specify all fields within the first variable...
+			$refineSearchSelectorElements1 = "first_name, last_name, title, institution, abbrev_institution, corporate_institution, address, address_line_1, address_line_2, address_line_3, zip_code, city, state, country, phone, email, url, keywords, notes, last_login, logins, user_id, marked, created_date, created_time, created_by, modified_date, modified_time, modified_by";
+			$refineSearchSelectorElements2 = ""; // ... and keep the second one blank (compare with 'search.php')
+			$refineSearchSelectorElementSelected = "last_name"; // this column will be selected by default
+			// Call the 'buildRefineSearchElements()' function (defined in 'include.inc') which does the actual work:
+			$RefineSearch = buildRefineSearchElements("users.php", $queryURL, $showQuery, $showLinks, $showRows, $NoColumns, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected);
+			echo $RefineSearch;
+
+			// Start a TABLE
+			echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays all users of this database\">";
+		
 			// Build a TABLE ROW with links for "previous" & "next" browsing, as well as links to intermediate pages
 			// call the 'buildBrowseLinks()' function (defined in 'include.inc'):
-			$BrowseLinks = buildBrowseLinks("users.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "", "", "", $exportOrder, $orderBy, $headerMsg);
+			$BrowseLinks = buildBrowseLinks("users.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "", "", $exportOrder, $orderBy, $headerMsg);
 			echo $BrowseLinks;
+
+			//    and insert a spacer TABLE ROW:
+			echo "\n<tr align=\"center\">"
+//				. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>" // uncomment this line and comment the next one if you prefer white space (instead of a divider line)
+				. "\n\t<td colspan=\"$NoColumns\"><hr align=\"center\" width=\"100%\"></td>"
+				. "\n</tr>";
 
 			// For the column headers, start another TABLE ROW ...
 			echo "\n<tr>";
@@ -221,7 +249,7 @@
 				$HTMLafterLink = "</th>"; // close the table header tag
 				// call the 'buildFieldNameLinks()' function (defined in 'include.inc'), which will return a properly formatted table header tag holding the current field's name
 				// as well as the URL encoded query with the appropriate ORDER clause:
-				$tableHeaderLink = buildFieldNameLinks("users.php", $query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "", "", "", "");
+				$tableHeaderLink = buildFieldNameLinks("users.php", $query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "", "", "");
 				echo $tableHeaderLink; // print the attribute name as link
 			 }
 	
@@ -233,7 +261,7 @@
 					$HTMLafterLink = "</th>"; // close the table header tag
 					// call the 'buildFieldNameLinks()' function (defined in 'include.inc'), which will return a properly formatted table header tag holding the current field's name
 					// as well as the URL encoded query with the appropriate ORDER clause:
-					$tableHeaderLink = buildFieldNameLinks("users.php", $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "", "", "Links", "user_id");
+					$tableHeaderLink = buildFieldNameLinks("users.php", $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "", "Links", "user_id");
 					echo $tableHeaderLink; // print the attribute name as link
 				}
 	
@@ -276,7 +304,8 @@
 					echo "\n\t\t<a href=\"user_details.php?userID=" . $row["user_id"]
 						. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit user\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
 	
-					if ($row["email"] != $adminLoginEmail) // we only provide a delete link if this user isn't the admin:
+					$adminUserID = getUserID($adminLoginEmail, $connection); // ...get the admin's 'user_id' using his/her 'adminLoginEmail' (function 'getUserID()' is defined in 'include.inc')
+					if ($row["user_id"] != $adminUserID) // we only provide a delete link if this user isn't the admin:
 						echo "\n\t\t<a href=\"user_receipt.php?userID=" . $row["user_id"] . "&amp;userAction=Delete"
 							. "\"><img src=\"img/delete.gif\" alt=\"delete\" title=\"delete user\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
 	
@@ -287,6 +316,12 @@
 			}
 
 			// BEGIN RESULTS FOOTER --------------------
+			// Insert a spacer TABLE ROW:
+			echo "\n<tr align=\"center\">"
+//				. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>" // uncomment this line and comment the next one if you prefer white space (instead of a divider line)
+				. "\n\t<td colspan=\"$NoColumns\"><hr align=\"center\" width=\"100%\"></td>"
+				. "\n</tr>";
+
 			// Again, insert the (already constructed) BROWSE LINKS
 			// (i.e., a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages)
 			echo $BrowseLinks;
@@ -305,6 +340,69 @@
 					. "\n</tr>"
 					. "\n</table>";
 		}// end if $rowsFound body
+	}
+
+	// --------------------------------------------------------------------
+
+	// EXTRACT FORM VARIABLES SENT THROUGH POST
+	// (!! NOTE !!: for details see <http://www.php.net/release_4_2_1.php> & <http://www.php.net/manual/en/language.variables.predefined.php>)
+
+	// Build the database query from user input provided by the "Search within Results" form above the query results list (which, in turn, was returned by 'users.php'):
+	function extractFormElementsRefine($displayType, $sqlQuery, $showLinks)
+	{
+		$refineSearchSelector = $_POST['refineSearchSelector']; // extract field name chosen by the user
+		$refineSearchName = $_POST['refineSearchName']; // extract search text entered by the user
+		$showRefineSearchFieldRadio = $_POST['showRefineSearchFieldRadio']; // extract user option whether searched field should be displayed
+		$refineSearchActionRadio = $_POST['refineSearchActionRadio']; // extract user option whether matched records should be included or excluded
+
+		$query = rawurldecode($sqlQuery); // URL decode SQL query (it was URL encoded before incorporation into a hidden tag of the 'refineSearch' form to avoid any HTML syntax errors)
+											// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
+											//       But, opposed to that, URL encoded data that are included within a form by means of a hidden form tag will *NOT* get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
+
+		if ("$showRefineSearchFieldRadio" == "1") // if the user checked the radio button next to 'Show column'...
+			{
+				if (!preg_match("/SELECT.*\W$refineSearchSelector\W.*FROM users/", $query)) // ...and the field is *not* already displayed...
+					$query = str_replace(" FROM users",", $refineSearchSelector FROM users",$query); // ...then SHOW the field that was used for refining the search results
+			}
+		elseif ("$showRefineSearchFieldRadio" == "0") // if the user checked the radio button next to 'Hide column'...
+			{
+				if (ereg("SELECT.+$refineSearchSelector.+FROM users", $query)) // ...and the field *is* currently displayed...
+					// for all columns except the first:
+					$query = preg_replace("/(SELECT.+?), $refineSearchSelector( .*FROM users)/","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
+					// for all columns except the last:
+					$query = preg_replace("/(SELECT.*? )$refineSearchSelector, (.+FROM users)/","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
+			}
+		// else if $showRefineSearchFieldRadio == '' (which is the form's default) we don't change the display of any columns
+
+		$query = str_replace(' FROM users',', user_id FROM users',$query); // add 'user_id' column (although it won't be visible the 'user_id' column gets included in every search query)
+																		// (which is required in order to obtain unique checkbox names as well as for use in the 'getUserID()' function)
+
+		if ("$refineSearchName" != "") // if the user typed a search string into the text entry field...
+		{
+			// Depending on the chosen output action, construct an appropriate SQL query:
+			if ($refineSearchActionRadio == "1") // if the user checked the radio button next to "Restrict to matched records"
+				{
+					// for the field 'marked=no', force NULL values to be matched:
+					if ($refineSearchSelector == "marked" AND $refineSearchName == "no")
+						$query = str_replace("WHERE","WHERE ($refineSearchSelector RLIKE \"$refineSearchName\" OR $refineSearchSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
+					else // add default 'WHERE' clause:
+						$query = str_replace("WHERE","WHERE $refineSearchSelector RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
+				}
+			else // $refineSearchActionRadio == "0" // if the user checked the radio button next to "Exclude matched records"
+				{
+					// for the field 'marked=yes', force NULL values to be excluded:
+					if ($refineSearchSelector == "marked" AND $refineSearchName == "yes")
+						$query = str_replace("WHERE","WHERE ($refineSearchSelector NOT RLIKE \"$refineSearchName\" OR $refineSearchSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
+					else // add default 'WHERE' clause:
+						$query = str_replace("WHERE","WHERE $refineSearchSelector NOT RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
+				}
+			$query = str_replace(' AND user_id RLIKE ".+"','',$query); // remove any 'AND user_id RLIKE ".+"' which isn't required anymore
+		}
+
+		// else, if the user did NOT type a search string into the text entry field, we simply keep the old WHERE clause...
+
+
+		return $query;
 	}
 
 	// --------------------------------------------------------------------
