@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   07-Jan-04, 23:19
+	// Modified:   28-Sep-04, 20:03
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -25,81 +25,79 @@
 
 	// --------------------------------------------------------------------
 
-	// Initialize the session
-	session_start();
-
-	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session();
 
 	// --------------------------------------------------------------------
 
 	if (isset($_REQUEST['referer']))
-		$referer = $_REQUEST['referer']; // get the referring URL (if any)
-	else // if (empty($referer))
 	{
-		if (isset($HTTP_REFERER))
-			$referer = $HTTP_REFERER;
-		else
-			$referer = "index.php";
+		$referer = $_REQUEST['referer']; // get the referring URL from the superglobal '$_REQUEST' variable (if any)
 	}
+	elseif (isset($_SESSION['referer']))
+	{
+		$referer = $_SESSION['referer']; // get the referring URL from the superglobal '$_SESSION' variable (if any)
+	}
+	else // if '$referer' is still not set
+	{
+		if (isset($_SERVER['HTTP_REFERER']))
+			$referer = $_SERVER['HTTP_REFERER'];
+		else
+			$referer = "index.php"; // if all other attempts fail, we'll re-direct to the main page
+	}
+	
+	if (isset($_POST["loginEmail"]))
+		$loginEmail = $_POST["loginEmail"];
+//		$loginEmail = clean($_POST["loginEmail"], 30); // using the clean function would be secure!
 
-	if (isset($HTTP_POST_VARS["loginEmail"]))
-		$loginEmail = $HTTP_POST_VARS["loginEmail"];
-//		$loginEmail = clean($HTTP_POST_VARS["loginEmail"], 30); // using the clean function would be secure!
-
-	if (isset($HTTP_POST_VARS["loginPassword"]))
-		$loginPassword = $HTTP_POST_VARS["loginPassword"];
-//		$loginPassword = clean($HTTP_POST_VARS["loginPassword"], 8); // using the clean function would be secure!
+	if (isset($_POST["loginPassword"]))
+		$loginPassword = $_POST["loginPassword"];
+//		$loginPassword = clean($_POST["loginPassword"], 8); // using the clean function would be secure!
 
 	// Check if the user is already logged in
-	if (session_is_registered("loginEmail"))
+	if (isset($_SESSION['loginEmail']))
 	{
-		if (!ereg("error\.php\?.+|user_login\.php$|install\.php", $referer))
+		if (!ereg("error\.php\?.+|user_login\.php|install\.php", $referer))
 			header("Location: $referer"); // redirect the user to the calling page
 		else
 			header("Location: index.php"); // back to main page
-
-		// a more smart solution would be something like the code below:
-		// (but '$referer' isn't registered yet across all pages!)
-
-//		// If they are, then just bounce them back where they came from
-//		if (session_is_registered("referer"))
-//		{  
-//			// Delete the redirection session variable
-//			session_unregister("referer");
-//			
-//			// Then, use it to redirect to the calling page
-//			header("Location: $referer");
-//			exit;
-//		}
-//		else
-//			header("Location: index.php"); // back to main page
-//			exit;
 	}
 
-	// Have they provided none or only one of the two required values: email address AND password?
-	if ((empty($HTTP_POST_VARS["loginEmail"]) && !empty($HTTP_POST_VARS["loginPassword"])) || (!empty($HTTP_POST_VARS["loginEmail"]) && empty($HTTP_POST_VARS["loginPassword"])))
+	// The user did submit the form but provided none or only one of the two required values: email address AND password:
+	if ((isset($loginEmail) && empty($loginEmail)) || (isset($loginPassword) && empty($loginPassword)))
+//	if ((empty($_POST["loginEmail"]) && !empty($_POST["loginPassword"])) || (!empty($_POST["loginEmail"]) && empty($_POST["loginPassword"])))
 	{		 
-		// Register an error message
-		session_register("HeaderString");
+		// Save an error message:
 		$HeaderString = "<b><span class=\"warning\">In order to login you must supply both, email address and password!</span></b>";
+
+		// Write back session variables:
+		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 	}
 
-	// Have they not provided an email address/password, or was there an error?
-	if (!isset($loginEmail) || !isset($loginPassword) || session_is_registered("HeaderString"))
-		login_page();
+	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// ('' will produce the default 'Web' output style)
+	if (isset($_REQUEST['viewType']))
+		$viewType = $_REQUEST['viewType'];
 	else
-		// They have provided a login. Is it valid?
-		check_login($loginEmail, $loginPassword);
+		$viewType = "";
+
+	// The user did not submit the form -OR- there was an error:
+	if (!isset($loginEmail) || !isset($loginPassword) || isset($_SESSION['HeaderString']))
+		login_page($referer);
+	else
+		// The user did submit the form AND provided values to both, email address AND password. Let's check if the info is valid:
+		check_login($referer, $loginEmail, $loginPassword);
 
 	// --------------------------------------------------------------------
 
-	function check_login($loginEmail, $loginPassword)
+	function check_login($referer, $loginEmail, $loginPassword)
 	{
-		global $referer;
 		global $username;
 		global $password;
 		global $hostName;
 		global $databaseName;
+		global $connection;
 		global $HeaderString;
 		global $loginUserID;
 		global $loginFirstName;
@@ -117,24 +115,11 @@
 
 		// -------------------
 
-		// (1) OPEN CONNECTION, (2) SELECT DATABASE, (3) RUN QUERY, (5) CLOSE CONNECTION
-
-		// (1) OPEN the database connection:
-		//      (variables are set by include file 'db.inc.php'!)
-		if (!($connection = @ mysql_connect($hostName, $username, $password)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("The following error occurred while trying to connect to the host:", "");
-
-		// (2) SELECT the database:
-		//      (variables are set by include file 'db.inc.php'!)
-		if (!(mysql_select_db($databaseName, $connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("The following error occurred while trying to connect to the database:", "");
+		// (1) OPEN CONNECTION, (2) SELECT DATABASE
+		connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 		// (3) RUN the query on the database through the connection:
-		if (!($result = @ mysql_query($query, $connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		// (4) EXTRACT results:
 		if (mysql_num_rows($result) == 1) // Interpret query result: Do we have exactly one row?
@@ -149,17 +134,12 @@
 
 		if ($foundUser == true)
 		{
-			// Register the loginEmail to show the user is logged in
-			session_register("loginEmail");
-	
-			// Clear any other session variables
-			if (session_is_registered("errors"))
-				// Delete the form errors session variable
-				session_unregister("errors");
+			// Clear any other session variables:
+			if (isset($_SESSION['errors'])) // delete the 'errors' session variable:
+				deleteSessionVariable("errors"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
 
-			if (session_is_registered("formVars"))
-				// Delete the formVars session variable
-				session_unregister("formVars");
+			if (isset($_SESSION['formVars'])) // delete the 'formVars' session variable:
+				deleteSessionVariable("formVars"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
 
 
 			$userID = $row["user_id"]; // extract the user's userID from the last query
@@ -167,22 +147,43 @@
 			// Now we need to get the user's first name and last name (e.g., in order to display them within the login welcome message)
 			$query = "SELECT user_id, first_name, last_name, abbrev_institution FROM users WHERE user_id = " . $userID; // CONSTRUCT SQL QUERY
 	
-			if (!($result = @ mysql_query($query, $connection))) // (3) RUN the query on the database through the connection:
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-					showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+			// RUN the query on the database through the connection:
+			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
-			$row2 = mysql_fetch_array($result); // (4) EXTRACT results: fetch the one row into the array $row2
+			$row2 = mysql_fetch_array($result); // EXTRACT results: fetch the one row into the array '$row2'
 
 			// Save the fetched user details to the session file:
-			$loginUserID = $row2["user_id"];
-			$loginFirstName = $row2["first_name"];
-			$loginLastName = $row2["last_name"];
-			$abbrevInstitution = $row2["abbrev_institution"];
-	
-			session_register("loginUserID");
-			session_register("loginFirstName");
-			session_register("loginLastName");
-			session_register("abbrevInstitution");
+
+			// Write back session variables:
+			saveSessionVariable("loginEmail", $loginEmail); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+			saveSessionVariable("loginUserID", $row2["user_id"]);
+			saveSessionVariable("loginFirstName", $row2["first_name"]);
+			saveSessionVariable("loginLastName", $row2["last_name"]);
+			saveSessionVariable("abbrevInstitution", $row2["abbrev_institution"]);
+
+			// Get all user groups specified by the current user
+			// and (if some groups were found) save them as semicolon-delimited string to the session variable 'userGroups':
+			getUserGroups($row2["user_id"]); // function 'getUserGroups()' is defined in 'include.inc.php'
+
+			// Get all user queries that were saved previously by the current user
+			// and (if some queries were found) save them as semicolon-delimited string to the session variable 'userQueries':
+			getUserQueries($row2["user_id"]); // function 'getUserQueries()' is defined in 'include.inc.php'
+
+			// Get all export formats that were selected previously by the current user
+			// and (if some formats were found) save them as semicolon-delimited string to the session variable 'user_formats':
+			getUserFormatsStylesTypes($row2["user_id"], "format"); // function 'getUserFormatsStylesTypes()' is defined in 'include.inc.php'
+
+			// Get all citation styles that were selected previously by the current user
+			// and (if some styles were found) save them as semicolon-delimited string to the session variable 'user_styles':
+			getUserFormatsStylesTypes($row2["user_id"], "style"); // function 'getUserFormatsStylesTypes()' is defined in 'include.inc.php'
+
+			// Get all document types that were selected previously by the current user
+			// and (if some types were found) save them as semicolon-delimited string to the session variable 'user_types':
+			getUserFormatsStylesTypes($row2["user_id"], "type"); // function 'getUserFormatsStylesTypes()' is defined in 'include.inc.php'
+
+			// Get the user permissions for the current user
+			// and save all allowed user actions as semicolon-delimited string to the session variable 'user_permissions':
+			getPermissions($row2["user_id"], "user"); // function 'getPermissions()' is defined in 'include.inc.php'
 
 
 			// We also update the user's entry within the 'users' table:
@@ -191,59 +192,43 @@
 					. "logins = logins+1 " // increase the number of logins by 1 
 					. "WHERE user_id = $userID";
 
-			if (!($result = @ mysql_query($query, $connection))) // (3) RUN the query on the database through the connection:
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-					showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+			// RUN the query on the database through the connection:
+			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 
-			header("Location: $referer"); // redirect the user to the calling page
-
-			// a more smart solution would be something like the code below:
-			// (but '$referer' isn't registered yet across all pages!)
-
-//			// Do we need to redirect to a calling page?
-//			if (session_is_registered("referer"))
-//			{		 
-//				// Delete the referer session variable
-//				session_unregister("referer");
-//	
-//				// Then, use it to redirect
-//				header("Location: $referer");
-//				exit;
-//			}
-//			else // there's no referer available
-//			{
-//				header("Location: index.php"); // back to main page (or, alternatively, rout them to their user account page: "Location: user_details.php?userID=$userID")
-//				exit;
-//			}
+			if (!ereg("error\.php\?.+|user_login\.php|install\.php", $referer))
+				header("Location: $referer"); // redirect the user to the calling page
+			else
+				header("Location: index.php"); // back to main page
 		}
 		else
 		{
 		// Ensure loginEmail is not registered, so the user is not logged in
-			if (session_is_registered("loginEmail"))
-				session_unregister("loginEmail");
+			if (isset($_SESSION['loginEmail'])) // delete the 'loginEmail' session variable:
+				deleteSessionVariable("loginEmail"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
 
-			// Register an error message
-			session_register("HeaderString");
+			// Save an error message:
 			$HeaderString = "<b><span class=\"warning\">Login failed! You provided an incorrect email address or password.</span></b>";
 
-			login_page();
+			// Write back session variables:
+			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+
+			login_page($referer);
 		}				 
 
 		// -------------------
 
 		// (5) CLOSE the database connection:
-		if (!(mysql_close($connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
+		disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 	}
 
 	// --------------------------------------------------------------------
 
 	// Function that shows the HTML <form> that is used to collect the email address and password
-	function login_page()
+	function login_page($referer)
 	{
 		global $HeaderString;
+		global $viewType;
 		global $loginWelcomeMsg;
 		global $loginStatus;
 		global $loginLinks;
@@ -253,19 +238,26 @@
 		showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 		// If there's no stored message available:
-		if (!session_is_registered("HeaderString"))
+		if (!isset($_SESSION['HeaderString']))
 			$HeaderString = "You need to login in order to make any changes to the database:"; // Provide the default welcome message
 		else
-			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
+		{
+			$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
+
+			// Note: though we clear the session variable, the current message is still available to this script via '$HeaderString':
+			deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+		}
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-		displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Login", "index,follow", "User login page. You must be logged in to the " . htmlentities($officialDatabaseName) . " in order to add, edit or delete records", "", false, "");
+		displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Login", "index,follow", "User login page. You must be logged in to the " . htmlentities($officialDatabaseName) . " in order to add, edit or delete records", "", false, "", $viewType);
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 		// Build the login form:
+		// Note: we use the fact here, that a page can have both, a GET and POST request.
+		//       (if you POST, but add ?blah=foo to the end of the action URL, the client will GET, then POST)
 ?>
 
-<form method="POST" action="user_login.php">
+<form method="POST" action="user_login.php?referer=<?php echo rawurlencode($referer); ?>">
 <table align="center" border="0" cellpadding="2" cellspacing="5" width="95%" summary="This table holds a login form for the <? echo htmlentities($officialDatabaseName); ?>">
 	<tr>
 		<td width="174" valign="bottom">
@@ -303,5 +295,6 @@
 
 	// --------------------------------------------------------------------
 ?>
+
 </body>
 </html>
