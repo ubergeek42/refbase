@@ -77,9 +77,13 @@
 					$loginStatus = "You're logged in as<br><em>" . $loginEmail . "</em>";
 
 				$loginLinks = "";
-				if ($loginEmail == $adminLoginEmail) // if the admin is logged in, add an 'Add User' link:
+				if ($loginEmail == $adminLoginEmail) // if the admin is logged in, add the 'Add User' & 'Manage Users' links:
+				{
 					$loginLinks .= "<a href=\"user_details.php\">Add User</a>&nbsp;&nbsp;|&nbsp;&nbsp;";
-				$loginLinks .= "<a href=\"user_details.php?userID=" . $loginUserID . "\">Change Details</a>&nbsp;&nbsp;|&nbsp;&nbsp;";
+					$loginLinks .= "<a href=\"users.php\">Manage Users</a>&nbsp;&nbsp;|&nbsp;&nbsp;";
+				}
+				else // if a normal user is logged in, we just add the 'Change Details' link instead:
+					$loginLinks .= "<a href=\"user_details.php?userID=" . $loginUserID . "\">Change Details</a>&nbsp;&nbsp;|&nbsp;&nbsp;";
 				$loginLinks .= "<a href=\"user_logout.php\">Logout</a>";
 			}
 		else
@@ -158,6 +162,214 @@
 
 		// Send the email:
 		mail($emailRecipient, $emailSubject, $emailBody, $emailHeaders);
+	}
+
+	// --------------------------------------------------------------------
+
+	// BUILD FIELD NAME LINKS
+	// (i.e., build clickable column headers for each available column based on the field names of the relevant mysql table)
+	function buildFieldNameLinks($href, $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, $formType, $submitType, $linkName, $orig_fieldname)
+	{
+		if ("$orig_fieldname" == "") // if there's no fixed original fieldname specified (as is the case for the 'Links' column)
+			{
+				// Get the meta-data for the attribute
+				$info = mysql_fetch_field ($result, $i);
+				// Get the attribute name:
+				$orig_fieldname = $info->name;
+			}
+		// Replace substrings with spaces:
+		$fieldname = str_replace("_"," ",$orig_fieldname);
+		// Form words (i.e., make the first char of a word uppercase):
+		$fieldname = ucwords($fieldname);
+
+		if ($linkName == "") // if there's no fixed link name specified (as is the case for the 'Links' column)...
+			$linkName = $fieldname; // ...use the attribute's name as link name
+
+		// Setup some variables (in order to enable sorting by clicking on column titles)
+		// NOTE: Column sorting with any queries that include the 'LIMIT'... parameter
+		//       will (technically) work. However, every new query will limit the selection to a *different* list of records!! ?:-/
+		if ("$newORDER" == "") // if there's no fixed ORDER BY string specified (as is the case for the 'Links' column)
+			{
+				if ($info->numeric == "1") // Check if the field's data type is numeric (if so we'll append " DESC" to the ORDER clause)
+					$newORDER = ("ORDER BY " . $orig_fieldname . " DESC"); // Build the appropriate ORDER BY clause (sort numeric fields in DESCENDING order)
+				else
+					$newORDER = ("ORDER BY " . $orig_fieldname); // Build the appropriate ORDER BY clause
+			}
+
+		if ("$orig_fieldname" == "pages") // when original field name = 'pages' then...
+			{
+				$newORDER = str_replace("ORDER BY pages", "ORDER BY first_page DESC", $newORDER); // ...sort by 'first_page' instead
+				$orig_fieldname = "first_page"; // adjust '$orig_fieldname' variable accordingly
+			}
+
+		// call the 'newORDERclause()' function to replace the ORDER clause:
+		$queryURLNewOrder = newORDERclause($newORDER, $query);
+		
+		// toggle sort order for the 1st-level sort attribute:
+		if (preg_match("/ORDER BY $orig_fieldname(?! DESC)/", $query)) // if 1st-level sort is by this attribute (in ASCending order)...
+			$queryURLNewOrder = preg_replace("/(ORDER%20BY%20$orig_fieldname)(?!%20DESC)/", "\\1%20DESC", $queryURLNewOrder); // ...change sort order to DESCending
+		elseif (preg_match("/ORDER BY $orig_fieldname DESC/", $query)) // if 1st-level sort is by this attribute (in DESCending order)...
+			$queryURLNewOrder = preg_replace("/(ORDER%20BY%20$orig_fieldname)%20DESC/", "\\1", $queryURLNewOrder); // ...change sort order to ASCending
+
+		// start the table header tag & print the attribute name as link:
+		$tableHeaderLink = "$HTMLbeforeLink<a href=\"$href?sqlQuery=$queryURLNewOrder&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;formType=$formType&amp;showRows=$showRows&amp;rowOffset=$rowOffset&amp;submit=$submitType&amp;oldQuery=" . rawurlencode($oldQuery) . "\">$linkName</a>";
+
+		// append sort indicator after the 1st-level sort attribute:
+		if (preg_match("/ORDER BY $orig_fieldname(?! DESC)(?=,|$)/", $query)) // if 1st-level sort is by this attribute (in ASCending order)...
+			$tableHeaderLink .= "&nbsp;<img src=\"img/sort_asc.gif\" alt=\"(up)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append an upward arrow image
+		elseif (preg_match("/ORDER BY $orig_fieldname DESC/", $query)) // if 1st-level sort is by this attribute (in DESCending order)...
+			$tableHeaderLink .= "&nbsp;<img src=\"img/sort_desc.gif\" alt=\"(down)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append a downward arrow image
+
+		$tableHeaderLink .=  $HTMLafterLink; // append any necessary HTML
+
+		return $tableHeaderLink;
+	}
+
+	// --------------------------------------------------------------------
+
+	//	REPLACE ORDER CLAUSE IN SQL QUERY
+	function newORDERclause($newORDER, $query)
+	{
+		$queryNewOrder = str_replace('LIMIT','¥LIMIT',$query); // put a unique delimiter in front of the 'LIMIT'... parameter (in order to keep any 'LIMIT' parameter)
+		$queryNewOrder = ereg_replace('ORDER BY [^¥]+',$newORDER,$queryNewOrder); // replace old 'ORDER BY'... parameter by new one
+		$queryNewOrder = str_replace('¥',' ',$queryNewOrder); // remove the unique delimiter again
+		$queryURLNewOrder = rawurlencode($queryNewOrder); // URL encode query
+		return $queryURLNewOrder;
+	}
+
+	// --------------------------------------------------------------------
+
+	//	BUILD BROWSE LINKS
+	// (i.e., build a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages)
+	function buildBrowseLinks($href, $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, $maxPageNo, $formType, $displayType, $exportFormat)
+	{
+		// First, calculate the offset page number:
+		$pageOffset = ($rowOffset / $showRows);
+		// workaround for always rounding upward (since I don't know better! :-/):
+		if (ereg("[0-9]+\.[0-9+]",$pageOffset)) // if the result number is not an integer..
+			$pageOffset = (int) $pageOffset + 1; // we convert the number into an integer and add 1
+		// set the offset page number to a multiple of $maxPageNo:
+		$pageOffset = $maxPageNo * (int) ($pageOffset / $maxPageNo);
+
+		// Plus, calculate the maximum number of pages needed:
+		$lastPage = ($rowsFound / $showRows);
+		// workaround for always rounding upward (since I don't know better! :-/):
+		if (ereg("[0-9]+\.[0-9+]",$lastPage)) // if the result number is not an integer..
+			$lastPage = (int) $lastPage + 1; // we convert the number into an integer and add 1
+
+		// Start a <TABLE> row:
+		$BrowseLinks = "\n<tr>";
+		$BrowseLinks .= "\n\t<td align=\"center\" valign=\"top\" colspan=\"$NoColumns\">";
+
+		// a) If there's a page range below the one currently shown,
+		// create a "[xx-xx]" link (linking directly to the previous range of pages):
+		if ($pageOffset > "0")
+			{
+				$previousRangeFirstPage = ($pageOffset - $maxPageNo + 1); // calculate the first page of the next page range
+
+				$previousRangeLastPage = ($previousRangeFirstPage + $maxPageNo - 1); // calculate the last page of the next page range
+
+				$BrowseLinks .= "\n\t\t<a href=\"" . $href
+					. "?sqlQuery=" . rawurlencode($query)
+					. "&amp;submit=$displayType"
+					. "&amp;exportFormatSelector=" . rawurlencode($exportFormat)
+					. "&amp;showQuery=$showQuery"
+					. "&amp;showLinks=$showLinks"
+					. "&amp;formType=$formType"
+					. "&amp;showRows=$showRows"
+					. "&amp;rowOffset=" . (($pageOffset - $maxPageNo) * $showRows)
+					. "&amp;oldQuery=" . rawurlencode($oldQuery)
+					. "\">[" . $previousRangeFirstPage . "&#8211;" . $previousRangeLastPage . "] </a>";
+			}
+
+		// b) Are there any previous pages?
+		if ($rowOffset > 0)
+			// Yes, so create a previous link
+			$BrowseLinks .= "\n\t\t<a href=\"" . $href
+				. "?sqlQuery=" . rawurlencode($query)
+				. "&amp;submit=$displayType"
+				. "&amp;exportFormatSelector=" . rawurlencode($exportFormat)
+				. "&amp;showQuery=$showQuery"
+				. "&amp;showLinks=$showLinks"
+				. "&amp;formType=$formType"
+				. "&amp;showRows=$showRows"
+				. "&amp;rowOffset=$previousOffset"
+				. "&amp;oldQuery=" . rawurlencode($oldQuery)
+				. "\">&lt;&lt;</a>";
+		else
+			// No, there is no previous page so don't print a link
+			$BrowseLinks .= "\n\t\t&lt;&lt;";
+	
+		// c) Output the page numbers as links:
+		// Count through the number of pages in the results:
+		for($x=($pageOffset * $showRows), $page=($pageOffset + 1);
+			$x<$rowsFound && $page <= ($pageOffset + $maxPageNo);
+			$x+=$showRows, $page++)
+			// Is this the current page?
+				if ($x < $rowOffset || 
+					$x > ($rowOffset + $showRows - 1))
+						// No, so print out a link
+						$BrowseLinks .= " \n\t\t<a href=\"" . $href
+							. "?sqlQuery=" . rawurlencode($query)
+							. "&amp;submit=$displayType"
+							. "&amp;exportFormatSelector=" . rawurlencode($exportFormat)
+							. "&amp;showQuery=$showQuery"
+							. "&amp;showLinks=$showLinks"
+							. "&amp;formType=$formType"
+							. "&amp;showRows=$showRows"
+							. "&amp;rowOffset=$x"
+							. "&amp;oldQuery=" . rawurlencode($oldQuery)
+							. "\">$page</a>";
+				else
+					// Yes, so don't print a link
+					$BrowseLinks .= " \n\t\t<b>$page</b>"; // current page is set in <b>BOLD</b>
+
+		$BrowseLinks .= " ";
+	
+		// d) Are there any Next pages?
+		if ($rowsFound > $nextOffset)
+			// Yes, so create a next link
+			$BrowseLinks .= "\n\t\t<a href=\"" . $href
+				. "?sqlQuery=" . rawurlencode($query)
+				. "&amp;submit=$displayType"
+				. "&amp;exportFormatSelector=" . rawurlencode($exportFormat)
+				. "&amp;showQuery=$showQuery"
+				. "&amp;showLinks=$showLinks"
+				. "&amp;formType=$formType"
+				. "&amp;showRows=$showRows"
+				. "&amp;rowOffset=$nextOffset"
+				. "&amp;oldQuery=" . rawurlencode($oldQuery)
+				. "\">&gt;&gt;</a>";
+		else
+			// No,	there is no next page so don't print a link
+			$BrowseLinks .= "\n\t\t&gt;&gt;";
+
+		// e) If there's a page range above the one currently shown,
+		// create a "[xx-xx]" link (linking directly to the next range of pages):
+		if ($pageOffset < ($lastPage - $maxPageNo))
+			{
+				$nextRangeFirstPage = ($pageOffset + $maxPageNo + 1); // calculate the first page of the next page range
+
+				$nextRangeLastPage = ($nextRangeFirstPage + $maxPageNo - 1); // calculate the last page of the next page range
+				if ($nextRangeLastPage > $lastPage)
+					$nextRangeLastPage = $lastPage; // adjust if this is the last range of pages and if it doesn't go up to the max allowed no of pages
+
+				$BrowseLinks .= "\n\t\t<a href=\"" . $href
+					. "?sqlQuery=" . rawurlencode($query)
+					. "&amp;submit=$displayType"
+					. "&amp;exportFormatSelector=" . rawurlencode($exportFormat)
+					. "&amp;showQuery=$showQuery"
+					. "&amp;showLinks=$showLinks"
+					. "&amp;formType=$formType"
+					. "&amp;showRows=$showRows"
+					. "&amp;rowOffset=" . (($pageOffset + $maxPageNo) * $showRows)
+					. "&amp;oldQuery=" . rawurlencode($oldQuery)
+					. "\"> [" . $nextRangeFirstPage . "&#8211;" . $nextRangeLastPage . "]</a>";
+			}
+
+		$BrowseLinks .= "\n\t</td>";
+		$BrowseLinks .= "\n</tr>";
+		return $BrowseLinks;
 	}
 
 	// --------------------------------------------------------------------
