@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./error.php
 	// Created:    5-Jan-03, 16:35
-	// Modified:   12-Jan-03, 15:40
+	// Modified:   14-Aug-03, 20:12
 
 	// This php script will display an error page
 	// showing any error that did occur. It will display
@@ -42,6 +42,7 @@
 
 	// Extract the header message that was returned by originating script:
 	$HeaderString = $_REQUEST['headerMsg'];
+	$HeaderString = ereg_replace("(\\\\)+(['\"])","\\2",$HeaderString); // replace any \" or \' with " or ', respectively (Note: the expression '\\\\' describes only *one* backslash! -> '\')
 
 	// Extract generic variables from the request:
 	$oldQuery = $_REQUEST['oldQuery']; // fetch the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
