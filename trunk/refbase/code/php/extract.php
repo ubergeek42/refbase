@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./extract.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   06-Sep-03, 15:14
+	// Modified:   16-Nov-03, 21:32
 
 	// Search formular that offers to extract
 	// literature cited within a text and build
@@ -43,11 +43,12 @@
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
 	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Extract Cited Literature", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "");
-	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
+	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (2b) Start <form> and <table> holding the form elements:
 	echo "\n<form action=\"search.php\" method=\"POST\">";
 	echo "\n<input type=\"hidden\" name=\"formType\" value=\"extractSearch\">"
+		. "\n<input type=\"hidden\" name=\"submit\" value=\"Export\">" // provide a default value for the 'submit' form tag. Otherwise, some browsers may not recognize the correct output format when a user hits <enter> within a form field (instead of clicking the "Export" button)
 		. "\n<input type=\"hidden\" name=\"showLinks\" value=\"1\">"; // embed '$showLinks=1' so that links get displayed on any 'display details' page
 	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the search form\">"
 			. "\n<tr>\n\t<td width=\"58\" valign=\"top\"><b>Extract Citations From:</b></td>\n\t<td width=\"10\">&nbsp;</td>"
