@@ -108,25 +108,32 @@
       $nameBranch = new XMLBranch("name");
       $nameBranch->setTagAttribute("type", $type);
 
-      list($singleNameFamily, $singleNameGivens) = preg_split($nameGivenDelim,
-                                                              $singleName);
+      if (preg_match($nameGivenDelim, $singleName))
+        list($singleNameFamily, $singleNameGivens) = preg_split($nameGivenDelim,
+                                                                $singleName);
+      else {
+        $singleNameFamily = $singleName;
+        $singleNameGivens = "";
+      }
 
       $nameFamilyBranch = new XMLBranch("namePart");
       $nameFamilyBranch->setTagAttribute("type", "family");
       $nameFamilyBranch->setTagContent($singleNameFamily);
       $nameBranch->addXMLBranch($nameFamilyBranch);
 
-      $singleNameGivenArray = split($betweenGivensDelim, $singleNameGivens);
-      foreach ($singleNameGivenArray as $singleNameGiven) {
-        $nameGivenBranch = new XMLBranch("namePart");
-        $nameGivenBranch->setTagAttribute("type", "given");
-        $nameGivenBranch->setTagContent($singleNameGiven);
-        $nameBranch->addXMLBranch($nameGivenBranch);
+      if (!empty($singleNameGivens)) {
+        $singleNameGivenArray = split($betweenGivensDelim, $singleNameGivens);
+        foreach ($singleNameGivenArray as $singleNameGiven) {
+          $nameGivenBranch = new XMLBranch("namePart");
+          $nameGivenBranch->setTagAttribute("type", "given");
+          $nameGivenBranch->setTagContent($singleNameGiven);
+          $nameBranch->addXMLBranch($nameGivenBranch);
+        }
       }
 
       $nameBranch->setTagContent($role,"name/role/roleTerm");
       $nameBranch->setTagAttribute("authority", "marcrelator",
-                                   "name/role/roleTerm");
+                                     "name/role/roleTerm");
       $nameBranch->setTagAttribute("type", "text", "name/role/roleTerm");
 
       array_push($nameArray, $nameBranch);
@@ -415,7 +422,7 @@
     //   local--CALL NUMBER
     //   NOTE: This should really be parsed!
     if ((!empty($row['call_number'])) && (!preg_match("/@\s*$/",
-	                                  $row['call_number']))) {
+                                          $row['call_number']))) {
       $identifierArray = array();
       $identifierArray = preg_split("/\s*;\s*/", $row['call_number']);
       foreach ($identifierArray as $singleIdentifier) {
@@ -439,7 +446,7 @@
       //   editor
       if (!empty($row['editor'])) {
         $editor=$row['editor'];
-	$author=$row['author'];
+        $author=$row['author'];
         if (ereg(" *\(eds?\)$", $editor))
           $editor = ereg_replace("[ \r\n]*\(eds?\)", "", $editor);
         if (ereg(" *\(eds?\)$", $author))
