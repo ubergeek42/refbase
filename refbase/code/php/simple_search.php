@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./simple_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   30-May-04, 17:46
+	// Modified:   13-Feb-05, 21:12
 
 	// Search form providing access to the main fields of the database.
 	// It offers some output options (like how many records to display per page)
@@ -58,7 +58,7 @@
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Simple Search", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Simple Search", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (2b) Start <form> and <table> holding the form elements:
@@ -104,7 +104,7 @@
 	// 5. An additional non-database value
 	// 6. Optional <OPTION SELECTED>
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "publication",
 				 "publicationName",
 				 "All",

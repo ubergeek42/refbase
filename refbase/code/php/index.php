@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./index.php
 	// Created:    29-Jul-02, 16:45
-	// Modified:   02-Nov-04, 00:44
+	// Modified:   13-Feb-05, 20:40
 
 	// This script builds the main page.
 	// It provides login and quick search forms
@@ -51,7 +51,7 @@
 		$viewType = "";
 
 	// CONSTRUCT SQL QUERY:
-	$query = "SELECT COUNT(serial) FROM refs"; // query the total number of records
+	$query = "SELECT COUNT(serial) FROM $tableRefs"; // query the total number of records
 
 	// --------------------------------------------------------------------
 
@@ -70,7 +70,7 @@
 
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Home", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Home", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (5) CLOSE the database connection:
@@ -79,7 +79,7 @@
 	// --------------------------------------------------------------------
 ?>
 
-<table align="center" border="0" cellpadding="2" cellspacing="5" width="90%" summary="This table explains features, goals and usage of the <? echo htmlentities($officialDatabaseName); ?>">
+<table align="center" border="0" cellpadding="2" cellspacing="5" width="90%" summary="This table explains features, goals and usage of the <? echo encodeHTML($officialDatabaseName); ?>">
 	<tr>
 		<td colspan="2"><h3><?php echo $loc["Goals"]; ?> &amp; <?php echo $loc["Features"]; ?></h3></td>
 		<td width="180" valign="bottom"><?php
@@ -95,12 +95,12 @@ else
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
-		<td><? echo $loc["ThisDatabaseAttempts"] . htmlentities($scientificFieldDescriptor); ?>.
+		<td><? echo $loc["ThisDatabaseAttempts"] . encodeHTML($scientificFieldDescriptor); ?>.
 			<br>
 			<br>
 			<?php echo $loc["ThisDatabase"] ." ". $loc["provides"]; ?>
 			<ul type="circle">
-				<li>a comprehensive dataset on <? echo htmlentities($scientificFieldDescriptor)." ".$loc["Literature"]; 
+				<li>a comprehensive dataset on <? echo encodeHTML($scientificFieldDescriptor)." ".$loc["Literature"]; 
 	// report the total number of records:
 	echo ", ". $loc["currently featuring"] . $recordCount . $loc["Records"];
 	?>
@@ -213,7 +213,7 @@ else
 		// -------------------------------------------------------
 ?>
 
-				<li><a href="library_search.php"><?php echo $loc["Library"]; ?> <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["SearchExt"]; ?> <? echo htmlentities($hostInstitutionName); ?></li>
+				<li><a href="library_search.php"><?php echo $loc["Library"]; ?> <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["SearchExt"]; ?> <? echo encodeHTML($hostInstitutionName); ?></li>
 			</ul>
 		</td>
 		<td width="163" valign="top">
@@ -421,7 +421,7 @@ else
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
-    <td><?php echo $loc["ThisDatabaseIsMaintained"]; ?> <a href="<? echo $hostInstitutionURL; ?>"><? echo htmlentities($hostInstitutionName); ?></a> (<? echo htmlentities($hostInstitutionAbbrevName); ?>). <?php echo $loc["You are welcome to send"]; ?> <a href="mailto:<? echo $feedbackEmail; ?>"><?php echo $loc["feedback address"]; ?></a>. <?php echo $loc["refbaseDesc"]; ?></td>
+    <td><?php echo $loc["ThisDatabaseIsMaintained"]; ?> <a href="<? echo $hostInstitutionURL; ?>"><? echo encodeHTML($hostInstitutionName); ?></a> (<? echo encodeHTML($hostInstitutionAbbrevName); ?>). <?php echo $loc["You are welcome to send"]; ?> <a href="mailto:<? echo $feedbackEmail; ?>"><?php echo $loc["feedback address"]; ?></a>. <?php echo $loc["refbaseDesc"]; ?></td>
 		<td width="163" valign="top"><a href="http://www.refbase.net/"><img src="img/refbase_credit.gif" alt="powered by refbase" width="80" height="44" hspace="0" border="0"></a></td>
 	</tr>
 </table><?php
