@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_options.php
 	// Created:    24-Oct-04, 19:31
-	// Modified:   27-Feb-04, 18:14
+	// Modified:   27-Feb-04, 23:10
 
 	// This script provides options which are individual for each user.
 	// 
@@ -145,8 +145,10 @@
 
 	// If the admin is logged in AND the displayed user data are NOT his own, we overwrite the default header message:
 	// (Since the admin is allowed to view and edit account data from other users, we have to provide a dynamic header message in that case)
-	if (($loginEmail == $adminLoginEmail) && ($userID != getUserID($loginEmail))) // ('$adminLoginEmail' is specified in 'ini.inc.php')
+	if (($loginEmail == $adminLoginEmail) && (!empty($userID)) && ($userID != getUserID($loginEmail))) // ('$adminLoginEmail' is specified in 'ini.inc.php')
 		$HeaderString = "Edit account options for <b>" . encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . $row["email"] . ")</b>:";
+	elseif (empty($userID))
+		$HeaderString = "Edit account options for anyone who isn't logged in:";
 
 	// Show the login status:
 	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
@@ -170,9 +172,17 @@
 		$formVars["language"] = $row["language"];
 	}
 
-
-	// Get all languages that were setup and enabled by the admin:
-	$languagesArray = getLanguages(""); // function 'getLanguages()' is defined in 'include.inc.php'
+	if (!empty($userID))
+	{
+		// Get all languages that were setup and enabled by the admin:
+		$languagesArray = getLanguages(""); // function 'getLanguages()' is defined in 'include.inc.php'
+		$languagePopupDisabled = "";
+	}
+	else // if '$userID == 0' which indicates a user not being logged in
+	{
+		$languagesArray = array($defaultLanguage); // for a user who's not logged in, we fall back to the default language (defined in 'ini.inc.php')
+		$languagePopupDisabled = " disabled"; // disable the language popup if the user isn't logged in
+	}
 
 	$languageOptionTags = buildSelectMenuOptions($languagesArray, " *; *", "\t\t\t", false); // build properly formatted <option> tag elements from language items returned by function 'getLanguages()'
 	$userLanguage = getLanguages($userID); // get the preferred language for the current user
@@ -204,7 +214,7 @@
 	<td align="left" width="169">Use language:</td>
 	<td><? echo fieldError("languageName", $errors); ?>
 
-		<select name="languageName"><? echo $languageOptionTags; ?>
+		<select name="languageName"<? echo $languagePopupDisabled; ?>><? echo $languageOptionTags; ?>
 
 		</select>
 	</td>
@@ -331,7 +341,7 @@
 		else
 			$allowCiteChecked = "";
 
-		if ($userPermissionsArray['allow_change_personinfo'] == 'yes')
+		if ($userPermissionsArray['allow_modify_options'] == 'yes')
 			$allowChangePersonInfoChecked = " checked";
 		else
 			$allowChangePersonInfoChecked = "";
@@ -445,7 +455,7 @@
 <tr>
 	<td align="left"></td>
 	<td>
-		<input type="checkbox" name="allow_change_personinfo" value="yes"<? echo $allowChangePersonInfoChecked; ?>>&nbsp;&nbsp;Change personal info
+		<input type="checkbox" name="allow_modify_options" value="yes"<? echo $allowChangePersonInfoChecked; ?>>&nbsp;&nbsp;Modify options
 	</td>
 	<td></td>
 </tr>
