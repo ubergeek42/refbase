@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./install.sql
 # Created:    02-Oct-04, 20:11
-# Modified:   26-Oct-04, 00:03
+# Modified:   01-Nov-04, 00:30
 
 # MySQL database structure & initial data
 
@@ -717,7 +717,7 @@ CREATE TABLE `users` (
   `logins` mediumint(8) unsigned default NULL,
   `language` varchar(50) default 'en',
   `user_id` mediumint(8) unsigned NOT NULL auto_increment,
-  `group_id` mediumint(8) unsigned NOT NULL default '0',
+  `user_groups` text,
   `marked` enum('no','yes') NOT NULL default 'no',
   `created_date` date default NULL,
   `created_time` time default NULL,
@@ -732,4 +732,4 @@ CREATE TABLE `users` (
 # data for table `users`
 #
 
-INSERT INTO `users` VALUES ('Initial', 'refbase user', 'Mr', '', 'refbase', '', '', '', '', '', '', '', '', '', 'user@refbase.net', 'http://www.refbase.net/', NULL, NULL, '2004-11-01 12:00:00', 0, 'en', 1, 0, 'no', '2004-11-01', '12:00:00', 'Initial refbase user (user@refbase.net)', '2004-11-01', '12:00:00', 'Initial refbase user (user@refbase.net)');
+INSERT INTO `users` VALUES ('Initial', 'refbase user', 'Mr', '', 'refbase', '', '', '', '', '', '', '', '', '', 'user@refbase.net', 'http://www.refbase.net/', NULL, NULL, '2004-11-01 12:00:00', 0, 'en', 1, NULL, 'no', '2004-11-01', '12:00:00', 'Initial refbase user (user@refbase.net)', '2004-11-01', '12:00:00', 'Initial refbase user (user@refbase.net)');
