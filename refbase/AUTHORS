@@ -1,9 +1,8 @@
-This file lists the current members of the refbase development team,
-i.e., people who have write access to the CVS.
+This file lists the current members of the refbase development team.
 
-Please avoid sending e-mail with refbase-related questions directly to
-them; your questions are likely to be answered much faster if you post
-them to the one of the mailing lists or forums on sourceforge:
+Please avoid sending e-mail with refbase-related questions directly to them;
+your questions are likely to be answered much faster if you post them to one of
+the mailing lists or forums on sourceforge:
   <http://sourceforge.net/projects/refbase/>
 
 - Matthias Steffens <refbase@extracts.de>:
@@ -13,10 +12,10 @@ them to the one of the mailing lists or forums on sourceforge:
   Project manager, application design
 
 - Richard Karnesky <karnesky@gmail.com>:
-  Application engineering, MODS XML export, minor bugfixes, some docs
+  Application engineering, MODS XML export, Endnote style, some bugfixes & docs
 
 - Jochen Wendebaum <wendebaum@users.sourceforge.net>:
   Localization, german translation
 
-Many other people have contributed to this project with feature requests,
-bug reports, testing, and helpful suggestions.
+Many other people have contributed to this project with feature requests, bug
+reports, testing, and helpful suggestions.
