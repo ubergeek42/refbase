@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./receipt.php
 	// Created:    2-Jan-03, 22:43
-	// Modified:   13-Dec-03, 23:20
+	// Modified:   29-Sep-04, 20:44
 
 	// This php script will display a feedback page after any action of
 	// adding/editing/deleting a record. It will display links to the
@@ -25,12 +25,29 @@
 
 	// --------------------------------------------------------------------
 
-	// Connect to a session
-	session_start();
-	
-	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session();
 
 	// --------------------------------------------------------------------
+
+	// First of all, check if this script was called by something else than 'record.php' (via 'modify.php'):
+	// (Note: Although 'receipt.php' gets actually called by 'modify.php', the HTTP_REFERER will be still set to 'record.php')
+	if (!ereg(".+/record.php\?.+", $_SERVER['HTTP_REFERER']))
+	{
+		// save an appropriate error message:
+		$HeaderString = "<b><span class=\"warning\">Invalid call to script 'receipt.php'!</span></b>";
+
+		// Write back session variables:
+		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+		
+		if (!empty($_SERVER['HTTP_REFERER'])) // if the referer variable isn't empty
+			header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to calling page
+		else
+			header("Location: index.php"); // redirect to main page ('index.php')
+
+		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	}
 
 	// [ Extract form variables sent through POST/GET by use of the '$_REQUEST' variable ]
 	// [ !! NOTE !!: for details see <http://www.php.net/release_4_2_1.php> & <http://www.php.net/manual/en/language.variables.predefined.php> ]
@@ -47,6 +64,13 @@
 	// Extract the header message that was returned by 'modify.php':
 	$HeaderString = $_REQUEST['headerMsg'];
 
+	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// ('' will produce the default 'Web' output style)
+	if (isset($_REQUEST['viewType']))
+		$viewType = $_REQUEST['viewType'];
+	else
+		$viewType = "";
+
 	// Extract generic variables from the request:
 	$oldQuery = $_REQUEST['oldQuery']; // fetch the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
 	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
@@ -61,26 +85,23 @@
 
 	// (4a) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Record Action Feedback", "noindex,nofollow", "Feedback page that confirms any adding, editing or deleting of records in the " . htmlentities($officialDatabaseName), "", false, "");
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Record Action Feedback", "noindex,nofollow", "Feedback page that confirms any adding, editing or deleting of records in the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
 
 
 	// (4b) DISPLAY results:
 	// First, construct the correct sql query that will link back to the added/edited record:
-	if (session_is_registered("loginEmail")) // if a user is logged in, show user specific fields:
-		$sqlQuery = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial, marked, copy, selected, user_keys, user_notes, user_file"
+	if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
+		$sqlQuery = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial, marked, copy, selected, user_keys, user_notes, user_file, user_groups, bibtex_id, related"
 				. " FROM refs LEFT JOIN user_data ON serial = record_id AND user_id =" . $loginUserID . " WHERE serial RLIKE \"^(" . $serialNo . ")$\" ORDER BY author, year DESC, publication"; // we simply use the fixed default ORDER BY clause here
 	else // if NO user logged in, don't display any user specific fields:
 		$sqlQuery = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial"
 				. " FROM refs WHERE serial RLIKE \"^(" . $serialNo . ")$\" ORDER BY author, year DESC, publication"; // we simply use the fixed default ORDER BY clause here
 
 	$sqlQuery = rawurlencode($sqlQuery);
-	
-	// Second, we'll have to URL encode the sqlQuery part within '$oldQuery' while maintaining the rest unencoded(!):
-	$oldQuerySQLPart = preg_replace("/sqlQuery=(.+?)&amp;.+/", "\\1", $oldQuery); // extract the sqlQuery part within '$oldQuery'
-	$oldQueryOtherPart = preg_replace("/sqlQuery=.+?(&amp;.+)/", "\\1", $oldQuery); // extract the remaining part after the sqlQuery
-	$oldQuerySQLPart = rawurlencode($oldQuerySQLPart); // URL encode sqlQuery part within '$oldQuery'
-	$oldQueryPartlyEncoded = "sqlQuery=" . $oldQuerySQLPart . $oldQueryOtherPart; // Finally, we merge everything again
+
+	// Second, prepare the previous query stored in '$oldQuery' so that it can be used as active query again:
+	$reactivatedOldQuery = reactivateOldQuery($oldQuery); // function 'reactivateOldQuery()' is defined in 'include.inc.php'
 
 
 	// Build a TABLE, containing one ROW and DATA tag:
@@ -96,7 +117,7 @@
 		echo "\n\t\t&nbsp;&nbsp;-OR-&nbsp;&nbsp;";
 
 	if ($oldQuery != "") // only provide a link to any previous search results if '$oldQuery' isn't empty (which occurs for "Add Record")
-		echo "\n\t\t<a href=\"search.php?" . $oldQueryPartlyEncoded . "\">Display previous search results</a>";
+		echo "\n\t\t<a href=\"search.php?" . $reactivatedOldQuery . "\">Display previous search results</a>";
 
 	if ($recordAction != "delet" || $oldQuery != "")
 		echo "\n\t\t&nbsp;&nbsp;-OR-&nbsp;&nbsp;";
@@ -115,5 +136,6 @@
 
 	// --------------------------------------------------------------------
 ?>
+
 </body>
 </html> 
