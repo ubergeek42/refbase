@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sql_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   12-Jan-03, 16:35
+	// Modified:   05-Sep-03, 20:42
 
 	// Search formular that offers to specify a custom sql query.
 	// It offers some output options (like how many records to display per page)
@@ -69,6 +69,17 @@
 				$checkLinks = "";
 
 			$showRows = $_REQUEST['showRows']; // extract the $showRows parameter
+
+			$displayType = $_REQUEST['submit']; // extract the type of display requested by the user (either 'Display', 'Export' or '')
+			$exportFormat = $_REQUEST['exportFormatSelector']; // get the export format chosen by the user (only occurs in 'extract.php' form and in query result lists)
+			$exportOrder = $_REQUEST['exportOrder']; // get the export sort order chosen by the user (only occurs in 'extract.php' form and in query result lists)
+
+			$oldQuery = $_REQUEST['oldQuery']; // get the query URL of the formerly displayed results page (if available) so that its's available on the subsequent receipt page that follows any add/edit/delete action!
+			if (ereg('sqlQuery%3D', $oldQuery)) // if '$oldQuery' still contains URL encoded data... ('%3D' is the URL encoded form of '=', see note below!)
+				$oldQuery = rawurldecode($oldQuery); // ...URL decode old query URL
+												// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
+												//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
+			$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
 		}
 	else // if there was no previous SQL query provide the default one:
 		{
@@ -76,11 +87,19 @@
 			$checkQuery = " checked";
 			$checkLinks = " checked";
 			$showRows = "10";
+			$displayType = ""; // ('' will produce the default columnar output style)
+			$exportFormat = "";
+			$exportOrder = "";
+			$oldQuery = "";
 		}
 
 	// (2b) Start <form> and <table> holding the form elements:
 	echo "\n<form action=\"search.php\" method=\"POST\">";
-	echo "\n<input type=\"hidden\" name=\"formType\" value=\"sqlSearch\">";
+	echo "\n<input type=\"hidden\" name=\"formType\" value=\"sqlSearch\">"
+			. "\n<input type=\"hidden\" name=\"submit\" value=\"$displayType\">"
+			. "\n<input type=\"hidden\" name=\"exportFormatSelector\" value=\"" . rawurlencode($exportFormat) . "\">"
+			. "\n<input type=\"hidden\" name=\"exportOrder\" value=\"$exportOrder\">"
+			. "\n<input type=\"hidden\" name=\"oldQuery\" value=\"" . rawurlencode($oldQuery) . "\">";
 	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the search form\">"
 			. "\n<tr>\n\t<td width=\"58\" valign=\"top\"><b>SQL Query:</b></td>\n\t<td width=\"10\">&nbsp;</td>"
 			. "\n\t<td><textarea name=\"sqlQuery\" rows=\"6\" cols=\"60\">$sqlQuery</textarea></td>"
