@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_details.php
 	// Created:    16-Apr-02, 10:55
-	// Modified:   31-May-04, 10:56
+	// Modified:   24-Oct-04, 20:35
 
 	// This script shows the user a user <form>. It can be used both for INSERTing a new user and for UPDATE-ing an existing user.
 	// If the user is logged in, then it is an UPDATE; otherwise, an INSERT. The script also shows error messages above widgets that
@@ -127,10 +127,6 @@
 	else
 		$viewType = "";
 
-//	if (isset($_SESSION['errors']))
-//		// Read session variable (only necessary if register globals is OFF!)
-//		$errors = $_SESSION['errors'];
-
 	// Is the user logged in and were there no errors from a previous validation? If so, look up the user for editing:
 	if (isset($_SESSION['loginEmail']) && empty($errors) && isset($userID) && !empty($userID))
 	{
@@ -174,14 +170,12 @@
 		$errors = array();
 
 		// Load all the form variables with user data:
-//		$formVars["user"] = $row["user"];
 		$formVars["firstName"] = $row["first_name"];
 		$formVars["lastName"] = $row["last_name"];
 		$formVars["title"] = $row["title"];
 		$formVars["institution"] = $row["institution"];
 		$formVars["abbrevInstitution"] = $row["abbrev_institution"];
 		$formVars["corporateInstitution"] = $row["corporate_institution"];
-//		$formVars["address"] = $row["address"];
 		$formVars["address1"] = $row["address_line_1"];
 		$formVars["address2"] = $row["address_line_2"];
 		$formVars["address3"] = $row["address_line_3"];
@@ -192,15 +186,15 @@
 		$formVars["phone"] = $row["phone"];
 		$formVars["email"] = $row["email"];
 		$formVars["url"] = $row["url"];
-//		$formVars["keywords"] = $row["keywords"];
-//		$formVars["notes"] = $row["notes"];
-//		$formVars["lastLogin"] = $row["last_login"];
-//		$formVars["logins"] = $row["logins"];
-//		$formVars["language"] = $row["language"];
-//		$formVars["records"] = $row["records"];
-//		$formVars["queries"] = $row["queries"];
-//		$formVars["serial"] = $row["serial"];
-//		$formVars["marked"] = $row["marked"];
+
+		if (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail)) // if the admin is logged in
+		{
+			$formVars["keywords"] = $row["keywords"];
+			$formVars["notes"] = $row["notes"];
+			$formVars["marked"] = $row["marked"];
+		}
+
+		$formVars["language"] = $row["language"];
 	}
 	elseif (empty($errors) && (!isset($userID) OR ($userID == ""))) // no userID specified
 	{
@@ -211,14 +205,12 @@
 		$errors = array();
 
 		// Set all form variables to "" (in order to prevent 'Undefined variable...' messages):
-//		$formVars["user"] = "";
 		$formVars["firstName"] = "";
 		$formVars["lastName"] = "";
 		$formVars["title"] = "";
 		$formVars["institution"] = "";
 		$formVars["abbrevInstitution"] = "";
 		$formVars["corporateInstitution"] = "";
-//		$formVars["address"] = "";
 		$formVars["address1"] = "";
 		$formVars["address2"] = "";
 		$formVars["address3"] = "";
@@ -229,15 +221,15 @@
 		$formVars["phone"] = "";
 		$formVars["email"] = "";
 		$formVars["url"] = "";
-//		$formVars["keywords"] = "";
-//		$formVars["notes"] = "";
-//		$formVars["lastLogin"] = "";
-//		$formVars["logins"] = "";
-//		$formVars["language"] = "";
-//		$formVars["records"] = "";
-//		$formVars["queries"] = "";
-//		$formVars["serial"] = "";
-//		$formVars["marked"] = "";
+
+		if (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail)) // if the admin is logged in
+		{
+			$formVars["keywords"] = "";
+			$formVars["notes"] = "";
+			$formVars["marked"] = "no";
+		}
+
+		$formVars["language"] = "en";
 	}
 
 	// Start <form> and <table> holding all the form elements:
@@ -347,18 +339,57 @@
 	<td align="left">Phone:</td>
 	<td><? echo fieldError("phone", $errors); ?>
 
-		<input type="text" name="phone" value="<? echo $formVars["phone"]; ?>" size="30">
+		<input type="text" name="phone" value="<? echo $formVars["phone"]; ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">URL:</td>
 	<td><? echo fieldError("url", $errors); ?>
 
-		<input type="text" name="url" value="<? echo $formVars["url"]; ?>" size="30">
+		<input type="text" name="url" value="<? echo $formVars["url"]; ?>" size="50">
 	</td>
 </tr>
 <?php
-// Only show the username/email and password widgets to new users (or the admin, since he's allowed to call 'user_details.php' w/o any 'userID' when logged in):
+
+	// if the admin is logged in, we'll show additional fields:
+	if (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail))
+	{
+		if ($formVars["marked"] == "yes")
+		{
+			$markedRadioYesChecked = "checked";
+			$markedRadioNoChecked = "";
+		}
+		else // $formVars["marked"] == "no"
+		{
+			$markedRadioYesChecked = "";
+			$markedRadioNoChecked = "checked";
+		}
+?>
+<tr>
+	<td align="left">Keywords:</td>
+	<td><? echo fieldError("keywords", $errors); ?>
+
+		<input type="text" name="keywords" value="<? echo $formVars["keywords"]; ?>" size="50">
+	</td>
+</tr>
+<tr>
+	<td align="left">Notes:</td>
+	<td><? echo fieldError("notes", $errors); ?>
+
+		<input type="text" name="notes" value="<? echo $formVars["notes"]; ?>" size="50">
+	</td>
+</tr>
+<tr>
+	<td align="left">Marked:</td>
+	<td><? echo fieldError("marked", $errors); ?>
+
+		<input type="radio" name="marked" value="yes"<? echo $markedRadioYesChecked; ?>>&nbsp;&nbsp;yes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="marked" value="no"<? echo $markedRadioNoChecked; ?>>&nbsp;&nbsp;no
+	</td>
+</tr>
+<?php
+	}
+
+	// Only show the username/email and password widgets to new users (or the admin, since he's allowed to call 'user_details.php' w/o any 'userID' when logged in):
 	if (!isset($_SESSION['loginEmail']) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($userID == "")))
 	{
 ?>
@@ -385,8 +416,9 @@
 </tr>
 <?php
 	}
-// if a user is logged in, we also show the password field (but with a different label text) so that the user is able to change his password later on:
-// (just keep the password field empty, if you don't want to change your password)
+
+	// if a user is logged in, we also show the password field (but with a different label text) so that the user is able to change his password later on:
+	// (just keep the password field empty, if you don't want to change your password)
 	elseif (isset($_SESSION['loginEmail']) && isset($userID))
 	{
 ?>
@@ -411,6 +443,7 @@
 	<td align="left"></td>
 	<td>
 <?php
+
 	// The submit button reads 'Add' if an authorized user uses 'user_details.php' to add a new user (-> 'userID' is empty!)
 	// This should make it more clear that submitting the form is going to add a new user without any further approval!
 	// INSERTs are allowed to:
