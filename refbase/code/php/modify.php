@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./modify.php
 	// Created:    18-Dec-02, 23:08
-	// Modified:   01-Nov-04, 21:36
+	// Modified:   17-Feb-05, 19:33
 
 	// This php script will perform adding, editing & deleting of records.
 	// It then calls 'receipt.php' which displays links to the modified/added record
@@ -633,7 +633,7 @@
 								// yes, the form already contains a valid serial number, so we'll have to update the relevant record:
 	{
 			// UPDATE - construct queries to update the relevant record
-			$queryRefs = "UPDATE refs SET "
+			$queryRefs = "UPDATE $tableRefs SET "
 					. "author = \"$authorName\", "
 					. "first_author = \"$first_author\", "
 					. "author_count = \"$author_count\", "
@@ -688,13 +688,13 @@
 
 			// first, we need to check if there's already an entry for the current record & user within the 'user_data' table:
 			// CONSTRUCT SQL QUERY:
-			$query = "SELECT data_id FROM user_data WHERE record_id = $serialNo AND user_id = $loginUserID"; // '$loginUserID' is provided as session variable
+			$query = "SELECT data_id FROM $tableUserData WHERE record_id = $serialNo AND user_id = $loginUserID"; // '$loginUserID' is provided as session variable
 
 			// (3) RUN the query on the database through the connection:
 			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 			if (mysql_num_rows($result) == 1) // if there's already an existing user_data entry, we perform an UPDATE action:
-				$queryUserData = "UPDATE user_data SET "
+				$queryUserData = "UPDATE $tableUserData SET "
 								. "marked = \"$markedRadio\", "
 								. "copy = \"$copyName\", "
 								. "selected = \"$selectedRadio\", "
@@ -706,7 +706,7 @@
 								. "related = \"$relatedName\" "
 								. "WHERE record_id = $serialNo AND user_id = $loginUserID"; // '$loginUserID' is provided as session variable
 			else // otherwise we perform an INSERT action:
-				$queryUserData = "INSERT INTO user_data SET "
+				$queryUserData = "INSERT INTO $tableUserData SET "
 								. "marked = \"$markedRadio\", "
 								. "copy = \"$copyName\", "
 								. "selected = \"$selectedRadio\", "
@@ -726,7 +726,7 @@
 			// Instead of deleting data, deleted records will be moved to the "deleted" table. Data will be stored within the "deleted" table
 			// until they are removed manually. This is to provide the admin with a simple recovery method in case a user did delete some data by accident...
 			// INSERT - construct queries to add data as new record
-			$queryDeleted = "INSERT INTO deleted SET "
+			$queryDeleted = "INSERT INTO $tableDeleted SET "
 					. "author = \"$authorName\", "
 					. "first_author = \"$first_author\", "
 					. "author_count = \"$author_count\", "
@@ -786,14 +786,14 @@
 					. "deleted_time = \"$currentTime\", "
 					. "deleted_by = \"$currentUser\"";
 
-			// since data have been moved from table "refs" to table "deleted", its now safe to delete the data from table "refs":
-			$queryRefs = "DELETE FROM refs WHERE serial = $serialNo";
+			// since data have been moved from table 'refs' to table 'deleted', its now safe to delete the data from table 'refs':
+			$queryRefs = "DELETE FROM $tableRefs WHERE serial = $serialNo";
 	}
 
 	else // if the form does NOT contain a valid serial number, we'll have to add the data:
 	{
 			// INSERT - construct queries to add data as new record
-			$queryRefs = "INSERT INTO refs SET "
+			$queryRefs = "INSERT INTO $tableRefs SET "
 					. "author = \"$authorName\", "
 					. "first_author = \"$first_author\", "
 					. "author_count = \"$author_count\", "
@@ -891,7 +891,7 @@
 
 		$result = queryMySQLDatabase($queryUserData, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
-		getUserGroups("user_data", $loginUserID); // update the 'userGroups' session variable (function 'getUserGroups()' is defined in 'include.inc.php')
+		getUserGroups($tableUserData, $loginUserID); // update the 'userGroups' session variable (function 'getUserGroups()' is defined in 'include.inc.php')
 	}
 	elseif ($recordAction == "add")
 	{
@@ -901,7 +901,7 @@
 		$serialNo = @ mysql_insert_id($connection); // find out the unique ID number of the newly created record (Note: this function should be called immediately after the
 													// SQL INSERT statement! After any subsequent query it won't be possible to retrieve the auto_increment identifier value for THIS record!)
 
-		$queryUserData = "INSERT INTO user_data SET "
+		$queryUserData = "INSERT INTO $tableUserData SET "
 				. "marked = \"$markedRadio\", "
 				. "copy = \"$copyName\", "
 				. "selected = \"$selectedRadio\", "
@@ -917,7 +917,7 @@
 
 		$result = queryMySQLDatabase($queryUserData, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
-		getUserGroups("user_data", $loginUserID); // update the 'userGroups' session variable (function 'getUserGroups()' is defined in 'include.inc.php')
+		getUserGroups($tableUserData, $loginUserID); // update the 'userGroups' session variable (function 'getUserGroups()' is defined in 'include.inc.php')
 
 
 		// Send EMAIL announcement:
