@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sql_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   29-Sep-04, 14:57
+	// Modified:   13-Feb-05, 21:05
 
 	// Search form that offers to specify a custom sql query.
 	// It offers some output options (like how many records to display per page)
@@ -17,6 +17,7 @@
 	*/
 	
 	// Incorporate some include files:
+	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
 	include 'includes/header.inc.php'; // include header
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
@@ -90,7 +91,7 @@
 		}
 	else // if there was no previous SQL query provide the default one:
 		{
-			$sqlQuery = "SELECT author, title, year, publication, volume, pages FROM refs WHERE year &gt; 2001 ORDER BY year DESC, author";
+			$sqlQuery = "SELECT author, title, year, publication, volume, pages FROM $tableRefs WHERE year &gt; 2001 ORDER BY year DESC, author";
 			$checkQuery = "";
 			$checkLinks = " checked";
 			$showRows = "10";
@@ -105,7 +106,7 @@
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- SQL Search", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- SQL Search", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
 
 	// (2b) Start <form> and <table> holding the form elements:
@@ -151,10 +152,10 @@
 			. "\n<tr>\n\t<td align=\"center\" colspan=\"3\">&nbsp;</td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td valign=\"top\"><b>".$loc["Examples"].":</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td><code>SELECT author, title, year, publication FROM refs WHERE publication = \"Polar Biology\" AND author RLIKE \"Legendre|Ambrose\" ORDER BY year DESC, author</code></td>"
+			. "\n\t<td><code>SELECT author, title, year, publication FROM $tableRefs WHERE publication = \"Polar Biology\" AND author RLIKE \"Legendre|Ambrose\" ORDER BY year DESC, author</code></td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td valign=\"top\">&nbsp;</td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td><code>SELECT serial, author, title, year, publication, volume FROM refs ORDER BY serial DESC LIMIT 10</code></td>"
+			. "\n\t<td><code>SELECT serial, author, title, year, publication, volume FROM $tableRefs ORDER BY serial DESC LIMIT 10</code></td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td valign=\"top\"><b>".$loc["Help"].":</b></td>\n\t<td>&nbsp;</td>"
 			. "\n\t<td>".$loc["MySQL-Info"]."</td>"
