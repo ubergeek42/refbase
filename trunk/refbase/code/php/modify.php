@@ -280,11 +280,12 @@
 	//  the 'upload_max_filesize' specified within your 'php.ini' configuration file)
 	if (!empty($uploadFile) && !empty($uploadFile["name"])) // if the user attempted to upload a file
 	{
-		// NOTE: 'is_uploaded_file()' does NOT seem to work for me! ?:-/ (using PHP 4.3.4 on MacOSX 10.3.2)
+		// NOTE: 'is_uploaded_file()' didn't work for Mattihas (using PHP 4.3.4 on MacOSX 10.3.2)
+		//       It didn't work for me as he had it, but this works on PHP 5 on Linux.....--RAK
 		// The 'is_uploaded_file()' function returns 'true' if the file named by '$uploadFile["name"]' was uploaded via HTTP POST. This is useful to help ensure
 		// that a malicious user hasn't tried to trick the script into working on files upon which it should not be working - for instance, /etc/passwd.
-//		if (is_uploaded_file($_FILES["uploadFile"]))
-//		{
+		if (is_uploaded_file($_FILES['uploadFile']['tmp_name']))
+		{
 			if (empty($uploadFile["tmp_name"])) // no tmp file exists => we assume that the maximum upload file size was exceeded!
 			// or check via 'error' element instead: "if ($uploadFile["error"] == 1)" (the 'error' element exists since PHP 4.2.0)
 			{
@@ -298,7 +299,6 @@
 				// since 'is_uploaded_file()' does NOT seem to work for me, here's a clumsy workaround, that at least tries to prevent hackers from gaining access to the systems 'passwd' file:
 				if (eregi("^passwd$", $uploadFile["name"])) // ...BUT its file name equals 'passwd'
 					$errors["uploadFile"] = "This file name is not allowed!"; // file name must not be 'passwd'
-
 				// check for invalid file name extensions:
 				if (eregi("\.(exe|com|bat|zip|php|phps|php3|cgi)$", $uploadFile["name"])) // ...BUT has a invalid file name extension (adjust the regex pattern if you want more relaxed file name validation)
 					$errors["uploadFile"] = "You cannot upload this type of file!"; // file name must not end with .exe, .com, .bat, .zip, .php, .phps, .php3 or .cgi
@@ -307,10 +307,34 @@
 				if (!ereg("^[a-zA-Z0-9+_.-]+$", $uploadFile["name"])) // ...BUT has invalid characters in its name (adjust the regex pattern if you want more relaxed file name validation)
 					$errors["uploadFile"] = "File name characters can only be alphanumeric ('a-zA-Z0-9'), plus ('+'), minus ('-'), substring ('_') or a dot ('.'):"; // characters of file name must be within [a-zA-Z0-9+_.-]
 			}
-//		}
+		}
 //		else // a malicious user may have tried to trick the script into working on files upon which it should not be working - for instance, /etc/passwd
 //			$errors["uploadFile"] = "Couldn't upload your file:"; // inform the user that there was a problem with the upload
+		else
+		{
+			// I'm not sure if this actually works --RAK
+			switch($_FILES['uploadFile']['error'])
+			{
+				case 0: //no error; possible file attack!
+					$errors["uploadFile"] = "There was a problem with your upload.";
+				case 1: //uploaded file exceeds the upload_max_filesize directive in php.ini
+					$maxFileSize = ini_get("upload_max_filesize");
+					$fileError = "File size must not be greater than " . $maxFileSize . ":";
+					$errors["uploadFile"] = $fileError;
+				case 2: //uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the html form
+					$errors["uploadFile"] = "The file you are trying to upload is too big.";
+				case 3: //uploaded file was only partially uploaded
+					$errors["uploadFile"] = "The file you are trying upload was only partially uploaded.";
+				case 4: //no file was uploaded
+					$errors["uploadFile"] = "You must select a file for upload.";
+				case 6:
+					$errors["uploadFile"] = "Missing a temporary folder.";
+				default: //a default error, just in case!  :)
+					$errors["uploadFile"] = "There was a problem with your upload.";
+			}
+		}
 	}
+	
 
 
 	// CAUTION: validation of other fields is currently disabled, since, IMHO, there are too many open questions how to implement this properly
