@@ -1,4 +1,12 @@
 <?
+	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
+	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+	//             Please see the GNU General Public License for more details.
+	// File:       ./header.inc
+	// Created:    28-Jul-02, 11:21
+	// Modified:   19-Jan-03, 14:46
+
 	// This is the header include file.
 	// It contains functions that provide the HTML header
 	// as well as the visible header that gets displayed on every page.

@@ -1,7 +1,15 @@
 <?php
-	// This file contains functions
-	// that are shared between all
-	// scripts
+	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
+	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+	//             Please see the GNU General Public License for more details.
+	// File:       ./include.inc
+	// Created:    16-Apr-02, 10:54
+	// Modified:   23-Jan-03, 0:34
+
+	// This file contains important
+	// functions that are shared
+	// between all scripts.
 
 	/*
 	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book

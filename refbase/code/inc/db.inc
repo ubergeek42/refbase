@@ -1,37 +1,31 @@
 <?php
-/*
-Source code example for Web Database Applications
+	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
+	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+	//             Please see the GNU General Public License for more details.
+	// File:       ./db.inc
+	// Created:    15-Oct-02, 19:11
+	// Modified:   2-Jun-03, 13:31
 
-Unless otherwise stated, the source code distributed with this book can be
-redistributed in source or binary form so long as an acknowledgment appears
-in derived source files.
-The citation should list that the code comes from Hugh E.
-Williams and David Lane, "Web Database Application with PHP and MySQL"
-published by O'Reilly & Associates.
-This code is under copyright and cannot be included in any other book,
-publication, or educational product without permission from O'Reilly &
-Associates.
-No warranty is attached; we cannot take responsibility for errors or fitness
-for use.
-*/
+	// This file holds crucial
+	// database access information.
+	// Please read the notes below!
 
-// NOTE: Edit the variables '$databaseName' and '$password' to suit your setup!
-// CAUTION: To avoid security risks you must not permit any remote user to view
-//          this file! E.g., this can be done by adjusting the config file of
-//          your server ("httpd.conf" in case of the apache web server) to
-//          disallow viewing of "*\.inc" files ("Deny from all").
+	/*
+	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
+	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
+	*/
+	
+	// NOTE: Edit the variables '$databaseName' and '$password' to suit your setup!
+	// CAUTION: To avoid security risks you must not permit any remote user to view
+	//          this file! E.g., this can be done by adjusting the config file of
+	//          your server ("httpd.conf" in case of the apache web server) to
+	//          disallow viewing of "*\.inc" files ("Deny from all").
 
 ?>
 <?php
-   $hostName = "localhost";
-   $databaseName = "MYSQL_DATABASE_NAME_GOES_HERE";
-   $username = "root";
-   $password = "MYSQL_PASSWORD_GOES_HERE";
-
-   function clean($input, $maxlength)
-   {
-      $input = substr($input, 0, $maxlength);
-      $input = EscapeShellCmd($input);
-      return ($input);
-   }
+	$hostName = "localhost";
+	$databaseName = "MYSQL_DATABASE_NAME_GOES_HERE";
+	$username = "root";
+	$password = "MYSQL_PASSWORD_GOES_HERE";
 ?>

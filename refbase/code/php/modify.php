@@ -1,4 +1,12 @@
 <?php
+	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
+	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+	//             Please see the GNU General Public License for more details.
+	// File:       ./modify.php
+	// Created:    18-Dec-02, 23:08
+	// Modified:   20-Jan-03, 23:29
+
 	// This php script will perform adding, editing & deleting of records.
 	// It then calls 'receipt.php' which displays links to the modified/added record
 	// as well as to the previous search results page (if any).

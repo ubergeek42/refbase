@@ -1,5 +1,15 @@
 <?php
-	// Search formular providing the main fields
+	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
+	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+	//             Please see the GNU General Public License for more details.
+	// File:       ./simple_search.php
+	// Created:    29-Jul-02, 16:39
+	// Modified:   20-Jan-03, 23:29
+
+	// Search formular providing access to the main fields of the database.
+	// It offers some output options (like how many records to display per page)
+	// and let's you specify the output sort order (up to three levels deep).
 
 	/*
 	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book

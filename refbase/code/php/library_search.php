@@ -1,5 +1,15 @@
 <?php
-	// Search formular providing the main fields. Searches will be restricted to records belonging to the IPOE library
+	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
+	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+	//             Please see the GNU General Public License for more details.
+	// File:       ./library_search.php
+	// Created:    29-Jul-02, 16:39
+	// Modified:   20-Jan-03, 23:29
+
+	// Search formular providing the main fields.
+	// Searches will be restricted to records belonging
+	// to the IPOE <http://www.uni-kiel.de/ipoe/> library.
 
 	/*
 	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book

@@ -1,4 +1,12 @@
 <?php
+	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
+	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+	//             Please see the GNU General Public License for more details.
+	// File:       ./index.php
+	// Created:    29-Jul-02, 16:45
+	// Modified:   20-Jan-03, 23:29
+
 	// This script builds the main page.
 	// It provides login and quick search forms
 	// as well as links to various search forms.
