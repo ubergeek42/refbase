@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./install.php
 	// Created:    07-Jan-04, 22:00
-	// Modified:   16-Feb-05, 16:08
+	// Modified:   16-Feb-05, 20:47
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -141,7 +141,7 @@
 
 		// DISPLAY header:
 		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Installation", "index,follow", "Installation form for the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Installation", "index,follow", "Installation form for the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 		// Start <form> and <table> holding the form elements:
@@ -446,7 +446,7 @@
 
 		// DISPLAY header:
 		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Installation Feedback", "index,follow", "Installation feedback for the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Installation Feedback", "index,follow", "Installation feedback for the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 		// Start a <table>:
@@ -460,7 +460,7 @@
 
 	<tr>
 		<td valign="top"><b>Error:</b></td>
-		<td><?php echo htmlentities($resultLines); ?></td>
+		<td><?php echo encodeHTML($resultLines); ?></td>
 	</tr>
 	<tr>
 		<td valign="top">&nbsp;</td>
@@ -494,7 +494,7 @@
 		<td>
 			Here's how to setup the admin user account for your newly created literature database:
 			<ul type="circle">
-				<li>Goto <a href="index.php" target="_blank" title="Open the main page in a new window"><?php echo htmlentities($officialDatabaseName); ?></a></li>
+				<li>Goto <a href="index.php" target="_blank" title="Open the main page in a new window"><?php echo encodeHTML($officialDatabaseName); ?></a></li>
 				<li>Login with email address = <em>user@refbase.net</em> &amp; password = <em>start</em></li>
 				<li>Click on <em>Add User</em> and enter the name, institutional abbreviation, email address and password of the admin user</li>
 				<li>Open the file <em>ini.inc.php</em> in a text editor and change the value of the <em>$adminLoginEmail</em> variable to the email address you've specified for the admin user</li>
