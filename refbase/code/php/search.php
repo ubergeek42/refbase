@@ -114,6 +114,12 @@
 			$query = extractFormElementsExtract();
 		}
 
+	// --- Form 'index.php': ---------------------
+	elseif ("$formType" == "quickSearch") // the user used the quick search form on the main page ('index.php') for searching...
+		{
+			$query = extractFormElementsQuick($showLinks);
+		}
+
 	// --------------------------------------------------------------------
 
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE, (3) RUN QUERY, (4) DISPLAY HEADER & RESULTS, (5) CLOSE CONNECTION
@@ -346,10 +352,10 @@
 			{
 				echo "\n\t<td valign=\"top\">";
 				if (!empty($row["url"]))
-					echo "<a href=\"" . $row["url"] . "\"><img src=\"img/link.jpg\" alt=\"url\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
+					echo "<a href=\"" . $row["url"] . "\"><img src=\"images/pfeil.gif\" alt=\"url\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
 	
 				if (!empty($row["doi"]))
-					echo "<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/doi.gif\" alt=\"doi\" width=\"20\" height=\"10\" hspace=\"0\" border=\"0\"></a>";
+					echo "<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"images/doi.gif\" alt=\"doi\" width=\"20\" height=\"10\" hspace=\"0\" border=\"0\"></a>";
 	
 				if (empty($row["url"]) AND (empty($row["doi"])))
 					echo "&nbsp;&nbsp;";
@@ -495,10 +501,10 @@
 //			{
 //				echo "\n\t<td valign=\"top\">";
 //				if (!empty($row["url"]))
-//					echo "<a href=\"" . $row["url"] . "\"><img src=\"img/link.jpg\" alt=\"url\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
+//					echo "<a href=\"" . $row["url"] . "\"><img src=\"images/pfeil.gif\" alt=\"url\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
 //	
 //				if (!empty($row["doi"]))
-//					echo "<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/doi.gif\" alt=\"doi\" width=\"20\" height=\"10\" hspace=\"0\" border=\"0\"></a>";
+//					echo "<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"images/doi.gif\" alt=\"doi\" width=\"20\" height=\"10\" hspace=\"0\" border=\"0\"></a>";
 //	
 //				if (empty($row["url"]) AND (empty($row["doi"])))
 //					echo "&nbsp;&nbsp;";
@@ -585,9 +591,9 @@
 
 		// append sort indicator after the 1st-level sort attribute:
 		if (preg_match("/ORDER BY $orig_fieldname(?! DESC)(?=,|$)/", $query)) // if 1st-level sort is by this attribute (in ASCending order)...
-			$tableHeaderLink .= "&nbsp;<img src=\"img/sort_asc.gif\" alt=\"(up)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append an upward arrow image
+			$tableHeaderLink .= "&nbsp;<img src=\"images/pfeil_up.gif\" alt=\"(up)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append an upward arrow image
 		elseif (preg_match("/ORDER BY $orig_fieldname DESC/", $query)) // if 1st-level sort is by this attribute (in DESCending order)...
-			$tableHeaderLink .= "&nbsp;<img src=\"img/sort_desc.gif\" alt=\"(down)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append a downward arrow image
+			$tableHeaderLink .= "&nbsp;<img src=\"images/pfeil_down.gif\" alt=\"(down)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append a downward arrow image
 
 		$tableHeaderLink .=  $HTMLafterLink; // append any necessary HTML
 
@@ -3638,6 +3644,39 @@
 
 		// Construct the SQL query:
 		$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY first_author, author_count, author, year, title";
+
+
+		return $query;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Build the database query from user input provided by the "Quick Search" form on the main page ('index.php'):
+	function extractFormElementsQuick($showLinks)
+	{
+		$query = "SELECT author, title, year, publication";
+
+		$quickSearchSelector = $_POST['quickSearchSelector']; // extract field name chosen by the user
+		$quickSearchName = $_POST['quickSearchName']; // extract search text entered by the user
+
+		// if the SELECT string doesn't already contain the chosen field name...
+		// (which is only the case for 'keywords' & 'abstract')
+		if (!ereg("$quickSearchSelector", $query))
+			$query .= ", $quickSearchSelector"; // ...add chosen field to SELECT query
+		else
+			$query .= ", volume, pages"; // ...otherwise, add further default columns
+
+		$query .= ", serial"; // add 'serial' column (although it won't be visible the 'serial' column gets included in every search query)
+							//  (which is required in order to obtain unique checkbox names)
+
+		if ("$showLinks" == "1")
+			$query .= ", url, doi"; // add 'url' & 'doi' columns
+
+		$query .= " FROM refs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
+		
+		$query .= " AND $quickSearchSelector RLIKE \"$quickSearchName\""; // add search field name & value
+
+		$query .= " ORDER BY author, year DESC, publication"; // add the default ORDER BY clause
 
 
 		return $query;
