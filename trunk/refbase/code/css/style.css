@@ -1,4 +1,4 @@
-/* CSS definitions for <http://home.knuut.de/paul/> */
+/* refbase CSS definitions */
 
 
 body        { background:#FFFFFF; color:#000000; }
@@ -12,6 +12,8 @@ pre,code    { font-family:monaco,courier,monospace; font-size:7pt; }
 .date       { font-size:smaller; }
 
 .header     { font-family:helvetica,arial,sans-serif; }
+
+.warning    { color:red; }
 
 th          { font-family:helvetica,arial,sans-serif; }
 
