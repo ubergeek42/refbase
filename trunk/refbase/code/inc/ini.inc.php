@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   16-Feb-05, 21:59
+	// Modified:   26-Feb-05, 17:20
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -101,6 +101,34 @@
 									"yes", // execute custom SQL queries via 'sql_search.php' ('allow_sql_search')
 									"yes", // change his/her personal data (like name, address or password) ('allow_change_personinfo')
 									"no"); // fully edit the contents of the 'call_number' field (like the database admin) ('allow_edit_call_number')
+											// [note that the 'allow_edit_call_number' permission setting isn't honoured yet!]
+
+
+	// When adding a new user, the following export formats will be made available to the new user by default:
+	// The specified format names must have matching entries within the 'formats' MySQL table.
+	$defaultUserExportFormats = array("Endnote",
+										"RIS",
+										"Bibtex",
+										"MODS XML");
+
+
+	// When adding a new user, the following citation styles will be made available to the new user by default:
+	// The specified citation styles must have matching entries within the 'styles' MySQL table.
+	$defaultUserStyles = array("Polar Biol",
+								"Mar Biol",
+								"MEPS",
+								"Deep Sea Res",
+								"Text Citation");
+
+
+	// When adding a new user, the following reference types will be made available to the new user by default:
+	// The specified reference types must have matching entries within the 'types' MySQL table.
+	$defaultUserTypes = array("Journal Article",
+								"Book Chapter",
+								"Book Whole",
+								"Journal",
+								"Manuscript",
+								"Map");
 
 
 	// Specify who'll be allowed to see files associated with any records:
@@ -175,6 +203,12 @@
 	// This name must correspond to an entry within the 'styles' MySQL table.
 	// It will be used for citation output within 'show.php' and the 'generateRSS()' function.
 	$defaultCiteStyle = "Polar Biol";
+
+
+	// Specify whether the user-specific cite key (if available) shall be preferred as unique record
+	// identifier when citing using the "Text Citation" style:
+	// (otherwise, the record's serial number will be used as unique record identifier)
+	$preferCiteKeyInTextCitation = "yes"; // possible values: "yes", "no"
 
 
 	// The default language selection, can be overwritten by userdefined language
