@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./rss.php
 	// Created:    25-Sep-04, 12:10
-	// Modified:   10-Oct-04, 18:06
+	// Modified:   15-Feb-05, 11:58
 
 	// This script will generate a dynamic RSS feed for the current query.
 	// Useage: Perform your query until you've got the desired results. Then, copy the "track" link in the header
@@ -17,6 +17,7 @@
 	*/
 
 	// Incorporate some include files:
+	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
 	include 'includes/include.inc.php'; // include common functions
 	include 'initialize/ini.inc.php'; // include common variables
 
@@ -68,9 +69,9 @@
 	// Note: the 'verifySQLQuery()' function that gets called below will add the user specific fields to the 'SELECT' clause and the
 	// 'LEFT JOIN...' part to the 'FROM' clause of the SQL query if a user is logged in. It will also add 'serial', 'file', 'url' & 'doi' columns
 	// as required. Therefore it's sufficient to provide just the plain SQL query here:
-	$sqlQuery = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, created_date, created_time, created_by, serial";
+	$sqlQuery = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, created_date, created_time, created_by, modified_date, modified_time, modified_by, serial";
 
-	$sqlQuery .= " FROM refs WHERE " . $queryWhereClause; // add FROM clause and the specified WHERE clause
+	$sqlQuery .= " FROM $tableRefs WHERE " . $queryWhereClause; // add FROM clause and the specified WHERE clause
 
 	$sqlQuery .= " ORDER BY created_date DESC, created_time DESC, modified_date DESC, modified_time DESC, serial DESC"; // sort records such that newly added/edited records get listed top of the list
 
