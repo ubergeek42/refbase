@@ -107,16 +107,19 @@
 		// (1) OPEN the database connection:
 		//      (variables are set by include file 'db.inc'!)
 		if (!($connection = @ mysql_connect($hostName, $username, $password)))
-			showErrorMsg("The following error occurred while trying to connect to the host:", "");
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to connect to the host:", "");
 
 		// (2) SELECT the database:
 		//      (variables are set by include file 'db.inc'!)
 		if (!(mysql_select_db($databaseName, $connection)))
-			showErrorMsg("The following error occurred while trying to connect to the database:", "");
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to connect to the database:", "");
 
 		// (3) RUN the query on the database through the connection:
 		if (!($result = @ mysql_query($query, $connection)))
-			showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
 
 		// (4) EXTRACT results:
 		if (mysql_num_rows($result) == 1) // Interpret query result: Do we have exactly one row?
@@ -129,7 +132,8 @@
 
 		// (5) CLOSE the database connection:
 		if (!(mysql_close($connection)))
-			showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
 
 		// -------------------
 
@@ -154,18 +158,22 @@
 			$query = "SELECT user_id, first_name, last_name, abbrev_institution FROM users WHERE user_id = " . $userID; // CONSTRUCT SQL QUERY
 	
 			if (!($connection = @ mysql_connect($hostName, $username, $password))) // (1) OPEN the database connection (variables are set by include file 'db.inc'!)
-				showErrorMsg("The following error occurred while trying to connect to the host:", "");
+				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+					showErrorMsg("The following error occurred while trying to connect to the host:", "");
 
 			if (!(mysql_select_db($databaseName, $connection))) // (2) SELECT the database (variables are set by include file 'db.inc'!)
-				showErrorMsg("The following error occurred while trying to connect to the database:", "");
+				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+					showErrorMsg("The following error occurred while trying to connect to the database:", "");
 
 			if (!($result = @ mysql_query($query, $connection))) // (3) RUN the query on the database through the connection:
-				showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+					showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
 
 			$row2 = mysql_fetch_array($result); // (4) EXTRACT results: fetch the one row into the array $row2
 
 			if (!(mysql_close($connection))) // (5) CLOSE the database connection
-				showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
+				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+					showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
 
 			// Save the fetched user details to the session file:
 			$loginUserID = $row2["user_id"];

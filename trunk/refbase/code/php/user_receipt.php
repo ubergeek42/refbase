@@ -67,12 +67,14 @@
 	// (1) OPEN the database connection:
 	//      (variables are set by include file 'db.inc'!)
 	if (!($connection = @ mysql_connect($hostName, $username, $password)))
-		showErrorMsg("The following error occurred while trying to connect to the host:", "");
+		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+			showErrorMsg("The following error occurred while trying to connect to the host:", "");
 
 	// (2) SELECT the database:
 	//      (variables are set by include file 'db.inc'!)
 	if (!(mysql_select_db($databaseName, $connection)))
-		showErrorMsg("The following error occurred while trying to connect to the database:", "");
+		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+			showErrorMsg("The following error occurred while trying to connect to the database:", "");
 
 	// ----------------------------------------------
 
@@ -89,7 +91,8 @@
 
 	// (5) CLOSE the database connection:
 	if (!(mysql_close($connection)))
-		showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
+		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+			showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
 
 	// --------------------------------------------------------------------
 
@@ -146,7 +149,8 @@
 
 		// (3) RUN the query on the database through the connection:
 		if (!($result = @ mysql_query($query, $connection)))
-			showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
 
 		// (4) EXTRACT results (since 'user_id' is the unique primary key for the 'users' table, there will be only one matching row)
 		$row = @ mysql_fetch_array($result);
