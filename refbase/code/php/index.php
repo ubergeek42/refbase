@@ -82,14 +82,14 @@
 <table align="center" border="0" cellpadding="2" cellspacing="5" width="90%" summary="This table explains features, goals and usage of the <? echo htmlentities($officialDatabaseName); ?>">
 	<tr>
 		<td colspan="2"><h3><?php echo $loc["Goals"]; ?> &amp; <?php echo $loc["Features"]; ?></h3></td>
-		<td width="163" valign="bottom"><?php
+		<td width="180" valign="bottom"><?php
 if (!isset($_SESSION['loginEmail']))
 	{
 ?><div class="header"><b><?php echo $loc["Login"]; ?>:</b></div><?php
 	}
 else
 	{
-?><div class="header"><b><?php echo $loc["Show"].$loc["MyRefs"]; ?>:</b></div><?php
+?><div class="header"><b><?php echo $loc["ShowMyRefs"]; ?>:</b></div><?php
 	}
 ?></td>
 	</tr>
@@ -132,11 +132,11 @@ if (!isset($_SESSION['loginEmail']))
 	{
 ?>
 			<form action="user_login.php" method="POST">
-				Email Address:
+				<?php echo $loc["EmailAddress"]; ?>:
 				<br>
 				<input type="text" name="loginEmail" size="12">
 				<br>
-				Password:
+				<?php echo $loc["Password"]; ?>:
 				<br>
 				<input type="password" name="loginPassword" size="12">
 				<br>
@@ -150,40 +150,40 @@ else
 				<input type="hidden" name="formType" value="myRefsSearch">
 				<input type="hidden" name="showQuery" value="0">
 				<input type="hidden" name="showLinks" value="1">
-				<input type="radio" name="myRefsRadio" value="1" checked>&nbsp;All
+				<input type="radio" name="myRefsRadio" value="1" checked>&nbsp;<?php echo $loc["All"]; ?>
 				<br>
-				<input type="radio" name="myRefsRadio" value="0">&nbsp;Only:
+				<input type="radio" name="myRefsRadio" value="0">&nbsp;<?php echo $loc["Only"]; ?>:
 				<br>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findMarked" value="1">
 				<select name="markedSelector">
-					<option>marked</option>
-					<option>not marked</option>
+					<option><?php echo $loc["marked"]; ?></option>
+					<option><?php echo $loc["not"]." ". $loc["marked"]; ?></option>
 				</select>
 				<br>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findSelected" value="1">
 				<select name="selectedSelector">
-					<option>selected</option>
-					<option>not selected</option>
+					<option><?php echo $loc["selected"]; ?></option>
+					<option><?php echo $loc["not"]." ". $loc["selected"]; ?></option>
 				</select>
 				<br>
-				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findCopy" value="1">&nbsp;copy:
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findCopy" value="1">&nbsp;<?php echo $loc["copy"]; ?>:
 				<select name="copySelector">
-					<option>true</option>
-					<option>fetch</option>
-					<option>ordered</option>
-					<option>false</option>
+					<option><?php echo $loc["true"]; ?></option>
+					<option><?php echo $loc["fetch"]; ?></option>
+					<option><?php echo $loc["ordered"]; ?></option>
+					<option><?php echo $loc["false"]; ?></option>
 				</select>
 				<br>
-				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findUserKeys" value="1">&nbsp;key:&nbsp;&nbsp;
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findUserKeys" value="1">&nbsp;<?php echo $loc["key"]; ?>:&nbsp;
 				<input type="text" name="userKeysName" size="7">
 				<br>
-				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findUserNotes" value="1">&nbsp;note:&nbsp;
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findUserNotes" value="1">&nbsp;<?php echo $loc["note"]; ?>:&nbsp;
 				<input type="text" name="userNotesName" size="7">
 				<br>
-				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findUserFile" value="1">&nbsp;file:&nbsp;&nbsp;&nbsp;
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findUserFile" value="1">&nbsp;<?php echo $loc["file"]; ?>:&nbsp;&nbsp;&nbsp;
 				<input type="text" name="userFileName" size="7">
 				<br>
-				<input type="submit" value="Show">
+				<input type="submit" value="<?php echo $loc["Show"]; ?>">
 			</form><?php
 	}
 ?>
@@ -191,15 +191,15 @@ else
 		</td>
 	</tr>
 	<tr>
-		<td colspan="2"><h3>Search</h3></td>
-		<td width="163" valign="bottom"><div class="header"><b>Quick Search:</b></div></td>
+		<td colspan="2"><h3><?php echo $loc["Search"]; ?></h3></td>
+		<td width="163" valign="bottom"><div class="header"><b><?php echo $loc["QuickSearch"]; ?>:</b></div></td>
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
-		<td>Search the literature database:
+		<td><?php echo $loc["SearchDB"]; ?>:
 			<ul type="circle">
-				<li><a href="simple_search.php">Simple Search</a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;search the main fields of the database</li>
-				<li><a href="advanced_search.php">Advanced Search</a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;search all fields of the database</li><?php
+				<li><a href="simple_search.php"><?php echo $loc["simple"]; ?> <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["SearchMain"]; ?></li>
+				<li><a href="advanced_search.php"><?php echo $loc["Advanced"]; ?> <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["SearchAll"]; ?></li><?php
 
 		// -------------------------------------------------------
 		if (isset($_SESSION['user_permissions']) AND ereg("allow_sql_search", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_sql_search'...
@@ -207,13 +207,13 @@ else
 		// ... include a link to 'sql_search.php':
 ?>
 
-				<li><a href="sql_search.php">SQL Search</a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;search the database by use of a SQL query</li><?php
+				<li><a href="sql_search.php">SQL <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["SearchSQL"]; ?></li><?php
 		}
 
 		// -------------------------------------------------------
 ?>
 
-				<li><a href="library_search.php">Library Search</a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;search the library of the <? echo htmlentities($hostInstitutionName); ?></li>
+				<li><a href="library_search.php"><?php echo $loc["Library"]; ?> <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["SearchExt"]; ?> <? echo htmlentities($hostInstitutionName); ?></li>
 			</ul>
 		</td>
 		<td width="163" valign="top">
@@ -222,11 +222,11 @@ else
 				<input type="hidden" name="showQuery" value="0">
 				<input type="hidden" name="showLinks" value="1">
 				<select name="quickSearchSelector">
-					<option selected>author</option>
-					<option>title</option>
-					<option>year</option>
-					<option>keywords</option>
-					<option>abstract</option>
+					<option selected><?php echo $loc["author"]; ?></option>
+					<option><?php echo $loc["title"]; ?></option>
+					<option><?php echo $loc["year"]; ?></option>
+					<option><?php echo $loc["keywords"]; ?></option>
+					<option><?php echo $loc["abstract"]; ?></option>
 				</select>
 				<br>
 				<input type="text" name="quickSearchName" size="12">
