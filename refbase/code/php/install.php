@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./install.php
 	// Created:    07-Jan-04, 22:00
-	// Modified:   16-Feb-05, 20:47
+	// Modified:   25-Feb-05, 22:17
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -25,12 +25,11 @@
 
 	// --------------------------------------------------------------------
 
-	// Extract any parameters passed to the script:
-	if (isset($_POST['adminDatabaseName']))
-		$adminDatabaseName = $_POST['adminDatabaseName'];
-	else
-		$adminDatabaseName = "";
+	// This specifies the name of the database that handles the MySQL user access privileges.
+	// Unless you've fiddled with it, you shouldn't change the default value ('mysql'):
+	$adminDatabaseName = 'mysql';
 
+	// Extract any parameters passed to the script:
 	if (isset($_POST['adminUserName']))
 		$adminUserName = $_POST['adminUserName'];
 	else
@@ -51,6 +50,11 @@
 	else
 		$databaseStructureFile = "";
 
+	if (isset($_POST['pathToBibutils']))
+		$pathToBibutils = $_POST['pathToBibutils'];
+	else
+		$pathToBibutils = "";
+
 	if (isset($_POST['defaultCharacterSet']))
 		$defaultCharacterSet = $_POST['defaultCharacterSet'];
 	else
@@ -65,7 +69,7 @@
 	// --------------------------------------------------------------------
 
 	// Check the correct parameters have been passed:
-	if (empty($adminDatabaseName) AND empty($adminUserName) AND empty($adminPassword) AND empty($pathToMYSQL) AND empty($databaseStructureFile))
+	if (empty($adminUserName) AND empty($adminPassword) AND empty($pathToMYSQL) AND empty($databaseStructureFile))
 	{
 		// if 'installation.php' was called without any valid parameters:
 		//Display an installation form:
@@ -93,11 +97,11 @@
 			$formVars = array();
 
 			// provide the default values:
-			$formVars["adminDatabaseName"] = "mysql";
 			$formVars["adminUserName"] = "root";
 			$formVars["adminPassword"] = "";
 			$formVars["pathToMYSQL"] = "/usr/local/mysql/bin/mysql";
 			$formVars["databaseStructureFile"] = "./install.sql";
+			$formVars["pathToBibutils"] = "/usr/local/bin/";
 			$formVars["defaultCharacterSet"] = "latin1";
 		}
 
@@ -162,14 +166,6 @@
 		</td>
 	</tr>
 	<tr>
-		<td valign="top"><b>MySQL Admin Database:</b></td>
-		<td valign="top"><?php echo fieldError("adminDatabaseName", $errors); ?>
-
-			<input type="text" name="adminDatabaseName" value="<?php echo $formVars["adminDatabaseName"]; ?>" size="30">
-		</td>
-		<td valign="top">Specify the name of the database that handles the MySQL user access privileges. Normally, you shouldn't change the default value: 'mysql'.</td>
-	</tr>
-	<tr>
 		<td valign="top"><b>MySQL Admin User:</b></td>
 		<td valign="top"><?php echo fieldError("adminUserName", $errors); ?>
 
@@ -206,6 +202,14 @@
 			<input type="text" name="databaseStructureFile" value="<?php echo $formVars["databaseStructureFile"]; ?>" size="30">
 		</td>
 		<td valign="top">Enter the full path to the SQL dump file containing the database structure &amp; data. Keep the default value, if you're installing refbase for the first time.</td>
+	</tr>
+	<tr>
+		<td valign="top"><b>Path to the bibutils directory [optional]:</b></td>
+		<td valign="top"><?php echo fieldError("pathToBibutils", $errors); ?>
+
+			<input type="text" name="pathToBibutils" value="<?php echo $formVars["pathToBibutils"]; ?>" size="30">
+		</td>
+		<td valign="top">If you'd like to use the export functionality you need to install <a href="http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html" title="bibutils home page">bibutils</a> and enter the full path to the bibutils utilities here. The given path just serves as an example and your path spec may be different.</td>
 	</tr>
 	<tr>
 		<td valign="top"><b>Default character set:</b></td>
@@ -253,12 +257,6 @@
 		// Write the (POST) form variables into an array:
 		foreach($_POST as $varname => $value)
 			$formVars[$varname] = $value;
-
-
-		// Validate the 'adminDatabaseName' field:
-		if (empty($formVars["adminDatabaseName"]))
-			// The 'adminDatabaseName' field cannot be a null string
-			$errors["adminDatabaseName"] = "This field cannot be blank:";
 
 
 		// Validate the 'adminUserName' field:
@@ -320,6 +318,20 @@
 			$errors["databaseStructureFile"] = "Your path specification is invalid (file not found):";
 
 
+		// Validate the 'pathToBibutils' field:
+		if (ereg("[;|]", $formVars["pathToBibutils"]))
+			// For security reasons, the 'pathToBibutils' field cannot contain the characters ';' or '|' (which would tie multiple shell commands together)
+			$errors["pathToBibutils"] = "Due to security reasons this field cannot contain the characters ';' or '|':";
+
+		elseif (!is_readable($formVars["pathToBibutils"]))
+			// Check if the specified path resolves to the mysql application
+			$errors["pathToBibutils"] = "Your path specification is invalid (directory not found):";
+
+		elseif (!is_dir($formVars["pathToBibutils"]))
+			// Check if the specified path resolves to a directory
+			$errors["pathToBibutils"] = "You must specify a directory! Please give the path to the directory containing the bibutils utilities:";
+
+
 		// Validate the 'defaultCharacterSet' field:
 		// Note: Currently we're not generating an error & rooting back to the install form, if the user did choose 'utf8' but has some MySQL version < 4.1 installed.
 		//       In this case, we'll simply ignore the setting and 'latin1' will be used by default.
@@ -376,10 +388,12 @@
 
 		$queryCreateDB = "CREATE DATABASE IF NOT EXISTS " . $databaseName; // by default, 'latin1' will be used as default character set
 
+		$queryUpdateDependsTable = "UPDATE " . $databaseName . ".depends SET depends_path = \"" . $pathToBibutils . "\" WHERE depends_external = \"bibutils\""; // update the bibutils path spec
+
 		if ($mysqlVersion >= 4.1) // if MySQL 4.1.x (or greater) is installed, we'll add the default character set chosen by the user:
 			$queryCreateDB = $queryCreateDB . " DEFAULT CHARACTER SET " . $defaultCharacterSet;
 
-		// (2) Run the install queries on the mysql database through the connection:
+		// (2) Run the INSTALL queries on the mysql database through the connection:
 		if (!($result = @ mysql_query ($queryGrantStatement, $connection)))
 			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 				showErrorMsg("The following error occurred while trying to query the database:", "");
@@ -388,13 +402,7 @@
 			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 				showErrorMsg("The following error occurred while trying to query the database:", "");
 
-		// (5) Close the database connection:
-		if (!(mysql_close($connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
-
-
-		// Import the literature database structure from file:
+		// IMPORT the literature database structure from file:
 		exec($pathToMYSQL . " -h " . $hostName . " -u " . $adminUserName . " -p" . $adminPassword . " --database=" . $databaseName . " < " . $databaseStructureFile . " 2>&1", $resultArray);
 
 		// User note from <http://de2.php.net/manual/en/ref.exec.php> regarding the use of PHP's 'exec()' command:
@@ -403,6 +411,16 @@
 		// wrong, since php echoes back the stdout stream rather than the stderr stream where all the useful error
 		// reporting's done. The solution is to add the code "2>&1" to the end of your shell command, which redirects
 		// stderr to stdout, which you can then easily print using something like print `shellcommand 2>&1`.
+
+		// run the UPDATE query on the depends table of the (just imported) literature database:
+		if (!($result = @ mysql_query ($queryUpdateDependsTable, $connection)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to query the database:", "");
+
+		// (5) Close the database connection:
+		if (!(mysql_close($connection)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
 
 		$resultLines = ""; // initialize variable
 
