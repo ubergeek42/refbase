@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./header.inc.php
 	// Created:    28-Jul-02, 11:21
-	// Modified:   16-Nov-03, 21:30
+	// Modified:   16-May-04, 01:45
 
 	// This is the header include file.
 	// It contains functions that provide the HTML header
@@ -19,42 +19,69 @@
 	// --------------------------------------------------------------------
 
 	// Inserts the HTML <head>...</head> block as well as the initial <body> tag:
-	function displayHTMLhead($pageTitle, $metaRobots, $metaDescription, $additionalMeta, $includeJavaScript, $includeJavaScriptFile)
+	function displayHTMLhead($pageTitle, $metaRobots, $metaDescription, $additionalMeta, $includeJavaScript, $includeJavaScriptFile, $viewType)
 	{
-		echo "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\""
-			. "\n\t\t\"http://www.w3.org/TR/html4/loose.dtd\">"
-			. "\n<html>"
-			. "\n<head>"
-			. "\n\t<title>" . $pageTitle . "</title>"
-			. "\n\t<meta name=\"date\" content=\"" . date('d-M-y') . "\">"
-			. "\n\t<meta name=\"robots\" content=\"" . $metaRobots . "\">"
-			. "\n\t<meta name=\"description\" lang=\"en\" content=\"" . $metaDescription . "\">"
-			. "\n\t<meta name=\"keywords\" lang=\"en\" content=\"search citation web database polar marine science literature references mysql php\">"
-			. $additionalMeta
-			. "\n\t<meta http-equiv=\"content-language\" content=\"en\">"
-			. "\n\t<meta http-equiv=\"content-type\" content=\"text/html; charset=iso-8859-1\">"
-			. "\n\t<meta http-equiv=\"Content-Style-Type\" content=\"text/css\">"
-			. "\n\t<link rel=\"stylesheet\" href=\"style.css\" type=\"text/css\" title=\"CSS Definition\">";
+		global $contentTypeCharset; // '$contentTypeCharset' is defined in 'ini.inc.php'
+?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+		"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title><? echo $pageTitle; ?></title>
+	<meta name="date" content="<? echo date('d-M-y'); ?>">
+	<meta name="robots" content="<? echo $metaRobots; ?>">
+	<meta name="description" lang="en" content="<? echo $metaDescription; ?>">
+	<meta name="keywords" lang="en" content="science academic literature scientific references search citation web database mysql php"><?php
+
+		if (!empty($additionalMeta))
+			echo $additionalMeta;
+?>
+
+	<meta http-equiv="content-language" content="en">
+	<meta http-equiv="content-type" content="text/html; charset=<? echo $contentTypeCharset; ?>">
+	<meta http-equiv="Content-Style-Type" content="text/css"><?php
+
+		if ($viewType == "Print")
+		{
+?>
+
+	<link rel="stylesheet" href="style_print.css" type="text/css" title="CSS Definition"><?php
+		}
+		else
+		{
+?>
+
+	<link rel="stylesheet" href="style.css" type="text/css" title="CSS Definition"><?php
+		}
 
 		if ($includeJavaScriptFile != "")
-			echo "\n\t<script language=\"JavaScript\" type=\"text/javascript\" src=\"" . $includeJavaScriptFile . "\">"
-				. "\n\t</script>";
+		{
+?>
+
+	<script language="JavaScript" type="text/javascript" src="<? echo $includeJavaScriptFile; ?>">
+		</script><?php
+		}
 
 		if ($includeJavaScript == true)
-			echo "\n\t<script language=\"JavaScript\" type=\"text/javascript\">"
-				. "\n\t\tfunction checkall(val,formpart){"
-				. "\n\t\t\tx=0;"
-				. "\n\t\t\twhile(document.queryResults.elements[x]){"
-				. "\n\t\t\t\tif(document.queryResults.elements[x].name==formpart){"
-				. "\n\t\t\t\t\tdocument.queryResults.elements[x].checked=val;"
-				. "\n\t\t\t\t}"
-				. "\n\t\t\t\tx++;"
-				. "\n\t\t\t}"
-				. "\n\t\t}"
-				. "\n\t</script>";
+		{
+?>
 
-		echo "\n</head>"
-			. "\n<body>\n";
+	<script language="JavaScript" type="text/javascript">
+		function checkall(val,formpart){
+			x=0;
+			while(document.queryResults.elements[x]){
+				if(document.queryResults.elements[x].name==formpart){
+					document.queryResults.elements[x].checked=val;
+				}
+				x++;
+			}
+		}
+	</script><?php
+		}
+?>
+
+</head>
+<body><?php
 	}
 
 	// --------------------------------------------------------------------
@@ -62,26 +89,27 @@
 	// Displays the visible header:
 	function showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery)
 	{
-		global $officialDatabaseName;
+		global $officialDatabaseName; // these variables are defined in 'ini.inc.php'
+		global $hostInstitutionName;
 		global $hostInstitutionAbbrevName;
 		global $hostInstitutionURL;
+?>
 
-		echo "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This holds the title logo and info\">"
-			. "\n<tr>"
-			. "\n\t<td valign=\"middle\" rowspan=\"2\" align=\"left\" width=\"170\"><a href=\"$hostInstitutionURL\"><img src=\"img/logo.gif\" border=\"0\" alt=\"" . htmlentities($hostInstitutionAbbrevName) . " Logo\" width=\"143\" height=\"107\"></a></td>"
-			. "\n\t<td>"
-			. "\n\t\t<h2>" . htmlentities($officialDatabaseName) . "</h2>"
-			. "\n\t\t<span class=\"smallup\"><a href=\"index.php\">Home</a>&nbsp;|&nbsp;<a href=\"simple_search.php\">Simple Search</a>&nbsp;|&nbsp;<a href=\"advanced_search.php\">Advanced Search</a>&nbsp;|&nbsp;<a href=\"record.php?recordAction=add&amp;oldQuery=" . rawurlencode($oldQuery) . "\">Add Record</a>&nbsp;|&nbsp;<a href=\"import_csa.php\">CSA Import</a></span>"
-			. "\n\t</td>"
-			. "\n\t<td align=\"right\" valign=\"middle\">" . $loginWelcomeMsg . "<br>" . $loginStatus . "</td>"
-			. "\n</tr>"
-			. "\n<tr>"
-//			. "\n\t<td>&nbsp;</td>" // img in 'header.inc.php' now spans this row (by rowspan="2")
-			. "\n\t<td>" . $HeaderString . "</td>"
-			. "\n\t<td align=\"right\" valign=\"middle\">" . $loginLinks . "</td>"
-			. "\n</tr>"
-			. "\n</table>"
-			. "\n<hr align=\"center\" width=\"95%\">";
+<table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This holds the title logo and info">
+<tr>
+	<td valign="middle" rowspan="2" align="left" width="170"><a href="<? echo $hostInstitutionURL; ?>"><img src="img/logo.gif" border="0" alt="<? echo htmlentities($hostInstitutionAbbrevName); ?> Home" title="<? echo htmlentities($hostInstitutionName); ?>" width="143" height="107"></a></td>
+	<td>
+		<h2><? echo htmlentities($officialDatabaseName); ?></h2>
+		<span class="smallup"><a href="index.php" title="goto main page">Home</a>&nbsp;|&nbsp;<a href="simple_search.php" title="search the main fields of the database">Simple Search</a>&nbsp;|&nbsp;<a href="advanced_search.php" title="search all fields of the database">Advanced Search</a>&nbsp;|&nbsp;<a href="record.php?recordAction=add&amp;oldQuery=<? echo rawurlencode($oldQuery); ?>" title="add a record to the database">Add Record</a>&nbsp;|&nbsp;<a href="import_csa.php" title="import a record from Cambridge Scientific Abstracts">CSA Import</a>&nbsp;|&nbsp;<a href="help.php" title="display help">Help</a></span>
+	</td>
+	<td class="small" align="right" valign="middle"><? echo $loginWelcomeMsg; ?><br><? echo $loginStatus; ?></td>
+</tr>
+<tr>
+	<td><? echo $HeaderString; ?></td>
+	<td class="small" align="right" valign="middle"><? echo $loginLinks; ?></td>
+</tr>
+</table>
+<hr align="center" width="95%"><?php
 	}
 
 	// --------------------------------------------------------------------
