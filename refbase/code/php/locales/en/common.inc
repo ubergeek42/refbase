@@ -54,7 +54,7 @@
 "Go Back"=>"Go Back",
 "Goals"=>"Goals",
 "GoToHome"=>"Go to main page",
-"Help"=>"Hilfe",
+"Help"=>"Help",
 "HelpLinkTitle"=>"show help",
 "Home"=>"Home",
 "Import"=>"Import",
