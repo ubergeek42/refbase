@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./header.inc.php
 	// Created:    28-Jul-02, 11:21
-	// Modified:   28-Sep-04, 19:01
+	// Modified:   12-Oct-04, 14:04
 
 	// This is the header include file.
 	// It contains functions that provide the HTML header
@@ -21,7 +21,9 @@
 	// Inserts the HTML <head>...</head> block as well as the initial <body> tag:
 	function displayHTMLhead($pageTitle, $metaRobots, $metaDescription, $additionalMeta, $includeJavaScript, $includeJavaScriptFile, $viewType)
 	{
-		global $contentTypeCharset; // '$contentTypeCharset' is defined in 'ini.inc.php'
+		global $contentTypeCharset; // these variables are specified in 'ini.inc.php' 
+		global $defaultStyleSheet;
+		global $printStyleSheet;
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 		"http://www.w3.org/TR/html4/loose.dtd">
@@ -45,16 +47,16 @@
 		{
 ?>
 
-	<link rel="stylesheet" href="style_print.css" type="text/css" title="CSS Definition"><?php
+	<link rel="stylesheet" href="<? echo $printStyleSheet; ?>" type="text/css" title="CSS Definition"><?php
 		}
 		else
 		{
 ?>
 
-	<link rel="stylesheet" href="style.css" type="text/css" title="CSS Definition"><?php
+	<link rel="stylesheet" href="<? echo $defaultStyleSheet; ?>" type="text/css" title="CSS Definition"><?php
 		}
 
-		if ($includeJavaScriptFile != "")
+		if (!empty($includeJavaScriptFile))
 		{
 ?>
 
@@ -62,7 +64,7 @@
 		</script><?php
 		}
 
-		if ($includeJavaScript == true)
+		if ($includeJavaScript)
 		{
 ?>
 
