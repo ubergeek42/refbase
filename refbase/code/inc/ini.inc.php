@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   26-Feb-05, 17:20
+	// Modified:   27-Feb-05, 23:26
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -99,7 +99,7 @@
 									"yes", // use the 'user queries' feature ('allow_user_queries')
 									"yes", // generate dynamic RSS feeds from any query ('allow_rss_feeds')
 									"yes", // execute custom SQL queries via 'sql_search.php' ('allow_sql_search')
-									"yes", // change his/her personal data (like name, address or password) ('allow_change_personinfo')
+									"yes", // change his/her personal data (like name, address or password) ('allow_modify_options')
 									"no"); // fully edit the contents of the 'call_number' field (like the database admin) ('allow_edit_call_number')
 											// [note that the 'allow_edit_call_number' permission setting isn't honoured yet!]
 
