@@ -44,7 +44,7 @@
 	}
 
 	// Check the correct parameters have been passed
-	if (!isset($userID))
+	if ($userID == "")
 	{
 		session_register("HeaderString"); // save an error message
 		$HeaderString = "<b><span class=\"warning\">Incorrect parameters to script 'user_receipt.php'!</span></b>";
@@ -56,17 +56,39 @@
 
 	// --------------------------------------------------------------------
 
- 	if (session_is_registered("loginEmail") && ($loginEmail != $adminLoginEmail)) // ('$adminLoginEmail' is specified in 'ini.inc.php')
-		// Check this user matches the userID (viewing user account details is only allowed to the admin)
+	// For regular users, validate that the correct userID has been passed to the script:
+ 	if (session_is_registered("loginEmail") && ($loginEmail != $adminLoginEmail))
+		// check this user matches the userID (viewing user account details is only allowed to the admin)
 		if ($userID != getUserID($loginEmail, NULL))
 		{
-			session_register("HeaderString"); // save an error message
+			session_register("HeaderString"); // otherwise save an error message
 			$HeaderString = "<b><span class=\"warning\">You can only view your own user receipt!<span></b>";
 	
-			$userID = getUserID($loginEmail, NULL); // re-establish the user's correct user_id
+			$userID = getUserID($loginEmail, NULL); // and re-establish the user's correct user_id
 		}
-//	else // if the admin is logged in he should be able to view account data of _other_ users...
-//		$userID = $_REQUEST['userID']; // ...in this case we accept 'userID' from the GET/POST request (it got included as hidden form tag by 'user_details.php')
+
+	// Extract the type of action requested by the user, either 'delete' or ''.
+	// ('' or anything else will be treated equal to 'edit').
+	// We actually extract the variable 'userAction' only if the admin is logged in
+	// (since only the admin will be allowed to delete a user):
+ 	if (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail)) // ('$adminLoginEmail' is specified in 'ini.inc.php')
+ 	{
+		$userAction = $_REQUEST['userAction'];
+		if ($userAction == "Delete")
+		{
+			if ($userID == getUserID($loginEmail, NULL)) // if the admin userID was passed to the script
+			{
+				session_register("HeaderString"); // save an error message
+				$HeaderString = "<b><span class=\"warning\">You cannot delete your own user data!<span></b>";
+		
+				$userAction = "Edit"; // and re-set the user action to 'edit'
+			}
+		}
+		else
+			$userAction = "Edit"; // everything that isn't a 'delete' action will be an 'edit' action
+	}
+	else // otherwise we simply assume an 'edit' action, no matter what was passed to the script (thus, no regular user will be able to delete a user)
+		$userAction = "Edit";
 
 	// --------------------------------------------------------------------
 
@@ -93,7 +115,7 @@
 	if ($userID == 0) // 'userID=0' is sent by 'user_validation.php' to indicate a NEW user who has successfully submitted 'user_details.php'
 		showEmailConfirmation($userID);
 	else
-		showUserData($userID, $connection);
+		showUserData($userID, $userAction, $connection);
 
 	// ----------------------------------------------
 
@@ -143,7 +165,7 @@
 
 	// Show the user an UPDATE receipt:
 	// (if the admin is logged in, this function will also provide a 'new user INSERT' receipt)
-	function showUserData($userID, $connection)
+	function showUserData($userID, $userAction, $connection)
 	{
 		global $HeaderString;
 		global $loginWelcomeMsg;
@@ -165,8 +187,11 @@
 		$row = @ mysql_fetch_array($result);
 
 		// Build the correct header message:
-		if (!session_is_registered("HeaderString"))
-			$HeaderString = "Account details for <b>" . htmlentities($row["first_name"]) . " " . htmlentities($row["last_name"]) . " (" . $row["email"] . ")</b>:"; // provide the default message
+		if (!session_is_registered("HeaderString")) // if there's no saved message
+			if ($userAction == "Delete") // provide an appropriate header message:
+				$HeaderString = "<b><span class=\"warning\">Delete user</span> " . htmlentities($row["first_name"]) . " " . htmlentities($row["last_name"]) . " (" . $row["email"] . ")</b>:";
+			else // provide the default message:
+				$HeaderString = "Account details for <b>" . htmlentities($row["first_name"]) . " " . htmlentities($row["last_name"]) . " (" . $row["email"] . ")</b>:";
 		else
 			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 
@@ -247,9 +272,24 @@
 
 			echo "\n\t</td>\n</tr>";
 
-			// If the admin is logged in, display an 'Edit User Account' link:
+			// If the admin is logged in, display a button that will allow to edit/delete the currently shown user:
 			if (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail)) // ('$adminLoginEmail' is specified in 'ini.inc.php')
-				echo "\n<tr>\n\t<td><a href=\"user_details.php?userID=" . $userID . "\">[Edit User Data]</a></td>\n</tr>";
+			{
+				if ($userAction == "Delete")
+					echo "\n<tr>\n\t<td>"
+						. "\n\t\t<form action=\"user_removal.php\" method=\"POST\">"
+						. "\n\t\t\t<input type=\"hidden\" name=\"userID\" value=\"" . $userID . "\">"
+						. "\n\t\t\t<input type=\"submit\" value=\"" . $userAction . " User\">"
+						. "\n\t\t</form>"
+						. "\n\t</td>\n</tr>";
+				else
+					echo "\n<tr>\n\t<td>"
+						. "\n\t\t<form action=\"user_details.php\" method=\"POST\">"
+						. "\n\t\t\t<input type=\"hidden\" name=\"userID\" value=\"" . $userID . "\">"
+						. "\n\t\t\t<input type=\"submit\" value=\"" . $userAction . " User\">"
+						. "\n\t\t</form>"
+						. "\n\t</td>\n</tr>";
+			}
 		}
 		else // no user exists with this user ID
 			echo "\n<tr>\n\t<td>(No user exists with this user ID!)</td>\n</tr>";
