@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   18-Oct-04, 00:29
+	// Modified:   31-Oct-04, 21:23
 
 	// This file contains important
 	// functions that are shared
@@ -61,15 +61,15 @@
 		{
 			// Get all export formats that were selected by the admin to be visible if a user isn't logged in
 			// and (if some formats were found) save them as semicolon-delimited string to the session variable 'user_formats':
-			getUserFormatsStylesTypes(0, "format", "export");
+			getVisibleUserFormatsStylesTypes(0, "format", "export");
 
 			// Get all citation styles that were selected by the admin to be visible if a user isn't logged in
 			// and (if some styles were found) save them as semicolon-delimited string to the session variable 'user_styles':
-			getUserFormatsStylesTypes(0, "style", "");
+			getVisibleUserFormatsStylesTypes(0, "style", "");
 
 			// Get all document types that were selected by the admin to be visible if a user isn't logged in
 			// and (if some types were found) save them as semicolon-delimited string to the session variable 'user_types':
-			getUserFormatsStylesTypes(0, "type", "");
+			getVisibleUserFormatsStylesTypes(0, "type", "");
 
 			// Get the user permissions for the current user
 			// and save all allowed user actions as semicolon-delimited string to the session variable 'user_permissions':
@@ -257,13 +257,13 @@
 					$loginLinks .= "<a href=\"user_details.php\" title=\"add a user to the database\">Add User</a>&nbsp;&nbsp;|&nbsp;&nbsp;";
 					$loginLinks .= "<a href=\"users.php\" title=\"manage user data\">Manage Users</a>&nbsp;&nbsp;|&nbsp;&nbsp;";
 				}
-				else // if a normal user is logged in, we add the 'My Refs' and 'Change Details' links instead:
+				else // if a normal user is logged in, we add the 'My Refs' and 'Options' links instead:
 				{
 					$loginLinks .= "<a href=\"search.php?formType=myRefsSearch&amp;showQuery=0&amp;showLinks=1&amp;myRefsRadio=1\" title=\"display all of your records\">My Refs</a>&nbsp;&nbsp;|&nbsp;&nbsp;";
 
 					if (isset($_SESSION['user_permissions']) AND ereg("allow_change_personinfo", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_change_personinfo'...
-					// ... include a link to 'user_details.php':
-						$loginLinks .= "<a href=\"user_details.php?userID=" . $loginUserID . "\" title=\"modify your user data\">Change Details</a>&nbsp;&nbsp;|&nbsp;&nbsp;";
+					// ... include a link to 'user_receipt.php':
+						$loginLinks .= "<a href=\"user_receipt.php?userID=" . $loginUserID . "\" title=\"view and modify your account details and options\">Options</a>&nbsp;&nbsp;|&nbsp;&nbsp;";
 				}
 				$loginLinks .= "<a href=\"user_logout.php?referer=" . rawurlencode($referer) . "\" title=\"logout from the database\">Logout</a>";
 			}
@@ -697,11 +697,11 @@
 						<select name="refineSearchSelector" title="choose the field you want to search">
 EOF;
 
-		$optionTags = buildSelectMenuOptions($refineSearchSelectorElements1, " *, *", "\t\t\t\t\t\t\t"); // build correct option tags from the column items provided
+		$optionTags = buildSelectMenuOptions($refineSearchSelectorElements1, " *, *", "\t\t\t\t\t\t\t", false); // build correct option tags from the column items provided
 
 		if (isset($_SESSION['loginEmail']) AND !empty($refineSearchSelectorElements2)) // if a user is logged in -AND- there were any additional elements specified...
 			// ...add these additional elements to the popup menu:
-			$optionTags .= buildSelectMenuOptions($refineSearchSelectorElements2, " *, *", "\t\t\t\t\t\t\t"); // build correct option tags from the column items provided
+			$optionTags .= buildSelectMenuOptions($refineSearchSelectorElements2, " *, *", "\t\t\t\t\t\t\t", false); // build correct option tags from the column items provided
 
 		$optionTags = ereg_replace("<option>$refineSearchSelectorElementSelected", "<option selected>$refineSearchSelectorElementSelected", $optionTags); // add 'selected' attribute:
 
@@ -789,9 +789,9 @@ EOF;
 			{
 				 // build properly formatted <option> tag elements from the items listed in the appropriate session variable:
 				if ($href == "search.php")
-					$optionTags = buildSelectMenuOptions($_SESSION['userGroups'], " *; *", "\t\t\t\t\t\t\t");
+					$optionTags = buildSelectMenuOptions($_SESSION['userGroups'], " *; *", "\t\t\t\t\t\t\t", false);
 				elseif ($href == "users.php")
-					$optionTags = buildSelectMenuOptions($_SESSION['adminUserGroups'], " *; *", "\t\t\t\t\t\t\t");
+					$optionTags = buildSelectMenuOptions($_SESSION['adminUserGroups'], " *; *", "\t\t\t\t\t\t\t", false);
 
 				if (!empty($currentGroup)) // if the current SQL query contains a 'WHERE' clause that searches for a particular user group
 					$optionTags = ereg_replace("<option>$currentGroup</option>", "<option selected>$currentGroup</option>", $optionTags); // we select that group by adding the 'selected' parameter to the apropriate <option> tag
@@ -851,11 +851,11 @@ EOF;
 	// NOTE: we embed the current value of '$rowOffset' as hidden tag within the 'displayOptions' form. By this, the current row offset can be re-applied after the user pressed the 'Show'/'Hide' button within the 'displayOptions' form.
 	//       To avoid that browse links don't behave as expected, the actual value of '$rowOffset' will be adjusted in 'search.php' to an exact multiple of '$showRows'!
 	
-		$optionTags = buildSelectMenuOptions($displayOptionsSelectorElements1, " *, *", "\t\t\t\t\t\t\t"); // build correct option tags from the column items provided
+		$optionTags = buildSelectMenuOptions($displayOptionsSelectorElements1, " *, *", "\t\t\t\t\t\t\t", false); // build correct option tags from the column items provided
 
 		if (isset($_SESSION['loginEmail']) AND !empty($displayOptionsSelectorElements2)) // if a user is logged in -AND- there were any additional elements specified...
 			// ...add these additional elements to the popup menu:
-			$optionTags .= buildSelectMenuOptions($displayOptionsSelectorElements2, " *, *", "\t\t\t\t\t\t\t"); // build correct option tags from the column items provided
+			$optionTags .= buildSelectMenuOptions($displayOptionsSelectorElements2, " *, *", "\t\t\t\t\t\t\t", false); // build correct option tags from the column items provided
 
 		$optionTags = ereg_replace("<option>$displayOptionsSelectorElementSelected", "<option selected>$displayOptionsSelectorElementSelected", $optionTags); // add 'selected' attribute:
 
@@ -1260,7 +1260,7 @@ EOF;
 			// (note that by using 'user_id as record_id' we can use the term 'record_id' as identifier of the primary key for both tables)
 
 
-		$result = queryMySQLDatabase($query, $oldQuery); // RUN the query on the database through the connection (function 'queryMySQLDatabase()' is defined in 'include.inc.php')
+		$result = queryMySQLDatabase($query, $oldQuery); // RUN the query on the database through the connection
 
 		$foundSerialsArray = array(""); // initialize array variable (which will hold the serial numbers of all found records)
 
@@ -1297,7 +1297,7 @@ EOF;
 					$queryUserData = "UPDATE users SET user_groups = \"" . $recordUserGroups . "\" WHERE user_id = " . $recordID;
 
 
-				$resultUserData = queryMySQLDatabase($queryUserData, $oldQuery); // RUN the query on the database through the connection (function 'queryMySQLDatabase()' is defined in 'include.inc.php')
+				$resultUserData = queryMySQLDatabase($queryUserData, $oldQuery); // RUN the query on the database through the connection
 			}
 		}
 
@@ -1315,7 +1315,7 @@ EOF;
 								. "user_id = \"$userID\", "
 								. "data_id = NULL"; // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
 	
-				$resultUserData = queryMySQLDatabase($queryUserData, $oldQuery); // RUN the query on the database through the connection (function 'queryMySQLDatabase()' is defined in 'include.inc.php')
+				$resultUserData = queryMySQLDatabase($queryUserData, $oldQuery); // RUN the query on the database through the connection
 			}
 		}
 
@@ -1421,10 +1421,76 @@ EOF;
 
 	// --------------------------------------------------------------------
 
-	// Get all user formats/styles/types that are enabled for the current user (by admins choice) AND which this user has choosen to be visible:
-	// and (if some formats/styles/types were found) save them each as semicolon-delimited string to the session variables 'user_formats', 'user_styles' or 'user_types', respectively:
-	function getUserFormatsStylesTypes($userID, $dataType, $formatType) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export' or 'import'
+	// Get all available formats/styles/types:
+	function getAvailableFormatsStylesTypes($dataType, $formatType) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export' or 'import'
 	{
+		connectToMySQLDatabase("");
+
+		// CONSTRUCT SQL QUERY:
+		if ($dataType == "format")
+			$query = "SELECT format_name, format_id FROM formats LEFT JOIN depends ON formats.depends_id = depends.depends_id WHERE format_type = '" . $formatType . "' AND format_enabled = 'true' AND depends_enabled = 'true' ORDER BY order_by, format_name";
+
+		elseif ($dataType == "style")
+			$query = "SELECT style_name, style_id FROM styles LEFT JOIN depends ON styles.depends_id = depends.depends_id WHERE style_enabled = 'true' AND depends_enabled = 'true' ORDER BY order_by, style_name";
+
+		elseif ($dataType == "type")
+			$query = "SELECT type_name, type_id FROM types WHERE type_enabled = 'true' ORDER BY order_by, type_name";
+
+		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
+	
+		$availableFormatsStylesTypesArray = array(); // initialize array variable
+	
+		$rowsFound = @ mysql_num_rows($result);
+		if ($rowsFound > 0) // If there were rows found ...
+			while ($row = @ mysql_fetch_array($result)) // for all rows found
+				$availableFormatsStylesTypesArray[$row[$dataType . "_id"]] = $row[$dataType . "_name"]; // append this row's format/style/type name to the array of found user formats/styles/types
+
+		return $availableFormatsStylesTypesArray;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Get all formats/styles/types that are available and were enabled by the admin for the current user:
+	function getEnabledUserFormatsStylesTypes($userID, $dataType, $formatType, $returnIDsAsValues) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export' or 'import'
+	{
+		connectToMySQLDatabase("");
+
+		// CONSTRUCT SQL QUERY:
+		if ($dataType == "format")
+			$query = "SELECT formats.format_name, formats.format_id FROM formats LEFT JOIN user_formats on formats.format_id = user_formats.format_id LEFT JOIN depends ON formats.depends_id = depends.depends_id WHERE format_type = '" . $formatType . "' AND format_enabled = 'true' AND depends_enabled = 'true' AND user_id = '" . $userID . "' ORDER BY formats.order_by, formats.format_name";
+
+		elseif ($dataType == "style")
+			$query = "SELECT styles.style_name, styles.style_id FROM styles LEFT JOIN user_styles on styles.style_id = user_styles.style_id LEFT JOIN depends ON styles.depends_id = depends.depends_id WHERE style_enabled = 'true' AND depends_enabled = 'true' AND user_id = '" . $userID . "' ORDER BY styles.order_by, styles.style_name";
+
+		elseif ($dataType == "type")
+			$query = "SELECT types.type_name, types.type_id FROM types LEFT JOIN user_types USING (type_id) WHERE type_enabled = 'true' AND user_id = '" . $userID . "' ORDER BY types.order_by, types.type_name";
+
+		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
+	
+		$enabledFormatsStylesTypesArray = array(); // initialize array variable
+	
+		$rowsFound = @ mysql_num_rows($result);
+		if ($rowsFound > 0) // If there were rows found ...
+			while ($row = @ mysql_fetch_array($result)) // for all rows found
+			{
+				if ($returnIDsAsValues) // return format/style/type IDs as element values:
+					$enabledFormatsStylesTypesArray[] = $row[$dataType . "_id"]; // append this row's format/style/type ID to the array of found user formats/styles/types
+				else // return format/style/type names as element values and use the corresponding IDs as element keys:
+					$enabledFormatsStylesTypesArray[$row[$dataType . "_id"]] = $row[$dataType . "_name"]; // append this row's format/style/type name to the array of found user formats/styles/types
+			}
+
+		return $enabledFormatsStylesTypesArray;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Get all user formats/styles/types that are available and enabled for the current user (by admins choice) AND which this user has choosen to be visible:
+	// and (if some formats/styles/types were found) save them each as semicolon-delimited string to the session variables 'user_formats', 'user_styles' or 'user_types', respectively:
+	function getVisibleUserFormatsStylesTypes($userID, $dataType, $formatType) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export' or 'import'
+	{
+		global $loginEmail;
+		global $adminLoginEmail; // ('$adminLoginEmail' is specified in 'ini.inc.php')
+
 		connectToMySQLDatabase("");
 
 		// CONSTRUCT SQL QUERY:
@@ -1467,14 +1533,63 @@ EOF;
 			while ($row = @ mysql_fetch_array($result)) // for all rows found
 				$userFormatsStylesTypesArray[] = $row[$dataType . "_name"]; // append this row's format/style/type name to the array of found user formats/styles/types
 
-			// join array of unique user formats/styles/types with '; ' as separator:
-			$userFormatsStylesTypesString = implode('; ', $userFormatsStylesTypesArray);
-
-			// Write the resulting string of user formats/styles/types into a session variable:
-			saveSessionVariable("user_" . $dataType . "s", $userFormatsStylesTypesString);
+			// we'll only update the appropriate session variable if either a normal user is logged in -OR- the admin is logged in and views his own user options page
+			if (($loginEmail != $adminLoginEmail) OR (($loginEmail == $adminLoginEmail) && ($userID == getUserID($loginEmail))))
+			{
+				// join array of unique user formats/styles/types with '; ' as separator:
+				$userFormatsStylesTypesString = implode('; ', $userFormatsStylesTypesArray);
+	
+				// Write the resulting string of user formats/styles/types into a session variable:
+				saveSessionVariable("user_" . $dataType . "s", $userFormatsStylesTypesString);
+			}
 		}
 		else // no user formats/styles/types found
-			deleteSessionVariable("user_" . $dataType . "s"); // delete any 'user_formats'/'user_styles'/'user_types' session variable (which is now outdated)		
+			// we'll only delete the appropriate session variable if either a normal user is logged in -OR- the admin is logged in and views his own user options page
+			if (($loginEmail != $adminLoginEmail) OR (($loginEmail == $adminLoginEmail) && ($userID == getUserID($loginEmail))))
+				deleteSessionVariable("user_" . $dataType . "s"); // delete any 'user_formats'/'user_styles'/'user_types' session variable (which is now outdated)		
+
+		return $userFormatsStylesTypesArray;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Get all formats/styles/types that are available (or enabled for the current user) and return them as properly formatted <option> tag elements.
+	// Note that this function will return two pretty different things, depending on who's logged in:
+	//   - if the admin is logged in, it will return all *available* formats/styles/types as <option> tags
+	//     (with those items being selected which were _enabled_ by the admin for the current user)
+	//   - if a normal user is logged in, this function will return all formats/styles/types as <option> tags which were *enabled* by the admin for the current user
+	//     (with those items being selected which were choosen to be _visible_ by the current user)
+	function returnFormatsStylesTypesAsOptionTags($userID, $dataType, $formatType) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export' or 'import'
+	{
+		global $loginEmail;
+		global $adminLoginEmail; // ('$adminLoginEmail' is specified in 'ini.inc.php')
+
+		if ($loginEmail == $adminLoginEmail) // if the admin is logged in
+			$availableFormatsStylesTypesArray = getAvailableFormatsStylesTypes($dataType, $formatType); // get all available formats/styles/types
+
+		$enabledFormatsStylesTypesArray = getEnabledUserFormatsStylesTypes($userID, $dataType, $formatType, false); // get all formats/styles/types that were enabled by the admin for the current user
+
+		if ($loginEmail == $adminLoginEmail) // if the admin is logged in
+		{
+			$optionTags = buildSelectMenuOptions($availableFormatsStylesTypesArray, " *; *", "\t\t\t", true); // build properly formatted <option> tag elements from the items listed in '$availableFormatsStylesTypesArray'
+
+			$selectedFormatsStylesTypesArray = $enabledFormatsStylesTypesArray; // get all formats/styles/types that were enabled by the admin for the current user
+		}
+		else // if ($loginEmail != $adminLoginEmail) // if a normal user is logged in
+		{
+			$optionTags = buildSelectMenuOptions($enabledFormatsStylesTypesArray, " *; *", "\t\t\t", true); // build properly formatted <option> tag elements from the items listed in '$enabledFormatsStylesTypesArray'
+
+			$selectedFormatsStylesTypesArray = getVisibleUserFormatsStylesTypes($userID, $dataType, $formatType); // get all formats/styles/types that were choosen to be visible for the current user		
+		}
+	
+		foreach($selectedFormatsStylesTypesArray as $itemKey => $itemValue) // escape possible meta characters within names of formats/styles/types that shall be selected (otherwise the grep pattern below would fail)
+			$selectedFormatsStylesTypesArray[$itemKey] = preg_quote($itemValue);
+	
+		$selectedFormatsStylesTypes = implode("|", $selectedFormatsStylesTypesArray); // merge array of formats/styles/types that shall be selected
+
+		$optionTags = ereg_replace("<option([^>]*)>($selectedFormatsStylesTypes)</option>", "<option\\1 selected>\\2</option>", $optionTags); // select all formats/styles/types that are listed within '$selectedFormatsStylesTypesArray'
+
+		return $optionTags;
 	}
 
 	// --------------------------------------------------------------------
@@ -1576,9 +1691,42 @@ EOF;
 
 	// --------------------------------------------------------------------
 
-	// Build properly formatted <option> tag elements from items listed within an array or string (and which are delimited by '$splitDelim').
+	// Returns language information:
+	// if empty($userID): get all languages that were setup and enabled by the admin
+	// if !empty($userID): get the preferred language for the user with the specified userID
+	function getLanguages($userID)
+	{
+		connectToMySQLDatabase("");
+
+		// CONSTRUCT SQL QUERY:
+		if (empty($userID))
+			// Find all unique language entries in the 'languages' table that are enabled:
+			// (language names should be unique anyhow, so the DISTINCT parameter wouldn't be really necessary)
+			$query = "SELECT DISTINCT language_name FROM languages WHERE language_enabled = 'true' ORDER BY order_by";
+		else
+			// Get the preferred language for the user with the user ID given in '$userID':
+			$query = "SELECT language AS language_name FROM users WHERE user_id = '" . $userID . "'";
+		
+
+		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
+
+		$languagesArray = array(); // initialize array variable
+
+		$rowsFound = @ mysql_num_rows($result);
+		if ($rowsFound > 0) // If there were rows found ...
+		{
+			while ($row = @ mysql_fetch_array($result)) // for all rows found
+				$languagesArray[] = $row["language_name"]; // append this row's language name to the array of found languages
+		}
+
+		return $languagesArray;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Build properly formatted <option> tag elements from items listed within an array or string (and which -- in the case of strings -- are delimited by '$splitDelim').
 	// The string given in '$prefix' will be used to prefix each of the <option> tags (e.g., use '\t\t' to indent each of the tags by 2 tabs)
-	function buildSelectMenuOptions($sourceStringOrArray, $splitDelim, $prefix)
+	function buildSelectMenuOptions($sourceStringOrArray, $splitDelim, $prefix, $useArrayKeysAsValues)
 	{
 		if (is_string($sourceStringOrArray)) // split the string on the specified delimiter (which is interpreted as regular expression!):
 			$itemArray = split($splitDelim, $sourceStringOrArray);
@@ -1588,8 +1736,16 @@ EOF;
 		$optionTags = ""; // initialize variable
 
 		// copy each item as option tag element to the end of the '$optionTags' variable:
-		foreach ($itemArray as $item)
-			$optionTags .= "\n$prefix<option>$item</option>";		
+		if ($useArrayKeysAsValues)
+		{
+			foreach ($itemArray as $itemID => $item)
+				$optionTags .= "\n$prefix<option value=\"$itemID\">$item</option>";
+		}
+		else
+		{
+			foreach ($itemArray as $item)
+				$optionTags .= "\n$prefix<option>$item</option>";
+		}
 
 		return $optionTags;
 	}
