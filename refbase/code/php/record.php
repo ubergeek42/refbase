@@ -2,8 +2,12 @@
 	"http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <?php
+	// Form that offers to add records or edit existing ones
+
 	$recordAction = $_REQUEST['recordAction']; // check whether the user wants to *add* a record or *edit* an existing one
 	$serialNo = $_REQUEST['serialNo']; // fetch the serial number of the record to edit
+	$oldQuery = $_REQUEST['oldQuery']; // fetch the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
+	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
 
 	if ("$recordAction" == "edit") // *edit* record
 		{
@@ -14,7 +18,7 @@
 		{
 			$pageTitle = "Add Record";
 			$headerTitle = "Add a record to the database:";
-			$serialNo = "&nbsp;(not assigned yet)";
+			$serialNo = "(not assigned yet)";
 		}
 ?>
 <head>
@@ -30,8 +34,6 @@
 </head>
 <body>
 <?php
-	// Form that offers to add records or edit existing ones
-
 	// Incorporate some include files:
 	include 'db.inc'; // 'db.inc' is included to hide username and password
 	include 'error.inc'; // include the 'showerror()' function
@@ -81,55 +83,64 @@
 			// (3a) RUN the query on the database through the connection:
 			if (!($result = @ mysql_query ($query, $connection)))
 			{
-				showheader($result, "", "", "", "Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:");
+				showheader($result, "Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:");
 				showerror();
 			}
 
-			// (3b) EXTRACT results:
-			$row = mysql_fetch_array($result); //fetch the current row into the array $row (it'll be always *one* row, but anyhow)
-			
-			// fetch attributes of the current record into variables:
-			$authorName = htmlentities($row[author]);
-			$titleName = htmlentities($row[title]);
-			$yearNo = htmlentities($row[year]);
-			$publicationName = htmlentities($row[publication]);
-			$abbrevJournalName = htmlentities($row[abbrev_journal]);
-			$volumeNo = htmlentities($row[volume]);
-			$issueNo = htmlentities($row[issue]);
-			$pagesNo = htmlentities($row[pages]);
-			$addressName = htmlentities($row[address]);
-			$corporateAuthorName = htmlentities($row[corporate_author]);
-			$keywordsName = htmlentities($row[keywords]);
-			$abstractName = htmlentities($row[abstract]);
-			$publisherName = htmlentities($row[publisher]);
-			$placeName = htmlentities($row[place]);
-			$editorName = htmlentities($row[editor]);
-			$languageName = htmlentities($row[language]);
-			$summaryLanguageName = htmlentities($row[summary_language]);
-			$OrigTitleName = htmlentities($row[orig_title]);
-			$seriesEditorName = htmlentities($row[series_editor]);
-			$seriesTitleName = htmlentities($row[series_title]);
-			$abbrevSeriesTitleName = htmlentities($row[abbrev_series_title]);
-			$seriesVolumeNo = htmlentities($row[series_volume]);
-			$seriesIssueNo = htmlentities($row[series_issue]);
-			$editionNo = htmlentities($row[edition]);
-			$issnName = htmlentities($row[issn]);
-			$isbnName = htmlentities($row[isbn]);
-			$mediumName = htmlentities($row[medium]);
-			$areaName = htmlentities($row[area]);
-			$expeditionName = htmlentities($row[expedition]);
-			$conferenceName = htmlentities($row[conference]);
-			$locationName = htmlentities($row[location]);
-			$callNumberName = htmlentities($row[call_number]);
-			$reprintStatusName = htmlentities($row[reprint_status]);
-			$markedRadio = htmlentities($row[marked]);
-			$approvedRadio = htmlentities($row[approved]);
-			$fileName = htmlentities($row[file]);
-			$serialNo = htmlentities($row[serial]);
-			$typeName = htmlentities($row[type]);
-			$notesName = htmlentities($row[notes]);
-			$userKeysName = htmlentities($row[user_keys]);
-			$userNotesName = htmlentities($row[user_notes]);
+			if (@ mysql_num_rows($result) == 1) // this condition is added here to avoid the case that clicking on a search result item which got deleted in the meantime invokes a seemingly correct but empty 'edit record' search form
+			{
+				// (3b) EXTRACT results:
+				$row = mysql_fetch_array($result); //fetch the current row into the array $row (it'll be always *one* row, but anyhow)
+				
+				// fetch attributes of the current record into variables:
+				$authorName = htmlentities($row[author]);
+				$titleName = htmlentities($row[title]);
+				$yearNo = htmlentities($row[year]);
+				$publicationName = htmlentities($row[publication]);
+				$abbrevJournalName = htmlentities($row[abbrev_journal]);
+				$volumeNo = htmlentities($row[volume]);
+				$issueNo = htmlentities($row[issue]);
+				$pagesNo = htmlentities($row[pages]);
+				$addressName = htmlentities($row[address]);
+				$corporateAuthorName = htmlentities($row[corporate_author]);
+				$keywordsName = htmlentities($row[keywords]);
+				$abstractName = htmlentities($row[abstract]);
+				$publisherName = htmlentities($row[publisher]);
+				$placeName = htmlentities($row[place]);
+				$editorName = htmlentities($row[editor]);
+				$languageName = htmlentities($row[language]);
+				$summaryLanguageName = htmlentities($row[summary_language]);
+				$OrigTitleName = htmlentities($row[orig_title]);
+				$seriesEditorName = htmlentities($row[series_editor]);
+				$seriesTitleName = htmlentities($row[series_title]);
+				$abbrevSeriesTitleName = htmlentities($row[abbrev_series_title]);
+				$seriesVolumeNo = htmlentities($row[series_volume]);
+				$seriesIssueNo = htmlentities($row[series_issue]);
+				$editionNo = htmlentities($row[edition]);
+				$issnName = htmlentities($row[issn]);
+				$isbnName = htmlentities($row[isbn]);
+				$mediumName = htmlentities($row[medium]);
+				$areaName = htmlentities($row[area]);
+				$expeditionName = htmlentities($row[expedition]);
+				$conferenceName = htmlentities($row[conference]);
+				$locationName = htmlentities($row[location]);
+				$callNumberName = htmlentities($row[call_number]);
+				$reprintStatusName = htmlentities($row[reprint_status]);
+				$markedRadio = htmlentities($row[marked]);
+				$approvedRadio = htmlentities($row[approved]);
+				$fileName = htmlentities($row[file]);
+				$serialNo = htmlentities($row[serial]);
+				$typeName = htmlentities($row[type]);
+				$notesName = htmlentities($row[notes]);
+				$userKeysName = htmlentities($row[user_keys]);
+				$userNotesName = htmlentities($row[user_notes]);
+			}
+			else
+			{
+				showheader($result, "Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:");
+				showerror();
+			}
+
 		}
 	else // if ("$recordAction" == "add"), i.e., adding a new record...
 		{
@@ -170,7 +181,7 @@
 			$markedRadio = "";
 			$approvedRadio = "";
 			$fileName = "";
-			$serialNo = "";
+			$serialNo = $serialNo; // supply some generic info: "(not assigned yet)" [as defined at the top]
 			$typeName = "";
 			$notesName = "";
 			$userKeysName = "";
@@ -183,8 +194,11 @@
 
 	// (4b) DISPLAY results:
 	// Start <form> and <table> holding the form elements:
-	echo "\n<form action=\"record.php\" method=\"POST\">";
+	echo "\n<form action=\"modify.php\" method=\"POST\">";
 	echo "\n<input type=\"hidden\" name=\"formType\" value=\"record\">";
+	echo "\n<input type=\"hidden\" name=\"submit\" value=\"" . $pageTitle . "\">"; // provide a default value for the 'submit' form tag (then, hitting <enter> within a text entry field will act as if the user clicked the 'Add/Edit Record' button)
+	echo "\n<input type=\"hidden\" name=\"recordAction\" value=\"" . $recordAction . "\">";
+	echo "\n<input type=\"hidden\" name=\"oldQuery\" value=\"" . rawurlencode($oldQuery) . "\">"; // we include a link to the formerly displayed results page as hidden form tag so that it's available on the subsequent receipt page that follows any add/edit/delete action!
 	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" width=\"600\" summary=\"This table holds a form that offers to add records or edit existing ones\">"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" bgcolor=\"#DEDEDE\"><b>Author</b></td>"
@@ -311,7 +325,7 @@
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\"><b>Serial</b></td>"
-			. "\n\t<td>$serialNo</td>"
+			. "\n\t<td><input type=\"text\" name=\"serialNo\" value=\"$serialNo\" size=\"14\" title=\"this is the unique serial number for this record\" readonly></td>"
 			. "\n\t<td width=\"74\"><b>Record Type</b></td>";
 
 	$recordType = "\n\t<td>\n\t\t<select name=\"typeName\" title=\"please specify the type of this publication (e.g. 'Journal Article' for a paper)\">\n\t\t\t<option>Book Chapter</option>\n\t\t\t<option>Book Whole</option>\n\t\t\t<option>Journal Article</option>\n\t\t\t<option>Journal</option>\n\t\t\t<option>Manuscript</option>\n\t\t\t<option>Map</option>\n\t\t</select>\n\t</td>";
@@ -340,7 +354,14 @@
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\">&nbsp;</td>"
-			. "\n\t<td align=\"right\" colspan=\"5\"><input type=\"submit\" value=\"$pageTitle\" name=\"$recordAction\"></td>"
+			. "\n\t<td align=\"right\" colspan=\"5\">"
+			. "<input type=\"submit\" name=\"submit\" value=\"$pageTitle\">";
+			
+	if ("$recordAction" == "edit") // add a DELETE button (CAUTION: the delete button must be displayed *AFTER* the edit button, otherwise DELETE will be the default action if the user hits return!!)
+								// (this is since the first displayed submit button represents the default submit action in several browsers!! [like OmniWeb or Mozilla])
+		echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"submit\" name=\"submit\" value=\"Delete Record\">";
+
+	echo "</td>"
 			. "\n</tr>"
 			. "\n</table>"
 			. "\n</form>";
@@ -366,17 +387,16 @@
 			. "\n\t<td>$HeaderString</td>"
 			. "\n</tr>"
 			. "\n</table>"
-			. "\n<hr align=\"center\" width=\"80%\">";
+			. "\n<hr align=\"center\" width=\"95%\">";
 	}
 
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
 	// call the 'displayfooter()' function from 'footer.inc')
-	displayfooter();
+	displayfooter($oldQuery);
 
 	// --------------------------------------------------------------------
-
 ?>
 </body>
 </html> 
