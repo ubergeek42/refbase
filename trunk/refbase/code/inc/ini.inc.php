@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   04-Jan-04, 15:36
+	// Modified:   10-Jan-04, 22:03
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -14,7 +14,7 @@
 	// --------------------------------------------------------------------
 
 	// The official name of this literature database:
-	$officialDatabaseName = "INSTITUTION_NAME Literature Database"; // e.g. "IPÖ Literature Database"
+	$officialDatabaseName = "Your Literature Database"; // e.g. "IPÖ Literature Database"
 
 
 	// The base url for this literature database (i.e., the URL to the root directory):
@@ -25,18 +25,22 @@
 
 	// This attributive string describes your scientific field and the kind of literature
 	// that's going to be stored within this literature database. It will be used on 'index.php'.
-	$scientificFieldDescriptor = "polar & marine"; // e.g. "polar & marine"
+	$scientificFieldDescriptor = "..."; // e.g. "polar & marine"
 
 
 	// Specify who'll be allowed to add a new user to the users table:
-	// VERY IMPORTANT NOTE: the value is set to "everyone" by default so that you'll be able to setup the very first user!
-	// Its best to setup the admin as the first user (and specify his email address below!), then change the value of
-	// $addNewUsers to "admin". By that you prevent other users to be able to mess with your users table.
-	$addNewUsers = "everyone"; // possible values: "everyone", "admin"
+	// Note, that you should leave this variable as it is, if you're going to use the 'install.php'
+	// script and the provided database structure file ('install.sql') for installation. This variable
+	// is only provided for people who want to install the refbase database manually (i.e. without using
+	// 'install.php' & 'install.sql'). If so, setting this value to "everyone" enables you to add the
+	// admin as the very first user (don't forget to specify his email address below!). Then, change the
+	// value of $addNewUsers to "admin". By that you prevent other users from messing with your users
+	// table. (If the value is set to "everyone", any user will be able to add users to the users table!)
+	$addNewUsers = "admin"; // possible values: "everyone", "admin"
 
 
 	// The admin email address (by which a user is granted admin status after successful login!):
-	$adminLoginEmail = "ADMIN_EMAIL_ADDRESS"; // e.g. "admin@ipoe.uni-kiel.de"
+	$adminLoginEmail = "user@refbase.net"; // e.g. "admin@ipoe.uni-kiel.de"
 
 
 	// The feedback email address to which any support questions or suggestions should be sent:
@@ -44,11 +48,11 @@
 
 
 	// The full name of the institution hosting this literature database:
-	$hostInstitutionName = "INSTITUTION_FULL_NAME"; // e.g. "Institute for Polar Ecology"
+	$hostInstitutionName = "Institute for ..."; // e.g. "Institute for Polar Ecology"
 
 
 	// The abbreviated name of the institution hosting this literature database:
-	$hostInstitutionAbbrevName = "INSTITUTIONAL_ABBREVIATION"; // e.g. "IPÖ"
+	$hostInstitutionAbbrevName = "..."; // e.g. "IPÖ"
 
 
 	// The URL of the institution hosting this literature database:
@@ -100,7 +104,7 @@
 
 	// The following search & replace actions will be applied to the 'title', 'keywords' and 'abstract'
 	// fields. This feature is meant to provide richer text capabilities (like displaying italics or
-	// super-/subscript) from the plain text data delivered by the mysql database. It works by means of
+	// super-/subscript) from the plain text data delivered by the MySQL database. It works by means of
 	// "human readable markup" that's used within the plain text fields of the database to define rich
 	// text characters (note that the current implementation only supports the 'title', 'keywords' and
 	// 'abstract' fields!). E.g., if you enclose a particular word by substrings (like '_in-situ_') this
