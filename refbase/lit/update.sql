@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./update.sql
 # Created:    01-Mar-05, 16:54
-# Modified:   02-Mar-05, 01:35
+# Modified:   24-Mar-05, 12:40
 
 # This MySQL database structure file will update any refbase v0.7 database to v0.8
 
@@ -71,7 +71,7 @@ CREATE TABLE `formats` (
 
 INSERT INTO `formats` VALUES (1, 'MODS XML','import', 'true', 'import_modsxml.php', '6', 1),
 (2, 'MODS XML','export', 'true', 'export_modsxml.php', '6', 1),
-(3, 'Text (CSV)','export', 'true', 'export_textcsv.php', '7', 1),
+(3, 'Text (CSV)','export', 'false', 'export_textcsv.php', '7', 1),
 (4, 'Bibtex','import', 'true', 'bibutils/import_bib2xml.php', '1', 2),
 (5, 'Bibtex','export', 'true', 'bibutils/export_xml2bib.php', '1', 2),
 (6, 'Endnote','import', 'true', 'bibutils/import_end2xml.php', '2', 2),
