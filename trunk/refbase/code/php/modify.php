@@ -402,7 +402,7 @@
 
 	$loginEmailArray = split("@", $loginEmail); // split the login email address at '@'
 	$loginEmailUserName = $loginEmailArray[0]; // extract the user name (which is the first element of the array '$loginEmailArray')
-	$callNumberPrefix = $abbrevInstitution . " @ " . $loginEmailUserName; // again, we use session variables to construct a correct call number prefix, like: 'IP´ @ msteffens'
+	$callNumberPrefix = $abbrevInstitution . " @ " . $loginEmailUserName; // again, we use session variables to construct a correct call number prefix, like: 'IPÖ @ msteffens'
 
 
 	// provide some magic that figures out what do to depending on the state of the 'is Editor' check box
@@ -533,7 +533,7 @@
 			elseif (!ereg("$callNumberPrefix", $callNumberName)) // if the admin's call number prefix does NOT already occur within the contents of the 'call_number' field...
 			{
 				if (ereg("; *[^ @;][^@;]*$", $callNumberName)) // for the admin we offer autocompletion of the call number prefix if he/she just enters his/her reference ID after the last full call number (separated by '; ')
-					// e.g., the string 'IP´ @ mschmid @ 123; 1778' will be autocompleted to 'IP´ @ mschmid @ 123; IP´ @ msteffens @ 1778' (with 'msteffens' being the admin user)
+					// e.g., the string 'IPÖ @ mschmid @ 123; 1778' will be autocompleted to 'IPÖ @ mschmid @ 123; IPÖ @ msteffens @ 1778' (with 'msteffens' being the admin user)
 					$callNumberName = ereg_replace("^(.+); *([^@;]+)$", "\\1; $callNumberPrefix @ \\2", $callNumberName); // insert the admin's call number prefix before any reference ID that stand's at the end of the string of call numbers
 				else
 					$callNumberName = $callNumberName . "; " . $callNumberPrefix . " @ "; // ...append the admin's call number prefix to any existing call numbers
