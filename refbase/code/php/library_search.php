@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./library_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   16-Feb-05, 20:47
+	// Modified:   28-Mar-05, 20:58
 
 	// Search form providing the main fields.
 	// Searches will be restricted to records belonging
@@ -22,6 +22,7 @@
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
 	include 'initialize/ini.inc.php'; // include common variables
+	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
@@ -104,16 +105,36 @@
 	// Parameters:
 	// 1: Database connection
 	// 2. Table that contains values
-	// 3. Attribute that contains values
-	// 4. <SELECT> element name
-	// 5. An additional non-database value
-	// 6. Optional <OPTION SELECTED>
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value (display string)
+	// 11. String that gets submitted instead of the display string given in 10.
+	// 12. Optional <OPTION SELECTED>
+	// 13. Restrict query to field... (keep empty if no restriction wanted)
+	// 14. ...where field contents are...
+	// 15. Split field contents into substrings? (yes = true, no = false)
+	// 16. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
 				 $tableRefs,
+				 "serial",
+				 $tableUserData,
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
 				 "series_title",
 				 "seriesTitleName",
+				 $loc["All"],
 				 "All",
-				 "All");
+				 $loc["All"],
+				 "",
+				 "",
+				 false,
+				 "");
 
 	echo "\n\t</td>"
 			. "\n</tr>";
@@ -203,75 +224,6 @@
 	
 	// (5) Close the database connection:
 	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
-
-	// --------------------------------------------------------------------
-
-	// THE SELECTDISTINCT FUNCTION:
-	function selectDistinct ($connection,
-							$tableName,
-							$columnName,
-							$pulldownName,
-							$additionalOption,
-							$defaultValue)
-	{
-		global $librarySearchPattern; // defined in 'ini.inc.php'
-
-		$defaultWithinResultSet = FALSE;
-	
-		// Query to find distinct values of $columnName
-		// in $tableName
-		// Note: we'll restrict the query to records where the pattern given in array element '$librarySearchPattern[1]' (defined in 'ini.inc.php')
-		//       matches the contents of the field given in array element '$librarySearchPattern[0]'
-		$distinctQuery = "SELECT DISTINCT $columnName FROM $tableName WHERE " . $librarySearchPattern[0] . " RLIKE \"" . $librarySearchPattern[1] . "\" ORDER BY $columnName";
-	
-		// Run the distinctQuery on the database through the connection:
-		$resultId = queryMySQLDatabase($distinctQuery, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
-	
-		// Retrieve all distinct values
-		$i = 0;
-		while ($row = @ mysql_fetch_array($resultId))
-			$resultBuffer[$i++] = $row[$columnName];
-	
-		// Start the select widget
-		echo "\n\t\t<select name=\"$pulldownName\">";		 
-	
-		// Is there an additional option?
-		if (isset($additionalOption))
-		{
-			// Yes, but is it the default option?
-			if ($defaultValue == $additionalOption)
-				// Show the additional option as selected
-				echo "\n\t\t\t<option selected>$additionalOption</option>";
-			else
-				// Just show the additional option
-				echo "\n\t\t\t<option>$additionalOption</option>";
-		}
-	
-		// check for a default value
-		if (isset($defaultValue))
-		{
-			// Yes, there's a default value specified
-	
-			// Check if the defaultValue is in the 
-			// database values
-			foreach ($resultBuffer as $result)
-				if ($result == $defaultValue)
-					// Yes, show as selected
-					echo "\n\t\t\t<option selected>$result</option>";
-				else
-					// No, just show as an option
-					echo "\n\t\t\t<option>$result</option>";
-		}	// end if defaultValue
-		else 
-		{
-			// No defaultValue
-			
-			// Show database values as options
-			foreach ($resultBuffer as $result)
-				echo "\n\t\t\t<option>$result</option>";
-		}
-		echo "\n\t\t</select>";
-	} // end of function
 
 	// --------------------------------------------------------------------
 
