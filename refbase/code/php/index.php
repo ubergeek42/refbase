@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./index.php
 	// Created:    29-Jul-02, 16:45
-	// Modified:   06-Sep-03, 01:39
+	// Modified:   25-Nov-03, 21:56
 
 	// This script builds the main page.
 	// It provides login and quick search forms
@@ -34,7 +34,7 @@
 
 	// If there's no stored message available:
 	if (!session_is_registered("HeaderString"))
-		$HeaderString = "Welcome! This database provides access to polar &amp; marine literature."; // Provide the default welcome message
+		$HeaderString = "Welcome! This database provides access to " . htmlentities($scientificFieldDescriptor) . " literature."; // Provide the default welcome message
 	else
 		session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 
@@ -72,7 +72,7 @@
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
 	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Home", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "");
-	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
+	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (5) CLOSE the database connection:
 	if (!(mysql_close($connection)))
@@ -97,18 +97,19 @@ else
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
-		<td>This web database is an attempt to provide a comprehensive and platform-independent literature resource for scientists working in the field of polar &amp; marine sciences.
+		<td>This web database is an attempt to provide a comprehensive and platform-independent literature resource for scientists working in the field of <? echo htmlentities($scientificFieldDescriptor); ?> sciences.
 			<br>
 			<br>
 			This database offers:
 			<ul type="circle">
-				<li>a comprehensive dataset on polar &amp; marine literature<?php
+				<li>a comprehensive dataset on <? echo htmlentities($scientificFieldDescriptor); ?> literature<?php
 	// report the total number of records:
 	echo ", currently featuring " . $recordCount . " records";
 ?></li>
 				<li>a clean &amp; standardized interface</li>
 				<li>a multitude of search options, including both, simple &amp; advanced as well as powerful SQL search options</li>
 				<li>various display &amp; export options</li>
+				<li><a href="import_csa.php">import</a> of full records from Cambridge Scientific Abstracts</li>
 			</ul>
 		</td>
 		<td width="163" valign="top">
@@ -143,6 +144,12 @@ else
 				<select name="markedSelector">
 					<option>marked</option>
 					<option>not marked</option>
+				</select>
+				<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findSelected" value="1">
+				<select name="selectedSelector">
+					<option>selected</option>
+					<option>not selected</option>
 				</select>
 				<br>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findCopy" value="1">&nbsp;copy:
@@ -184,12 +191,27 @@ else
 			<br>
 			Or, alternatively:
 <?php
-	// Get the current year in order to include it into the query URL:
-	$CurrentYear = date(Y);
-	echo "\t\t\t<ul type=\"circle\">\n";
-	echo "\t\t\t\t<li>view the 10 database entries that were <a href=\"search.php?sqlQuery=SELECT+author%2C+title%2C+year%2C+publication%2C+volume%2C+created_by+FROM+refs+ORDER+BY+created_date+DESC%2C+created_time+DESC%2C+serial+DESC+LIMIT+10&amp;showQuery=0&amp;showLinks=1&amp;formType=sqlSearch&amp;showRows=10\">added</a> / <a href=\"search.php?sqlQuery=SELECT+author%2C+title%2C+year%2C+publication%2C+volume%2C+modified_by+FROM+refs+ORDER+BY+modified_date+DESC%2C+modified_time+DESC%2C+serial+DESC+LIMIT+10&amp;showQuery=0&amp;showLinks=1&amp;formType=sqlSearch&amp;showRows=10\">edited</a> most recently.</li>";
-	echo "\n\t\t\t\t<li>view all database entries that were <a href=\"search.php?sqlQuery=SELECT+author%2C+title%2C+year%2C+publication%2C+volume+FROM+refs+WHERE+year+%3D+$CurrentYear+ORDER+BY+author%2C+publication%2C+volume&amp;showQuery0=&amp;showLinks=1&amp;formType=sqlSearch&amp;showRows=20\">published in $CurrentYear</a>.</li>";
-	echo "\n\t\t\t\t<li><a href=\"extract.php\">extract literature</a> cited within a text and build an appropriate reference list.</li>";
+	// Get the current year & date in order to include them into query URLs:
+	$CurrentYear = date('Y');
+	$CurrentDate = date('Y-m-d');
+	// We'll also need yesterday's date for inclusion into query URLs:
+	$TimeStampYesterday = mktime(0, 0, 0, date('m'), (date('d') - 1), date('Y'));
+	$DateYesterday = date('Y-m-d', $TimeStampYesterday);
+	// Plus, we'll calculate the date that's a week ago (again, for inclusion into query URLs):
+	$TimeStampYesterday = mktime(0, 0, 0, date('m'), (date('d') - 7), date('Y'));
+	$DateLastWeek = date('Y-m-d', $TimeStampYesterday);
+
+	echo "\t\t\t<ul type=\"circle\">";
+	echo "\n\t\t\t\t<li>view all database entries that were:";
+	echo "\n\t\t\t\t\t<ul type=\"circle\">";
+	echo "\n\t\t\t\t\t\t<li>added: <a href=\"show.php?date=" . $CurrentDate . "\">today</a> | <a href=\"show.php?date=" . $DateYesterday . "\">yesterday</a> | <a href=\"show.php?date=" . $DateLastWeek . "&amp;range=after\">last 7 days</a></li>";
+	echo "\n\t\t\t\t\t\t<li>edited: <a href=\"show.php?date=" . $CurrentDate . "&amp;when=edited\">today</a> | <a href=\"show.php?date=" . $DateYesterday . "&amp;when=edited\">yesterday</a> | <a href=\"show.php?date=" . $DateLastWeek . "&amp;when=edited&amp;range=after\">last 7 days</a></li>";
+	echo "\n\t\t\t\t\t\t<li>published in: <a href=\"show.php?year=" . $CurrentYear . "\">" . $CurrentYear . "</a> | <a href=\"show.php?year=" . ($CurrentYear - 1) . "\">" . ($CurrentYear - 1) . "</a> | <a href=\"show.php?year=" . ($CurrentYear - 2) . "\">" . ($CurrentYear - 2) . "</a> | <a href=\"show.php?year=" . ($CurrentYear - 3) . "\">" . ($CurrentYear - 3) . "</a></li>";
+	echo "\n\t\t\t\t\t</ul>";
+	echo "\n\t\t\t\t\t<br>";
+	echo "\n\t\t\t\t</li>";
+	echo "\n\t\t\t\t<li><a href=\"extract.php\">extract literature</a> cited within a text and build an appropriate reference list</li>";
+	echo "\n\t\t\t\t<li><a href=\"show.php\">display details</a> for a particular record by entering its database serial number</li>";
 	echo "\n\t\t\t</ul>\n";
 ?>
 		</td>
