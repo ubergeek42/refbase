@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./install.php
 	// Created:    07-Jan-04, 22:00
-	// Modified:   01-Mar-05, 22:51
+	// Modified:   24-Mar-05, 13:48
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -319,17 +319,20 @@
 
 
 		// Validate the 'pathToBibutils' field:
-		if (ereg("[;|]", $formVars["pathToBibutils"]))
-			// For security reasons, the 'pathToBibutils' field cannot contain the characters ';' or '|' (which would tie multiple shell commands together)
-			$errors["pathToBibutils"] = "Due to security reasons this field cannot contain the characters ';' or '|':";
-
-		elseif (!is_readable($formVars["pathToBibutils"]))
-			// Check if the specified path resolves to an existing directory
-			$errors["pathToBibutils"] = "Your path specification is invalid (directory not found):";
-
-		elseif (!is_dir($formVars["pathToBibutils"]))
-			// Check if the specified path resolves to a directory (and not a file)
-			$errors["pathToBibutils"] = "You must specify a directory! Please give the path to the directory containing the bibutils utilities:";
+		if (!empty($formVars["pathToBibutils"])) // we'll only validate the 'pathToBibutils' field if it isn't empty (installation of bibutils is optional)
+		{
+			if (ereg("[;|]", $formVars["pathToBibutils"]))
+				// For security reasons, the 'pathToBibutils' field cannot contain the characters ';' or '|' (which would tie multiple shell commands together)
+				$errors["pathToBibutils"] = "Due to security reasons this field cannot contain the characters ';' or '|':";
+	
+			elseif (!is_readable($formVars["pathToBibutils"]))
+				// Check if the specified path resolves to an existing directory
+				$errors["pathToBibutils"] = "Your path specification is invalid (directory not found):";
+	
+			elseif (!is_dir($formVars["pathToBibutils"]))
+				// Check if the specified path resolves to a directory (and not a file)
+				$errors["pathToBibutils"] = "You must specify a directory! Please give the path to the directory containing the bibutils utilities:";
+		}
 
 
 		// Validate the 'defaultCharacterSet' field:
@@ -388,10 +391,11 @@
 
 		$queryCreateDB = "CREATE DATABASE IF NOT EXISTS " . $databaseName; // by default, 'latin1' will be used as default character set
 
-		$queryUpdateDependsTable = "UPDATE " . $databaseName . ".depends SET depends_path = \"" . $pathToBibutils . "\" WHERE depends_external = \"bibutils\""; // update the bibutils path spec
-
 		if ($mysqlVersion >= 4.1) // if MySQL 4.1.x (or greater) is installed, we'll add the default character set chosen by the user:
 			$queryCreateDB = $queryCreateDB . " DEFAULT CHARACTER SET " . $defaultCharacterSet;
+
+		if (!empty($pathToBibutils)) // we'll only update the bibutils path if '$pathToBibutils' isn't empty (installation of bibutils is optional)
+			$queryUpdateDependsTable = "UPDATE " . $databaseName . ".depends SET depends_path = \"" . $pathToBibutils . "\" WHERE depends_external = \"bibutils\""; // update the bibutils path spec
 
 		// (2) Run the INSTALL queries on the mysql database through the connection:
 		if (!($result = @ mysql_query ($queryGrantStatement, $connection)))
@@ -412,10 +416,11 @@
 		// reporting's done. The solution is to add the code "2>&1" to the end of your shell command, which redirects
 		// stderr to stdout, which you can then easily print using something like print `shellcommand 2>&1`.
 
-		// run the UPDATE query on the depends table of the (just imported) literature database:
-		if (!($result = @ mysql_query ($queryUpdateDependsTable, $connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("The following error occurred while trying to query the database:", "");
+		if (!empty($pathToBibutils)) // we'll only update the bibutils path if '$pathToBibutils' isn't empty (installation of bibutils is optional)
+			// run the UPDATE query on the depends table of the (just imported) literature database:
+			if (!($result = @ mysql_query ($queryUpdateDependsTable, $connection)))
+				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+					showErrorMsg("The following error occurred while trying to query the database:", "");
 
 		// (5) Close the database connection:
 		if (!(mysql_close($connection)))
