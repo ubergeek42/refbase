@@ -5,8 +5,6 @@ Suggestions for improving refbase:
 
 * Enhanced export using bibutils to BibTex, EndNote, and RIS.
 
-* Support for Unicode and the UTF8 international character set.
-
 * Simplify manual data input by providing record type specific forms.
   These forms will guide a user by only showing those fields that are
   required for a particular record type (like journal articles, book
