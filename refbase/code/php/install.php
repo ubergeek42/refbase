@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./install.php
 	// Created:    07-Jan-04, 22:00
-	// Modified:   28-Feb-04, 20:43
+	// Modified:   01-Oct-04, 21:52
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -53,10 +53,9 @@
 
 	// --------------------------------------------------------------------
 
-	// Initialize the session
-	session_start();
-
-	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session();
 
 	// --------------------------------------------------------------------
 
@@ -66,13 +65,23 @@
 		// if 'installation.php' was called without any valid parameters:
 		//Display an installation form:
 
-		if (session_is_registered("errors"))
-			session_unregister("errors"); // Note: though we clear the session variable, the current error message is still available to this script via '$errors'
+		if (isset($_SESSION['errors']))
+		{
+			$errors = $_SESSION['errors'];
+
+			// Note: though we clear the session variable, the current error message is still available to this script via '$errors':
+			deleteSessionVariable("errors"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+		}
 		else
 			$errors = array(); // initialize the '$errors' variable in order to prevent 'Undefined variable...' messages
 
-		if (session_is_registered("formVars"))
-			session_unregister("formVars"); // Note: though we clear the session variable, the current form variables are still available to this script via '$formVars'
+		if (isset($_SESSION['formVars']))
+		{
+			$formVars = $_SESSION['formVars'];
+
+			// Note: though we clear the session variable, the current form variables are still available to this script via '$formVars':
+			deleteSessionVariable("formVars"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+		}
 		else
 		{
 			// Reset the '$formVars' variable (since we're providing the default values):
@@ -87,7 +96,7 @@
 		}
 
 		// If there's no stored message available:
-		if (!session_is_registered("HeaderString"))
+		if (!isset($_SESSION['HeaderString']))
 		{
 			if (empty($errors)) // provide the default message:
 				$HeaderString = "To install the refbase package please fill out the form below and click the <em>Install</em> button:";
@@ -95,14 +104,26 @@
 				$HeaderString = "<b><span class=\"warning\">There were validation errors regarding the details you entered. Please check the comments above the respective fields:</span></b>";
 		}
 		else
-			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
+		{
+			$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
+
+			// Note: though we clear the session variable, the current message is still available to this script via '$HeaderString':
+			deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+		}
+
+		// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+		// ('' will produce the default 'Web' output style)
+		if (isset($_REQUEST['viewType']))
+			$viewType = $_REQUEST['viewType'];
+		else
+			$viewType = "";
 
 		// Show the login status:
 		showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 		// DISPLAY header:
 		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Installation", "index,follow", "Installation form for the " . htmlentities($officialDatabaseName), "", false, "");
+		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Installation", "index,follow", "Installation form for the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 		// Start <form> and <table> holding the form elements:
@@ -187,6 +208,7 @@
 		// --------------------------------------------------------------------
 
 ?>
+
 </body>
 </html>
 <?php
@@ -196,19 +218,11 @@
 
 		// --------------------------------------------------------------------
 
-		// Register an error array - just in case!
-		if (!session_is_registered("errors"))
-			session_register("errors");
-
 		// Clear any errors that might have been found previously:
-		$errors = array();
+			$errors = array();
 
-		// Set up a $formVars array with the POST variables and register with the session:
-		if (!session_is_registered("formVars"))
-			session_register("formVars");
-
-		// Write the form variables into an array:
-		foreach($HTTP_POST_VARS as $varname => $value)
+		// Write the (POST) form variables into an array:
+		foreach($_POST as $varname => $value)
 			$formVars[$varname] = $value;
 
 
@@ -281,6 +295,10 @@
 		// Now the script has finished the validation, check if there were any errors:
 		if (count($errors) > 0)
 		{
+			// Write back session variables:
+			saveSessionVariable("errors", $errors); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+			saveSessionVariable("formVars", $formVars);
+
 			// There are errors. Relocate back to the installation form:
 			header("Location: install.php");
 
@@ -347,7 +365,7 @@
 		//Provide a feedback page:
 
 		// If there's no stored message available:
-		if (!session_is_registered("HeaderString")) // provide one of the default messages:
+		if (!isset($_SESSION['HeaderString'])) // provide one of the default messages:
 		{
 			if (!empty($resultArray)) // if there were any execution errors
 				$HeaderString = "The following error occurred while trying to import the SQL data into the database:";
@@ -355,14 +373,26 @@
 				$HeaderString = "Installation of the Web Reference Database was successful!";
 		}
 		else
-			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
+		{
+			$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
+
+			// Note: though we clear the session variable, the current message is still available to this script via '$HeaderString':
+			deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+		}
+
+		// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+		// ('' will produce the default 'Web' output style)
+		if (isset($_REQUEST['viewType']))
+			$viewType = $_REQUEST['viewType'];
+		else
+			$viewType = "";
 
 		// Show the login status:
 		showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 		// DISPLAY header:
 		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Installation Feedback", "index,follow", "Installation feedback for the " . htmlentities($officialDatabaseName), "", false, "");
+		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Installation Feedback", "index,follow", "Installation feedback for the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 		// Start a <table>:
@@ -440,6 +470,7 @@
 		// --------------------------------------------------------------------
 
 ?>
+
 </body>
 </html>
 <?php
