@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 0:25 Uhr
-	// Modified:   29-Jun-03, 17:25 Uhr
+	// Modified:   28-Aug-03, 14:07 Uhr
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -203,7 +203,7 @@
 
 			// Build a TABLE ROW with links for "previous" & "next" browsing, as well as links to intermediate pages
 			// call the 'buildBrowseLinks()' function (defined in 'include.inc'):
-			$BrowseLinks = buildBrowseLinks("users.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "", "", "");
+			$BrowseLinks = buildBrowseLinks("users.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "", "", "", $exportOrder, $orderBy, $headerMsg);
 			echo $BrowseLinks;
 
 			// For the column headers, start another TABLE ROW ...
