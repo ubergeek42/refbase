@@ -4,7 +4,7 @@
 	/*             Please see the GNU General Public License for more details. */
 	/* File:       ./style.css */
 	/* Created:    20-Oct-02, 15:08 */
-	/* Modified:   29-Jun-03, 14:30 */
+	/* Modified:   18-Nov-03, 21:41 */
 
 	/* refbase CSS definitions */
 
@@ -17,11 +17,19 @@ pre,code    { font-family:monaco,courier,monospace; font-size:7pt; }
 
 .spacer2    { padding-bottom:0.3em; }
 
-.date       { font-size:smaller; }
+.smaller    { font-size:smaller; }
+
+.small      { font-size:small; }
+
+.smallup    { font-size:small; position:relative; top:-10px; }
 
 .header     { font-family:helvetica,arial,sans-serif; }
 
+.footer     { font-family:helvetica,arial,sans-serif; font-size:x-small; color:#999999; }
+
 .warning    { color:red; }
+
+.warning2   { color:red; font-family:helvetica,arial,sans-serif; font-size:smaller; }
 
 th          { font-family:helvetica,arial,sans-serif; }
 
