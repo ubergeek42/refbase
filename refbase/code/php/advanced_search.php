@@ -1027,15 +1027,11 @@
 
 		// finalize header containing the appropriate header string:
 		echo "\n<tr>"
-			. "\n\t<td>&nbsp;</td>"
-			. "\n\t<td colspan=\"2\">$HeaderString</td>"
-			. "\n</tr>"
-			. "\n<tr align=\"center\">"
-			. "\n\t<td colspan=\"3\">&nbsp;</td>"
+//			. "\n\t<td>&nbsp;</td>" // img in 'header.inc' now spans this row (by rowspan="2")
+			. "\n\t<td>$HeaderString</td>"
 			. "\n</tr>"
 			. "\n</table>"
-			. "\n<hr align=\"center\" width=\"80%\">"
-			. "\n<p align=\"center\">&nbsp;</p>";
+			. "\n<hr align=\"center\" width=\"80%\">";
 	}
 
 	// --------------------------------------------------------------------
