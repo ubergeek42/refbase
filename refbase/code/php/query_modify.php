@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./query_modify.php
 	// Created:    23-May-04, 20:42
-	// Modified:   29-Aug-04, 20:39
+	// Modified:   03-Oct-04, 21:56
 
 	// This php script will perform adding, editing & deleting of user queries.
 	// It then relocates back to the main page ('index.php') so that the user
@@ -189,7 +189,7 @@
 	if (empty($sqlQuery))
 		$errors["sqlQuery"] = "You must specify a query string:"; // 'sqlQuery' must not be empty
 
-	elseif (!ereg("^SELECT", $sqlQuery))
+	elseif (!eregi("^SELECT", $sqlQuery))
 		$errors["sqlQuery"] = "You can only save SELECT queries:"; // currently, the user is only allowed to save SELECT queries
 	
 	// --------------------------------------------------------------------
