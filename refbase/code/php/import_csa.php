@@ -17,10 +17,10 @@
 	*/
 	
 	// Incorporate some include files:
-	include 'header.inc.php'; // include header
-	include 'footer.inc.php'; // include footer
-	include 'include.inc.php'; // include common functions
-	include "ini.inc.php"; // include common variables
+	include 'includes/header.inc.php'; // include header
+	include 'includes/footer.inc.php'; // include footer
+	include 'includes/include.inc.php'; // include common functions
+	include 'initialize/ini.inc.php'; // include common variables
 	
 	// --------------------------------------------------------------------
 

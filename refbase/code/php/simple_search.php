@@ -17,11 +17,11 @@
 	*/
 	
 	// Incorporate some include files:
-	include 'db.inc.php'; // 'db.inc.php' is included to hide username and password
-	include 'header.inc.php'; // include header
-	include 'footer.inc.php'; // include footer
-	include 'include.inc.php'; // include common functions
-	include "ini.inc.php"; // include common variables
+	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
+	include 'includes/header.inc.php'; // include header
+	include 'includes/footer.inc.php'; // include footer
+	include 'includes/include.inc.php'; // include common functions
+	include 'initialize/ini.inc.php'; // include common variables
 
 	// --------------------------------------------------------------------
 
