@@ -71,7 +71,7 @@
 
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
-	displayHTMLhead("IP&Ouml; Literature Database -- Home", "index,follow", "Search the IP&Ouml; Literature Database", "", false, "");
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Home", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "");
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
 
 	// (5) CLOSE the database connection:
@@ -81,13 +81,17 @@
 
 	// --------------------------------------------------------------------
 ?>
-<table align="center" border="0" cellpadding="2" cellspacing="5" width="90%" summary="This table explains features, goals and usage of the IP&Ouml; literature database">
+<table align="center" border="0" cellpadding="2" cellspacing="5" width="90%" summary="This table explains features, goals and usage of the <? echo htmlentities($officialDatabaseName); ?>">
 	<tr>
 		<td colspan="2"><h3>Goals &amp; Features</h3></td>
-		<td width="80" valign="bottom"><?php
+		<td width="158" valign="bottom"><?php
 if (!session_is_registered("loginEmail"))
 	{
 ?><div class="header"><b>Login:</b></div><?php
+	}
+else
+	{
+?><div class="header"><b>Show My Refs:</b></div><?php
 	}
 ?></td>
 	</tr>
@@ -107,7 +111,7 @@ if (!session_is_registered("loginEmail"))
 				<li>various display &amp; export options</li>
 			</ul>
 		</td>
-		<td width="80" valign="top">
+		<td width="158" valign="top">
 <?php
 if (!session_is_registered("loginEmail"))
 	{
@@ -124,12 +128,38 @@ if (!session_is_registered("loginEmail"))
 				<input type="submit" value="Login">
 			</form><?php
 	}
+else
+	{
+?>
+			<form action="search.php" method="POST">
+				<input type="hidden" name="formType" value="myRefsSearch">
+				<input type="hidden" name="showQuery" value="0">
+				<input type="hidden" name="showLinks" value="1">
+				<input type="radio" name="myRefsRadio" value="1" checked>&nbsp;All
+				<br>
+				<input type="radio" name="myRefsRadio" value="0">&nbsp;Only:
+				<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findMarked" value="1">
+				<select name="markedSelector">
+					<option>marked</option>
+					<option>not marked</option>
+				</select>
+				<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findUserKeys" value="1">&nbsp;key:&nbsp;&nbsp;
+				<input type="text" name="UserKeysName" size="7">
+				<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findUserNotes" value="1">&nbsp;note:&nbsp;
+				<input type="text" name="UserNotesName" size="7">
+				<br>
+				<input type="submit" value="Show">
+			</form><?php
+	}
 ?>
 		</td>
 	</tr>
 	<tr>
 		<td colspan="2"><h3>Search</h3></td>
-		<td width="80" valign="bottom"><div class="header"><b>Quick Search:</b></div></td>
+		<td width="158" valign="bottom"><div class="header"><b>Quick Search:</b></div></td>
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
@@ -138,7 +168,7 @@ if (!session_is_registered("loginEmail"))
 				<li><a href="simple_search.php">Simple Search</a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;search the main fields of the database</li>
 				<li><a href="advanced_search.php">Advanced Search</a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;search all fields of the database</li>
 				<li><a href="sql_search.php">SQL Search</a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;search the database by use of a SQL query</li>
-				<li><a href="library_search.php">Library Search</a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;search the library of the Institut f&uuml;r Polar&ouml;kologie</li>
+				<li><a href="library_search.php">Library Search</a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;search the library of the <? echo htmlentities($hostInstitutionName); ?></li>
 			</ul>
 			<br>
 			Or, alternatively:
@@ -152,7 +182,7 @@ if (!session_is_registered("loginEmail"))
 	echo "\n\t\t\t</ul>\n";
 ?>
 		</td>
-		<td width="80" valign="top">
+		<td width="158" valign="top">
 			<form action="search.php" method="POST">
 				<input type="hidden" name="formType" value="quickSearch">
 				<input type="hidden" name="showQuery" value="0">
@@ -176,8 +206,8 @@ if (!session_is_registered("loginEmail"))
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
-		<td>This literature database is maintained by the <a href="http://www.uni-kiel.de/ipoe/">Institut f&uuml;r Polar&ouml;kologie</a> (IP&Ouml;), Kiel. You're welcome to send any questions or suggestions to our <a href="mailto:&#105;&#112;&#111;&#101;&#108;&#105;&#116;&#64;&#105;&#112;&#111;&#101;&#46;&#117;&#110;&#105;&#45;&#107;&#105;&#101;&#108;&#46;&#100;&#101;">feedback</a> address. The database is powered by <a href="http://www.refbase.net">refbase</a>, an open source database front-end for managing scientific literature &amp; citations that was initiated at IP&Ouml;.</td>
-		<td width="80" valign="top"><a href="http://www.refbase.net/"><img src="img/refbase_credit.gif" alt="powered by refbase" width="80" height="44" hspace="0" border="0"></a></td>
+		<td>This literature database is maintained by the <a href="<? echo $hostInstitutionURL; ?>"><? echo htmlentities($hostInstitutionName); ?></a> (<? echo htmlentities($hostInstitutionAbbrevName); ?>). You're welcome to send any questions or suggestions to our <a href="mailto:<? echo $feedbackEmail; ?>">feedback</a> address. The database is powered by <a href="http://www.refbase.net">refbase</a>, an open source database front-end for managing scientific literature &amp; citations.</td>
+		<td width="158" valign="top"><a href="http://www.refbase.net/"><img src="img/refbase_credit.gif" alt="powered by refbase" width="80" height="44" hspace="0" border="0"></a></td>
 	</tr>
 </table><?php
 	// --------------------------------------------------------------------
