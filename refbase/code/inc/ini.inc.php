@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   14-Oct-04, 00:24
+	// Modified:   14-Oct-04, 23:19
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -85,22 +85,37 @@
 
 	// Specify who'll be allowed to see files associated with any records:
 	// Set this variable to "everyone" if you want _any_ visitor of your database (whether he's logged
-	// in or not) to be able to see links to any associated files. If you choose "login" instead, a user
-	// must be logged in to view any files. Finally, use "user-specific" if you want to set this permission
-	// individually for each user. Note that, setting this variable to either "everyone" or "login" will
-	// override the user-specific permission setting for file downloads ("allow_download" permission).
+	// in or not) to be able to see links to any associated files. If you choose "login" instead, a
+	// user must be logged in to view any files. Finally, use "user-specific" if you want to set this
+	// permission individually for each user. Note that, setting this variable to either "everyone" or
+	// "login" will override the user-specific permission setting for file downloads ("allow_download"
+	// permission).
 	$fileVisibility = "user-specific"; // possible values: "everyone", "login", "user-specific"
 
 
-	// [CAUTION: This is an advanced option. If you're new to refbase, just don't bother with it!]
+	// Specify a condition where files will be always made visible [optional]:
 	// This variable can be used to specify a condition where the above rule of file visibility can be
-	// by-passed (thus allowing download access to some particular files while all other files are protected
-	// by the above rule). Files will be shown regardless of the above rule if the specified condition is
-	// met. First param must be a valid field name from table 'refs', second param the conditional expression
-	// (specified as /perl regular expression/). The given example will *always* show links to files where
-	// the 'thesis' field of the corresponding record is not empty. If you do not wish to make any exception
-	// to the above rule, just specify an empty array, like: '$fileVisibilityException = array();'
-	$fileVisibilityException = array("thesis", "/.+/"); // "/.../i" will invoke case insensitive matching
+	// by-passed (thus allowing download access to some particular files while all other files are
+	// protected by the above rule). Files will be shown regardless of the above rule if the specified
+	// condition is met. First param must be a valid field name from table 'refs', second param the
+	// conditional expression (specified as /perl-style regular expression/ -> see note at the end of
+	// this file). The given example will *always* show links to files where the 'thesis' field of the
+	// corresponding record is not empty. If you do not wish to make any exception to the above rule,
+	// just specify an empty array, like: '$fileVisibilityException = array();'. Use the "/.../i"
+	// modifier to invoke case insensitive matching.
+	$fileVisibilityException = array("thesis", "/.+/"); // e.g. 'array("thesis", "/.+/")'
+
+
+	// Define what will be searched by "library_search.php":
+	// refbase offers a "Library Search" feature that provides a separate search page for searching an
+	// institution's library. All searches performed thru this search form will be restricted to
+	// records that match the specified condition. First param must be a valid field name from table
+	// 'refs', second param the conditional expression (specified as MySQL extended regular expression
+	// -> see note at the end of this file). Of course, you could also use this feature to restrict
+	// searches thru "library_search.php" by _any_ other condition. E.g., with "location" as the first
+	// parameter and your own login email address as the second parameter, any "library" search would
+	// be restricted to your personal literature data set.
+	$librarySearchPattern = array("location", "library"); // e.g. 'array("location", "IPÖ Library")'
 
 
 	// The base DIR path to your default file directory:
@@ -157,7 +172,9 @@
 	// markup scheme to your needs (the left column below represents regular expression patterns
 	// matching the human readable markup that's used in your database while the right column represents
 	// the equivalent HTML encoding). If you do not wish to perform any search and replace actions, just
-	// specify an empty array, like: '$markupSearchReplacePatterns = array();'
+	// specify an empty array, like: '$markupSearchReplacePatterns = array();'. Search & replace patterns
+	// must be specified as perl-style regular expression (in this case, without the leading & trailing
+	// slashes) -> see note at the end of this file.
 	$markupSearchReplacePatterns = array("_(.+?)_"          =>  "<i>\\1</i>",
 										"\\*\\*(.+?)\\*\\*" =>  "<b>\\1</b>",
 										"\\[super:(.+?)\\]" =>  "<sup>\\1</sup>",
@@ -214,4 +231,15 @@
 										"\\[Omega\\]"       =>  "&Omega;");
 
 	// --------------------------------------------------------------------
+
+	// Note regarding the use of regular expressions:
+
+	// Certain variables within this file expect you to enter search patterns as either "MySQL
+	// extended" or "perl-style" regular expression. While regular expressions provide a powerful
+	// syntax for searching they may be somewhat difficult to write and daunting if you're new to the
+	// concept. If you require help coming up with a correct regular expression that matches your
+	// needs, you may want to visit <http://grep.extracts.de/> for pointers to language-specific
+	// documentation, tutorials, books and regex-aware applications. Alternatively, you're welcome to
+	// post a message to the refbase help forum: <http://sourceforge.net/forum/forum.php?forum_id=218758>
+
 ?>
