@@ -17,7 +17,7 @@ user_keys	the user's personal keywords for this record
 user_notes	the user's personal notes for this record
 user_file	if the user owns a digital copy of this record, he can specify its file name/path here
 user_groups	the user's personal groups to which this record belongs (note that this field contains names of *reference* groups for this user, which must not be confused with the *user* groups from table 'users')
-bibtex_id	the unique BibTeX record identifier used when exporting to BibTeX format
+cite_key	the unique citation key for this record which uniquely identifies this record when citing
 related	contains pointers to related records. Pointers can be serial numbers or partial queries, e.g.: '1234; 2678; 1988; author=steffens' -> items separated by ";" will be connected by OR. Pure-digit items: assumed to be record serials. Dynamic items: 'field=content' syntax will be resolved to 'field RLIKE "content"'
 
 
@@ -35,7 +35,7 @@ user_keys	TEXT
 user_notes	TEXT
 user_file	VARCHAR(255)
 user_groups	TEXT
-bibtex_id	VARCHAR(255)
+cite_key	VARCHAR(255)
 related	TEXT
 
 INDEX	(user_id,record_id)
@@ -45,7 +45,7 @@ INDEX	(user_id,record_id)
 table creation code
 -------------------
 
-CREATE TABLE user_data (data_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id MEDIUMINT UNSIGNED NOT NULL, record_id MEDIUMINT UNSIGNED NOT NULL, marked ENUM("no","yes") NOT NULL, copy ENUM("false","true","ordered","fetch") NOT NULL, selected ENUM("no","yes") NOT NULL, user_keys TEXT, user_notes TEXT, user_file VARCHAR(255), user_groups TEXT, bibtex_id VARCHAR(255), related TEXT, INDEX (user_id,record_id));
+CREATE TABLE user_data (data_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id MEDIUMINT UNSIGNED NOT NULL, record_id MEDIUMINT UNSIGNED NOT NULL, marked ENUM("no","yes") NOT NULL, copy ENUM("false","true","ordered","fetch") NOT NULL, selected ENUM("no","yes") NOT NULL, user_keys TEXT, user_notes TEXT, user_file VARCHAR(255), user_groups TEXT, cite_key VARCHAR(255), related TEXT, INDEX (user_id,record_id));
 
 
 rules for data import
