@@ -1,11 +1,12 @@
-refbase 0.8 README
-==================
+refbase 0.8.0 README
+====================
 
 About refbase
 -------------
   refbase is a web-based solution for managing scientific literature,
-  references and citations.  Currently, the following features have been
-  implemented for:
+  references and citations.
+  
+  Currently, the following features have been implemented for:
   EVERYONE
     - search the database using different search forms
     - search within results
@@ -18,8 +19,8 @@ About refbase
   LOGGED IN USERS
     - user specific fields which are stored individually for each user
     - display or search within only the user's own literature
-    - export selected records to MODS XML and (via the freely available
-      bibutils utilities) to BibTex, EndNote, and RIS
+    - export selected records to MODS XML and (via the GPLed bibutils programs)
+      to BibTex, EndNote, and RIS
     - automatic email announcements for newly added records
     - save and recall search queries
     - adding records to user-specific groups
@@ -28,6 +29,10 @@ About refbase
   ADMINISTRATOR
     - user management interface provided to the database admin
     - set access permissions on a per-user basis
+
+  People with access to a shell on the refbase server can use the tools in the
+  contrib/endnote directory to batch transfer many records from Endnote into
+  refbase.
 
 Credits
 -------
@@ -40,13 +45,9 @@ Requirements
   - PHP <http://www.php.net/> (version 4.1.0 or greater)
   - MySQL <http://www.mysql.com/> (version 4.1.x or greater required for
     Unicode support)
-
-  In addition, export functionality requires:
-  - for MODS XML export:
-    ActiveLink PHP XML Package <http://www.active-link.com/software/>
+  
   - for Endnote/RIS/Bibtex export:
     bibutils <http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html>
-  (you won't need these utilities if you're not going to use the export feature)
 
 Installation
 ------------
