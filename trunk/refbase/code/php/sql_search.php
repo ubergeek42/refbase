@@ -14,9 +14,9 @@
 </head>
 <body>
 <?php
-	// Search formular providing the possibility to enter a sql query
+	// Search formular that offers to specify a custom sql query
 
-	// This is included to hide the username and password:
+	// Include header & footer:
 	include 'header.inc';
 	include 'footer.inc';
 
@@ -42,23 +42,15 @@
 
 			$showQuery = $_REQUEST['showQuery']; // extract the $showQuery parameter
 			if ("$showQuery" == "1")
-				{
-					$checkQuery = " checked";
-				}
+				$checkQuery = " checked";
 			else
-				{
-					$checkQuery = "";
-				}
+				$checkQuery = "";
 			
 			$showLinks = $_REQUEST['showLinks']; // extract the $showLinks parameter
 			if ("$showLinks" == "1")
-				{
-					$checkLinks = " checked";
-				}
+				$checkLinks = " checked";
 			else
-				{
-					$checkLinks = "";
-				}
+				$checkLinks = "";
 
 			$showRows = $_REQUEST['showRows']; // extract the $showRows parameter
 		}
@@ -111,15 +103,11 @@
 
 		// finalize header containing the appropriate header string:
 		echo "\n<tr>"
-			. "\n\t<td>&nbsp;</td>"
-			. "\n\t<td colspan=\"2\">$HeaderString</td>"
-			. "\n</tr>"
-			. "\n<tr align=\"center\">"
-			. "\n\t<td colspan=\"3\">&nbsp;</td>"
+//			. "\n\t<td>&nbsp;</td>" // img in 'header.inc' now spans this row (by rowspan="2")
+			. "\n\t<td>$HeaderString</td>"
 			. "\n</tr>"
 			. "\n</table>"
-			. "\n<hr align=\"center\" width=\"80%\">"
-			. "\n<p align=\"center\">&nbsp;</p>";
+			. "\n<hr align=\"center\" width=\"80%\">";
 	}
 
 	// --------------------------------------------------------------------
