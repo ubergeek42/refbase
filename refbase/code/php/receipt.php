@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./receipt.php
 	// Created:    2-Jan-03, 22:43
-	// Modified:   17-Feb-05, 19:35
+	// Modified:   27-Feb-05, 18:39
 
 	// This php script will display a feedback page after any action of
 	// adding/editing/deleting a record. It will display links to the
@@ -110,16 +110,19 @@
 		. "\n\t<td valign=\"top\">"
 		. "\n\t\tChoose how to proceed:&nbsp;&nbsp;";
 
-	if ($recordAction != "delet")
-		echo "\n\t\t<a href=\"search.php?sqlQuery=" . $sqlQuery . "&amp;showQuery=0&amp;showLinks=1&amp;formType=sqlSearch&amp;submit=Display&amp;oldQuery=" . rawurlencode($oldQuery) . "\">Show " . $recordAction . "ed record</a>";
-
-	if ($recordAction != "delet" && $oldQuery != "")
-		echo "\n\t\t&nbsp;&nbsp;-OR-&nbsp;&nbsp;";
+	if (isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does contain 'allow_details_view'...
+	{
+		if ($recordAction != "delet")
+			echo "\n\t\t<a href=\"search.php?sqlQuery=" . $sqlQuery . "&amp;showQuery=0&amp;showLinks=1&amp;formType=sqlSearch&amp;submit=Display&amp;oldQuery=" . rawurlencode($oldQuery) . "\">Show " . $recordAction . "ed record</a>";
+	
+		if ($recordAction != "delet" && $oldQuery != "")
+			echo "\n\t\t&nbsp;&nbsp;-OR-&nbsp;&nbsp;";
+	}
 
 	if ($oldQuery != "") // only provide a link to any previous search results if '$oldQuery' isn't empty (which occurs for "Add Record")
 		echo "\n\t\t<a href=\"search.php?" . $reactivatedOldQuery . "\">Display previous search results</a>";
 
-	if ($recordAction != "delet" || $oldQuery != "")
+	if ((isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions']) AND ($recordAction != "delet")) || $oldQuery != "")
 		echo "\n\t\t&nbsp;&nbsp;-OR-&nbsp;&nbsp;";
 
 		echo "\n\t\t<a href=\"index.php\">Goto " . encodeHTML($officialDatabaseName) . " Home</a>"; // we include the link to the home page here so that "Choose how to proceed:" never stands without any link to go
