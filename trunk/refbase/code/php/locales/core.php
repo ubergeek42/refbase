@@ -7,7 +7,7 @@
 	// Created:    01-Oct-04, 12:00
 	// Modified:   12-Oct-04, 12:00
 	
-  $f = $refbaseDir ."locales/".$locale."/common.inc"; // get filename
+  $f = "locales/".$locale."/common.inc"; // get filename
   
   ob_start();
   	readfile( $f ); // read the file contents
