@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import_csa.php
 	// Created:    21-Nov-03, 22:05
-	// Modified:   20-May-04, 23:06
+	// Modified:   29-Sep-04, 19:16
 
 	// Import form that offers to import records from the "Cambridge Scientific Abstracts" (CSA)
 	// Internet Database Service (<http://www.csa1.co.uk/csa/index.html>). This import form requires
@@ -68,8 +68,21 @@
 			. "\n<tr>\n\t<td valign=\"top\"><b>Options:</b></td>\n\t<td>&nbsp;</td>"
 			. "\n\t<td valign=\"top\"><input type=\"checkbox\" name=\"showSource\" value=\"1\" checked>&nbsp;&nbsp;&nbsp;Display original source data</td>"
 			. "\n</tr>"
-			. "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>\n\t\t<input type=\"submit\" name=\"submit\" value=\"Import\"></td>"
+			. "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>";
+
+	if (isset($_SESSION['user_permissions']) AND ereg("(allow_import|allow_batch_import)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains either 'allow_import' or 'allow_batch_import'...
+	// adjust the title string for the import button
+	{
+		$importButtonLock = "";
+		$importTitle = "press this button to have the database parse your entered data and pre-fill the record entry form for you";
+	}
+	else // Note, that disabling the submit button is just a cosmetic thing -- the user can still submit the form by pressing enter or by building the correct URL from scratch!
+	{
+		$importButtonLock = " disabled";
+		$importTitle = "not available since you have no permission to import any records";
+	}
+
+	echo "\n\t<td>\n\t\t<input type=\"submit\" name=\"submit\" value=\"Import\"$importButtonLock title=\"$importTitle\"></td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td align=\"center\" colspan=\"3\">&nbsp;</td>"
 			. "\n</tr>"
