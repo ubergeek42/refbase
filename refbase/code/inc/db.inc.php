@@ -3,7 +3,7 @@
 	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
 	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
 	//             Please see the GNU General Public License for more details.
-	// File:       ./db.inc.php
+	// File:       ./initialize/db.inc.php
 	// Created:    15-Oct-02, 19:11
 	// Modified:   28-Feb-04, 22:06
 
