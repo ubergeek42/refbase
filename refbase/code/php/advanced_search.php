@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./advanced_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   20-Jan-03, 23:29
+	// Modified:   03-Sep-03, 21:27
 
 	// Search formular providing access to all fields of the database.
 	// It offers some output options (like how many records to display per page)
@@ -29,6 +29,11 @@
 	session_start();
 
 	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+
+	// --------------------------------------------------------------------
+
+	if (!session_is_registered("loginEmail")) // if NO user is logged in
+		$loginUserID = ""; // set '$loginUserID' to "" so that 'selectDistinct()' function can be executed without problems
 
 	// --------------------------------------------------------------------
 
@@ -117,16 +122,26 @@
 	// Parameters:
 	// 1: Database connection
 	// 2. Table that contains values
-	// 3. Attribute that contains values
-	// 4. <SELECT> element name
-	// 5. An additional non-database value
-	// 6. Optional <OPTION SELECTED>
-	// 7. Restrict query to field... (keep empty if no restriction wanted)
-	// 8. ...where field contents are...
-	// 9. Split field contents into substrings? (yes = true, no = false)
-	// 10. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value
+	// 11. Optional <OPTION SELECTED>
+	// 12. Restrict query to field... (keep empty if no restriction wanted)
+	// 13. ...where field contents are...
+	// 14. Split field contents into substrings? (yes = true, no = false)
+	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
 				 "refs",
+				 "serial",
+				 "user_data",
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
 				 "publication",
 				 "publicationName",
 				 "All",
@@ -157,16 +172,26 @@
 	// Parameters:
 	// 1: Database connection
 	// 2. Table that contains values
-	// 3. Attribute that contains values
-	// 4. <SELECT> element name
-	// 5. An additional non-database value
-	// 6. Optional <OPTION SELECTED>
-	// 7. Restrict query to field... (keep empty if no restriction wanted)
-	// 8. ...where field contents are...
-	// 9. Split field contents into substrings? (yes = true, no = false)
-	// 10. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value
+	// 11. Optional <OPTION SELECTED>
+	// 12. Restrict query to field... (keep empty if no restriction wanted)
+	// 13. ...where field contents are...
+	// 14. Split field contents into substrings? (yes = true, no = false)
+	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
 				 "refs",
+				 "serial",
+				 "user_data",
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
 				 "abbrev_journal",
 				 "abbrevJournalName",
 				 "All",
@@ -227,16 +252,26 @@
 	// Parameters:
 	// 1: Database connection
 	// 2. Table that contains values
-	// 3. Attribute that contains values
-	// 4. <SELECT> element name
-	// 5. An additional non-database value
-	// 6. Optional <OPTION SELECTED>
-	// 7. Restrict query to field... (keep empty if no restriction wanted)
-	// 8. ...where field contents are...
-	// 9. Split field contents into substrings? (yes = true, no = false)
-	// 10. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value
+	// 11. Optional <OPTION SELECTED>
+	// 12. Restrict query to field... (keep empty if no restriction wanted)
+	// 13. ...where field contents are...
+	// 14. Split field contents into substrings? (yes = true, no = false)
+	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
 				 "refs",
+				 "serial",
+				 "user_data",
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
 				 "series_title",
 				 "seriesTitleName",
 				 "All",
@@ -267,16 +302,26 @@
 	// Parameters:
 	// 1: Database connection
 	// 2. Table that contains values
-	// 3. Attribute that contains values
-	// 4. <SELECT> element name
-	// 5. An additional non-database value
-	// 6. Optional <OPTION SELECTED>
-	// 7. Restrict query to field... (keep empty if no restriction wanted)
-	// 8. ...where field contents are...
-	// 9. Split field contents into substrings? (yes = true, no = false)
-	// 10. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value
+	// 11. Optional <OPTION SELECTED>
+	// 12. Restrict query to field... (keep empty if no restriction wanted)
+	// 13. ...where field contents are...
+	// 14. Split field contents into substrings? (yes = true, no = false)
+	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
 				 "refs",
+				 "serial",
+				 "user_data",
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
 				 "abbrev_series_title",
 				 "abbrevSeriesTitleName",
 				 "All",
@@ -328,16 +373,26 @@
 	// Parameters:
 	// 1: Database connection
 	// 2. Table that contains values
-	// 3. Attribute that contains values
-	// 4. <SELECT> element name
-	// 5. An additional non-database value
-	// 6. Optional <OPTION SELECTED>
-	// 7. Restrict query to field... (keep empty if no restriction wanted)
-	// 8. ...where field contents are...
-	// 9. Split field contents into substrings? (yes = true, no = false)
-	// 10. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value
+	// 11. Optional <OPTION SELECTED>
+	// 12. Restrict query to field... (keep empty if no restriction wanted)
+	// 13. ...where field contents are...
+	// 14. Split field contents into substrings? (yes = true, no = false)
+	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
 				 "refs",
+				 "serial",
+				 "user_data",
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
 				 "publisher",
 				 "publisherName",
 				 "All",
@@ -368,16 +423,26 @@
 	// Parameters:
 	// 1: Database connection
 	// 2. Table that contains values
-	// 3. Attribute that contains values
-	// 4. <SELECT> element name
-	// 5. An additional non-database value
-	// 6. Optional <OPTION SELECTED>
-	// 7. Restrict query to field... (keep empty if no restriction wanted)
-	// 8. ...where field contents are...
-	// 9. Split field contents into substrings? (yes = true, no = false)
-	// 10. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value
+	// 11. Optional <OPTION SELECTED>
+	// 12. Restrict query to field... (keep empty if no restriction wanted)
+	// 13. ...where field contents are...
+	// 14. Split field contents into substrings? (yes = true, no = false)
+	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
 				 "refs",
+				 "serial",
+				 "user_data",
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
 				 "place",
 				 "placeName",
 				 "All",
@@ -438,16 +503,26 @@
 	// Parameters:
 	// 1: Database connection
 	// 2. Table that contains values
-	// 3. Attribute that contains values
-	// 4. <SELECT> element name
-	// 5. An additional non-database value
-	// 6. Optional <OPTION SELECTED>
-	// 7. Restrict query to field... (keep empty if no restriction wanted)
-	// 8. ...where field contents are...
-	// 9. Split field contents into substrings? (yes = true, no = false)
-	// 10. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value
+	// 11. Optional <OPTION SELECTED>
+	// 12. Restrict query to field... (keep empty if no restriction wanted)
+	// 13. ...where field contents are...
+	// 14. Split field contents into substrings? (yes = true, no = false)
+	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
 				 "refs",
+				 "serial",
+				 "user_data",
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
 				 "language",
 				 "languageName",
 				 "All",
@@ -478,16 +553,26 @@
 	// Parameters:
 	// 1: Database connection
 	// 2. Table that contains values
-	// 3. Attribute that contains values
-	// 4. <SELECT> element name
-	// 5. An additional non-database value
-	// 6. Optional <OPTION SELECTED>
-	// 7. Restrict query to field... (keep empty if no restriction wanted)
-	// 8. ...where field contents are...
-	// 9. Split field contents into substrings? (yes = true, no = false)
-	// 10. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value
+	// 11. Optional <OPTION SELECTED>
+	// 12. Restrict query to field... (keep empty if no restriction wanted)
+	// 13. ...where field contents are...
+	// 14. Split field contents into substrings? (yes = true, no = false)
+	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
 				 "refs",
+				 "serial",
+				 "user_data",
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
 				 "summary_language",
 				 "summaryLanguageName",
 				 "All",
@@ -536,16 +621,26 @@
 	// Parameters:
 	// 1: Database connection
 	// 2. Table that contains values
-	// 3. Attribute that contains values
-	// 4. <SELECT> element name
-	// 5. An additional non-database value
-	// 6. Optional <OPTION SELECTED>
-	// 7. Restrict query to field... (keep empty if no restriction wanted)
-	// 8. ...where field contents are...
-	// 9. Split field contents into substrings? (yes = true, no = false)
-	// 10. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value
+	// 11. Optional <OPTION SELECTED>
+	// 12. Restrict query to field... (keep empty if no restriction wanted)
+	// 13. ...where field contents are...
+	// 14. Split field contents into substrings? (yes = true, no = false)
+	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
 				 "refs",
+				 "serial",
+				 "user_data",
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
 				 "area",
 				 "areaName",
 				 "All",
@@ -592,7 +687,19 @@
 			. "\n\t<td><input type=\"text\" name=\"urlName\" size=\"42\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
+			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showFile\" value=\"1\"></td>"
+			. "\n\t<td><b>File:</b></td>\n\t<td>&nbsp;</td>"
+			. "\n\t<td>\n\t\t<select name=\"fileSelector\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
+			. "\n\t<td><input type=\"text\" name=\"fileName\" size=\"42\"></td>"
+			. "\n</tr>"
+			. "\n<tr>"
 			. "\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
+			. "\n</tr>"
+			. "\n<tr>"
+			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showNotes\" value=\"1\"></td>"
+			. "\n\t<td><b>Notes:</b></td>\n\t<td>&nbsp;</td>"
+			. "\n\t<td>\n\t\t<select name=\"notesSelector\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
+			. "\n\t<td><input type=\"text\" name=\"notesName\" size=\"42\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showLocation\" value=\"1\"></td>"
@@ -606,16 +713,26 @@
 	// Parameters:
 	// 1: Database connection
 	// 2. Table that contains values
-	// 3. Attribute that contains values
-	// 4. <SELECT> element name
-	// 5. An additional non-database value
-	// 6. Optional <OPTION SELECTED>
-	// 7. Restrict query to field... (keep empty if no restriction wanted)
-	// 8. ...where field contents are...
-	// 9. Split field contents into substrings? (yes = true, no = false)
-	// 10. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value
+	// 11. Optional <OPTION SELECTED>
+	// 12. Restrict query to field... (keep empty if no restriction wanted)
+	// 13. ...where field contents are...
+	// 14. Split field contents into substrings? (yes = true, no = false)
+	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
 				 "refs",
+				 "serial",
+				 "user_data",
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
 				 "location",
 				 "locationName",
 				 "All",
@@ -641,73 +758,6 @@
 			. "\n\t<td><input type=\"text\" name=\"callNumberName\" size=\"42\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
-			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showFile\" value=\"1\"></td>"
-			. "\n\t<td><b>File Name:</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>\n\t\t<select name=\"fileSelector\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
-			. "\n\t<td><input type=\"text\" name=\"fileName\" size=\"42\"></td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showReprintStatus\" value=\"1\"></td>"
-			. "\n\t<td><b>Reprint Status:</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>\n\t\t<select name=\"reprintStatusSelector\">\n\t\t\t<option selected>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t</select>\n\t</td>"
-			. "\n\t<td>\n\t\t<select name=\"reprintStatusName\">\n\t\t\t<option selected>All</option>\n\t\t\t<option>true</option>\n\t\t\t<option>false</option>\n\t\t\t<option>requested</option>\n\t\t\t<option>fetch</option>\n\t\t</select>\n\t</td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showNotes\" value=\"1\"></td>"
-			. "\n\t<td><b>Notes:</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>\n\t\t<select name=\"notesSelector\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
-			. "\n\t<td><input type=\"text\" name=\"notesName\" size=\"42\"></td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showUserKeys\" value=\"1\"></td>"
-			. "\n\t<td><b>User Keys:</b></td>\n\t<td align=\"center\"><input type=\"radio\" name=\"userKeysRadio\" value=\"1\" checked></td>"
-			. "\n\t<td>\n\t\t<select name=\"userKeysSelector\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
-			. "\n\t<td>";
-
-	// (3) Run the query on the literature database through the connection:
-	//     (here by use of the 'selectDistinct' function)
-	// Produce the select list
-	// Parameters:
-	// 1: Database connection
-	// 2. Table that contains values
-	// 3. Attribute that contains values
-	// 4. <SELECT> element name
-	// 5. An additional non-database value
-	// 6. Optional <OPTION SELECTED>
-	// 7. Restrict query to field... (keep empty if no restriction wanted)
-	// 8. ...where field contents are...
-	// 9. Split field contents into substrings? (yes = true, no = false)
-	// 10. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
-	selectDistinct($connection,
-				 "refs",
-				 "user_keys",
-				 "userKeysName",
-				 "",
-				 "",
-				 "type",
-				 "\"journal\"",
-				 true,
-				 " *[,;()] *");
-
-	echo "\n\t</td>"
-			. "\n</tr>";
-
-	echo "\n<tr>"
-			. "\n\t<td>&nbsp;</td>"
-			. "\n\t<td align=\"right\">or:</td>\n\t<td align=\"center\"><input type=\"radio\" name=\"userKeysRadio\" value=\"0\"></td>"
-			. "\n\t<td>\n\t\t<select name=\"userKeysSelector2\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
-			. "\n\t<td><input type=\"text\" name=\"userKeysName2\" size=\"42\"></td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showUserNotes\" value=\"1\"></td>"
-			. "\n\t<td><b>User Notes:</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>\n\t\t<select name=\"userNotesSelector\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
-			. "\n\t<td><input type=\"text\" name=\"userNotesName\" size=\"42\"></td>"
-			. "\n</tr>"
-			. "\n<tr>"
 			. "\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
 			. "\n</tr>"
 			. "\n<tr>"
@@ -718,7 +768,7 @@
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showType\" value=\"1\"></td>"
-			. "\n\t<td><b>Record Type:</b></td>\n\t<td align=\"center\"><input type=\"radio\" name=\"typeRadio\" value=\"1\" checked></td>"
+			. "\n\t<td><b>Type:</b></td>\n\t<td align=\"center\"><input type=\"radio\" name=\"typeRadio\" value=\"1\" checked></td>"
 			. "\n\t<td>\n\t\t<select name=\"typeSelector\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
 			. "\n\t<td>";
 
@@ -728,16 +778,26 @@
 	// Parameters:
 	// 1: Database connection
 	// 2. Table that contains values
-	// 3. Attribute that contains values
-	// 4. <SELECT> element name
-	// 5. An additional non-database value
-	// 6. Optional <OPTION SELECTED>
-	// 7. Restrict query to field... (keep empty if no restriction wanted)
-	// 8. ...where field contents are...
-	// 9. Split field contents into substrings? (yes = true, no = false)
-	// 10. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value
+	// 11. Optional <OPTION SELECTED>
+	// 12. Restrict query to field... (keep empty if no restriction wanted)
+	// 13. ...where field contents are...
+	// 14. Split field contents into substrings? (yes = true, no = false)
+	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
 				 "refs",
+				 "serial",
+				 "user_data",
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
 				 "type",
 				 "typeName",
 				 "All",
@@ -755,12 +815,6 @@
 			. "\n\t<td align=\"right\">or:</td>\n\t<td align=\"center\"><input type=\"radio\" name=\"typeRadio\" value=\"0\"></td>"
 			. "\n\t<td>\n\t\t<select name=\"typeSelector2\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
 			. "\n\t<td><input type=\"text\" name=\"typeName2\" size=\"42\"></td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showMarked\" value=\"1\"></td>"
-			. "\n\t<td><b>Marked:</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td><input type=\"radio\" name=\"markedRadio\" value=\"1\">&nbsp;&nbsp;yes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"markedRadio\" value=\"0\">&nbsp;&nbsp;no</td>"
-			. "\n\t<td>&nbsp;</td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showApproved\" value=\"1\"></td>"
@@ -795,16 +849,26 @@
 	// Parameters:
 	// 1: Database connection
 	// 2. Table that contains values
-	// 3. Attribute that contains values
-	// 4. <SELECT> element name
-	// 5. An additional non-database value
-	// 6. Optional <OPTION SELECTED>
-	// 7. Restrict query to field... (keep empty if no restriction wanted)
-	// 8. ...where field contents are...
-	// 9. Split field contents into substrings? (yes = true, no = false)
-	// 10. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value
+	// 11. Optional <OPTION SELECTED>
+	// 12. Restrict query to field... (keep empty if no restriction wanted)
+	// 13. ...where field contents are...
+	// 14. Split field contents into substrings? (yes = true, no = false)
+	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
 				 "refs",
+				 "serial",
+				 "user_data",
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
 				 "created_by",
 				 "createdByName",
 				 "All",
@@ -850,16 +914,26 @@
 	// Parameters:
 	// 1: Database connection
 	// 2. Table that contains values
-	// 3. Attribute that contains values
-	// 4. <SELECT> element name
-	// 5. An additional non-database value
-	// 6. Optional <OPTION SELECTED>
-	// 7. Restrict query to field... (keep empty if no restriction wanted)
-	// 8. ...where field contents are...
-	// 9. Split field contents into substrings? (yes = true, no = false)
-	// 10. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value
+	// 11. Optional <OPTION SELECTED>
+	// 12. Restrict query to field... (keep empty if no restriction wanted)
+	// 13. ...where field contents are...
+	// 14. Split field contents into substrings? (yes = true, no = false)
+	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
 				 "refs",
+				 "serial",
+				 "user_data",
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
 				 "modified_by",
 				 "modifiedByName",
 				 "All",
@@ -877,8 +951,90 @@
 			. "\n\t<td align=\"right\">or:</td>\n\t<td align=\"center\"><input type=\"radio\" name=\"modifiedByRadio\" value=\"0\"></td>"
 			. "\n\t<td>\n\t\t<select name=\"modifiedBySelector2\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
 			. "\n\t<td><input type=\"text\" name=\"modifiedByName2\" size=\"42\"></td>"
+			. "\n</tr>";
+
+	if (session_is_registered("loginEmail")) // if a user is logged in, display user specific fields:
+	{
+		echo "\n<tr>"
+			. "\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
 			. "\n</tr>"
 			. "\n<tr>"
+			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showMarked\" value=\"1\"></td>"
+			. "\n\t<td><b>Marked:</b></td>\n\t<td>&nbsp;</td>"
+			. "\n\t<td><input type=\"radio\" name=\"markedRadio\" value=\"1\">&nbsp;&nbsp;yes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"markedRadio\" value=\"0\">&nbsp;&nbsp;no</td>"
+			. "\n\t<td>&nbsp;</td>"
+			. "\n</tr>"
+			. "\n<tr>"
+			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showCopy\" value=\"1\"></td>"
+			. "\n\t<td><b>Copy:</b></td>\n\t<td>&nbsp;</td>"
+			. "\n\t<td>\n\t\t<select name=\"copySelector\">\n\t\t\t<option selected>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t</select>\n\t</td>"
+			. "\n\t<td>\n\t\t<select name=\"copyName\">\n\t\t\t<option selected>All</option>\n\t\t\t<option>true</option>\n\t\t\t<option>fetch</option>\n\t\t\t<option>ordered</option>\n\t\t\t<option>false</option>\n\t\t</select>\n\t</td>"
+			. "\n</tr>"
+			. "\n<tr>"
+			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showUserKeys\" value=\"1\"></td>"
+			. "\n\t<td><b>User Keys:</b></td>\n\t<td align=\"center\"><input type=\"radio\" name=\"userKeysRadio\" value=\"1\" checked></td>"
+			. "\n\t<td>\n\t\t<select name=\"userKeysSelector\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
+			. "\n\t<td>";
+
+	// (3) Run the query on the literature database through the connection:
+	//     (here by use of the 'selectDistinct' function)
+	// Produce the select list
+	// Parameters:
+	// 1: Database connection
+	// 2. Table that contains values
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value
+	// 11. Optional <OPTION SELECTED>
+	// 12. Restrict query to field... (keep empty if no restriction wanted)
+	// 13. ...where field contents are...
+	// 14. Split field contents into substrings? (yes = true, no = false)
+	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
+	selectDistinct($connection,
+				 "refs",
+				 "serial",
+				 "user_data",
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
+				 "user_keys",
+				 "userKeysName",
+				 "",
+				 "",
+				 "type",
+				 "\"journal\"",
+				 true,
+				 " *[,;()] *");
+
+	echo "\n\t</td>"
+			. "\n</tr>";
+
+	echo "\n<tr>"
+			. "\n\t<td>&nbsp;</td>"
+			. "\n\t<td align=\"right\">or:</td>\n\t<td align=\"center\"><input type=\"radio\" name=\"userKeysRadio\" value=\"0\"></td>"
+			. "\n\t<td>\n\t\t<select name=\"userKeysSelector2\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
+			. "\n\t<td><input type=\"text\" name=\"userKeysName2\" size=\"42\"></td>"
+			. "\n</tr>"
+			. "\n<tr>"
+			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showUserNotes\" value=\"1\"></td>"
+			. "\n\t<td><b>User Notes:</b></td>\n\t<td>&nbsp;</td>"
+			. "\n\t<td>\n\t\t<select name=\"userNotesSelector\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
+			. "\n\t<td><input type=\"text\" name=\"userNotesName\" size=\"42\"></td>"
+			. "\n</tr>"
+			. "\n<tr>"
+			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showUserFile\" value=\"1\"></td>"
+			. "\n\t<td><b>User File:</b></td>\n\t<td>&nbsp;</td>"
+			. "\n\t<td>\n\t\t<select name=\"userFileSelector\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
+			. "\n\t<td><input type=\"text\" name=\"userFileName\" size=\"42\"></td>"
+			. "\n</tr>";
+	}
+
+	echo "\n<tr>"
 			. "\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
 			. "\n</tr>"
 			. "\n<tr>"
@@ -890,22 +1046,28 @@
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
-			. "\n</tr>"
-			. "\n<tr>"
+			. "\n</tr>";
+
+	if (session_is_registered("loginEmail")) // if a user is logged in, add user specific fields to the sort menus:
+		$userSpecificSortFields = "\n\t\t\t<option></option>\n\t\t\t<option>marked</option>\n\t\t\t<option>copy</option>\n\t\t\t<option>user_keys</option>\n\t\t\t<option>user_notes</option>\n\t\t\t<option>user_file</option>";
+	else
+		$userSpecificSortFields = "";
+
+	echo "\n<tr>"
 			. "\n\t<td>&nbsp;</td>\n\t<td>1st&nbsp;sort&nbsp;by:</td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>\n\t\t<select name=\"sortSelector1\">\n\t\t\t<option selected>author\n\t\t\t<option>address</option>\n\t\t\t<option>corporate_author</option>\n\t\t\t<option></option>\n\t\t\t<option>title</option>\n\t\t\t<option>orig_title</option>\n\t\t\t<option></option>\n\t\t\t<option>year</option>\n\t\t\t<option>publication</option>\n\t\t\t<option>abbrev_journal</option>\n\t\t\t<option>editor</option>\n\t\t\t<option></option>\n\t\t\t<option>volume</option>\n\t\t\t<option>issue</option>\n\t\t\t<option>pages</option>\n\t\t\t<option></option>\n\t\t\t<option>series_title</option>\n\t\t\t<option>abbrev_series_title</option>\n\t\t\t<option>series_editor</option>\n\t\t\t<option>series_volume</option>\n\t\t\t<option>series_issue</option>\n\t\t\t<option></option>\n\t\t\t<option>publisher</option>\n\t\t\t<option>place</option>\n\t\t\t<option></option>\n\t\t\t<option>edition</option>\n\t\t\t<option>medium</option>\n\t\t\t<option>issn</option>\n\t\t\t<option>isbn</option>\n\t\t\t<option></option>\n\t\t\t<option>language</option>\n\t\t\t<option>summary_language</option>\n\t\t\t<option></option>\n\t\t\t<option>keywords</option>\n\t\t\t<option>abstract</option>\n\t\t\t<option></option>\n\t\t\t<option>area</option>\n\t\t\t<option>expedition</option>\n\t\t\t<option>conference</option>\n\t\t\t<option></option>\n\t\t\t<option>doi</option>\n\t\t\t<option>url</option>\n\t\t\t<option></option>\n\t\t\t<option>location</option>\n\t\t\t<option>call_number</option>\n\t\t\t<option>file</option>\n\t\t\t<option>reprint_status</option>\n\t\t\t<option></option>\n\t\t\t<option>notes</option>\n\t\t\t<option>user_keys</option>\n\t\t\t<option>user_notes</option>\n\t\t\t<option></option>\n\t\t\t<option>serial</option>\n\t\t\t<option>type</option>\n\t\t\t<option>marked</option>\n\t\t\t<option>approved</option>\n\t\t\t<option></option>\n\t\t\t<option>created_date</option>\n\t\t\t<option>created_time</option>\n\t\t\t<option>created_by</option>\n\t\t\t<option></option>\n\t\t\t<option>modified_date</option>\n\t\t\t<option>modified_time</option>\n\t\t\t<option>modified_by</option>\n\t\t</select>\n\t</td>"
+			. "\n\t<td>\n\t\t<select name=\"sortSelector1\">\n\t\t\t<option selected>author</option>\n\t\t\t<option>address</option>\n\t\t\t<option>corporate_author</option>\n\t\t\t<option></option>\n\t\t\t<option>title</option>\n\t\t\t<option>orig_title</option>\n\t\t\t<option></option>\n\t\t\t<option>year</option>\n\t\t\t<option>publication</option>\n\t\t\t<option>abbrev_journal</option>\n\t\t\t<option>editor</option>\n\t\t\t<option></option>\n\t\t\t<option>volume</option>\n\t\t\t<option>issue</option>\n\t\t\t<option>pages</option>\n\t\t\t<option></option>\n\t\t\t<option>series_title</option>\n\t\t\t<option>abbrev_series_title</option>\n\t\t\t<option>series_editor</option>\n\t\t\t<option>series_volume</option>\n\t\t\t<option>series_issue</option>\n\t\t\t<option></option>\n\t\t\t<option>publisher</option>\n\t\t\t<option>place</option>\n\t\t\t<option></option>\n\t\t\t<option>edition</option>\n\t\t\t<option>medium</option>\n\t\t\t<option>issn</option>\n\t\t\t<option>isbn</option>\n\t\t\t<option></option>\n\t\t\t<option>language</option>\n\t\t\t<option>summary_language</option>\n\t\t\t<option></option>\n\t\t\t<option>keywords</option>\n\t\t\t<option>abstract</option>\n\t\t\t<option></option>\n\t\t\t<option>area</option>\n\t\t\t<option>expedition</option>\n\t\t\t<option>conference</option>\n\t\t\t<option></option>\n\t\t\t<option>doi</option>\n\t\t\t<option>url</option>\n\t\t\t<option>file</option>\n\t\t\t<option></option>\n\t\t\t<option>notes</option>\n\t\t\t<option>location</option>\n\t\t\t<option>call_number</option>\n\t\t\t<option></option>\n\t\t\t<option>serial</option>\n\t\t\t<option>type</option>\n\t\t\t<option>approved</option>\n\t\t\t<option></option>\n\t\t\t<option>created_date</option>\n\t\t\t<option>created_time</option>\n\t\t\t<option>created_by</option>\n\t\t\t<option></option>\n\t\t\t<option>modified_date</option>\n\t\t\t<option>modified_time</option>\n\t\t\t<option>modified_by</option>" . $userSpecificSortFields . "\n\t\t</select>\n\t</td>"
 			. "\n\t<td>\n\t\t<input type=\"radio\" name=\"sortRadio1\" value=\"0\" checked>&nbsp;&nbsp;&nbsp;ascending&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
 			. "\n\t\t<input type=\"radio\" name=\"sortRadio1\" value=\"1\">&nbsp;&nbsp;&nbsp;descending\n\t</td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td>&nbsp;</td>\n\t<td>2nd&nbsp;sort&nbsp;by:</td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>\n\t\t<select name=\"sortSelector2\">\n\t\t\t<option>author\n\t\t\t<option>address</option>\n\t\t\t<option>corporate_author</option>\n\t\t\t<option></option>\n\t\t\t<option>title</option>\n\t\t\t<option>orig_title</option>\n\t\t\t<option></option>\n\t\t\t<option selected>year</option>\n\t\t\t<option>publication</option>\n\t\t\t<option>abbrev_journal</option>\n\t\t\t<option>editor</option>\n\t\t\t<option></option>\n\t\t\t<option>volume</option>\n\t\t\t<option>issue</option>\n\t\t\t<option>pages</option>\n\t\t\t<option></option>\n\t\t\t<option>series_title</option>\n\t\t\t<option>abbrev_series_title</option>\n\t\t\t<option>series_editor</option>\n\t\t\t<option>series_volume</option>\n\t\t\t<option>series_issue</option>\n\t\t\t<option></option>\n\t\t\t<option>publisher</option>\n\t\t\t<option>place</option>\n\t\t\t<option></option>\n\t\t\t<option>edition</option>\n\t\t\t<option>medium</option>\n\t\t\t<option>issn</option>\n\t\t\t<option>isbn</option>\n\t\t\t<option></option>\n\t\t\t<option>language</option>\n\t\t\t<option>summary_language</option>\n\t\t\t<option></option>\n\t\t\t<option>keywords</option>\n\t\t\t<option>abstract</option>\n\t\t\t<option></option>\n\t\t\t<option>area</option>\n\t\t\t<option>expedition</option>\n\t\t\t<option>conference</option>\n\t\t\t<option></option>\n\t\t\t<option>doi</option>\n\t\t\t<option>url</option>\n\t\t\t<option></option>\n\t\t\t<option>location</option>\n\t\t\t<option>call_number</option>\n\t\t\t<option>file</option>\n\t\t\t<option>reprint_status</option>\n\t\t\t<option></option>\n\t\t\t<option>notes</option>\n\t\t\t<option>user_keys</option>\n\t\t\t<option>user_notes</option>\n\t\t\t<option></option>\n\t\t\t<option>serial</option>\n\t\t\t<option>type</option>\n\t\t\t<option>marked</option>\n\t\t\t<option>approved</option>\n\t\t\t<option></option>\n\t\t\t<option>created_date</option>\n\t\t\t<option>created_time</option>\n\t\t\t<option>created_by</option>\n\t\t\t<option></option>\n\t\t\t<option>modified_date</option>\n\t\t\t<option>modified_time</option>\n\t\t\t<option>modified_by</option>\n\t\t</select>\n\t</td>"
+			. "\n\t<td>\n\t\t<select name=\"sortSelector2\">\n\t\t\t<option>author</option>\n\t\t\t<option>address</option>\n\t\t\t<option>corporate_author</option>\n\t\t\t<option></option>\n\t\t\t<option>title</option>\n\t\t\t<option>orig_title</option>\n\t\t\t<option></option>\n\t\t\t<option selected>year</option>\n\t\t\t<option>publication</option>\n\t\t\t<option>abbrev_journal</option>\n\t\t\t<option>editor</option>\n\t\t\t<option></option>\n\t\t\t<option>volume</option>\n\t\t\t<option>issue</option>\n\t\t\t<option>pages</option>\n\t\t\t<option></option>\n\t\t\t<option>series_title</option>\n\t\t\t<option>abbrev_series_title</option>\n\t\t\t<option>series_editor</option>\n\t\t\t<option>series_volume</option>\n\t\t\t<option>series_issue</option>\n\t\t\t<option></option>\n\t\t\t<option>publisher</option>\n\t\t\t<option>place</option>\n\t\t\t<option></option>\n\t\t\t<option>edition</option>\n\t\t\t<option>medium</option>\n\t\t\t<option>issn</option>\n\t\t\t<option>isbn</option>\n\t\t\t<option></option>\n\t\t\t<option>language</option>\n\t\t\t<option>summary_language</option>\n\t\t\t<option></option>\n\t\t\t<option>keywords</option>\n\t\t\t<option>abstract</option>\n\t\t\t<option></option>\n\t\t\t<option>area</option>\n\t\t\t<option>expedition</option>\n\t\t\t<option>conference</option>\n\t\t\t<option></option>\n\t\t\t<option>doi</option>\n\t\t\t<option>url</option>\n\t\t\t<option>file</option>\n\t\t\t<option></option>\n\t\t\t<option>notes</option>\n\t\t\t<option>location</option>\n\t\t\t<option>call_number</option>\n\t\t\t<option></option>\n\t\t\t<option>serial</option>\n\t\t\t<option>type</option>\n\t\t\t<option>approved</option>\n\t\t\t<option></option>\n\t\t\t<option>created_date</option>\n\t\t\t<option>created_time</option>\n\t\t\t<option>created_by</option>\n\t\t\t<option></option>\n\t\t\t<option>modified_date</option>\n\t\t\t<option>modified_time</option>\n\t\t\t<option>modified_by</option>" . $userSpecificSortFields . "\n\t\t</select>\n\t</td>"
 			. "\n\t<td>\n\t\t<input type=\"radio\" name=\"sortRadio2\" value=\"0\">&nbsp;&nbsp;&nbsp;ascending&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
 			. "\n\t\t<input type=\"radio\" name=\"sortRadio2\" value=\"1\" checked>&nbsp;&nbsp;&nbsp;descending\n\t</td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td>&nbsp;</td>\n\t<td>3rd&nbsp;sort&nbsp;by:</td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>\n\t\t<select name=\"sortSelector3\">\n\t\t\t<option>author\n\t\t\t<option>address</option>\n\t\t\t<option>corporate_author</option>\n\t\t\t<option></option>\n\t\t\t<option>title</option>\n\t\t\t<option>orig_title</option>\n\t\t\t<option></option>\n\t\t\t<option>year</option>\n\t\t\t<option selected>publication</option>\n\t\t\t<option>abbrev_journal</option>\n\t\t\t<option>editor</option>\n\t\t\t<option></option>\n\t\t\t<option>volume</option>\n\t\t\t<option>issue</option>\n\t\t\t<option>pages</option>\n\t\t\t<option></option>\n\t\t\t<option>series_title</option>\n\t\t\t<option>abbrev_series_title</option>\n\t\t\t<option>series_editor</option>\n\t\t\t<option>series_volume</option>\n\t\t\t<option>series_issue</option>\n\t\t\t<option></option>\n\t\t\t<option>publisher</option>\n\t\t\t<option>place</option>\n\t\t\t<option></option>\n\t\t\t<option>edition</option>\n\t\t\t<option>medium</option>\n\t\t\t<option>issn</option>\n\t\t\t<option>isbn</option>\n\t\t\t<option></option>\n\t\t\t<option>language</option>\n\t\t\t<option>summary_language</option>\n\t\t\t<option></option>\n\t\t\t<option>keywords</option>\n\t\t\t<option>abstract</option>\n\t\t\t<option></option>\n\t\t\t<option>area</option>\n\t\t\t<option>expedition</option>\n\t\t\t<option>conference</option>\n\t\t\t<option></option>\n\t\t\t<option>doi</option>\n\t\t\t<option>url</option>\n\t\t\t<option></option>\n\t\t\t<option>location</option>\n\t\t\t<option>call_number</option>\n\t\t\t<option>file</option>\n\t\t\t<option>reprint_status</option>\n\t\t\t<option></option>\n\t\t\t<option>notes</option>\n\t\t\t<option>user_keys</option>\n\t\t\t<option>user_notes</option>\n\t\t\t<option></option>\n\t\t\t<option>serial</option>\n\t\t\t<option>type</option>\n\t\t\t<option>marked</option>\n\t\t\t<option>approved</option>\n\t\t\t<option></option>\n\t\t\t<option>created_date</option>\n\t\t\t<option>created_time</option>\n\t\t\t<option>created_by</option>\n\t\t\t<option></option>\n\t\t\t<option>modified_date</option>\n\t\t\t<option>modified_time</option>\n\t\t\t<option>modified_by</option>\n\t\t</select>\n\t</td>"
+			. "\n\t<td>\n\t\t<select name=\"sortSelector3\">\n\t\t\t<option>author</option>\n\t\t\t<option>address</option>\n\t\t\t<option>corporate_author</option>\n\t\t\t<option></option>\n\t\t\t<option>title</option>\n\t\t\t<option>orig_title</option>\n\t\t\t<option></option>\n\t\t\t<option>year</option>\n\t\t\t<option selected>publication</option>\n\t\t\t<option>abbrev_journal</option>\n\t\t\t<option>editor</option>\n\t\t\t<option></option>\n\t\t\t<option>volume</option>\n\t\t\t<option>issue</option>\n\t\t\t<option>pages</option>\n\t\t\t<option></option>\n\t\t\t<option>series_title</option>\n\t\t\t<option>abbrev_series_title</option>\n\t\t\t<option>series_editor</option>\n\t\t\t<option>series_volume</option>\n\t\t\t<option>series_issue</option>\n\t\t\t<option></option>\n\t\t\t<option>publisher</option>\n\t\t\t<option>place</option>\n\t\t\t<option></option>\n\t\t\t<option>edition</option>\n\t\t\t<option>medium</option>\n\t\t\t<option>issn</option>\n\t\t\t<option>isbn</option>\n\t\t\t<option></option>\n\t\t\t<option>language</option>\n\t\t\t<option>summary_language</option>\n\t\t\t<option></option>\n\t\t\t<option>keywords</option>\n\t\t\t<option>abstract</option>\n\t\t\t<option></option>\n\t\t\t<option>area</option>\n\t\t\t<option>expedition</option>\n\t\t\t<option>conference</option>\n\t\t\t<option></option>\n\t\t\t<option>doi</option>\n\t\t\t<option>url</option>\n\t\t\t<option>file</option>\n\t\t\t<option></option>\n\t\t\t<option>notes</option>\n\t\t\t<option>location</option>\n\t\t\t<option>call_number</option>\n\t\t\t<option></option>\n\t\t\t<option>serial</option>\n\t\t\t<option>type</option>\n\t\t\t<option>approved</option>\n\t\t\t<option></option>\n\t\t\t<option>created_date</option>\n\t\t\t<option>created_time</option>\n\t\t\t<option>created_by</option>\n\t\t\t<option></option>\n\t\t\t<option>modified_date</option>\n\t\t\t<option>modified_time</option>\n\t\t\t<option>modified_by</option>" . $userSpecificSortFields . "\n\t\t</select>\n\t</td>"
 			. "\n\t<td>\n\t\t<input type=\"radio\" name=\"sortRadio3\" value=\"0\" checked>&nbsp;&nbsp;&nbsp;ascending&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
 			. "\n\t\t<input type=\"radio\" name=\"sortRadio3\" value=\"1\">&nbsp;&nbsp;&nbsp;descending\n\t</td>"
 			. "\n</tr>"
@@ -927,7 +1089,12 @@
 
 	// THE SELECTDISTINCT FUNCTION:
 	function selectDistinct ($connection,
-							$tableName,
+							$refsTableName,
+							$refsTablePrimaryKey,
+							$userDataTableName,
+							$userDataTablePrimaryKey,
+							$userDataTableUserID,
+							$userDataTableUserIDvalue,
 							$columnName,
 							$pulldownName,
 							$additionalOption,
@@ -940,11 +1107,17 @@
 	$defaultWithinResultSet = FALSE;
 
 	// Query to find distinct values of $columnName
-	// in $tableName
-	if ($RestrictToField == "")
-		 $distinctQuery = "SELECT DISTINCT $columnName FROM $tableName ORDER BY $columnName";
-	else
-		 $distinctQuery = "SELECT DISTINCT $columnName FROM $tableName WHERE $RestrictToField RLIKE $RestrictToFieldContents ORDER BY $columnName";
+	// in $refsTableName
+	if (session_is_registered("loginEmail")) // if a user is logged in
+		if ($RestrictToField == "")
+			 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName LEFT JOIN $userDataTableName ON $refsTablePrimaryKey = $userDataTablePrimaryKey AND $userDataTableUserID = $userDataTableUserIDvalue ORDER BY $columnName";
+		else
+			 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName LEFT JOIN $userDataTableName ON $refsTablePrimaryKey = $userDataTablePrimaryKey AND $userDataTableUserID = $userDataTableUserIDvalue WHERE $RestrictToField RLIKE $RestrictToFieldContents ORDER BY $columnName";
+	else // if NO user is logged in
+		if ($RestrictToField == "")
+			 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName ORDER BY $columnName";
+		else
+			 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName WHERE $RestrictToField RLIKE $RestrictToFieldContents ORDER BY $columnName";
 
 	// Run the distinctQuery on the databaseName
 	if (!($resultId = @ mysql_query($distinctQuery, $connection)))
