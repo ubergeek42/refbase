@@ -1228,6 +1228,18 @@ EOF;
 
 		return($row["style_spec"]);
 	}
+  function getFormatFile($exportFormat)
+	{
+		connectToMySQLDatabase("");
+
+		// CONSTRUCT SQL QUERY:
+		// get the 'format_spec' for the record entry in table 'formats' whose 'format_name' matches that in '$exportStyle':
+		$query = "SELECT format_spec FROM formats WHERE format_name = '$exportFormat'";
+
+		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
+		$row = mysql_fetch_array($result);
+		return($row["format_spec"]);
+	}
 
 	// --------------------------------------------------------------------
 
