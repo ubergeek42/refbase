@@ -16,7 +16,7 @@ selected	has the user selected this publication? (by that he can label publicati
 user_keys	the user's personal keywords for this record
 user_notes	the user's personal notes for this record
 user_file	if the user owns a digital copy of this record, he can specify its file name/path here
-user_groups	the user's personal groups to which this record belongs (note that this field contains names of *reference* groups for this user, which must not be confused with the 'groups' MySQL table that lists groups of particular database *users*)
+user_groups	the user's personal groups to which this record belongs (note that this field contains names of *reference* groups for this user, which must not be confused with the *user* groups from table 'users')
 bibtex_id	the unique BibTeX record identifier used when exporting to BibTeX format
 related	contains pointers to related records. Pointers can be serial numbers or partial queries, e.g.: '1234; 2678; 1988; author=steffens' -> items separated by ";" will be connected by OR. Pure-digit items: assumed to be record serials. Dynamic items: 'field=content' syntax will be resolved to 'field RLIKE "content"'
 
