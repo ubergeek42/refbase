@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./modify.php
 	// Created:    18-Dec-02, 23:08
-	// Modified:   15-Dec-03, 00:31
+	// Modified:   01-Oct-04, 22:43
 
 	// This php script will perform adding, editing & deleting of records.
 	// It then calls 'receipt.php' which displays links to the modified/added record
@@ -23,142 +23,222 @@
 
 	// --------------------------------------------------------------------
 
-	// Initialize the session
-	session_start();
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session();
 
-	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
-
-	// Register an error array - just in case!
-	if (!session_is_registered("errors"))
-		session_register("errors");
-	
 	// Clear any errors that might have been found previously:
 	$errors = array();
 	
+	// Write the (POST) form variables into an array:
+	foreach($_POST as $varname => $value)
+		$formVars[$varname] = trim($value); // remove any leading or trailing whitespace from the field's contents & copy the trimmed string to the '$formVars' array
+//		$formVars[$varname] = trim(clean($value, 50)); // the use of the clean function would be more secure!
+
 	// --------------------------------------------------------------------
 
-	// [ Extract form variables sent through POST/GET by use of the '$_REQUEST' variable ]
-	// [ !! NOTE !!: for details see <http://www.php.net/release_4_2_1.php> & <http://www.php.net/manual/en/language.variables.predefined.php> ]
+	// Extract form variables sent through POST:
+	// Note: Although we could use the '$formVars' array directly below (e.g.: $formVars['pageLoginStatus'] etc., like in 'user_validation.php'), we'll read out
+	//       all variables individually again. This is done to enhance readability. (A smarter way of doing so seems be the use of the 'extract()' function, but that
+	//       may expose yet another security hole...)
 
 	// Extract the page's login status (which indicates the user's login status at the time the page was loaded):
-	$pageLoginStatus = $_REQUEST['pageLoginStatus'];
+	$pageLoginStatus = $formVars['pageLoginStatus'];
 
-	// First of all, check if the user is logged in:
-	if ((!session_is_registered("loginEmail")) OR ($pageLoginStatus != "logged in")) // if the user isn't logged in -OR- the page's login status still does NOT state "logged in" (since the page wasn't reloaded after the user logged in elsewhere)
+	// First of all, check if this script was called by something else than 'record.php':
+	if (!ereg(".+/record.php\?.+", $_SERVER['HTTP_REFERER']))
+	{
+		// save an appropriate error message:
+		$HeaderString = "<b><span class=\"warning\">Invalid call to script 'modify.php'!</span></b>";
+
+		// Write back session variables:
+		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+		
+		if (!empty($_SERVER['HTTP_REFERER'])) // if the referer variable isn't empty
+			header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to calling page
+		else
+			header("Location: index.php"); // redirect to main page ('index.php')
+
+		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	}
+	// If the referring page is 'record.php' (i.e., if this script was called by 'record.php'), check if the user is logged in:
+	elseif ((!isset($_SESSION['loginEmail'])) OR ($pageLoginStatus != "logged in")) // if the user isn't logged in -OR- the page's login status still does NOT state "logged in" (since the page wasn't reloaded after the user logged in elsewhere)
 	{
 		// the user is logged in BUT the page's login status still does NOT state "logged in" (since the page wasn't reloaded after the user logged IN elsewhere):
-		if ((session_is_registered("loginEmail")) AND ($pageLoginStatus != "logged in"))
+		if ((isset($_SESSION['loginEmail'])) AND ($pageLoginStatus != "logged in"))
 		{
-			session_register("HeaderString"); // save an appropriate error message
+			// save an appropriate error message:
 			$HeaderString = "<b><span class=\"warning\">You did login elsewhere leaving this page in an out-dated state!</span></b><br>Record data had to be reloaded omitting your changes. Please re-edit this record:";
-			header("Location: $HTTP_REFERER"); // redirect to 'record.php'
+
+			// Write back session variables:
+			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+
+			header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to 'record.php'
 
 			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		}
 
 		// the user is NOT logged in BUT the page's login status still states that he's "logged in" (since the page wasn't reloaded after the user logged OUT elsewhere):
-		if ((!session_is_registered("loginEmail")) AND ($pageLoginStatus == "logged in"))
+		if ((!isset($_SESSION['loginEmail'])) AND ($pageLoginStatus == "logged in"))
 		{
-			session_register("HeaderString"); // save an appropriate error message
+			// save an appropriate error message:
 			$HeaderString = "<b><span class=\"warning\">You're not logged in anymore!</span></b><br>This may be due to a time out, or, because you did logout elsewhere. Please login again:";
+
+			// Write back session variables:
+			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 		}
 
-		// else, the user isn't logged in yet:
-		header("Location: user_login.php?referer=" . rawurlencode($HTTP_REFERER)); // ask the user to login first, then he'll get directed back to 'record.php'
+		// else if the user isn't logged in yet: ((!isset($_SESSION['loginEmail'])) AND ($pageLoginStatus != "logged in"))
+		header("Location: user_login.php?referer=" . rawurlencode($_SERVER['HTTP_REFERER'])); // ask the user to login first, then he'll get directed back to 'record.php'
 
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
 
+	// if we made it here, the user is regularly logged in: (isset($_SESSION['loginEmail'] == true) AND ($pageLoginStatus == "logged in")
+
+
 	// Extract the form used by the user:
-	$formType = $_REQUEST['formType'];
+	$formType = $formVars['formType'];
 
 	// Extract the type of action requested by the user (either 'add', 'edit' or ''):
-	// ('' will be treated equal to 'add')
-	$recordAction = $_REQUEST['recordAction'];
+	$recordAction = $formVars['recordAction'];
+
+	// $recordAction == '' will be treated equal to 'add':
+	if (empty($recordAction))
+		$recordAction = "add"; // we set it explicitly here so that we can employ this variable within message strings, etc
 
 	// Determine the button that was hit by the user (either 'Add Record', 'Edit Record', 'Delete Record' or ''):
 	// '$submitAction' is only used to determine any 'delet' action! (where '$submitAction' = 'Delete Record')
 	// (otherwise, only '$recordAction' controls how to proceed)
-	$submitAction = $_REQUEST['submit'];
-	if ("$submitAction" == "Delete Record") // *delete* record
+	$submitAction = $formVars['submit'];
+	if ($submitAction == "Delete Record") // *delete* record
 		$recordAction = "delet";
 
+
+	// now, check if the (logged in) user is allowed to perform the current record action (i.e., add, edit or delete a record):
+	$notPermitted = false;
+
+	// if the (logged in) user...
+	if ($recordAction == "edit") // ...wants to edit the current record...
+	{
+		if (isset($_SESSION['user_permissions']) AND !ereg("allow_edit", $_SESSION['user_permissions'])) // ...BUT the 'user_permissions' session variable does NOT contain 'allow_edit'...
+		{
+			$notPermitted = true;
+			// save an appropriate error message:
+			$HeaderString = "<b><span class=\"warning\">You have no permission to edit this record!</span></b>";
+		}
+	}
+	elseif ($recordAction == "delet") // ...wants to delete the current record...
+	{	
+		if (isset($_SESSION['user_permissions']) AND !ereg("allow_delete", $_SESSION['user_permissions'])) // ...BUT the 'user_permissions' session variable does NOT contain 'allow_delete'...
+		{
+			$notPermitted = true;
+			// save an appropriate error message:
+			$HeaderString = "<b><span class=\"warning\">You have no permission to delete this record!</span></b>";
+		}
+	}
+	else // if ($recordAction == "add" OR $recordAction == "") // ...wants to add the current record...
+	{	
+		if (isset($_SESSION['user_permissions']) AND !ereg("allow_add", $_SESSION['user_permissions'])) // ...BUT the 'user_permissions' session variable does NOT contain 'allow_add'...
+		{
+			$notPermitted = true;
+			// save an appropriate error message:
+			$HeaderString = "<b><span class=\"warning\">You have no permission to add any new records to the database!</span></b>";
+		}
+	}
+
+	if ($notPermitted)
+	{
+		// Write back session variables:
+		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+
+		header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to 'record.php'
+
+		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	}
+
+
+	// if we made it here, we assume that the user is allowed to perform the current record action
+
 	// Extract generic variables from the request:
-	$oldQuery = $_REQUEST['oldQuery']; // fetch the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
+	$oldQuery = $formVars['oldQuery']; // fetch the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
 	if (ereg('sqlQuery%3D', $oldQuery)) // if '$oldQuery' still contains URL encoded data... ('%3D' is the URL encoded form of '=', see note below!)
 		$oldQuery = rawurldecode($oldQuery); // ...URL decode old query URL (it was URL encoded before incorporation into a hidden tag of the 'record' form to avoid any HTML syntax errors)
-										// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
+										// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_POST'!
 										//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
 	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
 
 	// Extract all form values provided by 'record.php':
-	$authorName = $_REQUEST['authorName'];
-	$isEditorCheckBox = $_REQUEST['isEditorCheckBox'];
-	$titleName = $_REQUEST['titleName'];
-	$yearNo = $_REQUEST['yearNo'];
-	$publicationName = $_REQUEST['publicationName'];
-	$abbrevJournalName = $_REQUEST['abbrevJournalName'];
-	$volumeNo = $_REQUEST['volumeNo'];
-	$issueNo = $_REQUEST['issueNo'];
-	$pagesNo = $_REQUEST['pagesNo'];
-	$addressName = $_REQUEST['addressName'];
-	$corporateAuthorName = $_REQUEST['corporateAuthorName'];
-	$keywordsName = $_REQUEST['keywordsName'];
-	$abstractName = $_REQUEST['abstractName'];
-	$publisherName = $_REQUEST['publisherName'];
-	$placeName = $_REQUEST['placeName'];
-	$editorName = $_REQUEST['editorName'];
-	$languageName = $_REQUEST['languageName'];
-	$summaryLanguageName = $_REQUEST['summaryLanguageName'];
-	$OrigTitleName = $_REQUEST['OrigTitleName'];
-	$seriesEditorName = $_REQUEST['seriesEditorName'];
-	$seriesTitleName = $_REQUEST['seriesTitleName'];
-	$abbrevSeriesTitleName = $_REQUEST['abbrevSeriesTitleName'];
-	$seriesVolumeNo = $_REQUEST['seriesVolumeNo'];
-	$seriesIssueNo = $_REQUEST['seriesIssueNo'];
-	$editionNo = $_REQUEST['editionNo'];
-	$issnName = $_REQUEST['issnName'];
-	$isbnName = $_REQUEST['isbnName'];
-	$mediumName = $_REQUEST['mediumName'];
-	$areaName = $_REQUEST['areaName'];
-	$expeditionName = $_REQUEST['expeditionName'];
-	$conferenceName = $_REQUEST['conferenceName'];
-	$notesName = $_REQUEST['notesName'];
-	$approvedRadio = $_REQUEST['approvedRadio'];
-	$locationName = $_REQUEST['locationName'];
-	$callNumberName = $_REQUEST['callNumberName'];
+	$authorName = $formVars['authorName'];
+	$isEditorCheckBox = $formVars['isEditorCheckBox'];
+	$titleName = $formVars['titleName'];
+	$yearNo = $formVars['yearNo'];
+	$publicationName = $formVars['publicationName'];
+	$abbrevJournalName = $formVars['abbrevJournalName'];
+	$volumeNo = $formVars['volumeNo'];
+	$issueNo = $formVars['issueNo'];
+	$pagesNo = $formVars['pagesNo'];
+	$addressName = $formVars['addressName'];
+	$corporateAuthorName = $formVars['corporateAuthorName'];
+	$keywordsName = $formVars['keywordsName'];
+	$abstractName = $formVars['abstractName'];
+	$publisherName = $formVars['publisherName'];
+	$placeName = $formVars['placeName'];
+	$editorName = $formVars['editorName'];
+	$languageName = $formVars['languageName'];
+	$summaryLanguageName = $formVars['summaryLanguageName'];
+	$origTitleName = $formVars['origTitleName'];
+	$seriesEditorName = $formVars['seriesEditorName'];
+	$seriesTitleName = $formVars['seriesTitleName'];
+	$abbrevSeriesTitleName = $formVars['abbrevSeriesTitleName'];
+	$seriesVolumeNo = $formVars['seriesVolumeNo'];
+	$seriesIssueNo = $formVars['seriesIssueNo'];
+	$editionNo = $formVars['editionNo'];
+	$issnName = $formVars['issnName'];
+	$isbnName = $formVars['isbnName'];
+	$mediumName = $formVars['mediumName'];
+	$areaName = $formVars['areaName'];
+	$expeditionName = $formVars['expeditionName'];
+	$conferenceName = $formVars['conferenceName'];
+	$notesName = $formVars['notesName'];
+	$approvedRadio = $formVars['approvedRadio'];
+	$locationName = $formVars['locationName'];
 
+	$callNumberName = $formVars['callNumberName'];
 	if (ereg("%40", $callNumberName)) // if '$callNumberName' still contains URL encoded data... ('%40' is the URL encoded form of the character '@', see note below!)
 		$callNumberName = rawurldecode($callNumberName); // ...URL decode 'callNumberName' variable contents (it was URL encoded before incorporation into a hidden tag of the 'record' form to avoid any HTML syntax errors)
-														// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
+														// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_POST'!
 														//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
 
-	$callNumberNameUserOnly = $_REQUEST['callNumberNameUserOnly'];
-	$serialNo = $_REQUEST['serialNo'];
-	$typeName = $_REQUEST['typeName'];
-	$thesisName = $_REQUEST['thesisName'];
-	$markedRadio = $_REQUEST['markedRadio'];
-	$copyName = $_REQUEST['copyName'];
-	$selectedRadio = $_REQUEST['selectedRadio'];
-	$userKeysName = $_REQUEST['userKeysName'];
-	$userNotesName = $_REQUEST['userNotesName'];
-	$userFileName = $_REQUEST['userFileName'];
-	$fileName = $_REQUEST['fileName'];
-	$urlName = $_REQUEST['urlName'];
-	$doiName = $_REQUEST['doiName'];
-	$contributionID = $_REQUEST['contributionIDName'];
+	$callNumberNameUserOnly = $formVars['callNumberNameUserOnly'];
+	$serialNo = $formVars['serialNo'];
+	$typeName = $formVars['typeName'];
+	$thesisName = $formVars['thesisName'];
+	$markedRadio = $formVars['markedRadio'];
+	$copyName = $formVars['copyName'];
+	$selectedRadio = $formVars['selectedRadio'];
+	$userKeysName = $formVars['userKeysName'];
+	$userNotesName = $formVars['userNotesName'];
+	$userFileName = $formVars['userFileName'];
+	$userGroupsName = $formVars['userGroupsName'];
+	$bibtexIDName = $formVars['bibtexIDName'];
+	$relatedName = $formVars['relatedName'];
+	$fileName = $formVars['fileName'];
+	$urlName = $formVars['urlName'];
+	$doiName = $formVars['doiName'];
+	$contributionID = $formVars['contributionIDName'];
 	$contributionID = rawurldecode($contributionID); // URL decode 'contributionID' variable contents (it was URL encoded before incorporation into a hidden tag of the 'record' form to avoid any HTML syntax errors) [see above!]
-	$contributionIDCheckBox = $_REQUEST['contributionIDCheckBox'];
-	$locationSelector = $_REQUEST['locationSelector'];
-	$onlinePublicationCheckBox = $_REQUEST['onlinePublicationCheckBox'];
-	$onlineCitationName = $_REQUEST['onlineCitationName'];
-	$createdDate = $_REQUEST['createdDate'];
-	$createdTime = $_REQUEST['createdTime'];
-	$createdBy = $_REQUEST['createdBy'];
-	$modifiedDate = $_REQUEST['modifiedDate'];
-	$modifiedTime = $_REQUEST['modifiedTime'];
-	$modifiedBy = $_REQUEST['modifiedBy'];
-	$origRecord = $_REQUEST['origRecord'];
+	$contributionIDCheckBox = $formVars['contributionIDCheckBox'];
+	$locationSelectorName = $formVars['locationSelectorName'];
+	$onlinePublicationCheckBox = $formVars['onlinePublicationCheckBox'];
+	$onlineCitationName = $formVars['onlineCitationName'];
+	$createdDate = $formVars['createdDate'];
+	$createdTime = $formVars['createdTime'];
+	$createdBy = $formVars['createdBy'];
+	$modifiedDate = $formVars['modifiedDate'];
+	$modifiedTime = $formVars['modifiedTime'];
+	$modifiedBy = $formVars['modifiedBy'];
+	$origRecord = $formVars['origRecord'];
 
 	// check if a file was uploaded:
 	// (note that to have file uploads work, HTTP file uploads must be allowed within your 'php.ini' configuration file
@@ -192,7 +272,7 @@
 	// Validate the 'Call Number' field:
 	if (ereg("[@;]", $callNumberNameUserOnly))
 		$errors["callNumberNameUserOnly"] = "Your call number cannot contain the characters '@' and ';' (since they function as delimiters):"; // the user's personal reference ID cannot contain the characters '@' and ';' since they are used as delimiters (within or between call numbers)
-	elseif ($recordAction == "edit" AND !empty($callNumberNameUserOnly) AND !ereg("$loginEmail", $locationName) AND !ereg("^(Add|Remove)$", $locationSelector)) // if the user specified some reference ID within an 'edit' action -BUT- there's no existing call number for this user within the contents of the 'location' field -AND- the user doesn't want to add it either...
+	elseif ($recordAction == "edit" AND !empty($callNumberNameUserOnly) AND !ereg("$loginEmail", $locationName) AND !ereg("^(Add|Remove)$", $locationSelectorName)) // if the user specified some reference ID within an 'edit' action -BUT- there's no existing call number for this user within the contents of the 'location' field -AND- the user doesn't want to add it either...
 		$errors["callNumberNameUserOnly"] = "You cannot specify a call number unless you add this record to your personal literature set! This can be done by setting the 'Location Field' popup below to 'Add'."; // warn the user that he/she has to set the Location Field popup to 'Add' if he want's to add this record to his personal literature set
 
 	// Validate the 'uploadFile' field:
@@ -200,22 +280,36 @@
 	//  the 'upload_max_filesize' specified within your 'php.ini' configuration file)
 	if (!empty($uploadFile) && !empty($uploadFile["name"])) // if the user attempted to upload a file
 	{
-		if (empty($uploadFile["tmp_name"])) // no tmp file exists => we assume that the maximum upload file size was exceeded!
-		// or check via 'error' member instead: "if ($uploadFile["error"] == 1)"
-		{
-			if (function_exists("ini_get")) # ini_get() is PHP 4-only
+		// NOTE: 'is_uploaded_file()' does NOT seem to work for me! ?:-/ (using PHP 4.3.4 on MacOSX 10.3.2)
+		// The 'is_uploaded_file()' function returns 'true' if the file named by '$uploadFile["name"]' was uploaded via HTTP POST. This is useful to help ensure
+		// that a malicious user hasn't tried to trick the script into working on files upon which it should not be working - for instance, /etc/passwd.
+//		if (is_uploaded_file($_FILES["uploadFile"]))
+//		{
+			if (empty($uploadFile["tmp_name"])) // no tmp file exists => we assume that the maximum upload file size was exceeded!
+			// or check via 'error' element instead: "if ($uploadFile["error"] == 1)" (the 'error' element exists since PHP 4.2.0)
 			{
 				$maxFileSize = ini_get("upload_max_filesize");
 				$fileError = "File size must not be greater than " . $maxFileSize . ":";
+		
+				$errors["uploadFile"] = $fileError; // inform the user that the maximum upload file size was exceeded
 			}
-			else
-				$fileError = "Maximum upload file size exceeded:";
-	
-			$errors["uploadFile"] = $fileError; // inform the user that the maximum upload file size was exceeded
-		}
-		else // a tmp file exists...
-			if (!ereg("^[a-zA-Z0-9+_.-]+$", $uploadFile["name"])) // ...BUT has non-valid characters in its name (adjust the regex pattern if you want more relaxed file name validation)
-				$errors["uploadFile"] = "File name characters can only be alphanumeric ('a-zA-Z0-9'), plus ('+'), minus ('-'), substring ('_') or a dot ('.'):"; // characters of file name must be within [a-zA-Z0-9+_.-]
+			else // a tmp file exists...
+			{
+				// since 'is_uploaded_file()' does NOT seem to work for me, here's a clumsy workaround, that at least tries to prevent hackers from gaining access to the systems 'passwd' file:
+				if (eregi("^passwd$", $uploadFile["name"])) // ...BUT its file name equals 'passwd'
+					$errors["uploadFile"] = "This file name is not allowed!"; // file name must not be 'passwd'
+
+				// check for invalid file name extensions:
+				if (eregi("\.(exe|com|bat|zip|php|phps|php3|cgi)$", $uploadFile["name"])) // ...BUT has a invalid file name extension (adjust the regex pattern if you want more relaxed file name validation)
+					$errors["uploadFile"] = "You cannot upload this type of file!"; // file name must not end with .exe, .com, .bat, .zip, .php, .phps, .php3 or .cgi
+
+				// check for invalid file name characters:
+				if (!ereg("^[a-zA-Z0-9+_.-]+$", $uploadFile["name"])) // ...BUT has invalid characters in its name (adjust the regex pattern if you want more relaxed file name validation)
+					$errors["uploadFile"] = "File name characters can only be alphanumeric ('a-zA-Z0-9'), plus ('+'), minus ('-'), substring ('_') or a dot ('.'):"; // characters of file name must be within [a-zA-Z0-9+_.-]
+			}
+//		}
+//		else // a malicious user may have tried to trick the script into working on files upon which it should not be working - for instance, /etc/passwd
+//			$errors["uploadFile"] = "Couldn't upload your file:"; // inform the user that there was a problem with the upload
 	}
 
 
@@ -280,9 +374,12 @@
 	// Now the script has finished the validation, check if there were any errors:
 	if (count($errors) > 0)
 	{
+		// Write back session variables:
+		saveSessionVariable("errors", $errors); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+		saveSessionVariable("formVars", $formVars);
 
 		// There are errors. Relocate back to the record entry form:
-		header("Location: $HTTP_REFERER");
+		header("Location: " . $_SERVER['HTTP_REFERER']);
 
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
@@ -292,18 +389,7 @@
 	// If we made it here, then the data is considered valid!
 
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE
-
-	// (1) OPEN the database connection:
-	//      (variables are set by include file 'db.inc.php'!)
-	if (!($connection = @ mysql_connect($hostName, $username, $password)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to connect to the host:", $oldQuery);
-
-	// (2) SELECT the database:
-	//      (variables are set by include file 'db.inc.php'!)
-	if (!(mysql_select_db($databaseName, $connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to connect to the database:", $oldQuery);
+	connectToMySQLDatabase($oldQuery); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 
@@ -316,7 +402,7 @@
 
 	$loginEmailArray = split("@", $loginEmail); // split the login email address at '@'
 	$loginEmailUserName = $loginEmailArray[0]; // extract the user name (which is the first element of the array '$loginEmailArray')
-	$callNumberPrefix = $abbrevInstitution . " @ " . $loginEmailUserName; // again, we use session variables to construct a correct call number prefix, like: 'IPÖ @ msteffens'
+	$callNumberPrefix = $abbrevInstitution . " @ " . $loginEmailUserName; // again, we use session variables to construct a correct call number prefix, like: 'IP« @ msteffens'
 
 
 	// provide some magic that figures out what do to depending on the state of the 'is Editor' check box
@@ -386,8 +472,8 @@
 
 
 	// manage 'location' field data:
-	if ((($locationSelector == "Add") OR ($locationSelector == "")) AND (!ereg("$loginEmail", $locationName))) // add the current user to the 'location' field (if he/she isn't listed already within the 'location' field):
-	// note: if the current user is NOT logged in -OR- if any normal user is logged in, the value for '$locationSelector' will be always '' when performing an INSERT,
+	if ((($locationSelectorName == "Add") OR ($locationSelectorName == "")) AND (!ereg("$loginEmail", $locationName))) // add the current user to the 'location' field (if he/she isn't listed already within the 'location' field):
+	// note: if the current user is NOT logged in -OR- if any normal user is logged in, the value for '$locationSelectorName' will be always '' when performing an INSERT,
 	//       since the popup is fixed to 'Add' and disabled (which, in turn, will result in an empty value to be returned)
 	{
 		if (ereg("^(\(your name &(amp;)? email address will be filled in automatically\))?$", $locationName)) // if the 'location' field is either completely empty -OR- does only contain the information string (that shows up on 'add' for normal users)
@@ -395,13 +481,13 @@
 		else // if the 'location' field does already contain some user content:
 			$locationName = ereg_replace("^(.+)$", "\\1; $currentUser", $locationName);
 	}
-	elseif ($locationSelector == "Remove") // remove the current user from the 'location' field:
+	elseif ($locationSelectorName == "Remove") // remove the current user from the 'location' field:
 	{ // the only pattern that's really unique is the users email address, the user's name may change (since it can be modified by the user). This is why we dont use '$currentUser' here:
 		$locationName = ereg_replace("^[^;]*\( *$loginEmail *\) *; *", "", $locationName); // the current user is listed at the very beginning of the 'location' field
 		$locationName = ereg_replace(" *;[^;]*\( *$loginEmail *\) *", "", $locationName); // the current user occurs after some other user within the 'location' field
 		$locationName = ereg_replace("^[^;]*\( *$loginEmail *\) *$", "", $locationName); // the current user is the only one listed within the 'location' field
 	}
-	// else if '$locationSelector' == "Don't touch" -OR- if the user is already listed within the 'location' field, we just accept the contents of the 'location' field as entered by the user
+	// else if '$locationSelectorName' == "Don't touch" -OR- if the user is already listed within the 'location' field, we just accept the contents of the 'location' field as entered by the user
 
 
 	// manage 'call_number' field data:
@@ -409,9 +495,9 @@
 	{
 		if (ereg("$loginEmail", $locationName)) // we only process the user's call number information if the current user is listed within the 'location' field:
 		{
-			// Note that, for normal users, we process the user's call number information even if the '$locationSelector' is NOT set to 'Add'.
-			// This is done, since the user should be able to update his/her personal reference ID while the '$locationSelector' is set to 'Don't touch'.
-			// If the '$locationSelector' is set to 'Remove', then any changes made to the personal reference ID will be discarded anyhow.
+			// Note that, for normal users, we process the user's call number information even if the '$locationSelectorName' is NOT set to 'Add'.
+			// This is done, since the user should be able to update his/her personal reference ID while the '$locationSelectorName' is set to 'Don't touch'.
+			// If the '$locationSelectorName' is set to 'Remove', then any changes made to the personal reference ID will be discarded anyhow.
 	
 			// build a correct call number string for the current user & record:
 			if ($callNumberNameUserOnly == "") // if the user didn't enter any personal reference ID for this record...
@@ -429,7 +515,7 @@
 		}
 	}
 	else // if the admin is logged in:
-		if ($locationSelector == "Add") // we only add the admin's call number information if he/she did set the '$locationSelector' to 'Add'
+		if ($locationSelectorName == "Add") // we only add the admin's call number information if he/she did set the '$locationSelectorName' to 'Add'
 		{
 			if ($callNumberName == "") // if there's no call number info provided by the admin...
 				$callNumberName = $callNumberPrefix . " @ "; // ...insert the admin's call number prefix
@@ -439,7 +525,7 @@
 			elseif (!ereg("$callNumberPrefix", $callNumberName)) // if the admin's call number prefix does NOT already occur within the contents of the 'call_number' field...
 			{
 				if (ereg("; *[^ @;][^@;]*$", $callNumberName)) // for the admin we offer autocompletion of the call number prefix if he/she just enters his/her reference ID after the last full call number (separated by '; ')
-					// e.g., the string 'IPÖ @ mschmid @ 123; 1778' will be autocompleted to 'IPÖ @ mschmid @ 123; IPÖ @ msteffens @ 1778' (with 'msteffens' being the admin user)
+					// e.g., the string 'IP« @ mschmid @ 123; 1778' will be autocompleted to 'IP« @ mschmid @ 123; IP« @ msteffens @ 1778' (with 'msteffens' being the admin user)
 					$callNumberName = ereg_replace("^(.+); *([^@;]+)$", "\\1; $callNumberPrefix @ \\2", $callNumberName); // insert the admin's call number prefix before any reference ID that stand's at the end of the string of call numbers
 				else
 					$callNumberName = $callNumberName . "; " . $callNumberPrefix . " @ "; // ...append the admin's call number prefix to any existing call numbers
@@ -447,7 +533,7 @@
 		}
 		// otherwise we simply use the information as entered by the admin
 
-	if ($locationSelector == "Remove") // remove the current user's call number from the 'call_number' field:
+	if ($locationSelectorName == "Remove") // remove the current user's call number from the 'call_number' field:
 	{
 		$callNumberName = ereg_replace("^ *$callNumberPrefix *@ *[^@;]*; *", "", $callNumberName); // the user's call number is listed at the very beginning of the 'call_number' field
 		$callNumberName = ereg_replace(" *; *$callNumberPrefix *@ *[^@;]*", "", $callNumberName); // the user's call number occurs after some other call number within the 'call_number' field
@@ -520,6 +606,19 @@
 	else
 		$onlinePublication = "no";
 
+	// remove any meaningless delimiter(s) from the beginning or end of a field string:
+	// Note:  - this cleanup is only done for fields that may contain sub-elements, which are the fields:
+	//          'author', 'keywords', 'place', 'language', 'summary_language', 'area', 'user_keys' and 'user_groups'
+	//        - currently, only the semicolon (optionally surrounded by whitespace) is supported as sub-element delimiter
+	$authorName = trimTextPattern($authorName, "( *; *)+", true, true); // function 'trimTextPattern()' is defined in 'include.inc.php'
+	$keywordsName = trimTextPattern($keywordsName, "( *; *)+", true, true);
+	$placeName = trimTextPattern($placeName, "( *; *)+", true, true);
+	$languageName = trimTextPattern($languageName, "( *; *)+", true, true);
+	$summaryLanguageName = trimTextPattern($summaryLanguageName, "( *; *)+", true, true);
+	$areaName = trimTextPattern($areaName, "( *; *)+", true, true);
+	$userKeysName = trimTextPattern($userKeysName, "( *; *)+", true, true);
+	$userGroupsName = trimTextPattern($userGroupsName, "( *; *)+", true, true);
+
 
 	// Is this an update?
 	if ($recordAction == "edit") // alternative method to check for an 'edit' action: if (ereg("^[0-9]+$",$serialNo)) // a valid serial number must be an integer
@@ -548,7 +647,7 @@
 					. "editor = \"$editorName\", "
 					. "language = \"$languageName\", "
 					. "summary_language = \"$summaryLanguageName\", "
-					. "orig_title = \"$OrigTitleName\", "
+					. "orig_title = \"$origTitleName\", "
 					. "series_editor = \"$seriesEditorName\", "
 					. "series_title = \"$seriesTitleName\", "
 					. "abbrev_series_title = \"$abbrevSeriesTitleName\", "
@@ -582,9 +681,8 @@
 			// CONSTRUCT SQL QUERY:
 			$query = "SELECT data_id FROM user_data WHERE record_id = $serialNo AND user_id = $loginUserID"; // '$loginUserID' is provided as session variable
 
-			if (!($result = @ mysql_query($query, $connection))) // (3) RUN the query on the database through the connection:
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-					showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+			// (3) RUN the query on the database through the connection:
+			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 			if (mysql_num_rows($result) == 1) // if there's already an existing user_data entry, we perform an UPDATE action:
 				$queryUserData = "UPDATE user_data SET "
@@ -593,7 +691,10 @@
 								. "selected = \"$selectedRadio\", "
 								. "user_keys = \"$userKeysName\", "
 								. "user_notes = \"$userNotesName\", "
-								. "user_file = \"$userFileName\" "
+								. "user_file = \"$userFileName\", "
+								. "user_groups = \"$userGroupsName\", "
+								. "bibtex_id = \"$bibtexIDName\", "
+								. "related = \"$relatedName\" "
 								. "WHERE record_id = $serialNo AND user_id = $loginUserID"; // '$loginUserID' is provided as session variable
 			else // otherwise we perform an INSERT action:
 				$queryUserData = "INSERT INTO user_data SET "
@@ -603,6 +704,9 @@
 								. "user_keys = \"$userKeysName\", "
 								. "user_notes = \"$userNotesName\", "
 								. "user_file = \"$userFileName\", "
+								. "user_groups = \"$userGroupsName\", "
+								. "bibtex_id = \"$bibtexIDName\", "
+								. "related = \"$relatedName\", "
 								. "record_id = \"$serialNo\", "
 								. "user_id = \"$loginUserID\", " // '$loginUserID' is provided as session variable
 								. "data_id = NULL"; // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
@@ -635,7 +739,7 @@
 					. "editor = \"$editorName\", "
 					. "language = \"$languageName\", "
 					. "summary_language = \"$summaryLanguageName\", "
-					. "orig_title = \"$OrigTitleName\", "
+					. "orig_title = \"$origTitleName\", "
 					. "series_editor = \"$seriesEditorName\", "
 					. "series_title = \"$seriesTitleName\", "
 					. "abbrev_series_title = \"$abbrevSeriesTitleName\", "
@@ -701,7 +805,7 @@
 					. "editor = \"$editorName\", "
 					. "language = \"$languageName\", "
 					. "summary_language = \"$summaryLanguageName\", "
-					. "orig_title = \"$OrigTitleName\", "
+					. "orig_title = \"$origTitleName\", "
 					. "series_editor = \"$seriesEditorName\", "
 					. "series_title = \"$seriesTitleName\", "
 					. "abbrev_series_title = \"$abbrevSeriesTitleName\", "
@@ -772,19 +876,15 @@
 	// (3) RUN the query on the database through the connection:
 	if ($recordAction == "edit")
 	{
-		if (!($result = @ mysql_query($queryRefs, $connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("Your query:\n<br>\n<br>\n<code>$queryRefs</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
+		$result = queryMySQLDatabase($queryRefs, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
-		if (!($result = @ mysql_query($queryUserData, $connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("Your query:\n<br>\n<br>\n<code>$queryUserData</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
+		$result = queryMySQLDatabase($queryUserData, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+
+		getUserGroups($loginUserID); // update the 'userGroups' session variable (function 'getUserGroups()' is defined in 'include.inc.php')
 	}
 	elseif ($recordAction == "add")
 	{
-		if (!($result = @ mysql_query($queryRefs, $connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("Your query:\n<br>\n<br>\n<code>$queryRefs</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
+		$result = queryMySQLDatabase($queryRefs, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		// Get the record id that was created
 		$serialNo = @ mysql_insert_id($connection); // find out the unique ID number of the newly created record (Note: this function should be called immediately after the
@@ -797,13 +897,16 @@
 				. "user_keys = \"$userKeysName\", "
 				. "user_notes = \"$userNotesName\", "
 				. "user_file = \"$userFileName\", "
+				. "user_groups = \"$userGroupsName\", "
+				. "bibtex_id = \"$bibtexIDName\", "
+				. "related = \"$relatedName\", "
 				. "record_id = \"$serialNo\", "
 				. "user_id = \"$loginUserID\", " // '$loginUserID' is provided as session variable
 				. "data_id = NULL"; // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
 
-		if (!($result = @ mysql_query($queryUserData, $connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("Your query:\n<br>\n<br>\n<code>$queryUserData</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
+		$result = queryMySQLDatabase($queryUserData, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+
+		getUserGroups($loginUserID); // update the 'userGroups' session variable (function 'getUserGroups()' is defined in 'include.inc.php')
 
 
 		// Send EMAIL announcement:
@@ -862,13 +965,9 @@
 	}
 	else // '$recordAction' is "delet" (Note that if you delete the mother record within the 'refs' table, the corresponding child entry within the 'user_data' table will remain!)
 	{
-		if (!($result = @ mysql_query($queryDeleted, $connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("Your query:\n<br>\n<br>\n<code>$queryRefs</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
+		$result = queryMySQLDatabase($queryDeleted, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
-		if (!($result = @ mysql_query($queryRefs, $connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("Your query:\n<br>\n<br>\n<code>$queryRefs</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
+		$result = queryMySQLDatabase($queryRefs, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 	}
 
 	// Build correct header message:
@@ -884,9 +983,7 @@
 	// (5) CLOSE CONNECTION
 
 	// (5) CLOSE the database connection:
-	if (!(mysql_close($connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to disconnect from the database:", $oldQuery);
+	disconnectFromMySQLDatabase($oldQuery); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 ?>
