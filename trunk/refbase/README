@@ -27,7 +27,7 @@ About refbase
     - import of full records from Cambridge Scientific Abstracts
   ADMINISTRATOR
     - user management interface provided to the database admin
-    - localization for different languages (currently English and German)
+    - set access permissions on a per-user basis
 
 Credits
 -------
@@ -35,9 +35,18 @@ Credits
 
 Requirements
 ------------
+  refbase requires:
   - a web server (like the Apache HTTP Server <http://httpd.apache.org/>)
-  - PHP (version 4.1.0 or greater) <http://www.php.net/>
-  - MySQL <http://www.mysql.com/>
+  - PHP <http://www.php.net/> (version 4.1.0 or greater)
+  - MySQL <http://www.mysql.com/> (version 4.1.x or greater required for
+    Unicode support)
+
+  In addition, export functionality requires:
+  - for MODS XML export:
+    ActiveLink PHP XML Package <http://www.active-link.com/software/>
+  - for Endnote/RIS/Bibtex export:
+    bibutils <http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html>
+  (you won't need these utilities if you're not going to use the export feature)
 
 Installation
 ------------
