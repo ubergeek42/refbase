@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_options_modify.php
 	// Created:    26-Oct-04, 20:57
-	// Modified:   31-Oct-04, 23:09
+	// Modified:   17-Feb-05, 20:20
 
 	// This script validates user options selected within the form provided by 'user_options.php'.
 	// If validation succeeds, it UPDATEs the corresponding table fields for that user and redirects to a receipt page;
@@ -115,7 +115,7 @@
 		// UPDATE - construct queries to update the relevant table fields for this user
 
 		// a) update the language field of the 'users' table:
-		$queryArray[] = "UPDATE users SET "
+		$queryArray[] = "UPDATE $tableUsers SET "
 						. "language = \"" . $formVars["languageName"] . "\" "
 						. "WHERE user_id = $userID";
 
@@ -138,7 +138,7 @@
 				// - remove types which do exist within the 'user_types' table but were deselected by the admin:
 				$enabledUserTypesNOTInSelectedTypesString = implode("|", $enabledUserTypesNOTInSelectedTypesArray); // join array of type IDs using a pipe as separator
 
-				$queryArray[] = "DELETE FROM user_types "
+				$queryArray[] = "DELETE FROM $tableUserTypes "
 								. "WHERE user_id = $userID AND type_id RLIKE \"^(" . $enabledUserTypesNOTInSelectedTypesString . ")$\"";
 			}
 	
@@ -147,7 +147,7 @@
 				// - insert types that were selected by the admin but which do not yet exist within the 'user_types' table:
 				$selectedTypesNOTInEnabledUserTypesString = implode("|", $selectedTypesNOTInEnabledUserTypesArray); // join array of type IDs using a pipe as separator
 
-				$insertTypesQuery = "INSERT INTO user_types VALUES ";
+				$insertTypesQuery = "INSERT INTO $tableUserTypes VALUES ";
 
 				foreach ($selectedTypesNOTInEnabledUserTypesArray as $newUserTypeID)
 					$insertTypesQueryValues[] = "(NULL, $newUserTypeID, $userID, 'true')";
@@ -172,7 +172,7 @@
 				// - remove styles which do exist within the 'user_styles' table but were deselected by the admin:
 				$enabledUserStylesNOTInSelectedStylesString = implode("|", $enabledUserStylesNOTInSelectedStylesArray); // join array of style IDs using a pipe as separator
 
-				$queryArray[] = "DELETE FROM user_styles "
+				$queryArray[] = "DELETE FROM $tableUserStyles "
 								. "WHERE user_id = $userID AND style_id RLIKE \"^(" . $enabledUserStylesNOTInSelectedStylesString . ")$\"";
 			}
 	
@@ -181,7 +181,7 @@
 				// - insert styles that were selected by the admin but which do not yet exist within the 'user_styles' table:
 				$selectedStylesNOTInEnabledUserStylesString = implode("|", $selectedStylesNOTInEnabledUserStylesArray); // join array of style IDs using a pipe as separator
 
-				$insertStylesQuery = "INSERT INTO user_styles VALUES ";
+				$insertStylesQuery = "INSERT INTO $tableUserStyles VALUES ";
 
 				foreach ($selectedStylesNOTInEnabledUserStylesArray as $newUserStyleID)
 					$insertStylesQueryValues[] = "(NULL, $newUserStyleID, $userID, 'true')";
@@ -206,7 +206,7 @@
 				// - remove formats which do exist within the 'user_formats' table but were deselected by the admin:
 				$enabledUserFormatsNOTInSelectedFormatsString = implode("|", $enabledUserFormatsNOTInSelectedFormatsArray); // join array of format IDs using a pipe as separator
 
-				$queryArray[] = "DELETE FROM user_formats "
+				$queryArray[] = "DELETE FROM $tableUserFormats "
 								. "WHERE user_id = $userID AND format_id RLIKE \"^(" . $enabledUserFormatsNOTInSelectedFormatsString . ")$\"";
 			}
 	
@@ -215,7 +215,7 @@
 				// - insert formats that were selected by the admin but which do not yet exist within the 'user_formats' table:
 				$selectedFormatsNOTInEnabledUserFormatsString = implode("|", $selectedFormatsNOTInEnabledUserFormatsArray); // join array of format IDs using a pipe as separator
 
-				$insertFormatsQuery = "INSERT INTO user_formats VALUES ";
+				$insertFormatsQuery = "INSERT INTO $tableUserFormats VALUES ";
 
 				foreach ($selectedFormatsNOTInEnabledUserFormatsArray as $newUserFormatID)
 					$insertFormatsQueryValues[] = "(NULL, $newUserFormatID, $userID, 'true')";
@@ -231,33 +231,33 @@
 			// b) update all entries for this user within the 'user_types' table:
 			$typeIDString = implode("|", $formVars["referenceTypeSelector"]); // join array of type IDs using a pipe as separator
 	
-			$queryArray[] = "UPDATE user_types SET "
+			$queryArray[] = "UPDATE $tableUserTypes SET "
 							. "show_type = \"true\" "
 							. "WHERE user_id = $userID AND type_id RLIKE \"^(" . $typeIDString . ")$\"";
 	
-			$queryArray[] = "UPDATE user_types SET "
+			$queryArray[] = "UPDATE $tableUserTypes SET "
 							. "show_type = \"false\" "
 							. "WHERE user_id = $userID AND type_id NOT RLIKE \"^(" . $typeIDString . ")$\"";
 	
 			// c) update all entries for this user within the 'user_styles' table:
 			$styleIDString = implode("|", $formVars["citationStyleSelector"]); // join array of style IDs using a pipe as separator
 	
-			$queryArray[] = "UPDATE user_styles SET "
+			$queryArray[] = "UPDATE $tableUserStyles SET "
 							. "show_style = \"true\" "
 							. "WHERE user_id = $userID AND style_id RLIKE \"^(" . $styleIDString . ")$\"";
 	
-			$queryArray[] = "UPDATE user_styles SET "
+			$queryArray[] = "UPDATE $tableUserStyles SET "
 							. "show_style = \"false\" "
 							. "WHERE user_id = $userID AND style_id NOT RLIKE \"^(" . $styleIDString . ")$\"";
 	
 			// d) update all entries for this user within the 'user_formats' table:
 			$formatIDString = implode("|", $formVars["exportFormatSelector"]); // join array of format IDs using a pipe as separator
 	
-			$queryArray[] = "UPDATE user_formats SET "
+			$queryArray[] = "UPDATE $tableUserFormats SET "
 							. "show_format = \"true\" "
 							. "WHERE user_id = $userID AND format_id RLIKE \"^(" . $formatIDString . ")$\"";
 	
-			$queryArray[] = "UPDATE user_formats SET "
+			$queryArray[] = "UPDATE $tableUserFormats SET "
 							. "show_format = \"false\" "
 							. "WHERE user_id = $userID AND format_id NOT RLIKE \"^(" . $formatIDString . ")$\"";
 		}
