@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 00:25
-	// Modified:   27-Sep-04, 20:04
+	// Modified:   03-Oct-04, 22:17
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -119,7 +119,7 @@
 	// --- Embedded sql query: ----------------------
 	if ("$formType" == "sqlSearch") // the admin used a link with an embedded sql query for searching...
 	{
-		$query = str_replace(' FROM users',', user_id FROM users',$sqlQuery); // add 'user_id' column (which is required in order to obtain unique checkbox names as well as for use in the 'getUserID()' function)
+		$query = eregi_replace(' FROM users',', user_id FROM users',$sqlQuery); // add 'user_id' column (which is required in order to obtain unique checkbox names as well as for use in the 'getUserID()' function)
 		$query = str_replace('\"','"',$query); // replace any \" with "
 		$query = str_replace('\\\\','\\',$query);
 	}
@@ -142,7 +142,7 @@
 	// ----------------------------------------------
 
 	// (4a) DISPLAY header:
-	$query = str_replace(', user_id FROM users',' FROM users',$query); // strip 'user_id' column from SQL query (so that it won't get displayed in query strings)
+	$query = eregi_replace(', user_id FROM users',' FROM users',$query); // strip 'user_id' column from SQL query (so that it won't get displayed in query strings)
 
 	$queryURL = rawurlencode($query); // URL encode SQL query
 
@@ -413,20 +413,20 @@
 
 		if ("$showRefineSearchFieldRadio" == "1") // if the user checked the radio button next to 'Show column'...
 			{
-				if (!preg_match("/SELECT.*\W$refineSearchSelector\W.*FROM users/", $query)) // ...and the field is *not* already displayed...
-					$query = str_replace(" FROM users",", $refineSearchSelector FROM users",$query); // ...then SHOW the field that was used for refining the search results
+				if (!preg_match("/SELECT.*\W$refineSearchSelector\W.*FROM users/i", $query)) // ...and the field is *not* already displayed...
+					$query = eregi_replace(" FROM users",", $refineSearchSelector FROM users",$query); // ...then SHOW the field that was used for refining the search results
 			}
 		elseif ("$showRefineSearchFieldRadio" == "0") // if the user checked the radio button next to 'Hide column'...
 			{
-				if (ereg("SELECT.+$refineSearchSelector.+FROM users", $query)) // ...and the field *is* currently displayed...
+				if (eregi("SELECT.+$refineSearchSelector.+FROM users", $query)) // ...and the field *is* currently displayed...
 					// for all columns except the first:
-					$query = preg_replace("/(SELECT.+?), $refineSearchSelector( .*FROM users)/","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
+					$query = preg_replace("/(SELECT.+?), $refineSearchSelector( .*FROM users)/i","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
 					// for all columns except the last:
-					$query = preg_replace("/(SELECT.*? )$refineSearchSelector, (.+FROM users)/","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
+					$query = preg_replace("/(SELECT.*? )$refineSearchSelector, (.+FROM users)/i","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
 			}
 		// else if $showRefineSearchFieldRadio == "" (which is the form's default) we don't change the display of any columns
 
-		$query = str_replace(' FROM users',', user_id FROM users',$query); // add 'user_id' column (although it won't be visible the 'user_id' column gets included in every search query)
+		$query = eregi_replace(' FROM users',', user_id FROM users',$query); // add 'user_id' column (although it won't be visible the 'user_id' column gets included in every search query)
 																		// (which is required in order to obtain unique checkbox names as well as for use in the 'getUserID()' function)
 
 		if ("$refineSearchName" != "") // if the user typed a search string into the text entry field...
@@ -436,19 +436,19 @@
 				{
 					// for the field 'marked=no', force NULL values to be matched:
 					if ($refineSearchSelector == "marked" AND $refineSearchName == "no")
-						$query = str_replace("WHERE","WHERE ($refineSearchSelector RLIKE \"$refineSearchName\" OR $refineSearchSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
+						$query = eregi_replace("WHERE","WHERE ($refineSearchSelector RLIKE \"$refineSearchName\" OR $refineSearchSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
 					else // add default 'WHERE' clause:
-						$query = str_replace("WHERE","WHERE $refineSearchSelector RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
+						$query = eregi_replace("WHERE","WHERE $refineSearchSelector RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
 				}
 			else // $refineSearchActionRadio == "0" // if the user checked the radio button next to "Exclude matched records"
 				{
 					// for the field 'marked=yes', force NULL values to be excluded:
 					if ($refineSearchSelector == "marked" AND $refineSearchName == "yes")
-						$query = str_replace("WHERE","WHERE ($refineSearchSelector NOT RLIKE \"$refineSearchName\" OR $refineSearchSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
+						$query = eregi_replace("WHERE","WHERE ($refineSearchSelector NOT RLIKE \"$refineSearchName\" OR $refineSearchSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
 					else // add default 'WHERE' clause:
-						$query = str_replace("WHERE","WHERE $refineSearchSelector NOT RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
+						$query = eregi_replace("WHERE","WHERE $refineSearchSelector NOT RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
 				}
-			$query = str_replace(' AND user_id RLIKE ".+"','',$query); // remove any 'AND user_id RLIKE ".+"' which isn't required anymore
+			$query = eregi_replace(' AND user_id RLIKE ".+"','',$query); // remove any 'AND user_id RLIKE ".+"' which isn't required anymore
 		}
 
 		// else, if the user did NOT type a search string into the text entry field, we simply keep the old WHERE clause...
