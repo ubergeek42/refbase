@@ -11,7 +11,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
   //
   // Created:    02-Oct-04, 12:00
-  // Modified:   25-Feb-05, 22:51
+  // Modified:   20-Mar-05, 06:40
 
   // This include file contains functions that'll export records to MODS XML.
   // Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -33,6 +33,8 @@
   //   There's a lot of overlap in the portions that depend on types.  I plan
   //     on refactoring this, so that they can make calls to the same function.
 
+  // Separate keywords on ';' and ','
+  
   // I need to add these fields:
   //   series_editor
   //   series_title
@@ -240,8 +242,8 @@
       if (!empty($row['summary_languange'])) {
         $abstract->setTagAttribute("lang", $row['summary_language']);
       }
+      $record->addXMLBranch($abstract);
     }
-    $record->addXMLBranch($abstract);
 
     // subject
     //   keywords
@@ -357,7 +359,7 @@
 	$thesis = new XMLBranch("genre");
 
 	$thesismarc->setTagContent("theses");
-        $thesismarch->setTagAttribute("authority", "marc");
+        $thesismarc->setTagAttribute("authority", "marc");
 
 	$thesis->setTagContent($row['thesis']);
 
@@ -458,7 +460,7 @@
 	$thesis = new XMLBranch("genre");
 
 	$thesismarc->setTagContent("theses");
-        $thesismarch->setTagAttribute("authority", "marc");
+        $thesismarc->setTagAttribute("authority", "marc");
 
 	$thesis->setTagContent($row['thesis']);
 
