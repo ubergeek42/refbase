@@ -23,11 +23,6 @@
 	$databaseBaseURL = "http://YOUR_SERVER_ADDRESS/PATH_ON_SERVER/"; // e.g. "http://polaris.ipoe.uni-kiel.de/refs/"
 
 
-	// This attributive string describes your scientific field and the kind of literature
-	// that's going to be stored within this literature database. It will be used on 'index.php'.
-	$scientificFieldDescriptor = "..."; // e.g. "polar & marine"
-
-
 	// Specify who'll be allowed to add a new user to the users table:
 	// Note, that you should leave this variable as it is, if you're going to use the 'install.php'
 	// script and the provided database structure file ('install.sql') for installation. This variable

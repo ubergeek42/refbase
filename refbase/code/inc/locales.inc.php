@@ -15,6 +15,4 @@
 
   include 'locales/core.php'; // include the locales
 
-
-
 ?>
