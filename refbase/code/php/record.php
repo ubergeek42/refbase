@@ -1,49 +1,54 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-	"http://www.w3.org/TR/html4/loose.dtd">
-<html>
 <?php
-	// Form that offers to add records or edit existing ones
+	// Form that offers to add records or edit/delete existing ones
+
+
+
+	/*
+	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
+	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
+	*/
+
+	// Incorporate some include files:
+	include 'db.inc'; // 'db.inc' is included to hide username and password
+	include 'header.inc'; // include header
+	include 'footer.inc'; // include footer
+	include 'include.inc'; // include common functions
+
+	// --------------------------------------------------------------------
+
+	// Connect to a session
+	session_start();
+	
+	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+
+	// --------------------------------------------------------------------
 
 	$recordAction = $_REQUEST['recordAction']; // check whether the user wants to *add* a record or *edit* an existing one
 	$serialNo = $_REQUEST['serialNo']; // fetch the serial number of the record to edit
 	$oldQuery = $_REQUEST['oldQuery']; // fetch the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
 	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
 
-	if ("$recordAction" == "edit") // *edit* record
-		{
-			$pageTitle = "Edit Record";
-			$headerTitle = "Edit the following record:";
-		}
-	else // *add* record will be the default action if no parameter is given
-		{
-			$pageTitle = "Add Record";
-			$headerTitle = "Add a record to the database:";
-			$serialNo = "(not assigned yet)";
-		}
-?>
-<head>
-	<title>IP&Ouml; Literature Database -- <?php echo $pageTitle; ?></title>
-	<meta name="date" content=<?php echo "\"" . date("d-M-y") . "\""; ?>>
-	<meta name="robots" content="index,follow">
-	<meta name="description" lang="en" content="Edit or add a record to the IP&Ouml; Literature Database">
-	<meta name="keywords" lang="en" content="search citation web database polar marine science literature references mysql php">
-	<meta http-equiv="content-language" content="en">
-	<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
-	<meta http-equiv="Content-Style-Type" content="text/css">
-	<link rel="stylesheet" href="style.css" type="text/css" title="CSS Definition">
-</head>
-<body>
-<?php
-	// Incorporate some include files:
-	include 'db.inc'; // 'db.inc' is included to hide username and password
-	include 'error.inc'; // include the 'showerror()' function
-	include 'header.inc'; // include header
-	include 'footer.inc'; // include footer
+	// If there's no stored message available:
+	if (!session_is_registered("HeaderString")) // if there's no stored message available
+		if (empty($errors)) // provide one of the default messages:
+			if ("$recordAction" == "edit") // *edit* record
+				$HeaderString = "Edit the following record:";
+			else // *add* record will be the default action if no parameter is given
+				$HeaderString = "Add a record to the database:";
+		else // -> there were errors validating the data entered by the user
+			$HeaderString = "There were validation errors regarding the data you entered. Please check the comments above the respective fields.";
+	else
+		session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 
-	/*
-	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
-	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
-	*/
+	if ("$recordAction" == "edit") // *edit* record
+	{
+		$pageTitle = "Edit Record";
+	}
+	else // *add* record will be the default action if no parameter is given
+	{
+		$pageTitle = "Add Record";
+		$serialNo = "(not assigned yet)";
+	}
 
 	// --------------------------------------------------------------------
 
@@ -65,27 +70,18 @@
 	// (1) OPEN the database connection:
 	//      (variables are set by include file 'db.inc'!)
 	if (!($connection = @ mysql_connect($hostName, $username, $password)))
-	{
-		showheader($result, "The following error occurred while trying to connect to the host:");
-		showerror();
-	}
+		showErrorMsg("The following error occurred while trying to connect to the host:", "");
 
 	// (2) SELECT the database:
 	//      (variables are set by include file 'db.inc'!)
 	if (!(mysql_select_db($databaseName, $connection)))
-	{
-		showheader($result, "The following error occurred while trying to connect to the database:");
-		showerror();
-	}
+		showErrorMsg("The following error occurred while trying to connect to the database:", "");
 
 	if ("$recordAction" == "edit")
 		{
 			// (3a) RUN the query on the database through the connection:
 			if (!($result = @ mysql_query ($query, $connection)))
-			{
-				showheader($result, "Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:");
-				showerror();
-			}
+				showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
 
 			if (@ mysql_num_rows($result) == 1) // this condition is added here to avoid the case that clicking on a search result item which got deleted in the meantime invokes a seemingly correct but empty 'edit record' search form
 			{
@@ -136,10 +132,7 @@
 				$userNotesName = htmlentities($row[user_notes]);
 			}
 			else
-			{
-				showheader($result, "Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:");
-				showerror();
-			}
+				showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
 
 		}
 	else // if ("$recordAction" == "add"), i.e., adding a new record...
@@ -188,13 +181,17 @@
 			$userNotesName = "";
 		}
 
+	// Show the login status:
+	showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+
 	// (4a) DISPLAY header:
-	// call the 'showheader()' function:
-	showheader($result, $headerTitle);
+	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+	displayHTMLhead("IP&Ouml; Literature Database -- " . $pageTitle, "index,follow", "Add, edit or delete a record in the IP&Ouml; Literature Database", "", false, "confirmDelete.js");
+	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
 
 	// (4b) DISPLAY results:
 	// Start <form> and <table> holding the form elements:
-	echo "\n<form action=\"modify.php\" method=\"POST\">";
+	echo "\n<form onsubmit=\"return(confirmDelete(this.submit))\" action=\"modify.php\" method=\"POST\">";
 	echo "\n<input type=\"hidden\" name=\"formType\" value=\"record\">";
 	echo "\n<input type=\"hidden\" name=\"submit\" value=\"" . $pageTitle . "\">"; // provide a default value for the 'submit' form tag (then, hitting <enter> within a text entry field will act as if the user clicked the 'Add/Edit Record' button)
 	echo "\n<input type=\"hidden\" name=\"recordAction\" value=\"" . $recordAction . "\">";
@@ -202,27 +199,27 @@
 	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" width=\"600\" summary=\"This table holds a form that offers to add records or edit existing ones\">"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" bgcolor=\"#DEDEDE\"><b>Author</b></td>"
-			. "\n\t<td colspan=\"5\" bgcolor=\"#DEDEDE\"><input type=\"text\" name=\"authorName\" value=\"$authorName\" size=\"85\" title=\"please separate multiple authors with a semicolon &amp; a space ('; ')\"></td>"
+			. "\n\t<td colspan=\"5\" bgcolor=\"#DEDEDE\">" . fieldError("authorName", $errors) . "<input type=\"text\" name=\"authorName\" value=\"$authorName\" size=\"85\" title=\"please separate multiple authors with a semicolon &amp; a space ('; ')\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" bgcolor=\"#DEDEDE\"><b>Title</b></td>"
-			. "\n\t<td colspan=\"5\" bgcolor=\"#DEDEDE\"><input type=\"text\" name=\"titleName\" value=\"$titleName\" size=\"85\" title=\"please don't append any dot to the title!\"></td>"
+			. "\n\t<td colspan=\"5\" bgcolor=\"#DEDEDE\">" . fieldError("titleName", $errors) . "<input type=\"text\" name=\"titleName\" value=\"$titleName\" size=\"85\" title=\"please don't append any dot to the title!\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" bgcolor=\"#DEDEDE\"><b>Year</b></td>"
-			. "\n\t<td bgcolor=\"#DEDEDE\"><input type=\"text\" name=\"yearNo\" value=\"$yearNo\" size=\"14\" title=\"please specify years in 4-digit format, like '1998'\"></td>"
+			. "\n\t<td bgcolor=\"#DEDEDE\">" . fieldError("yearNo", $errors) . "<input type=\"text\" name=\"yearNo\" value=\"$yearNo\" size=\"14\" title=\"please specify years in 4-digit format, like '1998'\"></td>"
 			. "\n\t<td width=\"74\" bgcolor=\"#DEDEDE\"><b>Publication</b></td>"
-			. "\n\t<td bgcolor=\"#DEDEDE\"><input type=\"text\" name=\"publicationName\" value=\"$publicationName\" size=\"14\" title=\"the full title of the journal or the book title\"></td>"
+			. "\n\t<td bgcolor=\"#DEDEDE\">" . fieldError("publicationName", $errors) . "<input type=\"text\" name=\"publicationName\" value=\"$publicationName\" size=\"14\" title=\"the full title of the journal or the book title\"></td>"
 			. "\n\t<td width=\"74\" bgcolor=\"#DEDEDE\"><b>Abbrev Journal</b></td>"
-			. "\n\t<td align=\"right\" bgcolor=\"#DEDEDE\"><input type=\"text\" name=\"abbrevJournalName\" value=\"$abbrevJournalName\" size=\"14\" title=\"the abbreviated journal title\"></td>"
+			. "\n\t<td align=\"right\" bgcolor=\"#DEDEDE\">" . fieldError("abbrevJournalName", $errors) . "<input type=\"text\" name=\"abbrevJournalName\" value=\"$abbrevJournalName\" size=\"14\" title=\"the abbreviated journal title\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" bgcolor=\"#DEDEDE\"><b>Volume</b></td>"
-			. "\n\t<td bgcolor=\"#DEDEDE\"><input type=\"text\" name=\"volumeNo\" value=\"$volumeNo\" size=\"14\" title=\"the volume of the specified publication\"></td>"
+			. "\n\t<td bgcolor=\"#DEDEDE\">" . fieldError("volumeNo", $errors) . "<input type=\"text\" name=\"volumeNo\" value=\"$volumeNo\" size=\"14\" title=\"the volume of the specified publication\"></td>"
 			. "\n\t<td width=\"74\" bgcolor=\"#DEDEDE\"><b>Issue</b></td>"
 			. "\n\t<td bgcolor=\"#DEDEDE\"><input type=\"text\" name=\"issueNo\" value=\"$issueNo\" size=\"14\" title=\"the issue of the specified volume\"></td>"
 			. "\n\t<td width=\"74\" bgcolor=\"#DEDEDE\"><b>Pages</b></td>"
-			. "\n\t<td align=\"right\" bgcolor=\"#DEDEDE\"><input type=\"text\" name=\"pagesNo\" value=\"$pagesNo\" size=\"14\" title=\"papers &amp; book chapters: e.g. '12-18' (no 'pp'!), whole books: e.g. '316 pp'\"></td>"
+			. "\n\t<td align=\"right\" bgcolor=\"#DEDEDE\">" . fieldError("pagesNo", $errors) . "<input type=\"text\" name=\"pagesNo\" value=\"$pagesNo\" size=\"14\" title=\"papers &amp; book chapters: e.g. '12-18' (no 'pp'!), whole books: e.g. '316 pp'\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\"><b>Address</b></td>"
@@ -248,7 +245,7 @@
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\"><b>Language</b></td>"
-			. "\n\t<td><input type=\"text\" name=\"languageName\" value=\"$languageName\" size=\"14\" title=\"language of the body text\"></td>"
+			. "\n\t<td>" . fieldError("languageName", $errors) . "<input type=\"text\" name=\"languageName\" value=\"$languageName\" size=\"14\" title=\"language of the body text\"></td>"
 			. "\n\t<td width=\"74\"><b>Summary Language</b></td>"
 			. "\n\t<td><input type=\"text\" name=\"summaryLanguageName\" value=\"$summaryLanguageName\" size=\"14\" title=\"language of the summary or abstract (if any)\"></td>"
 			. "\n\t<td width=\"74\"><b>Orig Title</b></td>"
@@ -288,7 +285,7 @@
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\"><b>Location</b></td>"
-			. "\n\t<td><input type=\"text\" name=\"locationName\" value=\"$locationName\" size=\"14\" title=\"the physical location of this publication, if it's at your place, give your full name\"></td>"
+			. "\n\t<td><input type=\"text\" name=\"locationName\" value=\"$locationName\" size=\"14\" title=\"the physical location of this publication, if it's at your place, give your full name &amp; email address\"></td>"
 			. "\n\t<td width=\"74\"><b>Call Number</b></td>"
 			. "\n\t<td><input type=\"text\" name=\"callNumberName\" value=\"$callNumberName\" size=\"14\" title=\"your_institutional_abbreviation @ your_user_id @ your_own_reference_id\"></td>"
 			. "\n\t<td width=\"74\"><b>Reprint Status</b></td>";
@@ -368,26 +365,15 @@
 	
 	// (5) CLOSE the database connection:
 	if (!(mysql_close($connection)))
-	{
-		showheader($result, "The following error occurred while trying to disconnect from the database:");
-		showerror();
-	}
+		showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
 
 	// --------------------------------------------------------------------
 
-	// BUILD THE HTML HEADER:
-	function showheader($result, $HeaderString)
+	// SHOW ERROR IN RED:
+	function fieldError($fieldName, $errors)
 	{
-		// call the 'displayheader()' function from 'header.inc'):
-		displayheader();
-
-		// finalize header containing the appropriate header string:
-		echo "\n<tr>"
-//			. "\n\t<td>&nbsp;</td>" // img in 'header.inc' now spans this row (by rowspan="2")
-			. "\n\t<td>$HeaderString</td>"
-			. "\n</tr>"
-			. "\n</table>"
-			. "\n<hr align=\"center\" width=\"95%\">";
+		if (isset($errors[$fieldName]))
+			return "<b><span class=\"warning\">" . $errors[$fieldName] . "</span></b><br>";
 	}
 
 	// --------------------------------------------------------------------
