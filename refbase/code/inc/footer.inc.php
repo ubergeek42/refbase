@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./footer.inc.php
 	// Created:    28-Jul-02, 11:30
-	// Modified:   28-Sep-04, 19:00
+	// Modified:   16-Feb-05, 20:47
 
 	// This is the footer include file.
 	// It contains functions that build the footer
@@ -20,8 +20,8 @@
 
 	function displayfooter($oldQuery)
 	{
-		global $officialDatabaseName; // usage example: <a href="index.php">[? echo htmlentities($officialDatabaseName); ?]</a>
-		global $hostInstitutionAbbrevName; // usage example: <a href="[? echo $hostInstitutionURL; ?]">[? echo htmlentities($hostInstitutionAbbrevName); ?] Home</a>
+		global $officialDatabaseName; // usage example: <a href="index.php">[? echo encodeHTML($officialDatabaseName); ?]</a>
+		global $hostInstitutionAbbrevName; // usage example: <a href="[? echo $hostInstitutionURL; ?]">[? echo encodeHTML($hostInstitutionAbbrevName); ?] Home</a>
 		global $hostInstitutionName; // (note: in the examples above, square brackets must be replaced by their respective angle brackets)
 		global $hostInstitutionURL;
 ?>
@@ -49,12 +49,12 @@
 		// -------------------------------------------------------
 ?>
 
-		<a href="library_search.php" title="search the library of the <? echo htmlentities($hostInstitutionName); ?>">Library Search</a>
+		<a href="library_search.php" title="search the library of the <? echo encodeHTML($hostInstitutionName); ?>">Library Search</a>
 	</td>
 	<td class="small" align="right" width="105"><? echo date('D, j M Y'); ?></td>
 </tr>
 <tr>
-<td class="small" width="105"><!--<a href="help.php" title="display help">Help</a>--></td>
+	<td class="small" width="105"><!--<a href="help.php" title="display help">Help</a>--></td>
 	<td class="small" align="center"><?php
 
 		// -------------------------------------------------------
