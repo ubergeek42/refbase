@@ -45,10 +45,10 @@
 	else
 	{
 		session_register("HeaderString"); // save an error message
-		$HeaderString = "<b><span class=\"warning\">You cannot logout since you were not logged in anymore!</span></b>";
+		$HeaderString = "<b><span class=\"warning\">You cannot logout since you are not logged in anymore!</span></b>";
 	}
 
-	if (!preg_match("/.*user_(details|receipt)\.php.*/", $HTTP_REFERER))
+	if (!preg_match("/.*user(_details|_receipt|s)\.php.*/", $HTTP_REFERER))
 		header("Location: $HTTP_REFERER"); // redirect the user to the calling page
 	else
 		header("Location: index.php"); // back to main page
