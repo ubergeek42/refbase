@@ -274,7 +274,11 @@
 						. "\"><img src=\"img/details.gif\" alt=\"details\" title=\"show details\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
 	
 					echo "\n\t\t<a href=\"user_details.php?userID=" . $row["user_id"]
-						. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit user\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
+						. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit user\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
+	
+					if ($row["email"] != $adminLoginEmail) // we only provide a delete link if this user isn't the admin:
+						echo "\n\t\t<a href=\"user_receipt.php?userID=" . $row["user_id"] . "&amp;userAction=Delete"
+							. "\"><img src=\"img/delete.gif\" alt=\"delete\" title=\"delete user\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
 	
 					echo "\n\t</td>";
 				}
@@ -301,37 +305,6 @@
 					. "\n</tr>"
 					. "\n</table>";
 		}// end if $rowsFound body
-
-
-//		// Start a table:
-//		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays all users\">";
-//
-//		if (mysql_num_rows($result) == 1) // If there's a user associated with this user ID
-//		{
-//			// Display a password reminder:
-//			// (but only if a normal user is logged in -OR- the admin is logged in AND the updated user data are his own!)
-//			if (($loginEmail != $adminLoginEmail) | (($loginEmail == $adminLoginEmail) && ($userID == getUserID($loginEmail, $connection))))
-//				echo "\n<tr>\n\t<td><i>Please record your password somewhere safe for future use!</i></td>\n</tr>";
-//	
-//			// Print title, first name, last name and institutional abbreviation:
-//			echo "\n<tr>\n\t<td>\n\t\t";
-//			if (!empty($row["title"]))
-//				echo $row["title"] . ". ";
-//			echo htmlentities($row["first_name"]) . " " . htmlentities($row["last_name"]) . " (" . htmlentities($row["abbrev_institution"]) . ")"; // Since the first name, last name and abbrev. institution fields are mandatory, we don't need to check if they're empty
-//	
-//			// Print email:
-//				echo "\n\t\t<br>\n\t\t" . "Email: <a href=\"mailto:" . $row["email"] . "\">" . $row["email"] . "</a>"; // Since the email field is mandatory, we don't need to check if it's empty
-//
-//			echo "\n\t</td>\n</tr>";
-//
-//			// If the admin is logged in, display an 'Edit User Account' link:
-//		 	if (($loginEmail == $adminLoginEmail) && ($userID != getUserID($loginEmail, $connection)))
-//		 		echo "\n<tr>\n\t<td><a href=\"user_details.php?userID=" . $userID . "\">[Edit User Data]</a></td>\n</tr>";
-//		}
-//		else // no user exists with this user ID
-//			echo "\n<tr>\n\t<td>(No user exists with this user ID!)</td>\n</tr>";
-//
-//		echo "\n</table>";
 	}
 
 	// --------------------------------------------------------------------
