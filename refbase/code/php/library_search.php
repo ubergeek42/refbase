@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./library_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   20-Jan-03, 23:29
+	// Modified:   31-Aug-03, 13:59
 
 	// Search formular providing the main fields.
 	// Searches will be restricted to records belonging
@@ -168,7 +168,7 @@
 			. "\n<tr>"
 			. "\n\t<td>&nbsp;</td>"
 			. "\n\t<td valign=\"top\"><b>Output Options:</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showLinks\" value=\"1\">&nbsp;&nbsp;&nbsp;Display Links</td>"
+			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showLinks\" value=\"1\" checked>&nbsp;&nbsp;&nbsp;Display Links</td>"
 			. "\n\t<td valign=\"middle\">Show&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"showRows\" value=\"10\" size=\"4\">&nbsp;&nbsp;&nbsp;records per page"
 			. "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"Search\"></td>"
 			. "\n</tr>"
