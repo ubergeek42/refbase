@@ -1,34 +1,38 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-	"http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-	<title>IP&Ouml; Literature Database -- Extract Cited Literature</title>
-	<meta name="date" content=<?php echo "\"" . date("d-M-y") . "\""; ?>>
-	<meta name="robots" content="index,follow">
-	<meta name="description" lang="en" content="Search the IP&Ouml; Literature Database">
-	<meta name="keywords" lang="en" content="search citation web database polar marine science literature references mysql php">
-	<meta http-equiv="content-language" content="en">
-	<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
-	<meta http-equiv="Content-Style-Type" content="text/css">
-	<link rel="stylesheet" href="style.css" type="text/css" title="CSS Definition">
-</head>
-<body>
 <?php
 	// Search formular offering the extraction of literature cited within a text
-
-	// This is included to hide the username and password:
-	include 'header.inc';
-	include 'footer.inc';
 
 	/*
 	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
 	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
 	*/
 	
+	// Incorporate some include files:
+	include 'header.inc'; // include header
+	include 'footer.inc'; // include footer
+	include 'include.inc'; // include common functions
+	
 	// --------------------------------------------------------------------
 
+	// Connect to a session
+	session_start();
+
+	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+
+	// --------------------------------------------------------------------
+
+	// If there's no stored message available:
+	if (!session_is_registered("HeaderString"))
+		$HeaderString = "Extract literature cited within a text and build an appropriate reference list:"; // Provide the default message
+	else
+		session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
+
+	// Show the login status:
+	showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+
 	// (2a) Display header:
-	showheader($result, "Extract literature cited within a text and build an appropriate reference list:");
+	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+	displayHTMLhead("IP&Ouml; Literature Database -- Extract Cited Literature", "index,follow", "Search the IP&Ouml; Literature Database", "", false, "");
+	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
 
 	// (2b) Start <form> and <table> holding the form elements:
 	echo "\n<form action=\"search.php\" method=\"POST\">";
@@ -70,29 +74,11 @@
 	
 	// --------------------------------------------------------------------
 
-	// BUILD THE HTML HEADER:
-	function showheader($result, $HeaderString)
-	{
-		// call the 'displayheader()' function from 'header.inc'):
-		displayheader();
-
-		// finalize header containing the appropriate header string:
-		echo "\n<tr>"
-//			. "\n\t<td>&nbsp;</td>" // img in 'header.inc' now spans this row (by rowspan="2")
-			. "\n\t<td>$HeaderString</td>"
-			. "\n</tr>"
-			. "\n</table>"
-			. "\n<hr align=\"center\" width=\"95%\">";
-	}
-
-	// --------------------------------------------------------------------
-
 	// DISPLAY THE HTML FOOTER:
 	// call the 'displayfooter()' function from 'footer.inc')
 	displayfooter("");
 
 	// --------------------------------------------------------------------
-
 ?>
 </body>
 </html> 
