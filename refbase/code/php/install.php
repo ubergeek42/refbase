@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./install.php
 	// Created:    07-Jan-04, 22:00
-	// Modified:   25-Feb-05, 22:36
+	// Modified:   01-Mar-05, 22:51
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -71,7 +71,7 @@
 	// Check the correct parameters have been passed:
 	if (empty($adminUserName) AND empty($adminPassword) AND empty($pathToMYSQL) AND empty($databaseStructureFile))
 	{
-		// if 'installation.php' was called without any valid parameters:
+		// if 'install.php' was called without any valid parameters:
 		//Display an installation form:
 
 		if (isset($_SESSION['errors']))
@@ -153,7 +153,7 @@
 
 <form action="install.php" method="POST">
 <input type="hidden" name="formType" value="install">
-<input type="hidden" name="submit" value="Install"><?php // provide a default value for the 'submit' form tag. Otherwise, some browsers may not recognize the correct output format when a user hits <enter> within a form field (instead of clicking the "Show" button) ?>
+<input type="hidden" name="submit" value="Install"><?php // provide a default value for the 'submit' form tag. Otherwise, some browsers may not recognize the correct output format when a user hits <enter> within a form field (instead of clicking the "Install" button) ?>
 
 <table align="center" border="0" cellpadding="0" cellspacing="12" width="95%" summary="This table holds the installation form">
 	<tr>
@@ -324,11 +324,11 @@
 			$errors["pathToBibutils"] = "Due to security reasons this field cannot contain the characters ';' or '|':";
 
 		elseif (!is_readable($formVars["pathToBibutils"]))
-			// Check if the specified path resolves to the mysql application
+			// Check if the specified path resolves to an existing directory
 			$errors["pathToBibutils"] = "Your path specification is invalid (directory not found):";
 
 		elseif (!is_dir($formVars["pathToBibutils"]))
-			// Check if the specified path resolves to a directory
+			// Check if the specified path resolves to a directory (and not a file)
 			$errors["pathToBibutils"] = "You must specify a directory! Please give the path to the directory containing the bibutils utilities:";
 
 
@@ -375,7 +375,7 @@
 				showErrorMsg("The following error occurred while trying to query the database:", "");
 
 		// (3) Extract result:
-		$row = mysql_fetch_row($result); //fetch the current row into the array $row (it'll be always *one* row, but anyhow)
+		$row = mysql_fetch_row($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
 		$mysqlVersionString = $row[0]; // extract the contents of the first (and only) row (returned version string will be something like "4.0.20-standard" etc.)
 		$mysqlVersion = preg_replace("/^(\d+\.\d+).+/", "\\1", $mysqlVersionString); // extract main version number (e.g. "4.0") from version string
 
@@ -434,7 +434,7 @@
 
 		// --------------------------------------------------------------------
 
-		//Provide a feedback page:
+		// Provide a feedback page:
 
 		// If there's no stored message available:
 		if (!isset($_SESSION['HeaderString'])) // provide one of the default messages:
