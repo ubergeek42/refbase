@@ -512,7 +512,7 @@
             $pages->setTagContent($row['pages']);
           }
         }
-        else if (ereg("[0-9] *pp?", $row['pages'])) { // if a number of pages
+        else if (preg_match("/^\d\d*\s*pp?.?$/", $row['pages'])) {
           list($pagetotal) = preg_split('/\s*pp?/', $row['pages']);
           $pages->setTagContent($pagetotal, "extent/total");
         }          
