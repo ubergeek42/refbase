@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   23-Feb-05, 22:20
+	// Modified:   27-Feb-05, 13:25
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -191,7 +191,7 @@
 
 			// Get the user permissions for the current user
 			// and save all allowed user actions as semicolon-delimited string to the session variable 'user_permissions':
-			getPermissions($row2["user_id"], "user"); // function 'getPermissions()' is defined in 'include.inc.php'
+			getPermissions($row2["user_id"], "user", true); // function 'getPermissions()' is defined in 'include.inc.php'
 
 
 			// We also update the user's entry within the 'users' table:
