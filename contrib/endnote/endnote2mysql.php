@@ -44,7 +44,7 @@
     $fin = str_replace("<REFBASE>","",$fin);
     $fin = str_replace("</REFBASE>\\n","\n",$fin);
     $fin = str_replace("<REFBASE J/>","Journal",$fin);
-    $fin = str_replace("\t\t","\t\\N\t",$fin);
+    $fin = preg_replace("/(?<=\t)(?=\t)/","\\N",$fin);
     $fin = preg_replace("/<Go to ISI>:\/\/\S*/","\\N",$fin);
   }
   do {
