@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   28-Sep-04, 20:03
+	// Modified:   13-Oct-04, 01:18
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -17,11 +17,11 @@
 	*/
 
 	// Incorporate some include files:
-	include 'db.inc.php'; // 'db.inc.php' is included to hide username and password
-	include 'header.inc.php'; // include header
-	include 'footer.inc.php'; // include footer
-	include 'include.inc.php'; // include common functions
-	include "ini.inc.php"; // include common variables
+	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
+	include 'includes/header.inc.php'; // include header
+	include 'includes/footer.inc.php'; // include footer
+	include 'includes/include.inc.php'; // include common functions
+	include 'initialize/ini.inc.php'; // include common variables
 
 	// --------------------------------------------------------------------
 
@@ -132,7 +132,7 @@
 
 		// -------------------
 
-		if ($foundUser == true)
+		if ($foundUser)
 		{
 			// Clear any other session variables:
 			if (isset($_SESSION['errors'])) // delete the 'errors' session variable:
@@ -171,15 +171,15 @@
 
 			// Get all export formats that were selected previously by the current user
 			// and (if some formats were found) save them as semicolon-delimited string to the session variable 'user_formats':
-			getUserFormatsStylesTypes($row2["user_id"], "format"); // function 'getUserFormatsStylesTypes()' is defined in 'include.inc.php'
+			getUserFormatsStylesTypes($row2["user_id"], "format", "export"); // function 'getUserFormatsStylesTypes()' is defined in 'include.inc.php'
 
 			// Get all citation styles that were selected previously by the current user
 			// and (if some styles were found) save them as semicolon-delimited string to the session variable 'user_styles':
-			getUserFormatsStylesTypes($row2["user_id"], "style"); // function 'getUserFormatsStylesTypes()' is defined in 'include.inc.php'
+			getUserFormatsStylesTypes($row2["user_id"], "style", ""); // function 'getUserFormatsStylesTypes()' is defined in 'include.inc.php'
 
 			// Get all document types that were selected previously by the current user
 			// and (if some types were found) save them as semicolon-delimited string to the session variable 'user_types':
-			getUserFormatsStylesTypes($row2["user_id"], "type"); // function 'getUserFormatsStylesTypes()' is defined in 'include.inc.php'
+			getUserFormatsStylesTypes($row2["user_id"], "type", ""); // function 'getUserFormatsStylesTypes()' is defined in 'include.inc.php'
 
 			// Get the user permissions for the current user
 			// and save all allowed user actions as semicolon-delimited string to the session variable 'user_permissions':
