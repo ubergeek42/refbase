@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./record.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   29-Dec-03, 14:19
+	// Modified:   14-Jan-04, 00:52
 
 	// Form that offers to add
 	// records or edit/delete
@@ -33,15 +33,27 @@
 	// --------------------------------------------------------------------
 
 	$recordAction = $_REQUEST['recordAction']; // check whether the user wants to *add* a record or *edit* an existing one
-	$mode = $_REQUEST['mode']; // check whether the user wants to add a record by use of an *import* form (e.g., the parameter "mode=import" will be set by 'import_csa.php')
-	$importSource = $_REQUEST['importSource']; // get the source from which the imported data originate (e.g., if data have been imported via 'import_csa.php', the 'importSource' value will be 'csa')
+
+	if (isset($_REQUEST['mode']))
+		$mode = $_REQUEST['mode']; // check whether the user wants to add a record by use of an *import* form (e.g., the parameter "mode=import" will be set by 'import_csa.php')
+	else
+		$mode = ""; // if the 'mode' parameter wasn't set we set the '$mode' variable to the empty string ("") to prevent 'Undefined index: mode...' notification messages
+
+	if (isset($_REQUEST['importSource']))
+		$importSource = $_REQUEST['importSource']; // get the source from which the imported data originate (e.g., if data have been imported via 'import_csa.php', the 'importSource' value will be 'csa')
+	else
+		$importSource = ""; // if the 'importSource' parameter wasn't set we set the '$importSource' variable to the empty string ("") to prevent 'Undefined index: importSource...' notification messages
 
 	if (isset($_REQUEST['serialNo']))
 		$serialNo = $_REQUEST['serialNo']; // fetch the serial number of the record to edit
 	else
 		$serialNo = ""; // this is actually unneccessary, but we do it for clarity reasons here
 
-	$oldQuery = $_REQUEST['oldQuery']; // fetch the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
+	if (isset($_REQUEST['oldQuery']))
+		$oldQuery = $_REQUEST['oldQuery']; // fetch the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
+	else
+		$oldQuery = ""; // if the 'oldQuery' parameter wasn't set we set the '$oldQuery' variable to the empty string ("") to prevent 'Undefined index: oldQuery...' notification messages
+	
 	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
 	$oldQuery = ereg_replace('(\\\\)+','\\\\',$oldQuery);
 
@@ -264,44 +276,171 @@
 			if ($mode == "import") // if the user wants to import record data by use of an import form (like 'import_csa.php')
 			{
 				// read field data from a GET/POST request:
-				$authorName = $_REQUEST['author'];
-				$titleName = $_REQUEST['title'];
-				$yearNo = $_REQUEST['year'];
-				$publicationName = $_REQUEST['publication'];
-				$abbrevJournalName = $_REQUEST['abbrev_journal'];
-				$volumeNo = $_REQUEST['volume'];
-				$issueNo = $_REQUEST['issue'];
-				$pagesNo = $_REQUEST['pages'];
-				$addressName = $_REQUEST['address'];
-				$corporateAuthorName = $_REQUEST['corporate_author'];
-				$keywordsName = $_REQUEST['keywords'];
-				$abstractName = $_REQUEST['abstract'];
-				$publisherName = $_REQUEST['publisher'];
-				$placeName = $_REQUEST['place'];
-				$editorName = $_REQUEST['editor'];
-				$languageName = $_REQUEST['language'];
-				$summaryLanguageName = $_REQUEST['summary_language'];
-				$OrigTitleName = $_REQUEST['orig_title'];
-				$seriesEditorName = $_REQUEST['series_editor'];
-				$seriesTitleName = $_REQUEST['series_title'];
-				$abbrevSeriesTitleName = $_REQUEST['abbrev_series_title'];
-				$seriesVolumeNo = $_REQUEST['series_volume'];
-				$seriesIssueNo = $_REQUEST['series_issue'];
-				$editionNo = $_REQUEST['edition'];
-				$issnName = $_REQUEST['issn'];
-				$isbnName = $_REQUEST['isbn'];
+				if (isset($_REQUEST['author']))
+					$authorName = $_REQUEST['author'];
+				else
+					$authorName = "";
+
+				if (isset($_REQUEST['title']))
+					$titleName = $_REQUEST['title'];
+				else
+					$titleName = "";
+
+				if (isset($_REQUEST['year']))
+					$yearNo = $_REQUEST['year'];
+				else
+					$yearNo = "";
+
+				if (isset($_REQUEST['publication']))
+					$publicationName = $_REQUEST['publication'];
+				else
+					$publicationName = "";
+
+				if (isset($_REQUEST['abbrev_journal']))
+					$abbrevJournalName = $_REQUEST['abbrev_journal'];
+				else
+					$abbrevJournalName = "";
+
+				if (isset($_REQUEST['volume']))
+					$volumeNo = $_REQUEST['volume'];
+				else
+					$volumeNo = "";
+
+				if (isset($_REQUEST['issue']))
+					$issueNo = $_REQUEST['issue'];
+				else
+					$issueNo = "";
+
+				if (isset($_REQUEST['pages']))
+					$pagesNo = $_REQUEST['pages'];
+				else
+					$pagesNo = "";
+
+				if (isset($_REQUEST['address']))
+					$addressName = $_REQUEST['address'];
+				else
+					$addressName = "";
+
+				if (isset($_REQUEST['corporate_author']))
+					$corporateAuthorName = $_REQUEST['corporate_author'];
+				else
+					$corporateAuthorName = "";
+
+				if (isset($_REQUEST['keywords']))
+					$keywordsName = $_REQUEST['keywords'];
+				else
+					$keywordsName = "";
+
+				if (isset($_REQUEST['abstract']))
+					$abstractName = $_REQUEST['abstract'];
+				else
+					$abstractName = "";
+
+				if (isset($_REQUEST['publisher']))
+					$publisherName = $_REQUEST['publisher'];
+				else
+					$publisherName = "";
+
+				if (isset($_REQUEST['place']))
+					$placeName = $_REQUEST['place'];
+				else
+					$placeName = "";
+
+				if (isset($_REQUEST['editor']))
+					$editorName = $_REQUEST['editor'];
+				else
+					$editorName = "";
+
+				if (isset($_REQUEST['language']))
+					$languageName = $_REQUEST['language'];
+				else
+					$languageName = "";
+
+				if (isset($_REQUEST['summary_language']))
+					$summaryLanguageName = $_REQUEST['summary_language'];
+				else
+					$summaryLanguageName = "";
+
+				if (isset($_REQUEST['orig_title']))
+					$OrigTitleName = $_REQUEST['orig_title'];
+				else
+					$OrigTitleName = "";
+
+				if (isset($_REQUEST['series_editor']))
+					$seriesEditorName = $_REQUEST['series_editor'];
+				else
+					$seriesEditorName = "";
+
+				if (isset($_REQUEST['series_title']))
+					$seriesTitleName = $_REQUEST['series_title'];
+				else
+					$seriesTitleName = "";
+
+				if (isset($_REQUEST['abbrev_series_title']))
+					$abbrevSeriesTitleName = $_REQUEST['abbrev_series_title'];
+				else
+					$abbrevSeriesTitleName = "";
+
+				if (isset($_REQUEST['series_volume']))
+					$seriesVolumeNo = $_REQUEST['series_volume'];
+				else
+					$seriesVolumeNo = "";
+
+				if (isset($_REQUEST['series_issue']))
+					$seriesIssueNo = $_REQUEST['series_issue'];
+				else
+					$seriesIssueNo = "";
+
+				if (isset($_REQUEST['edition']))
+					$editionNo = $_REQUEST['edition'];
+				else
+					$editionNo = "";
+
+				if (isset($_REQUEST['issn']))
+					$issnName = $_REQUEST['issn'];
+				else
+					$issnName = "";
+
+				if (isset($_REQUEST['isbn']))
+					$isbnName = $_REQUEST['isbn'];
+				else
+					$isbnName = "";
+
 				$mediumName = "";
-				$areaName = $_REQUEST['area'];
+
+				if (isset($_REQUEST['area']))
+					$areaName = $_REQUEST['area'];
+				else
+					$areaName = "";
+
 				$expeditionName = "";
-				$conferenceName = $_REQUEST['conference'];
-				$notesName = $_REQUEST['notes'];
+
+				if (isset($_REQUEST['conference']))
+					$conferenceName = $_REQUEST['conference'];
+				else
+					$conferenceName = "";
+
+				if (isset($_REQUEST['notes']))
+					$notesName = $_REQUEST['notes'];
+				else
+					$notesName = "";
+
 				$approvedRadio = "";
 				$locationName = $locationName; // supply some generic info: "(...will be filled in automatically)" [as defined at the top of this script]
 				$callNumberName = "";
 				$callNumberNameUserOnly = "";
 				$serialNo = $serialNo; // supply some generic info: "(not assigned yet)" [as defined at the top of this script]
-				$typeName = $_REQUEST['type'];
-				$thesisName = $_REQUEST['thesis'];
+
+				if (isset($_REQUEST['type']))
+					$typeName = $_REQUEST['type'];
+				else
+					$typeName = "";
+
+				if (isset($_REQUEST['thesis']))
+					$thesisName = $_REQUEST['thesis'];
+				else
+					$thesisName = "";
+
 				$markedRadio = "";
 				$copyName = "";
 				$selectedRadio = "";
@@ -309,8 +448,17 @@
 				$userNotesName = "";
 				$userFileName = "";
 				$fileName = "";
-				$urlName = $_REQUEST['url'];
-				$doiName = $_REQUEST['doi'];
+
+				if (isset($_REQUEST['url']))
+					$urlName = $_REQUEST['url'];
+				else
+					$urlName = "";
+
+				if (isset($_REQUEST['doi']))
+					$doiName = $_REQUEST['doi'];
+				else
+					$doiName = "";
+
 				$contributionID = "";
 				$onlinePublication = "";
 				$onlineCitationName = "";

@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   13-Dec-03, 23:28
+	// Modified:   14-Jan-04, 01:09
 
 	// This script serves as a routing page which takes any record serial number, date, year or author that was passed as parameter
 	// to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -32,28 +32,73 @@
 	// --------------------------------------------------------------------
 
 	// Extract any parameters passed to the script:
-	$serial = $_REQUEST['record']; // get record serial number
+	if (isset($_REQUEST['record']))
+		$serial = $_REQUEST['record']; // get record serial number
+	else
+		$serial = "";
 
-	$date = $_REQUEST['date']; // get date
-	$when = $_REQUEST['when']; // get info about what kind of date shall be searched for ("when=edited" -> search field 'modified_date'; otherwise -> search field 'created_date')
-	$range = $_REQUEST['range']; // check the date range ("range=after" -> return all records whose created/modifed date is after '$date'; "range=before" -> return all records whose created/modifed date is before '$date')
 
-	$year = $_REQUEST['year']; // get year
+	if (isset($_REQUEST['date']))
+		$date = $_REQUEST['date']; // get date
+	else
+		$date = "";
 
-	$author = $_REQUEST['author']; // get author
-	$without = $_REQUEST['without']; // when searching for authors, check whether duplicate records should be included
-	$headerMsg = $_REQUEST['headerMsg']; // we'll accept custom header messages as well
+
+	if (isset($_REQUEST['when']))
+		$when = $_REQUEST['when']; // get info about what kind of date shall be searched for ("when=edited" -> search field 'modified_date'; otherwise -> search field 'created_date')
+	else
+		$when = "";
+
+
+	if (isset($_REQUEST['range']))
+		$range = $_REQUEST['range']; // check the date range ("range=after" -> return all records whose created/modifed date is after '$date'; "range=before" -> return all records whose created/modifed date is before '$date')
+	else
+		$range = "";
+
+
+	if (isset($_REQUEST['year']))
+		$year = $_REQUEST['year']; // get year
+	else
+		$year = "";
+
+
+	if (isset($_REQUEST['author']))
+		$author = $_REQUEST['author']; // get author
+	else
+		$author = "";
+
+
+	if (isset($_REQUEST['without']))
+		$without = $_REQUEST['without']; // when searching for authors, check whether duplicate records should be included
+	else
+		$without = "";
+
+
+	if (isset($_REQUEST['headerMsg']))
+		$headerMsg = $_REQUEST['headerMsg']; // we'll accept custom header messages as well
 						// Note: custom header messages are provided so that it's possible to include an information string within a link. This info string could
 						//       e.g. describe who's publications are being displayed (e.g.: "Publications of Matthias Steffens:"). I.e., a link pointing to a
 						//       persons own publications can include the appropriate owner information (it will show up as header message)
+	else
+		$headerMsg = "";
+
 
 	// currently, the following two fields will get only interpreted when searching for authors (i.e., the 'author' parameter must be present):
-	$only = $_REQUEST['only']; // check whether we are supposed to show records of a particular subset only. Currently, only "only=selected" is supported. If this
+	if (isset($_REQUEST['only']))
+		$only = $_REQUEST['only']; // check whether we are supposed to show records of a particular subset only. Currently, only "only=selected" is supported. If this
 								// parameter and value is present, we'll restrict the search results to those records that have the 'selected' bit set for a particular user.
 								// IMPORTANT: Since the 'selected' field is specific to every user (table 'user_data'), the 'userID' parameter must be specified as well!!
-	$userID = $_REQUEST['userID']; // when searching user specific fields (like the 'selected' field), this parameter specifies the user's user ID.
+	else
+		$only = "";
+
+
+	if (isset($_REQUEST['userID']))
+		$userID = $_REQUEST['userID']; // when searching user specific fields (like the 'selected' field), this parameter specifies the user's user ID.
 									// I.e., the 'userID' parameter does only make sense when specified together with "only=selected". As an example,
 									// "show.php?author=...&only=selected&userID=2" will show every record where the user who's identified by user ID "2" has set the selected bit to "yes".
+	else
+		$userID = "";
+
 
 	// Check the correct parameters have been passed:
 	if (empty($serial) AND empty($year) AND empty($date) AND empty($author))
