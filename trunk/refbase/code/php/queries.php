@@ -17,8 +17,8 @@
 	*/
 
 	// Incorporate some include files:
-	include 'include.inc.php'; // include common functions
-	include "ini.inc.php"; // include common variables
+	include 'includes/include.inc.php'; // include common functions
+	include 'initialize/ini.inc.php'; // include common variables
 
 	// --------------------------------------------------------------------
 

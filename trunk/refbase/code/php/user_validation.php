@@ -17,9 +17,9 @@
 	*/
 
 	// Incorporate some include files:
-	include 'db.inc.php'; // 'db.inc.php' is included to hide username and password
-	include 'include.inc.php'; // include common functions
-	include "ini.inc.php"; // include common variables
+	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
+	include 'includes/include.inc.php'; // include common functions
+	include 'initialize/ini.inc.php'; // include common variables
 
 	// --------------------------------------------------------------------
 
