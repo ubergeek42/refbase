@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./record.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   29-Mar-05, 00:44
+	// Modified:   05-Apr-05, 18:20
 
 	// Form that offers to add
 	// records or edit/delete
@@ -1094,7 +1094,9 @@
 		if ($recordAction == "edit") // add a DELETE button (CAUTION: the delete button must be displayed *AFTER* the edit button, otherwise DELETE will be the default action if the user hits return!!)
 									// (this is since the first displayed submit button represents the default submit action in several browsers!! [like OmniWeb or Mozilla])
 		{
-			if (!isset($loginEmail) OR ((!ereg($loginEmail,$locationName) OR ereg(";",$locationName)) AND ($loginEmail != $adminLoginEmail))) // if the user isn't logged in -OR- any normal user is logged in & the 'location' field doesn't list her email address -OR- if the 'location' field contains more than one user (which is indicated by a semicolon character)...
+			if (!isset($loginEmail) OR ((!ereg($loginEmail,$locationName) OR ereg(";",$row['location'])) AND ($loginEmail != $adminLoginEmail))) // if the user isn't logged in -OR- any normal user is logged in & the 'location' field doesn't list her email address -OR- if the 'location' field contains more than one user (which is indicated by a semicolon character)...
+				// Note that we use '$row['location']' instead of the '$locationName' variable for those tests that check for the existence of a semicolon since for '$locationName' high ASCII characters were converted into HTML entities.
+				// E.g., the german umlaut 'ü' would be presented as '&uuml;', thus containing a semicolon character *within* the user's name!
 			{
 				// build an informative title string:
 				if (!isset($loginEmail)) // if the user isn't logged in
@@ -1103,8 +1105,6 @@
 				elseif (!ereg($loginEmail, $locationName)) // if any normal user is logged in & the 'location' field doesn't list her email address
 					$deleteTitle = "you can't delete this record since it doesn't belong to your personal literature data set";
 
-				// Note that we use '$row['location']' instead of the '$locationName' variable for the following tests since for the latter high ASCII characters were converted into HTML entities.
-				// E.g., the german umlaut 'ü' would be presented as '&uuml;', thus containing a semicolon character *within* the user's name!
 				elseif (ereg(";", $row['location'])) // if the 'location' field contains more than one user (which is indicated by a semicolon character)
 				{
 					// if we made it here, the current user is listed within the 'location' field of this record
