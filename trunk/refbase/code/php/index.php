@@ -231,19 +231,19 @@ else
 				<br>
 				<input type="text" name="quickSearchName" size="12">
 				<br>
-				<input type="submit" value="Search">
+				<input type="submit" value="<?php echo $loc["Search"]; ?>">
 			</form>
 		</td>
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
-		<td>Or, alternatively:</td>
+		<td><?php echo $loc["or"]; ?>:</td>
 		<td width="163" valign="top">
 <?php
 if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_groups", $_SESSION['user_permissions'])))
 	{
 ?>
-			<div class="header"><b>Show My Group:</b></div><?php
+			<div class="header"><b><?php echo $loc["ShowMyGroup"]; ?>:</b></div><?php
 	}
 else
 	{
@@ -269,11 +269,11 @@ else
 	$DateLastWeek = date('Y-m-d', $TimeStampLastWeek);
 ?>
 			<ul type="circle" class="moveup">
-				<li>view all database entries that were:
+				<li><?php echo $loc["view all"]; ?>:
 					<ul type="circle">
-						<li>added: <a href="show.php?date=<? echo $CurrentDate; ?>">today</a> | <a href="show.php?date=<? echo $DateYesterday; ?>">yesterday</a> | <a href="show.php?date=<? echo $DateLastWeek; ?>&amp;range=after">last 7 days</a></li>
-						<li>edited: <a href="show.php?date=<? echo $CurrentDate; ?>&amp;when=edited">today</a> | <a href="show.php?date=<? echo $DateYesterday; ?>&amp;when=edited">yesterday</a> | <a href="show.php?date=<? echo $DateLastWeek; ?>&amp;when=edited&amp;range=after">last 7 days</a></li>
-						<li>published in: <a href="show.php?year=<? echo $CurrentYear; ?>"><? echo $CurrentYear; ?></a> | <a href="show.php?year=<? echo ($CurrentYear - 1); ?>"><? echo ($CurrentYear - 1); ?></a> | <a href="show.php?year=<? echo ($CurrentYear - 2); ?>"><? echo ($CurrentYear - 2); ?></a> | <a href="show.php?year=<? echo ($CurrentYear - 3); ?>"><? echo ($CurrentYear - 3); ?></a></li>
+						<li><?php echo $loc["added"]; ?>: <a href="show.php?date=<? echo $CurrentDate; ?>"><?php echo $loc["today"]; ?></a> | <a href="show.php?date=<? echo $DateYesterday; ?>"><?php echo $loc["yesterday"]; ?></a> | <a href="show.php?date=<? echo $DateLastWeek; ?>&amp;range=after"><?php echo $loc["last 7 days"]; ?></a></li>
+						<li><?php echo $loc["edited"]; ?>: <a href="show.php?date=<? echo $CurrentDate; ?>&amp;when=edited"><?php echo $loc["today"]; ?></a> | <a href="show.php?date=<? echo $DateYesterday; ?>&amp;when=edited"><?php echo $loc["yesterday"]; ?></a> | <a href="show.php?date=<? echo $DateLastWeek; ?>&amp;when=edited&amp;range=after"><?php echo $loc["last 7 days"]; ?></a></li>
+						<li><?php echo $loc["published in"]; ?>: <a href="show.php?year=<? echo $CurrentYear; ?>"><? echo $CurrentYear; ?></a> | <a href="show.php?year=<? echo ($CurrentYear - 1); ?>"><? echo ($CurrentYear - 1); ?></a> | <a href="show.php?year=<? echo ($CurrentYear - 2); ?>"><? echo ($CurrentYear - 2); ?></a> | <a href="show.php?year=<? echo ($CurrentYear - 3); ?>"><? echo ($CurrentYear - 3); ?></a></li>
 					</ul>
 				</li>
 			</ul>
@@ -302,7 +302,7 @@ if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND
 				{
 ?>
 
-					<option>(no groups available)</option><?php
+					<option>(<?php echo $loc["NoGroupsAvl"]; ?>)</option><?php
 				}
 ?>
 
@@ -327,7 +327,7 @@ else
 if (isset($_SESSION['user_permissions']) AND ereg("(allow_details_view|allow_cite)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable either contains 'allow_details_view' or 'allow_cite'...
 	{
 ?>
-			Tools that work with record serial numbers:<?php
+			<?php echo $loc["Tools serial nums"]; ?>:<?php
 	}
 else
 	{
@@ -361,14 +361,14 @@ if (isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSIO
 	{
 ?>
 
-				<li><a href="show.php">display details</a> for a particular record by entering its database serial number</li><?php
+				<li><a href="show.php"><?php echo $loc["SearchSerial"]; ?></a></li><?php
 	}
 
 if (isset($_SESSION['user_permissions']) AND ereg("allow_cite", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_cite'...
 	{
 ?>
 
-				<li><a href="extract.php">extract citations</a> from a text and build an appropriate reference list</li><?php
+				<li><a href="extract.php"><?php echo $loc["ExtractCitations"]; ?></a></li><?php
 	}
 ?>
 
@@ -398,7 +398,7 @@ if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND
 				{
 ?>
 
-					<option>(no queries available)</option><?php
+					<option>(<?php echo $loc["NoQueriesAvl"]; ?>)</option><?php
 				}
 ?>
 
@@ -417,11 +417,11 @@ else
 		</td>
 	</tr>
 	<tr>
-		<td colspan="3"><h3>About</h3></td>
+		<td colspan="3"><h3><?php echo $loc["about"]; ?></h3></td>
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
-		<td>This literature database is maintained by the <a href="<? echo $hostInstitutionURL; ?>"><? echo htmlentities($hostInstitutionName); ?></a> (<? echo htmlentities($hostInstitutionAbbrevName); ?>). You're welcome to send any questions or suggestions to our <a href="mailto:<? echo $feedbackEmail; ?>">feedback</a> address. The database is powered by <a href="http://www.refbase.net">refbase</a>, an open source database front-end for managing scientific literature &amp; citations.</td>
+    <td><?php echo $loc["ThisDatabaseIsMaintained"]; ?> <a href="<? echo $hostInstitutionURL; ?>"><? echo htmlentities($hostInstitutionName); ?></a> (<? echo htmlentities($hostInstitutionAbbrevName); ?>). <?php echo $loc["You are welcome to send"]; ?> <a href="mailto:<? echo $feedbackEmail; ?>"><?php echo $loc["feedback address"]; ?></a>. <?php echo $loc["refbaseDesc"]; ?></td>
 		<td width="163" valign="top"><a href="http://www.refbase.net/"><img src="img/refbase_credit.gif" alt="powered by refbase" width="80" height="44" hspace="0" border="0"></a></td>
 	</tr>
 </table><?php
