@@ -38,7 +38,8 @@
 		{
 			$sqlQuery = $_REQUEST['sqlQuery']; // accept any previous SQL queries
 				$sqlQuery = str_replace('\"','"',$sqlQuery); // convert \" into "
-				$sqlQuery = str_replace('\\\\\\\'','\'',$sqlQuery); // convert \\\' into '
+				$sqlQuery = str_replace('\\\\','\\',$sqlQuery);
+//				$sqlQuery = str_replace('\\\\\\\'','\'',$sqlQuery); // convert \\\' into '
 
 			$showQuery = $_REQUEST['showQuery']; // extract the $showQuery parameter
 			if ("$showQuery" == "1")
@@ -65,7 +66,7 @@
 	// (2b) Start <form> and <table> holding the form elements:
 	echo "\n<form action=\"search.php\" method=\"POST\">";
 	echo "\n<input type=\"hidden\" name=\"formType\" value=\"sqlSearch\">";
-	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"80%\" summary=\"This table holds the search form\">"
+	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the search form\">"
 			. "\n<tr>\n\t<td width=\"58\" valign=\"top\"><b>SQL Query:</b></td>\n\t<td width=\"10\">&nbsp;</td>"
 			. "\n\t<td><textarea name=\"sqlQuery\" rows=\"6\" cols=\"60\">$sqlQuery</textarea></td>"
 			. "\n</tr>"
@@ -107,14 +108,14 @@
 			. "\n\t<td>$HeaderString</td>"
 			. "\n</tr>"
 			. "\n</table>"
-			. "\n<hr align=\"center\" width=\"80%\">";
+			. "\n<hr align=\"center\" width=\"95%\">";
 	}
 
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
 	// call the 'displayfooter()' function from 'footer.inc')
-	displayfooter();
+	displayfooter("");
 
 	// --------------------------------------------------------------------
 
