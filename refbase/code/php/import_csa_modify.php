@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import_csa_modify.php
 	// Created:    21-Nov-03, 22:46
-	// Modified:   20-May-04, 23:07
+	// Modified:   29-Sep-04, 19:17
 
 	// This php script accepts input from 'import_csa.php'. It will process the CSA full record data
 	// and call 'record.php' with all provided fields pre-filled. The user can then verify the data,
@@ -37,6 +37,20 @@
 	if (!isset($_SESSION['loginEmail'])) // -> if the user isn't logged in
 	{
 		header("Location: user_login.php?referer=" . rawurlencode($_SERVER['HTTP_REFERER'])); // ask the user to login first, then he'll get directed back to 'import_csa.php'
+
+		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	}
+
+	// now, check if the (logged in) user is allowed to import any record into the database:
+	if (isset($_SESSION['user_permissions']) AND !ereg("(allow_import|allow_batch_import)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain either 'allow_import' or 'allow_batch_import'...
+	{
+		// save an appropriate error message:
+		$HeaderString = "<b><span class=\"warning\">You have no permission to import any records!</span></b>";
+
+		// Write back session variables:
+		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+
+		header("Location: " . $_SERVER['HTTP_REFERER']); // redirect back to 'import_csa.php'
 
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
