@@ -1,33 +1,34 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-	"http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-	<title>IP&Ouml; Literature Database -- Home</title>
-	<meta name="date" content=<?php echo "\"" . date("d-M-y") . "\""; ?>>
-	<meta name="robots" content="index,follow">
-	<meta name="description" lang="en" content="Search the IP&Ouml; Literature Database">
-	<meta name="keywords" lang="en" content="search citation web database polar marine science literature references mysql php">
-	<meta http-equiv="content-language" content="en">
-	<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
-	<meta http-equiv="Content-Style-Type" content="text/css">
-	<link rel="stylesheet" href="style.css" type="text/css" title="CSS Definition">
-</head>
-<body>
 <?php
-	// The main page
-
-	// This is included to hide the username and password:
-	include 'db.inc';
-	include 'error.inc';
-	include 'header.inc';
-	include 'footer.inc';
+	// This script builds the main page.
+	// It provides login and quick search forms
+	// as well as links to various search forms.
 
 	/*
 	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
 	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
 	*/
 	
+	// Incorporate some include files:
+	include 'db.inc'; // 'db.inc' is included to hide username and password
+	include 'header.inc'; // include header
+	include 'footer.inc'; // include footer
+	include 'include.inc'; // include common functions
+	include "ini.inc.php"; // include common variables
+
 	// --------------------------------------------------------------------
+
+	// Connect to a session
+	session_start();
+	
+	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+
+	// --------------------------------------------------------------------
+
+	// If there's no stored message available:
+	if (!session_is_registered("HeaderString"))
+		$HeaderString = "Welcome! This database provides access to polar &amp; marine literature."; // Provide the default welcome message
+	else
+		session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 
 	// CONSTRUCT SQL QUERY:
 	$query = "SELECT COUNT(serial) FROM refs"; // query the total number of records
@@ -39,65 +40,44 @@
 	// (1) OPEN the database connection:
 	//      (variables are set by include file 'db.inc'!)
 	if (!($connection = @ mysql_connect($hostName, $username, $password)))
-	{
-		showheader($result, "The following error occurred while trying to connect to the host:");
-		showerror();
-	}
+		showErrorMsg("The following error occurred while trying to connect to the host:", "");
 
 	// (2) SELECT the database:
 	//      (variables are set by include file 'db.inc'!)
 	if (!(mysql_select_db($databaseName, $connection)))
-	{
-		showheader($result, "The following error occurred while trying to connect to the database:");
-		showerror();
-	}
+		showErrorMsg("The following error occurred while trying to connect to the database:", "");
 
 	// (3a) RUN the query on the database through the connection:
 	if (!($result = @ mysql_query ($query, $connection)))
-	{
-		showheader($result, "The following error occurred while trying to query the database:");
-		showerror();
-	}
+		showErrorMsg("The following error occurred while trying to query the database:", "");
 
 	// (3b) EXTRACT results:
 	$row = mysql_fetch_row($result); //fetch the current row into the array $row (it'll be always *one* row, but anyhow)
 	$recordCount = $row[0]; // extract the contents of the first (and only) row
 
+	// Show the login status:
+	showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+
 	// (4) DISPLAY header:
-	// call the 'showheader()' function:
-	showheader($result, "Welcome! This database provides access to polar &amp; marine literature.");
+	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+	displayHTMLhead("IP&Ouml; Literature Database -- Home", "index,follow", "Search the IP&Ouml; Literature Database", "", false, "");
+	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
 
 	// (5) CLOSE the database connection:
 	if (!(mysql_close($connection)))
-	{
-		showheader($result, "The following error occurred while trying to disconnect from the database:");
-		showerror();
-	}
-
-	// --------------------------------------------------------------------
-
-	//	BUILD THE HTML HEADER:
-	function showheader($result, $HeaderString)
-	{
-		// call the 'displayheader()' function from 'header.inc'):
-		displayheader();
-
-		// finalize header containing the appropriate header string:
-		echo "\n<tr>"
-//			. "\n\t<td>&nbsp;</td>" // img in 'header.inc' now spans this row (by rowspan="2")
-			. "\n\t<td>$HeaderString</td>"
-			. "\n</tr>"
-			. "\n</table>"
-			. "\n<hr align=\"center\" width=\"95%\">";
-	}
+		showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
 
 	// --------------------------------------------------------------------
 ?>
-
 <table align="center" border="0" cellpadding="2" cellspacing="5" width="90%" summary="This table explains features, goals and usage of the IP&Ouml; literature database">
 	<tr>
 		<td colspan="2"><h3>Goals &amp; Features</h3></td>
-		<td width="80" valign="bottom"><div class="header"><b>Login:</b></div></td>
+		<td width="80" valign="bottom"><?php
+if (!session_is_registered("loginEmail"))
+	{
+?><div class="header"><b>Login:</b></div><?php
+	}
+?></td>
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
@@ -116,17 +96,23 @@
 			</ul>
 		</td>
 		<td width="80" valign="top">
-			<form action="index.php" method="POST">
+<?php
+if (!session_is_registered("loginEmail"))
+	{
+?>
+			<form action="user_login.php" method="POST">
 				Email Address:
 				<br>
-				<input type="text" name="loginName" size="12">
+				<input type="text" name="loginEmail" size="12">
 				<br>
 				Password:
 				<br>
-				<input type="password" name="pwdName" size="12">
+				<input type="password" name="loginPassword" size="12">
 				<br>
 				<input type="submit" value="Login">
-			</form>
+			</form><?php
+	}
+?>
 		</td>
 	</tr>
 	<tr>
@@ -148,7 +134,7 @@
 	// Get the current year in order to include it into the query URL:
 	$CurrentYear = date(Y);
 	echo "\t\t\t<ul type=\"circle\">\n";
-	echo "\t\t\t\t<li>view the 10 database entries that were <a href=\"search.php?sqlQuery=SELECT+serial%2C+author%2C+title%2C+year%2C+publication%2C+volume+FROM+refs+ORDER+BY+serial+DESC+LIMIT+10&amp;showQuery=0&amp;showLinks=1&amp;formType=sqlSearch&amp;showRows=10\">added most recently</a>.</li>";
+	echo "\t\t\t\t<li>view the 10 database entries that were <a href=\"search.php?sqlQuery=SELECT+author%2C+title%2C+year%2C+publication%2C+volume%2C+created_by+FROM+refs+ORDER+BY+created_date+DESC%2C+created_time+DESC%2C+serial+DESC+LIMIT+10&amp;showQuery=0&amp;showLinks=1&amp;formType=sqlSearch&amp;showRows=10\">added</a> / <a href=\"search.php?sqlQuery=SELECT+author%2C+title%2C+year%2C+publication%2C+volume%2C+modified_by+FROM+refs+ORDER+BY+modified_date+DESC%2C+modified_time+DESC%2C+serial+DESC+LIMIT+10&amp;showQuery=0&amp;showLinks=1&amp;formType=sqlSearch&amp;showRows=10\">edited</a> most recently.</li>";
 	echo "\n\t\t\t\t<li>view all database entries that were <a href=\"search.php?sqlQuery=SELECT+author%2C+title%2C+year%2C+publication%2C+volume+FROM+refs+WHERE+year+%3D+$CurrentYear+ORDER+BY+author%2C+publication%2C+volume&amp;showQuery0=&amp;showLinks=1&amp;formType=sqlSearch&amp;showRows=20\">published in $CurrentYear</a>.</li>";
 	echo "\n\t\t\t\t<li><a href=\"extract.php\">extract literature</a> cited within a text and build an appropriate reference list.</li>";
 	echo "\n\t\t\t</ul>\n";
