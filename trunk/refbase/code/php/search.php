@@ -409,6 +409,14 @@
 		else
 			$CounterMax = "0"; // Otherwise don't hide any columns
 
+		// Calculate the maximum result number on each page
+		// (Note: this doubles code from the 'showheader()' function. It'd be better if '$showMaxRow'
+		//        would be calculated outside any function, then provided to any function as parameter!)
+		if (($rowOffset + $showRows) < $rowsFound)
+			$showMaxRow = ($rowOffset + $showRows); // maximum result number on each page
+		else
+			$showMaxRow = $rowsFound; // for the last results page, correct the maximum result number if necessary
+
 		// count the number of fields
 		$fieldsFound = mysql_num_fields($result);
 		// hide those last columns that were added by the script and not by the user
@@ -431,8 +439,8 @@
 		// ... print a marker ('x') column (which will hold the checkboxes within the results part)
 		echo "\n\t<th align=\"left\" valign=\"top\">x</th>";
 
-		// ... print a record header (entitling two columns that will hold all the record data: field name - field data)
-		if ($rowsFound == "1" || $showRows == "1")
+		// ... print a record header
+		if (($showMaxRow-$rowOffset) == "1") // '$showMaxRow-$rowOffset' gives the number of displayed records for a particular page) // '($rowsFound == "1" || $showRows == "1")' wouldn't trap the case of a single record on the last of multiple results pages!
 				$recordHeader = "Record"; // use singular form if there's only one record to display
 		else
 				$recordHeader = "Records"; // use plural form if there are multiple records to display
@@ -469,13 +477,6 @@
 					$info = mysql_fetch_field ($result, $i); // get the meta-data for the attribute
 					$orig_fieldname = $info->name; // get the attribute name
 
-					if (ereg("^(address)$", $orig_fieldname)) // insret a spacer row before address field
-						$recordData .= "\n<tr>"
-									. "\n\t<td valign=\"top\" width=\"10\">&nbsp;</td>"
-									. "\n\t<td colspan=\"6\"><hr align=\"left\" width=\"100%\"></td>"
-									. "\n\t<td valign=\"top\">&nbsp;</td>"
-									. "\n</tr>";
-
 					// for all the fields specified:
 					if (ereg("^(author|title|year|volume|address|keywords|abstract|publisher|language|series_editor|series_volume|issn|area|location|marked|serial|created_date|modified_date|user_keys)$", $orig_fieldname))
 						{
@@ -489,8 +490,16 @@
 
 					// ... and print out each of the ATTRIBUTE NAMES:
 					// in that row as a bold link...
-					$HTMLbeforeLink = "\n\t<td valign=\"top\" width=\"75\"><b>"; // start the (bold) TD tag
-					$HTMLafterLink = "</b></td>"; // close the (bold) TD tag
+					if (ereg("^(author|title|year|publication|abbrev_journal|volume|issue|pages)$", $orig_fieldname)) // print a colored background
+						{
+							$HTMLbeforeLink = "\n\t<td valign=\"top\" width=\"75\" bgcolor=\"#DEDEDE\"><b>"; // start the (bold) TD tag
+							$HTMLafterLink = "</b></td>"; // close the (bold) TD tag
+						}
+					else // no colored background
+						{
+							$HTMLbeforeLink = "\n\t<td valign=\"top\" width=\"75\"><b>"; // start the (bold) TD tag
+							$HTMLafterLink = "</b></td>"; // close the (bold) TD tag
+						}
 					// call the 'buildFieldNameLinks()' function (which will return a properly formatted table data tag holding the current field's name
 					// as well as the URL encoded query with the appropriate ORDER clause):
 					$recordData .= buildFieldNameLinks($query, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "Display", "", "");
@@ -504,9 +513,15 @@
 
 					// then, start the TD tag, for all the fields specified:
 					if (ereg("^(author|title|keywords|abstract|address|user_keys)$", $orig_fieldname))
-						$recordData .= "\n\t<td valign=\"top\" colspan=\"$ColspanFields\">"; // ...with colspan attribute & appropriate value
+						if (ereg("^(author|title|year|publication|abbrev_journal|volume|issue|pages)$", $orig_fieldname)) // print a colored background
+							$recordData .= "\n\t<td valign=\"top\" colspan=\"$ColspanFields\" bgcolor=\"#DEDEDE\">"; // ...with colspan attribute & appropriate value
+						else // no colored background
+							$recordData .= "\n\t<td valign=\"top\" colspan=\"$ColspanFields\">"; // ...with colspan attribute & appropriate value
 					else // for all other fields:
-						$recordData .= "\n\t<td valign=\"top\">"; // ...without colspan attribute
+						if (ereg("^(author|title|year|publication|abbrev_journal|volume|issue|pages)$", $orig_fieldname)) // print a colored background
+							$recordData .= "\n\t<td valign=\"top\" bgcolor=\"#DEDEDE\">"; // ...without colspan attribute
+						else // no colored background
+							$recordData .= "\n\t<td valign=\"top\">"; // ...without colspan attribute
 		
 					if (ereg("^(author|title|year)$", $orig_fieldname)) // print author, title & year fields in bold
 						$recordData .= "<b>";
@@ -546,7 +561,8 @@
 						}
 				}
 
-				if (($rowsFound > 0) && ($rowCounter < ($showRows - 1))) // if statement noch buggy!! еееееее
+			if ((($rowCounter+1) < $showRows) && (($rowCounter+1) < $rowsFound)) // append a divider line if it's not the last (or only) record on the page
+				if (!(($showMaxRow == $rowsFound) && (($rowCounter+1) == ($showMaxRow-$rowOffset)))) // if we're NOT on the *last* page processing the *last* record... ('$showMaxRow-$rowOffset' gives the number of displayed records for a particular page)
 					$recordData .= "\n<tr>"
 						. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>"
 						. "\n</tr>"
@@ -1108,6 +1124,14 @@
 				}
 			// --- END DEEP SEA RES -----------------------------
 
+			// --- BEGIN TEXT CITATION --------------------------
+			if (ereg("Text Citation", $exportFormat)) // output records suitable for citation within a text, like: "Ambrose 1991 {3735}", "Ambrose & Renaud 1995 {3243}" or "Ambrose et al. 2001 {4774}"
+				{
+
+
+				}
+			// --- END TEXT CITATION ----------------------------
+
 			// Print out the current record:
 			if (!empty($record)) // unless the record buffer is empty...
 				{
@@ -1380,8 +1404,7 @@
 							. "\n\t\t\t<option>Mar Biol</option>"
 							. "\n\t\t\t<option>MEPS</option>"
 							. "\n\t\t\t<option>Deep Sea Res</option>"
-							. "\n\t\t\t<option>J Geophys Res</option>"
-							. "\n\t\t\t<option>Library Info</option>"
+							. "\n\t\t\t<option>Text Citation</option>"
 							. "\n\t\t</select>"
 							. "\n\t</td>";
 		$ResultsFooterRow .= "\n</tr>";
@@ -3662,7 +3685,7 @@
 		// Depending on the chosen output format, construct an appropriate SQL query:
 		if ($displayType == "Export")
 			{
-				$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY first_author, author_count, author, year, title";
+				$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, first_author, author_count FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY first_author, author_count, author, year, title";
 			}
 		else // $displayType == "Display" (hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
 			{
