@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./index.php
 	// Created:    29-Jul-02, 16:45
-	// Modified:   28-Sep-04, 21:43
+	// Modified:   02-Nov-04, 00:44
 
 	// This script builds the main page.
 	// It provides login and quick search forms
@@ -22,7 +22,7 @@
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
 	include 'initialize/ini.inc.php'; // include common variables
-  include 'includes/locales.inc.php'; // include the locales
+	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
@@ -295,7 +295,7 @@ if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND
 
 				if (isset($_SESSION['userGroups']))
 				{
-					$optionTags = buildSelectMenuOptions($_SESSION['userGroups'], " *; *", "\t\t\t\t\t"); // build properly formatted <option> tag elements from the items listed in the 'userGroups' session variable
+					$optionTags = buildSelectMenuOptions($_SESSION['userGroups'], " *; *", "\t\t\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'userGroups' session variable
 					echo $optionTags;
 				}
 				else
@@ -391,7 +391,7 @@ if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND
 
 				if (isset($_SESSION['userQueries']))
 				{
-					$optionTags = buildSelectMenuOptions($_SESSION['userQueries'], " *; *", "\t\t\t\t\t"); // build properly formatted <option> tag elements from the items listed in the 'userQueries' session variable
+					$optionTags = buildSelectMenuOptions($_SESSION['userQueries'], " *; *", "\t\t\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'userQueries' session variable
 					echo $optionTags;
 				}
 				else
