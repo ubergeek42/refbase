@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./error.php
 	// Created:    5-Jan-03, 16:35
-	// Modified:   16-Nov-03, 22:22
+	// Modified:   01-Mar-04, 17:06
 
 	// This php script will display an error page
 	// showing any error that did occur. It will display
@@ -25,10 +25,9 @@
 
 	// --------------------------------------------------------------------
 
-	// Connect to a session
-	session_start();
-	
-	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session();
 
 	// --------------------------------------------------------------------
 
@@ -44,12 +43,19 @@
 	$HeaderString = $_REQUEST['headerMsg'];
 	$HeaderString = ereg_replace("(\\\\)+(['\"])","\\2",$HeaderString); // replace any \" or \' with " or ', respectively (Note: the expression '\\\\' describes only *one* backslash! -> '\')
 
+	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// ('' will produce the default 'Web' output style)
+	if (isset($_REQUEST['viewType']))
+		$viewType = $_REQUEST['viewType'];
+	else
+		$viewType = "";
+
 	// Extract generic variables from the request:
 	$oldQuery = $_REQUEST['oldQuery']; // fetch the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
 	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
 
-	if (isset($HTTP_REFERER))
-		$referer = $HTTP_REFERER;
+	if (isset($_SERVER['HTTP_REFERER']))
+		$referer = $_SERVER['HTTP_REFERER'];
 	else
 		$referer = "index.php"; // if there's no HTTP referer available we relocate back to the main page
 
@@ -63,8 +69,8 @@
 
 	// (4a) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Error", "noindex,nofollow", "Feedback page that shows any error that occurred while using the " . htmlentities($officialDatabaseName), "", false, "");
-	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Error", "noindex,nofollow", "Feedback page that shows any error that occurred while using the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery, $viewType);
 
 
 	// URL encode the sqlQuery part within '$oldQuery' while maintaining the rest unencoded(!):
@@ -88,40 +94,24 @@
 			. "\n\t</td>"
 			. "\n</tr>";
 
-	showErrorMessage($errorNo, $errorMsg, $links, $oldQuery);
-
-	// --------------------------------------------------------------------
-
 	// SHOW ERROR MESSAGE:
-	function showErrorMessage($errorNo, $errorMsg, $links, $oldQuery)
-	// includes code from 'footer.inc.php'
-	{
-		global $officialDatabaseName;
-		global $hostInstitutionAbbrevName;
-		global $hostInstitutionURL;
 
-		die("\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\">\n<tr>\n\t<td valign=\"top\"> Error "
+	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\">\n<tr>\n\t<td valign=\"top\"> Error "
 		. $errorNo . " : <b>" . $errorMsg . "</b>"
 		. "</td>\n</tr>"
 		. $links		
-		. "\n</table>"
-		. "\n<hr align=\"center\" width=\"95%\">"
-		. "\n<p align=\"center\"><a href=\"simple_search.php\">Simple Search</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"advanced_search.php\">Advanced Search</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"sql_search.php\">SQL Search</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"library_search.php\">Library Search</a></p>"
-		. "\n<p align=\"center\"><a href=\"$hostInstitutionURL\">" . htmlentities($hostInstitutionAbbrevName) . " Home</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"index.php\">" . htmlentities($officialDatabaseName) . " Home</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"record.php?recordAction=add&amp;oldQuery=" . rawurlencode($oldQuery) . "\">Add Record</a></p>"
-		. "\n<p align=\"center\">"
-		.  date('r')
-		. "</p>"
-		. "\n</body>"
-		. "\n</html>");
-	}
+		. "\n</table>";
 
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
-	// call the 'displayfooter()' function from 'footer.inc.php') // CAUTION: due to the use of die in 'showErrorMessage()' the 'displayfooter()' function is currently not used!
+	// call the 'displayfooter()' function from 'footer.inc.php')
 	displayfooter($oldQuery);
 
 	// --------------------------------------------------------------------
 ?>
+
 </body>
-</html> 
+</html><?php
+	exit; // die
+?>
