@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./install.sql
 # Created:    02-Oct-04, 20:11
-# Modified:   24-Oct-04, 19:12
+# Modified:   26-Oct-04, 00:03
 
 # MySQL database structure & initial data
 
@@ -701,7 +701,6 @@ CREATE TABLE `users` (
   `institution` varchar(255) default NULL,
   `abbrev_institution` varchar(25) default NULL,
   `corporate_institution` varchar(255) default NULL,
-  `address` varchar(255) default NULL,
   `address_line_1` varchar(50) default NULL,
   `address_line_2` varchar(50) default NULL,
   `address_line_3` varchar(50) default NULL,
@@ -733,4 +732,4 @@ CREATE TABLE `users` (
 # data for table `users`
 #
 
-INSERT INTO `users` VALUES ('Initial', 'refbase user', 'Mr', '', 'refbase', '', NULL, '', '', '', '', '', '', '', '', 'user@refbase.net', 'http://www.refbase.net/', NULL, NULL, '2004-10-02 16:55:51', 74, 'en', 1, 0, 'no', '2004-01-08', '21:57:03', 'Initial refbase user (user@refbase.net)', '2004-01-08', '21:57:13', 'Initial refbase user (user@refbase.net)');
+INSERT INTO `users` VALUES ('Initial', 'refbase user', 'Mr', '', 'refbase', '', '', '', '', '', '', '', '', '', 'user@refbase.net', 'http://www.refbase.net/', NULL, NULL, '2004-11-01 12:00:00', 0, 'en', 1, 0, 'no', '2004-11-01', '12:00:00', 'Initial refbase user (user@refbase.net)', '2004-11-01', '12:00:00', 'Initial refbase user (user@refbase.net)');
