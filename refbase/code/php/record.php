@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./record.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   17-Feb-05, 19:37
+	// Modified:   28-Mar-05, 10:57
 
 	// Form that offers to add
 	// records or edit/delete
@@ -766,6 +766,20 @@
 	{
 		$optionTags = buildSelectMenuOptions($_SESSION['user_types'], " *; *", "\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'user_types' session variable
 		$recordType .= $optionTags;
+
+		$userTypes = split(" *; *", $_SESSION['user_types']);
+		$optionPresent = false;
+		foreach ($userTypes as $userType)
+		{
+			if ($userType == $typeName)
+			{
+				$optionPresent = true;
+			}
+		}
+		if ($optionPresent != true)
+		{
+			$recordType .= "\t\t\t<option>$typeName</option>";
+		}
 	}
 	else
 		$recordType .= "<option>(no types available)</option>";
