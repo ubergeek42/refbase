@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./update.php
 	// Created:    01-Mar-05, 20:47
-	// Modified:   02-Mar-05, 01:58
+	// Modified:   12-Mar-05, 20:20
 
 	// This file will update any refbase MySQL database installation from v0.7 to v0.8.
 	// (Note that this script currently doesn't offer any conversion from 'latin1' to 'utf8')
@@ -211,6 +211,7 @@
 		</td>
 		<td valign="top">If you'd like to use the export functionality you need to install <a href="http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html" title="bibutils home page">bibutils</a> and enter the full path to the bibutils utilities here. The given path just serves as an example and your path spec may be different. The path must end with a slash!</td>
 	</tr><?php
+// Currently, there's no support for character set transformation:
 /*
 ?>
 
@@ -387,8 +388,64 @@
 
 		// --------------------------------------------------------------------
 
+		// First, check which tables do exist within the user's existing literature database:
+		$queryTables = "SHOW TABLES FROM " . $databaseName;
+
+		// Run the query on the mysql database through the connection:
+		if (!($result = @ mysql_query ($queryTables, $connection)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to query the database:", "");
+
+		$resultArray1 = array();
+		$addTablesArray = array("depends", "formats", "languages", "queries", "styles", "types", "user_formats", "user_permissions", "user_styles", "user_types");
+
+		while ($row = @ mysql_fetch_array($result)) // for all database tables found, check if their names match the table names which we want to add using 'update.sql':
+		{
+			if (in_array($row[0], $addTablesArray))
+				$resultArray1[] = "Table <em>" . $row[0] . "</em> already exists!";
+		}
+
+		// Second, check if fields which we're going to add do exist already:
+		$updateTablesArray = array("deleted", "refs", "user_data", "users");
+		$addFieldsArray = array("deleted.series_volume_numeric", "refs.series_volume_numeric", "user_data.user_groups", "user_data.cite_key", "user_data.related", "users.user_groups");
+
+		foreach($updateTablesArray as $updateTable)
+		{
+			$queryFields = "SHOW FIELDS FROM " . $updateTable . " FROM " . $databaseName;
+
+			// Run the query on the mysql database through the connection:
+			if (!($result = @ mysql_query ($queryFields, $connection)))
+				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+					showErrorMsg("The following error occurred while trying to query the database:", "");
+
+			while ($row = @ mysql_fetch_array($result)) // for all fields found, check if their names match the field names which we want to add using 'update.sql':
+			{
+				$thisField = $updateTable . "." . $row["Field"];
+				if (in_array($thisField, $addFieldsArray))
+					$resultArray1[] = "Field <em>" . $row["Field"] . "</em> in table <em>" . $updateTable . "</em> already exists!";
+			}
+		}
+
+		// If any of the new tables/fields exist already, we stop script execution and issue an error message:
+		if (!empty($resultArray1))
+		{
+			$HeaderString = "Nothing was updated! The following errors occurred while checking your database:";
+
+			if (count($resultArray1) > 1)
+				$resultArray1String = "\n<br>";
+			else
+				$resultArray1String = "";
+
+			$resultArray1String .= implode("\n<br>", $resultArray1); // merge array elements into a string
+
+			// Note that we don't use the 'showErrorMsg()' function here since we want to provide a custom 'errorMsg' parameter:
+			header("Location: error.php?errorNo=&errorMsg=" . rawurlencode($resultArray1String) . "&headerMsg=" . rawurlencode($HeaderString) . "&oldQuery=");
+
+			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		}
+
 		// IMPORT the literature database structure from file:
-		exec($pathToMYSQL . " -h " . $hostName . " -u " . $adminUserName . " -p" . $adminPassword . " --database=" . $databaseName . " < " . $databaseStructureFile . " 2>&1", $resultArray);
+		exec($pathToMYSQL . " -h " . $hostName . " -u " . $adminUserName . " -p" . $adminPassword . " --database=" . $databaseName . " < " . $databaseStructureFile . " 2>&1", $resultArray2);
 
 		// User note from <http://de2.php.net/manual/en/ref.exec.php> regarding the use of PHP's 'exec()' command:
 		// From 'eremy at ntb dot co dot nz' (28-Sep-2003 03:18):
@@ -397,12 +454,23 @@
 		// reporting's done. The solution is to add the code "2>&1" to the end of your shell command, which redirects
 		// stderr to stdout, which you can then easily print using something like print `shellcommand 2>&1`.
 
+		if (!empty($resultArray2))
+		{
+			$HeaderString = "Update process interrupted! The following errors occurred while updating your database:";
+			$resultArray2String = implode("\n<br>", $resultArray2); // merge array elements into a string
+
+			// Note that we don't use the 'showErrorMsg()' function here since we want to provide a custom 'errorMsg' parameter:
+			header("Location: error.php?errorNo=&errorMsg=" . rawurlencode($resultArray2String) . "&headerMsg=" . rawurlencode($HeaderString) . "&oldQuery=");
+
+			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		}
+
 
 		// Prepare the update queries and proceed with the actual update procedure:
 
 		$queryArray = array(); // initialize array variable
 
-		// First, check how many users are contained in table 'users':
+		// Check how many users are contained in table 'users':
 		$queryUserIDs = "SELECT user_id FROM " . $databaseName . ".users";
 
 		// Run the query on the mysql database through the connection:
@@ -459,16 +527,6 @@
 			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 				showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
 
-		$resultLines = ""; // initialize variable
-
-		// Read out the execution result array:
-		if (!empty($resultArray)) // if there were any execution errors
-		{
-			reset($resultArray); // reset the internal array pointer to the first element
-			while (list ($key, $val) = each ($resultArray))
-				$resultLines .= "\n" . trim($val); // append each of the array elements to a string
-		}
-
 		// --------------------------------------------------------------------
 
 		// Provide a feedback page:
@@ -476,8 +534,8 @@
 		// If there's no stored message available:
 		if (!isset($_SESSION['HeaderString'])) // provide one of the default messages:
 		{
-			if (!empty($resultArray)) // if there were any execution errors
-				$HeaderString = "The following error occurred while trying to import the SQL data into the database:";
+			if (!empty($resultArray2)) // if there were any execution errors
+				$HeaderString = "The following errors occurred while trying to import the SQL data into the database:";
 			else // assume that the update was successful
 				$HeaderString = "Update of the Web Reference Database was successful!";
 		}
@@ -509,19 +567,14 @@
 
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds the update feedback info"><?php
 
-		if (!empty($resultArray)) // if there were any execution errors:
+		if (!empty($resultArray2)) // if there were any execution errors:
+		// Note that since we now stop script execution directly after the 'exec()' command, the following {...} block is kinda unnecessary now...
 		{
 ?>
 
 	<tr>
-		<td valign="top"><b>Error:</b></td>
-		<td><?php echo encodeHTML($resultLines); ?></td>
-	</tr>
-	<tr>
-		<td valign="top">&nbsp;</td>
-		<td>
-			<b>Please make sure that you've specified the correct path to the MySQL database structure file!</b>
-		</td>
+		<td valign="top"><b>Errors:</b></td>
+		<td><?php echo encodeHTML($resultArray2String); ?></td>
 	</tr>
 	<tr>
 		<td valign="top">&nbsp;</td>
