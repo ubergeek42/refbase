@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc
 	// Created:    16-Apr-02, 10:54
-	// Modified:   05-Sep-03, 00:18
+	// Modified:   07-Sep-03, 16:38
 
 	// This file contains important
 	// functions that are shared
@@ -249,6 +249,9 @@
 		if ("$orig_fieldname" == "marked") // when original field name = 'marked' then...
 			$newORDER = str_replace("ORDER BY marked", "ORDER BY marked DESC", $newORDER); // ...sort 'marked' column in DESCENDING order (so that 'yes' sorts before 'no')
 
+		if ("$orig_fieldname" == "last_login") // when original field name = 'last_login' (defined in 'users' table) then...
+			$newORDER = str_replace("ORDER BY last_login", "ORDER BY last_login DESC", $newORDER); // ...sort 'last_login' column in DESCENDING order (so that latest date+time sorts first)
+
 		$orderBy = ereg_replace("ORDER BY ", "", $newORDER); // remove 'ORDER BY ' phrase in order to store just the 'ORDER BY' field spec within the 'orderBy' variable
 
 		// call the 'newORDERclause()' function to replace the ORDER clause:
@@ -434,6 +437,86 @@
 		$BrowseLinks .= "\n\t</td>";
 		$BrowseLinks .= "\n</tr>";
 		return $BrowseLinks;
+	}
+
+	// --------------------------------------------------------------------
+
+	//	BUILD REFINE SEARCH ELEMENTS
+	// (i.e., provide options to refine the search results as well as the diplayed columns)
+	function buildRefineSearchElements($href, $queryURL, $showQuery, $showLinks, $showRows, $NoColumns, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected)
+	{
+		// Start a FORM:
+		$RefineSearchRow .= "\n<form action=\"$href\" method=\"POST\" name=\"refineSearch\">"
+				. "\n\t<input type=\"hidden\" name=\"formType\" value=\"refineSearch\">"
+				. "\n\t<input type=\"hidden\" name=\"sqlQuery\" value=\"$queryURL\">" // embed the current sqlQuery so that it can be re-applied when displaying refined results
+				. "\n\t<input type=\"hidden\" name=\"showQuery\" value=\"$showQuery\">" // embed the current value of '$showQuery' so that it's available when displaying refined results
+				. "\n\t<input type=\"hidden\" name=\"showLinks\" value=\"$showLinks\">" // embed the current value of '$showLinks' so that it's available when displaying refined results
+				. "\n\t<input type=\"hidden\" name=\"showRows\" value=\"$showRows\">"; // embed the current value of '$showRows' so that it's available when displaying refined results
+
+		// Start a TABLE:
+		$RefineSearchRow .= "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds a search form that enables you to refine the previous search result\">";
+
+		// Append a TABLE ROW with a field POPUP, a search TEXT ENTRY FIELD and a submit BUTTON for searching within found records
+		$RefineSearchRow .= "\n<tr>"
+							. "\n\t<td align=\"center\" valign=\"top\" colspan=\"$NoColumns\">";
+		// Build the form elements:
+		$RefineSearchRow .= "\n\t\tSearch within Results:&nbsp;&nbsp;&nbsp;&nbsp;"
+							. "\n\t\t<select name=\"refineSearchSelector\">"
+							. "\n\t\t\t<option>";
+		$RefineSearchRow .= splitAndMerge(", *", "</option>\n\t\t\t<option>", $refineSearchSelectorElements1); // build correct option tags from the column items provided
+		$RefineSearchRow .= "</option>";
+
+		if (session_is_registered("loginEmail") AND !empty($refineSearchSelectorElements2)) // if a user is logged in -AND- there were any additional elements specified...
+		{
+			// ...add these additional elements to the popup menu:
+			$RefineSearchRow .= "\n\t\t\t<option>";
+			$RefineSearchRow .= splitAndMerge(", *", "</option>\n\t\t\t<option>", $refineSearchSelectorElements2); // build correct option tags from the column items provided
+			$RefineSearchRow .= "</option>";
+		}
+		
+		$RefineSearchRow = ereg_replace("<option>$refineSearchSelectorElementSelected", "<option selected>$refineSearchSelectorElementSelected", $RefineSearchRow); // add 'selected' attribute
+
+		$RefineSearchRow .= "\n\t\t</select>&nbsp;&nbsp;"
+							. "\n\t\t<input type=\"text\" name=\"refineSearchName\" size=\"12\">&nbsp;&nbsp;"
+							. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Refine\">";
+		// Finish the data and row tags:
+		$RefineSearchRow .= "\n\t</td>"
+							. "\n</tr>";
+
+		// Append another TABLE ROW with two pairs of RADIO buttons that control 1) the diplay of columns 2) whether to include or exclude matched records
+		$RefineSearchRow .= "\n<tr>"
+							. "\n\t<td align=\"center\" valign=\"top\" colspan=\"$NoColumns\">";
+		// Build the form elements:
+		$RefineSearchRow .= "\n\t\t<input type=\"radio\" name=\"showRefineSearchFieldRadio\" value=\"1\">&nbsp;Show&nbsp;&nbsp;"
+							. "\n\t\t<input type=\"radio\" name=\"showRefineSearchFieldRadio\" value=\"0\">&nbsp;Hide column&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;"
+							. "\n\t\t<input type=\"radio\" name=\"refineSearchActionRadio\" value=\"1\" checked>&nbsp;Restrict to&nbsp;&nbsp;"
+							. "\n\t\t<input type=\"radio\" name=\"refineSearchActionRadio\" value=\"0\">&nbsp;Exclude matched records";
+		// Finish the data and row tags:
+		$RefineSearchRow .= "\n\t</td>"
+							. "\n</tr>";
+
+		// Finish the table:
+		$RefineSearchRow .= "\n</table>";
+
+		// Finish the form:
+		$RefineSearchRow .= "\n</form>";
+
+		return $RefineSearchRow;
+	}
+
+	// --------------------------------------------------------------------
+
+	// SPLIT AND MERGE AGAIN
+	// (this function takes a string and splits it on $splitDelim into an array, then re-joins the pieces inserting $joinDelim as separator)
+	function splitAndMerge($splitDelim, $joinDelim, $sourceString)
+	{
+		// split the string on the specified delimiter (which is interpreted as regular expression!):
+		$piecesArray = split($splitDelim, $sourceString);
+
+		// re-join the array with the specified separator:
+		$newString = implode($joinDelim, $piecesArray);
+
+		return $newString;
 	}
 
 	// --------------------------------------------------------------------
