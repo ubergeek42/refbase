@@ -82,7 +82,7 @@
 	else
 		$queryID = "";
 
-	// Extract the type of display requested by the user (normally, either 'Display', 'Export' or ''):
+	// Extract the type of display requested by the user (normally, either 'Display', 'Cite' or ''):
 	// ('' will produce the default columnar output style)
 	// Note: In contrast to other scripts, the 'displayType' parameter is not passed via the submit button but via a hidden form tag 'displayType'
 	if (isset($formVars['displayType']))
@@ -123,19 +123,19 @@
 	else
 		$showRows = 0;
 
-	if (isset($formVars['exportFormatSelector']))
-		$exportFormat = $formVars['exportFormatSelector']; // get the export format chosen by the user
+	if (isset($formVars['citeStyleSelector']))
+		$citeStyle = $formVars['citeStyleSelector']; // get the cite style chosen by the user
 	else
-		$exportFormat = "";
-	if (ereg("%20", $exportFormat)) // if '$exportFormat' still contains URL encoded data... ('%20' is the URL encoded form of a space, see note below!)
-		$exportFormat = rawurldecode($exportFormat); // ...URL decode 'exportFormat' statement (it was URL encoded before incorporation into a hidden tag of the 'sqlSearch' form to avoid any HTML syntax errors)
+		$citeStyle = "";
+	if (ereg("%20", $citeStyle)) // if '$citeStyle' still contains URL encoded data... ('%20' is the URL encoded form of a space, see note below!)
+		$citeStyle = rawurldecode($citeStyle); // ...URL decode 'citeStyle' statement (it was URL encoded before incorporation into a hidden tag of the 'sqlSearch' form to avoid any HTML syntax errors)
 													// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
 													//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
 
-	if (isset($formVars['exportOrder']))
-		$exportOrder = $formVars['exportOrder']; // get information how the data should be sorted. If this param is set to 'Year', records will be listed in blocks sorted by year.
+	if (isset($formVars['citeOrder']))
+		$citeOrder = $formVars['citeOrder']; // get information how the data should be sorted. If this param is set to 'Year', records will be listed in blocks sorted by year.
 	else
-		$exportOrder = "";
+		$citeOrder = "";
 
 	if (isset($formVars['oldQuery']))
 	{
@@ -225,8 +225,8 @@
 					. "show_query = \"$showQuery\", "
 					. "show_links = \"$showLinks\", "
 					. "show_rows = \"$showRows\", "
-					. "export_format_selector = \"$exportFormat\", "
-					. "export_order = \"$exportOrder\" "
+					. "cite_style_selector = \"$citeStyle\", "
+					. "cite_order = \"$citeOrder\" "
 					. "WHERE query_id = $queryID";
 	}
 
@@ -248,8 +248,8 @@
 					. "show_query = \"$showQuery\", "
 					. "show_links = \"$showLinks\", "
 					. "show_rows = \"$showRows\", "
-					. "export_format_selector = \"$exportFormat\", "
-					. "export_order = \"$exportOrder\", "
+					. "cite_style_selector = \"$citeStyle\", "
+					. "cite_order = \"$citeOrder\", "
 					. "last_execution = NOW(), " // set 'last_execution' field to the current date & time in 'DATETIME' format (which is 'YYYY-MM-DD HH:MM:SS', e.g.: '2003-12-31 23:45:59')
 					. "query_id = NULL"; // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
 	}

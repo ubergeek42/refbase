@@ -172,7 +172,7 @@
 
 		// CONSTRUCT SQL QUERY:
 		// for the selected query, select *all* fields that are available in the form:
-		$query = "SELECT query_id, user_id, query_name, display_type, view_type, query, show_query, show_links, show_rows, export_format_selector, export_order"
+		$query = "SELECT query_id, user_id, query_name, display_type, view_type, query, show_query, show_links, show_rows, cite_style_selector, cite_order"
 				. " FROM queries WHERE query_id = $queryID"; // since we'll only fetch one record, the ORDER BY clause is obsolete here
 
 
@@ -228,8 +228,8 @@
 			$showQuery = $row['show_query'];
 			$showLinks = $row['show_links'];
 			$showRows = $row['show_rows'];
-			$exportFormat = htmlentities($row['export_format_selector']);
-			$exportOrder = $row['export_order'];
+			$citeStyle = htmlentities($row['cite_style_selector']);
+			$citeOrder = $row['cite_order'];
 			$origQueryName = $row['query_name'];
 		}
 		else // $queryAction == "add"
@@ -241,7 +241,7 @@
 
 			if ($customQuery == "1") // the script was called with parameters
 			{
-				$displayType = $_REQUEST['displayType']; // extract the type of display requested by the user (either 'Display', 'Export' or '')
+				$displayType = $_REQUEST['displayType']; // extract the type of display requested by the user (either 'Display', 'Cite' or '')
 
 				$sqlQuery = $_REQUEST['sqlQuery']; // accept any previous SQL queries
 					$sqlQuery = str_replace('\"','"',$sqlQuery); // convert \" into "
@@ -250,8 +250,8 @@
 				$showQuery = $_REQUEST['showQuery']; // extract the $showQuery parameter
 				$showLinks = $_REQUEST['showLinks']; // extract the $showLinks parameter
 				$showRows = $_REQUEST['showRows']; // extract the $showRows parameter
-				$exportFormat = $_REQUEST['exportFormatSelector']; // get the export format chosen by the user (only occurs in 'extract.php' form and in query result lists)
-				$exportOrder = $_REQUEST['exportOrder']; // get the export sort order chosen by the user (only occurs in 'extract.php' form and in query result lists)
+				$citeStyle = $_REQUEST['citeStyleSelector']; // get the cite style chosen by the user (only occurs in 'extract.php' form and in query result lists)
+				$citeOrder = $_REQUEST['citeOrder']; // get the citation sort order chosen by the user (only occurs in 'extract.php' form and in query result lists)
 			}
 			else // if there was no previous SQL query provide the default query and options:
 			{
@@ -260,8 +260,8 @@
 				$showQuery = "0";
 				$showLinks = "1";
 				$showRows = "5";
-				$exportFormat = "";
-				$exportOrder = "";
+				$citeStyle = "";
+				$citeOrder = "";
 			}			
 		}
 	}
@@ -289,16 +289,16 @@
 
 		$showRows = $formVars['showRows'];
 
-		if (isset($formVars['exportFormatSelector']))
-			$exportFormat = $formVars['exportFormatSelector'];
+		if (isset($formVars['citeStyleSelector']))
+			$citeStyle = $formVars['citeStyleSelector'];
 		else
-			$exportFormat = "";
-		if (ereg("%20", $exportFormat)) // if '$exportFormat' still contains URL encoded data... ('%20' is the URL encoded form of a space, see note below!)
-			$exportFormat = rawurldecode($exportFormat); // ...URL decode 'exportFormat' statement (it was URL encoded before incorporation into a hidden tag of the 'sqlSearch' form to avoid any HTML syntax errors)
+			$citeStyle = "";
+		if (ereg("%20", $citeStyle)) // if '$citeStyle' still contains URL encoded data... ('%20' is the URL encoded form of a space, see note below!)
+			$citeStyle = rawurldecode($citeStyle); // ...URL decode 'citeStyle' statement (it was URL encoded before incorporation into a hidden tag of the 'sqlSearch' form to avoid any HTML syntax errors)
 														// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
 														//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
 
-		$exportOrder = $formVars['exportOrder'];
+		$citeOrder = $formVars['citeOrder'];
 
 		if (isset($formVars['origQueryName']))
 			$origQueryName = rawurldecode($formVars['origQueryName']); // get the original query name that was included within a hidden form tag (and since it got URL encoded, we'll need to decode it again)
@@ -347,8 +347,8 @@
 <input type="hidden" name="queryAction" value="<? echo $queryAction; ?>">
 <input type="hidden" name="queryID" value="<? echo $queryID; ?>">
 <input type="hidden" name="displayType" value="<? echo $displayType; ?>">
-<input type="hidden" name="exportFormatSelector" value="<? echo rawurlencode($exportFormat); ?>">
-<input type="hidden" name="exportOrder" value="<? echo $exportOrder; ?>">
+<input type="hidden" name="citeStyleSelector" value="<? echo rawurlencode($citeStyle); ?>">
+<input type="hidden" name="citeOrder" value="<? echo $citeOrder; ?>">
 <input type="hidden" name="oldQuery" value="<? echo rawurlencode($oldQuery); ?>">
 <input type="hidden" name="origQueryName" value="<? echo rawurlencode($origQueryName); ?>">
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds forms that enable you to manage your custom queries">
