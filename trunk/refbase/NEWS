@@ -118,8 +118,8 @@ User customization:
 - Custom CSS style sheets can be specified within 'ini.inc.php' to change the
   visual appearance of the served web pages.
 
-- You can now define (in 'ini.inc.php') what will be searched by script
-  'library_search.php'.
+- You can now define (in 'initialize/ini.inc.php') what will be searched by
+  script 'library_search.php'.
 
 - Added variables to the database configuration file ('initialize/db.inc.php')
   which allow to use custom names for the refbase MySQL tables.
