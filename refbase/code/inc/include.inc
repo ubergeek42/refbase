@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc
 	// Created:    16-Apr-02, 10:54
-	// Modified:   23-Jan-03, 0:34
+	// Modified:   05-Sep-03, 00:18
 
 	// This file contains important
 	// functions that are shared
@@ -54,8 +54,52 @@
 		global $loginLinks;
 		global $loginUserID;
 		global $adminLoginEmail; // ('$adminLoginEmail' is specified in 'ini.inc.php')
+
+//		$referer = $_SERVER["REQUEST_URI"]; // 'REQUEST_URI' does only seem to work for GET requests (but not for POST requests!) ?:-/
+		// so, as a workaround, we build an appropriate query string from scratch (which will also work for POST requests):
+
+		// --- BEGIN WORKAROUND ---
+		global $formType;
+		global $displayType;
+		global $queryURL;
+		global $showQuery;
+		global $showLinks;
+		global $showRows;
+		global $rowOffset;
+
+		global $exportFormat;
+		global $exportOrder;
+		global $orderBy;
+
+		global $recordAction;
+		global $serialNo;
+		global $headerMsg;
+		global $oldQuery;
 		
-		$referer = $_SERVER["REQUEST_URI"];
+		global $errorNo;
+		global $errorMsg;
+		
+		// Extract checkbox variable values from the request:
+		$recordSerialsArray = $_REQUEST['marked']; // extract the values of all checked checkboxes (i.e., the serials of all selected records)	
+		// join array elements:
+		if (!empty($recordSerialsArray)) // the user did check some checkboxes
+			$recordSerialsString = implode("&marked[]=", $recordSerialsArray); // prefix each record serial (except the first one) with "&marked[]="
+			$recordSerialsString = "&marked[]=" . $recordSerialsString; // prefix also the very first record serial with "&marked[]="
+		
+		// based on the refering script we adjust the parameters that get included in the link:
+		if (ereg(".*(index|simple_search|advanced_search|sql_search|library_search|extract|users|user_details|user_receipt)\.php", $_SERVER["SCRIPT_NAME"]))
+			$referer = $_SERVER["SCRIPT_NAME"]; // we don't need to provide any parameters if the user clicked login/logout on the main page or any of the search pages (we just need to re-locate
+												// back to these pages after successfull login/logout). Logout on 'users.php', 'user_details.php' or 'user_receipt.php' will redirect to 'index.php'.
+
+		elseif (ereg(".*(record|receipt)\.php", $_SERVER["SCRIPT_NAME"]))
+			$referer = $_SERVER["SCRIPT_NAME"] . "?" . "recordAction=" . $recordAction . "&serialNo=" . $serialNo . "&headerMsg=" . rawurlencode($headerMsg) . "&oldQuery=" . rawurlencode($oldQuery);
+
+		elseif (ereg(".*error\.php", $_SERVER["SCRIPT_NAME"]))
+			$referer = $_SERVER["SCRIPT_NAME"] . "?" . "errorNo=" . $errorNo . "&errorMsg=" . rawurlencode($errorMsg) . "&headerMsg=" . rawurlencode($headerMsg) . "&oldQuery=" . rawurlencode($oldQuery);
+
+		else
+			$referer = $_SERVER["SCRIPT_NAME"] . "?" . "formType=" . "sqlSearch" . "&submit=" . $displayType . "&headerMsg=" . rawurlencode($headerMsg) . "&sqlQuery=" . $queryURL . "&showQuery=" . $showQuery . "&showLinks=" . $showLinks . "&showRows=" . $showRows . "&rowOffset=" . $rowOffset . $recordSerialsString . "&exportFormatSelector=" . rawurlencode($exportFormat) . "&exportOrder=" . $exportOrder . "&orderBy=" . rawurlencode($orderBy) . "&oldQuery=" . rawurlencode($oldQuery);
+		// --- END WORKAROUND -----
 
 		if (!session_is_registered("loginUserID"))
 			session_register("loginUserID");
@@ -84,7 +128,7 @@
 				}
 				else // if a normal user is logged in, we just add the 'Change Details' link instead:
 					$loginLinks .= "<a href=\"user_details.php?userID=" . $loginUserID . "\">Change Details</a>&nbsp;&nbsp;|&nbsp;&nbsp;";
-				$loginLinks .= "<a href=\"user_logout.php\">Logout</a>";
+				$loginLinks .= "<a href=\"user_logout.php?referer=" . rawurlencode($referer) . "\">Logout</a>";
 			}
 		else
 			{
@@ -202,6 +246,11 @@
 				$orig_fieldname = "first_page"; // adjust '$orig_fieldname' variable accordingly
 			}
 
+		if ("$orig_fieldname" == "marked") // when original field name = 'marked' then...
+			$newORDER = str_replace("ORDER BY marked", "ORDER BY marked DESC", $newORDER); // ...sort 'marked' column in DESCENDING order (so that 'yes' sorts before 'no')
+
+		$orderBy = ereg_replace("ORDER BY ", "", $newORDER); // remove 'ORDER BY ' phrase in order to store just the 'ORDER BY' field spec within the 'orderBy' variable
+
 		// call the 'newORDERclause()' function to replace the ORDER clause:
 		$queryURLNewOrder = newORDERclause($newORDER, $query);
 		
@@ -212,7 +261,7 @@
 			$queryURLNewOrder = preg_replace("/(ORDER%20BY%20$orig_fieldname)%20DESC/", "\\1", $queryURLNewOrder); // ...change sort order to ASCending
 
 		// start the table header tag & print the attribute name as link:
-		$tableHeaderLink = "$HTMLbeforeLink<a href=\"$href?sqlQuery=$queryURLNewOrder&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;formType=$formType&amp;showRows=$showRows&amp;rowOffset=$rowOffset&amp;submit=$submitType&amp;oldQuery=" . rawurlencode($oldQuery) . "\">$linkName</a>";
+		$tableHeaderLink = "$HTMLbeforeLink<a href=\"$href?sqlQuery=$queryURLNewOrder&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;formType=$formType&amp;showRows=$showRows&amp;rowOffset=$rowOffset&amp;submit=$submitType&amp;orderBy=" . rawurlencode($orderBy) . "&amp;oldQuery=" . rawurlencode($oldQuery) . "\">$linkName</a>";
 
 		// append sort indicator after the 1st-level sort attribute:
 		if (preg_match("/ORDER BY $orig_fieldname(?! DESC)(?=,|$)/", $query)) // if 1st-level sort is by this attribute (in ASCending order)...
@@ -241,7 +290,7 @@
 
 	//	BUILD BROWSE LINKS
 	// (i.e., build a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages)
-	function buildBrowseLinks($href, $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, $maxPageNo, $formType, $displayType, $exportFormat)
+	function buildBrowseLinks($href, $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, $maxPageNo, $formType, $displayType, $exportFormat, $exportOrder, $orderBy, $headerMsg)
 	{
 		// First, calculate the offset page number:
 		$pageOffset = ($rowOffset / $showRows);
@@ -273,6 +322,9 @@
 					. "?sqlQuery=" . rawurlencode($query)
 					. "&amp;submit=$displayType"
 					. "&amp;exportFormatSelector=" . rawurlencode($exportFormat)
+					. "&amp;exportOrder=$exportOrder"
+					. "&amp;orderBy=" . rawurlencode($orderBy)
+					. "&amp;headerMsg=" . rawurlencode($headerMsg)
 					. "&amp;showQuery=$showQuery"
 					. "&amp;showLinks=$showLinks"
 					. "&amp;formType=$formType"
@@ -289,6 +341,9 @@
 				. "?sqlQuery=" . rawurlencode($query)
 				. "&amp;submit=$displayType"
 				. "&amp;exportFormatSelector=" . rawurlencode($exportFormat)
+				. "&amp;exportOrder=$exportOrder"
+				. "&amp;orderBy=" . rawurlencode($orderBy)
+				. "&amp;headerMsg=" . rawurlencode($headerMsg)
 				. "&amp;showQuery=$showQuery"
 				. "&amp;showLinks=$showLinks"
 				. "&amp;formType=$formType"
@@ -313,6 +368,9 @@
 							. "?sqlQuery=" . rawurlencode($query)
 							. "&amp;submit=$displayType"
 							. "&amp;exportFormatSelector=" . rawurlencode($exportFormat)
+							. "&amp;exportOrder=$exportOrder"
+							. "&amp;orderBy=" . rawurlencode($orderBy)
+							. "&amp;headerMsg=" . rawurlencode($headerMsg)
 							. "&amp;showQuery=$showQuery"
 							. "&amp;showLinks=$showLinks"
 							. "&amp;formType=$formType"
@@ -333,6 +391,9 @@
 				. "?sqlQuery=" . rawurlencode($query)
 				. "&amp;submit=$displayType"
 				. "&amp;exportFormatSelector=" . rawurlencode($exportFormat)
+				. "&amp;exportOrder=$exportOrder"
+				. "&amp;orderBy=" . rawurlencode($orderBy)
+				. "&amp;headerMsg=" . rawurlencode($headerMsg)
 				. "&amp;showQuery=$showQuery"
 				. "&amp;showLinks=$showLinks"
 				. "&amp;formType=$formType"
@@ -358,6 +419,9 @@
 					. "?sqlQuery=" . rawurlencode($query)
 					. "&amp;submit=$displayType"
 					. "&amp;exportFormatSelector=" . rawurlencode($exportFormat)
+					. "&amp;exportOrder=$exportOrder"
+					. "&amp;orderBy=" . rawurlencode($orderBy)
+					. "&amp;headerMsg=" . rawurlencode($headerMsg)
 					. "&amp;showQuery=$showQuery"
 					. "&amp;showLinks=$showLinks"
 					. "&amp;formType=$formType"
