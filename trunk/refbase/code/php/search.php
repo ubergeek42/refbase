@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   24-Feb-05, 14:44
+	// Modified:   12-Mar-05, 17:18
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -371,7 +371,7 @@
 	// --- Form 'extract.php': ---------------------
 	elseif ($formType == "extractSearch") // the user used the 'extract.php' form for searching...
 		{
-			$query = extractFormElementsExtract($citeOrder);
+			$query = extractFormElementsExtract($citeOrder, $userID);
 		}
 
 	// --- My Refs Search Form within 'index.php': -------------------
@@ -4435,30 +4435,86 @@
 	// --------------------------------------------------------------------
 
 	// Build the database query from user input provided by the 'extract.php' form:
-	function extractFormElementsExtract($citeOrder)
+	function extractFormElementsExtract($citeOrder, $userID)
 	{
-		global $tableRefs; // defined in 'db.inc.php'
+		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
 		// Extract form elements (that are unique to the 'extract.php' form):
-		$sourceText = $_POST['sourceText']; // get the source text that contains the record serial numbers
-		$startDelim = $_POST['startDelim']; // get the start delimiter that precedes record serial numbers
-		$endDelim = $_POST['endDelim']; // get the end delimiter that follows record serial numbers
+		$sourceText = $_POST['sourceText']; // get the source text that contains the record serial numbers/cite keys
+		$startDelim = $_POST['startDelim']; // get the start delimiter that precedes record serial numbers/cite keys
+		$endDelim = $_POST['endDelim']; // get the end delimiter that follows record serial numbers/cite keys
 
 		$startDelim = preg_quote($startDelim); // escape any potential meta-characters
 		$endDelim = preg_quote($endDelim); // escape any potential meta-characters
 
-		// Extract record serial numbers from source text:
-		$recordSerialsString = preg_replace("/(?<=^).*?(?=$startDelim\d+$endDelim|$)/s", "", $sourceText); // remove any text preceding the first serial number
-		$recordSerialsString = preg_replace("/$startDelim(\d+)$endDelim.*?(?=$startDelim\d+$endDelim|$)/s", "\\1|", $recordSerialsString); // replace any text between serial numbers (or between a serial number and the end of the text) with "|"; additionally, remove the delimiters enclosing the serial numbers
-		$recordSerialsString = preg_replace("/\D+$/s", "", $recordSerialsString); // remove any trailing non-digit chars (like \n or "|") at end of line
+		// Extract record serial numbers/cite keys from source text:
+		$sourceText = "_" . $sourceText; // Note: by adding a character at the beginning of '$sourceText' we circumvent a problem with the regex pattern below which will strip everything up to the 2nd serial number/cite key if '$sourceText' starts with '$startDelim'
+		$recordSerialsKeysString = preg_replace("/^.*?(?=$startDelim.+?$endDelim|$)/s", "", $sourceText); // remove any text preceeding the first serial number/cite key
+
+		$recordSerialsKeysString = preg_replace("/$startDelim(.+?)$endDelim.*?(?=$startDelim.+?$endDelim|$)/s", "\\1_#_§_~_", $recordSerialsKeysString); // replace any text between serial numbers/cite keys (or between a serial number/cite key and the end of the text) with "_#_§_~_"; additionally, remove the delimiters enclosing the serial numbers/cite keys
+		// Note: we do a quick'n dirty approach here, by inserting the string "_#_§_~_" as string delimiter between serial numbers/cite keys. Of course, this will only work as long the string "_#_§_~_" doesn't occur within '$sourceText'.
+		$recordSerialsKeysString = preg_replace("/(_#_§_~_)?\n?$/s", "", $recordSerialsKeysString); // remove any trailing chars (like \n or "_#_§_~_") at end of line
+
+		$recordSerialsKeysArray = split("_#_§_~_", $recordSerialsKeysString); // split string containing the serial numbers/cite keys on the string delimiter "_#_§_~_"
+
+		$recordSerialsArray = array();
+		$escapedRecordKeysArray = array();
+
+		foreach($recordSerialsKeysArray as $recordSerialKey)
+		{
+			if (preg_match("/^\d+$/", $recordSerialKey)) // every identifier which only contains digits is treated as a serial number! (In other words: cite keys must contain at least one non-digit character)
+				$recordSerialsArray[] = $recordSerialKey;
+			elseif (!empty($recordSerialKey)) // identifier is treated as cite key
+			{
+				$escapedRecordKey = preg_quote($recordSerialKey); // escape any potential meta-characters within cite key
+				$escapedRecordKey = str_replace('\\','\\\\', $escapedRecordKey); // escape the escape character (i.e., make each backslash "\" a double backslash "\\")
+				$escapedRecordKeysArray[] = $escapedRecordKey;
+			}
+		}
+
+		$recordSerialsString = implode("|", $recordSerialsArray); // merge array of serial numbers again into a string, using "|" as delimiter
+		$escapedRecordKeysString = implode("|", $escapedRecordKeysArray); // merge array of cite keys again into a string, using "|" as delimiter
 
 		// Construct the SQL query:
-		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
-		if ($citeOrder == "year") // sort records first by year (descending), then in the usual way:
-			$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial FROM $tableRefs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY year DESC, first_author, author_count, author, title";
-		else // if any other or no '$citeOrder' parameter is specified, we supply the default ORDER BY pattern (which is suitable for citation in a journal etc.):
-			$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial FROM $tableRefs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY first_author, author_count, author, year, title";
+		// for the selected records, select all fields that are visible in Citation view:
+		$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi";
 
+		if (isset($_SESSION['loginEmail'])) // if a user is logged in...
+			$query .= ", cite_key"; // add user-specific fields which are required in Citation view
+
+		$query .= ", serial"; // add 'serial' column
+
+		$query .= " FROM $tableRefs"; // add FROM clause
+
+		if (isset($_SESSION['loginEmail'])) // if a user is logged in...
+			$query .= " LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID; // add LEFT JOIN part to FROM clause
+
+		$query .= " WHERE"; // add WHERE clause:
+		
+		if (!empty($recordSerialsArray) OR (empty($recordSerialsArray) AND empty($escapedRecordKeysArray)) OR (empty($recordSerialsArray) AND !isset($_SESSION['loginEmail']))) // the second condition ensures a valid SQL query if no serial numbers or cite keys were found, same for the third condition if a user isn't logged in and '$sourceText' did only contain cite keys
+			$query .= " serial RLIKE \"^(" . $recordSerialsString . ")$\""; // add any serial numbers to WHERE clause
+
+		if (!empty($recordSerialsArray) AND (!empty($escapedRecordKeysArray) AND isset($_SESSION['loginEmail'])))
+			$query .= " OR";
+
+		if (!empty($escapedRecordKeysArray) AND isset($_SESSION['loginEmail']))
+			$query .= " cite_key RLIKE \"^(" . $escapedRecordKeysString . ")$\""; // add any cite keys to WHERE clause
+
+		// add ORDER BY clause:
+		if ($citeOrder == "year") // sort records first by year (descending), then in the usual way:
+			$query .= " ORDER BY year DESC, first_author, author_count, author, title";
+		else // if any other or no '$citeOrder' parameter is specified, we supply the default ORDER BY pattern (which is suitable for citation in a journal etc.):
+			$query .= " ORDER BY first_author, author_count, author, year, title";
+
+
+		if (!empty($escapedRecordKeysArray) AND !isset($_SESSION['loginEmail'])) // a user can only use cite keys as record identifiers when he's logged in
+		{
+			// save an appropriate error message:
+			$HeaderString = "<b><span class=\"warning\">You must login to use cite keys as record identifiers!</span></b>"; // save an appropriate error message
+
+			// Write back session variable:
+			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+		}
 
 		return $query;
 	}
