@@ -54,7 +54,7 @@
 	<td class="small" align="right" width="105"><? echo date('D, j M Y'); ?></td>
 </tr>
 <tr>
-	<td class="small" width="105"><a href="help.php" title="display help">Help</a></td>
+<td class="small" width="105"><!--<a href="help.php" title="display help">Help</a>--></td>
 	<td class="small" align="center"><?php
 
 		// -------------------------------------------------------
