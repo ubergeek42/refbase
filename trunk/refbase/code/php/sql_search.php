@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sql_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   28-Mar-05, 20:32
+	// Modified:   05-Apr-05, 02:24
 
 	// Search form that offers to specify a custom sql query.
 	// It offers some output options (like how many records to display per page)
@@ -119,9 +119,9 @@
 <form action="search.php" method="POST">
 <input type="hidden" name="formType" value="sqlSearch">
 <input type="hidden" name="submit" value="<?php echo $displayType; ?>">
-<input type="hidden" name="citeStyleSelector" value="<?php rawurlencode($citeStyle); ?>">
+<input type="hidden" name="citeStyleSelector" value="<?php echo rawurlencode($citeStyle); ?>">
 <input type="hidden" name="citeOrder" value="<?php echo $citeOrder; ?>">
-<input type="hidden" name="oldQuery" value="<?php rawurlencode($oldQuery); ?>">
+<input type="hidden" name="oldQuery" value="<?php echo rawurlencode($oldQuery); ?>">
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds the search form">
 <tr>
 	<td width="58" valign="top"><b><?php echo $loc["SQLQuery"]; ?>:</b></td>
