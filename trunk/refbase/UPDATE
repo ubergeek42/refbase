@@ -1,57 +1,60 @@
 How to update?
 --------------
-Please follow the steps below to update an existing refbase v0.7 installation
-to v0.8:
+Please follow the steps below to update an existing refbase-0.7 installation to
+refbase-0.8.0:
 
-- First of all, please make sure that you have a recent backup of your
-  refbase MySQL database! This can be accomplished by issuing the following
-  command from your shell:
+- First of all, please make sure that you have a recent backup of your refbase
+  MySQL database! This can be accomplished by issuing the following command from
+  your shell:
 
-  mysqldump DATABASE_NAME --complete-insert -uADMINUSER -p --flush-logs --opt > refbase-backup.sql
+    mysqldump DATABASE_NAME --complete-insert -uADMINUSER -p --flush-logs \
+              --opt > refbase-backup.sql
 
   In the above line, replace DATABASE_NAME with the database name that you've
-  specified in variable '$databaseName' (file 'db.inc') for refbase v0.7.
-  Similarly, replace ADMINUSER with the name of the administrative user that
-  has full access to the MySQL admin database. As an example, if the variable
-  '$databaseName' is set to "literature" and your administrative user is
-  "root", the above line would read:
+  specified for the variable '$databaseName' (in file 'db.inc') for refbase-0.7.
+  Similarly, replace ADMINUSER with the name of the administrative user that has
+  full access to the MySQL admin database.  As an example, if the variable
+  '$databaseName' is set to "literature" and your administrative user is "root",
+  the above line would read:
 
-  mysqldump literature --complete-insert -uroot -p --flush-logs --opt > refbase-backup.sql
+    mysqldump literature --complete-insert -uroot -p --flush-logs \
+              --opt > refbase-backup.sql
 
-  The resulting backup file will enable you to re-establish your current
-  database (using the refbase v0.7 'install.php' script and specifying
-  'refbase-backup.sql' as SQL dump file).
+  WARNING: If using MySQL 4.1.x, mysqldump's charset conversion may damage data.
+           If necessary, set the charset option to 'latin1' to avoid the
+           conversion.
 
-- Currently, the update process won't read/retain your existing settings. So,
-  please make sure that you have a backup copy of your existing include files
-  'db.inc' and 'ini.inc.php'!
+- Backup your original 'db.inc' and 'ini.inc.php'.  refbase-0.8.0 should not
+  overwrite these, as they have been moved to the subdirectory 'initialize'.
 
-- Move all files from within the 'files' directory to your web directory.
-  (If you want to keep the refbase v0.7 scripts, simply copy the v0.8 scripts
-  to another directory or sub-directory within your main web directory)
+- Optionally backup your refbase-0.7 scripts.
 
-- Open the file 'db.inc.php' (sub-dir 'initialize/') in a text editor and
-  re-enter the values from your old 'db.inc' file for the variables
-  '$databaseName', '$username' and '$password'.
+- Move all refbase-0.8.0 files to your web directory.
+
+- Open the file 'initialize/db.inc.php' in a text editor and re-enter the values
+  from your old 'db.inc' file for the variables '$databaseName', '$username' and
+  '$password'.
 
 - Now, open a web browser and access the 'update.php' script by typing:
 
-    http://SERVER_ADDRESS/PATH_ON_SERVER/update.php
+    <http://SERVER_ADDRESS/PATH_ON_SERVER/update.php>
 
    (where the string 'SERVER_ADDRESS' is replaced by your server name and
-   'PATH_ON_SERVER' is the actual path specification to your refbase v0.8
-    web directory)
+   'PATH_ON_SERVER' is the actual path to your refbase-0.8.0 web directory)
 
-  This should bring up the update form. Edit the contents of all
-  text entry fields to match your server setup and supply the MySQL
-  admin password, then click the 'Update' button to update the
-  database.
+  This should bring up the update form.  Edit the contents of all text entry
+  fields to match your server setup and supply the MySQL admin password, then
+  click the 'Update' button to update the database.
 
-  This will add any MySQL tables that were added in v0.8 and alter your
-  existing tables to match the table design used by refbase v0.8. Your data
-  should remain untouched by this operation.
+  WIN32: The 'update.php' and 'install.php' scripts now work under Windows.  Be
+         sure to set a password for the MySQL root user.  The path to MySQL is
+         probably '/Program Files/MySQL/bin/mysql.exe' or
+         '/wamp/mysql/bin/mysql.exe', depending on how you installed MySQL.
+
+  This will add the MySQL tables that were added in 0.8.0 and alter existing
+  tables to match the table design used by refbase-0.8.0. Your data should
+  remain untouched by this operation.
 
 - After you've successfully performed the update, please remove the files
   'update.php' & 'update.sql' (as well as 'install.php' & 'install.sql') from
   your web directory.
-
