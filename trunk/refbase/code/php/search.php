@@ -1,46 +1,26 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-		"http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-	<title>IP&Ouml; Literature Database -- Query Results</title>
-	<meta name="date" content=<?php echo "\"" . date("d-M-y") . "\""; ?>>
-	<meta name="robots" content="noindex,nofollow">
-	<meta name="description" lang="en" content="Results from the IP&Ouml; Literature Database">
-	<meta name="keywords" lang="en" content="citation web database polar marine science literature references mysql php">
-	<meta http-equiv="content-language" content="en">
-	<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
-	<meta http-equiv="Content-Style-Type" content="text/css">
-	<link rel="stylesheet" href="style.css" type="text/css" title="CSS Definition">
-	<script language="JavaScript" type="text/javascript">
-		function checkall(val,formpart){
-			x=0;
-			while(document.queryResults.elements[x]){
-				if(document.queryResults.elements[x].name==formpart){
-					document.queryResults.elements[x].checked=val;
-				}
-				x++;
-			}
-		}
-	</script> 
-</head>
-<body>
 <?php
 	// VERSION 1.4
-	// -- implements "search within results" functionality (implementation was actually finished in cvs revision 1.12)
 	// -- generates the query URL of the currently displayed results page and routes it thru 'Display Details' and 'Add/Edit Record'
 	//    so that its's available on the subsequent receipt page that follows any add/edit/delete action!
-
-	// This is included to hide the username and password:
-	include 'db.inc';
-	include 'error.inc';
-	include 'header.inc';
-	include 'footer.inc';
 
 	/*
 	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
 	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
 	*/
 	
+	// Incorporate some include files:
+	include 'db.inc'; // 'db.inc' is included to hide username and password
+	include 'header.inc'; // include header
+	include 'footer.inc'; // include footer
+	include 'include.inc'; // include common functions
+
+	// --------------------------------------------------------------------
+
+	// Connect to a session
+	session_start();
+
+	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+
 	// --------------------------------------------------------------------
 
 	// CONSTRUCT SQL QUERY from user input provided by any of the search forms:
@@ -133,25 +113,16 @@
 	// (1) OPEN the database connection:
 	//      (variables are set by include file 'db.inc'!)
 	if (!($connection = @ mysql_connect($hostName, $username, $password)))
-	{
-		showheader($result, "", "", "", "The following error occurred while trying to connect to the host:");
-		showerror();
-	}
+		showErrorMsg("The following error occurred while trying to connect to the host:", $oldQuery);
 
 	// (2) SELECT the database:
 	//      (variables are set by include file 'db.inc'!)
 	if (!(mysql_select_db($databaseName, $connection)))
-	{
-		showheader($result, "", "", "", "The following error occurred while trying to connect to the database:");
-		showerror();
-	}
+		showErrorMsg("The following error occurred while trying to connect to the database:", $oldQuery);
 
 	// (3) RUN the query on the database through the connection:
 	if (!($result = @ mysql_query ($query, $connection)))
-	{
-		showheader($result, "", "", "", "Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:");
-		showerror();
-	}
+		showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
 
 	// (4a) DISPLAY header:
 	// First, build the appropriate SQL query in order to embed it into the 'your query' URL:
@@ -204,19 +175,40 @@
 			mysql_data_seek($result, $rowOffset);
 		}
 
-	// Then, call the showheader() function:
-	if ("$showQuery" == "1")
-		{
-			showheader($result, $rowsFound, $rowOffset, $showRows, " records found matching <a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows\">your query</a>:\n<br>\n<br>\n<code>$query</code>");
-		}
-	else // $showQuery == "0" or wasn't specified
-		{
-			showheader($result, $rowsFound, $rowOffset, $showRows, " records found matching <a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows\">your query</a>:");
-		}
+	// Fourth, calculate the maximum result number on each page ('$showMaxRow' is required as parameter to the 'displayRows()' function)
+	if (($rowOffset + $showRows) < $rowsFound)
+		$showMaxRow = ($rowOffset + $showRows); // maximum result number on each page
+	else
+		$showMaxRow = $rowsFound; // for the last results page, correct the maximum result number if necessary
+
+	// Finally, build the appropriate header string (which is required as parameter to the 'showPageHeader()' function):
+	if (!session_is_registered("HeaderString")) // if there's no stored message available provide the default message:
+	{
+		if ("$showQuery" == "1")
+			$HeaderString = " records found matching <a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows\">your query</a>:\n<br>\n<br>\n<code>$query</code>";
+		else // $showQuery == "0" or wasn't specified
+			$HeaderString = " records found matching <a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows\">your query</a>:";
 	
+		if ($rowsFound > 0)
+			$HeaderString = ($rowOffset + 1) . "&#8211;" . $showMaxRow . " of " . $rowsFound . $HeaderString;
+		elseif ($rowsFound == 0)
+			$HeaderString = $rowsFound . $HeaderString;
+		else
+			$HeaderString = $HeaderString; // well, this is actually bad coding but I do it for clearity reasons...
+	}
+	else
+		session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
+
+	// Now, show the login status:
+	showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+
+	// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+	displayHTMLhead("IP&Ouml; Literature Database -- Query Results", "noindex,nofollow", "Results from the IP&Ouml; Literature Database", "", true, "");
+	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
+
 	// (4b) DISPLAY results:
 	if ($displayType == "Display") // display details for each of the selected records
-		displayRows($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $exportFormat);
+		displayRows($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $exportFormat, $showMaxRow);
 
 	elseif ($displayType == "Export") // export each of the selected records
 		exportRows($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $exportFormat);
@@ -227,51 +219,15 @@
 
 	// (5) CLOSE the database connection:
 	if (!(mysql_close($connection)))
-	{
-		showheader($result, "", "", "", "The following error occurred while trying to disconnect from the database:");
-		showerror();
-	}
-
-	// --------------------------------------------------------------------
-
-	//	BUILD THE HTML HEADER:
-	function showheader($result, $rowsFound, $rowOffset, $showRows, $HeaderString)
-	{
-		// call the 'displayheader()' function from 'header.inc'):
-		displayheader();
-
-		// Build the appropriate header string:
-		if ($rowsFound > 0)
-		{
-			if (($rowOffset + $showRows) < $rowsFound)
-				$showMaxRow = ($rowOffset + $showRows); // maximum result number on each page
-			else
-				$showMaxRow = $rowsFound; // for the last results page, correct the maximum result number if necessary
-			
-			$FullHeaderString = ($rowOffset + 1) . "&#8211;" . $showMaxRow . " of " . $rowsFound . $HeaderString;
-		}
-		elseif ($rowsFound == 0)
-		{
-			$FullHeaderString = $rowsFound . $HeaderString;
-		}
-		else
-		{
-			$FullHeaderString = $HeaderString;
-		}
-		// finalize header containing the appropriate header string:
-		echo "\n<tr>"
-//			. "\n\t<td>&nbsp;</td>" // img in 'header.inc' now spans this row (by rowspan="2")
-			. "\n\t<td>$FullHeaderString</td>"
-			. "\n</tr>"
-			. "\n</table>"
-			. "\n<hr align=\"center\" width=\"95%\">";
-	}
+		showErrorMsg("The following error occurred while trying to disconnect from the database:", $oldQuery);
 
 	// --------------------------------------------------------------------
 
 	// SHOW THE RESULTS IN AN HTML <TABLE> (columnar layout)
 	function displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $exportFormat)
 	{
+		global $oldQuery; // This is required since the 'add record' link gets constructed outside this function, otherwise it would still contain the older query URL!)
+
 		$orderBy = str_replace('LIMIT','¥LIMIT',$query); // put a unique delimiter in front of the 'LIMIT'... parameter (in order to keep any 'LIMIT' parameter)
 		$orderBy = ereg_replace(".+ORDER BY ([^¥]+)","\\1",$orderBy); // extract 'ORDER BY'... parameter
 
@@ -297,7 +253,6 @@
 			$NoColumns = (1+$fieldsToDisplay); // add checkbox column
 
 		// Although there might be an (older) query URL available, we build a new query URL for the page currently displayed. The variable '$oldQuery' will get included into every 'browse'/'field title'/'show details'/'edit record'/'add record' link. Plus it will get written into a hidden form tag so that it's available on 'display details' (batch display)
-		// (NOTE: Since the 'add record' link gets constructed outside this function, it will still contain the older query URL!)
 		// The variable '$oldQuery' gets routed thru the 'display details' and 'record.php' forms to facilitate a link to the current results page on the subsequent receipt page that follows any add/edit/delete action!
 		$oldQuery = "sqlQuery=" . $query . "&amp;showQuery=" . $showQuery . "&amp;showLinks=" . $showLinks . "&amp;formType=sqlSearch&amp;showRows=" . $showRows . "&amp;rowOffset=" . $rowOffset;
 
@@ -309,7 +264,7 @@
 
 
 		// 3) Start another FORM
-		echo "\n<form action=\"search.php\" method=\"POST\" name=\"queryResults\">"
+		echo "\n<form action=\"search.php\" method=\"GET\" name=\"queryResults\">"
 				. "\n<input type=\"hidden\" name=\"formType\" value=\"queryResults\">"
 				. "\n<input type=\"hidden\" name=\"submit\" value=\"Display\">" // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
 				. "\n<input type=\"hidden\" name=\"orderBy\" value=\"$orderBy\">" // embed the current ORDER BY parameter so that it can be re-applied when displaying details
@@ -460,10 +415,10 @@
 	// --------------------------------------------------------------------
 
 	// SHOW THE RESULTS IN AN HTML <TABLE> (horizontal layout)
-	function displayRows($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $exportFormat)
+	function displayRows($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $exportFormat, $showMaxRow)
 	{
 		// Start a form
-		echo "\n<form action=\"search.php\" method=\"POST\" name=\"queryResults\">"
+		echo "\n<form action=\"search.php\" method=\"GET\" name=\"queryResults\">"
 				. "\n<input type=\"hidden\" name=\"formType\" value=\"queryResults\">"
 				. "\n<input type=\"hidden\" name=\"submit\" value=\"Display\">" // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
 				. "\n<input type=\"hidden\" name=\"oldQuery\" value=\"" . rawurlencode($oldQuery) . "\">"; // embed the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
@@ -479,14 +434,6 @@
 			$CounterMax = "2"; // When displaying a 'Links' column truncate the last two columns (i.e., hide the 'url' and 'doi' columns)
 		else
 			$CounterMax = "0"; // Otherwise don't hide any columns
-
-		// Calculate the maximum result number on each page
-		// (Note: this doubles code from the 'showheader()' function. It'd be better if '$showMaxRow'
-		//        would be calculated outside any function, then provided to any function as parameter!)
-		if (($rowOffset + $showRows) < $rowsFound)
-			$showMaxRow = ($rowOffset + $showRows); // maximum result number on each page
-		else
-			$showMaxRow = $rowsFound; // for the last results page, correct the maximum result number if necessary
 
 		// count the number of fields
 		$fieldsFound = mysql_num_fields($result);
@@ -1447,6 +1394,7 @@
 							. "\n\t\t\t<option>type</option>"
 							. "\n\t\t\t<option>reprint_status</option>"
 							. "\n\t\t\t<option>location</option>"
+							. "\n\t\t\t<option>call_number</option>"
 							. "\n\t\t\t<option>notes</option>"
 							. "\n\t\t\t<option>user_keys</option>"
 							. "\n\t\t\t<option>user_notes</option>"
@@ -3962,10 +3910,10 @@
 	// Build the database query from records selected by the user within the query results list (which, in turn, was returned by 'search.php'):
 	function extractFormElementsQueryResults($displayType, $showLinks)
 	{
-		$orderBy = $_POST['orderBy']; // extract the current ORDER BY parameter so that it can be re-applied when displaying details
+		$orderBy = $_REQUEST['orderBy']; // extract the current ORDER BY parameter so that it can be re-applied when displaying details
 
 		// Extract checkbox variable values from the request:
-		$recordSerialsArray = $_POST['marked']; // extract the values of all checked checkboxes (i.e., the serials of all selected records)	
+		$recordSerialsArray = $_REQUEST['marked']; // extract the values of all checked checkboxes (i.e., the serials of all selected records)	
 		// join array elements:
 		if (!empty($recordSerialsArray)) // the user did check some checkboxes
 			$recordSerialsString = implode("|", $recordSerialsArray); // separate record serials by "|" in order to facilitate regex querying...
