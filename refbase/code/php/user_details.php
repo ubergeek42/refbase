@@ -30,8 +30,29 @@
 	
 	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
 
-//	// Read session variable (only necessary if register globals is OFF!)
+//	// Read session variables (only necessary if register globals is OFF!)
 //	$errors = $HTTP_SESSION_VARS['errors'];
+//	$formVars = $HTTP_SESSION_VARS['formVars'];
+
+	// The current values of the session variables 'errors' and 'formVars' get stored in '$errors' or '$formVars', respectively. (either automatically if
+	// register globals is ON, or explicitly if register globals is OFF [by uncommenting the code above]).
+	// We need to clear these session variables here, since they would otherwise be there even if 'user_details.php' gets called with a different userID!
+	// Note: though we clear the session variables, the current error message (or form variables) is still available to this script via '$errors' (or '$formVars', respectively).
+	session_unregister("errors");
+	session_unregister("formVars");
+
+	// A user must be logged in in order to call 'user_details.php' WITH the 'userID' parameter:
+	if (!session_is_registered("loginEmail") && ($userID != 0))
+	{
+		session_register("HeaderString"); // save an error message
+		$HeaderString = "<b><span class=\"warning\">You must login to view your user account details!</span></b>";
+
+		session_register("referer"); // save the URL of the currently displayed page
+		$referer = $HTTP_REFERER;
+
+		header("Location: user_login.php");
+		exit;
+	}
 
 	// --------------------------------------------------------------------
 
@@ -44,8 +65,6 @@
 	
 			$userID = getUserID($loginEmail, NULL); // re-establish the user's correct user_id
 		}
-	// CAUTION: currently, there will be an error, when admin is logged in and calls 'user_details.php' w/o any params
-	//          (userID is not defined but SQL Query gets executed!)
 
 	// --------------------------------------------------------------------
 
@@ -55,8 +74,11 @@
 			if (empty($errors)) // provide one of the default messages:
 				if (session_is_registered("loginEmail") && isset($userID)) // -> the user is logged in and views a user entry
 					$HeaderString = "Please amend your details below as required. Fields shown in <b>bold</b> are mandatory.";
-				else // -> the user is NOT logged in (or: the admin is logged in and wants to add a new user)
-					$HeaderString = "Please fill in the details below to join. Fields shown in <b>bold</b> are mandatory.";
+				else // -> the user is NOT logged in (OR: the admin is logged in and wants to add a new user, by calling 'user_details.php' w/o any 'userID')
+					if ((!session_is_registered("loginEmail") && ($addNewUsers == "everyone") && ($_REQUEST['userID'] == "")) | (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && ($userID == "")))
+						$HeaderString = "Add a new user. Fields shown in <b>bold</b> are mandatory.";
+					else // ask a user to submit its user details for approval by the database admin:
+						$HeaderString = "Please fill in the details below to join. Fields shown in <b>bold</b> are mandatory.";
 			else // -> there were errors validating the user's details
 				$HeaderString = "There were validation errors regarding the details you entered. Please check the comments above the respective fields.";
 	else
@@ -108,7 +130,7 @@
 
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
-	displayHTMLhead("IP&Ouml; Literature Database -- User Details", "noindex,nofollow", "User details required for use of the IP&Ouml; Literature Database", "\n\t<meta http-equiv=\"expires\" content=\"0\">", false, "");
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Details", "noindex,nofollow", "User details required for use of the " . htmlentities($officialDatabaseName), "\n\t<meta http-equiv=\"expires\" content=\"0\">", false, "");
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
 
 	if (session_is_registered("loginEmail") && empty($errors) && isset($userID))
@@ -161,6 +183,7 @@
 
 <form method="POST" action="user_validation.php">
 <input type="hidden" name="userID" value="<? echo $userID ?>">
+<input type="hidden" name="email" value="<? echo $formVars["email"] ?>">
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds a form with user details">
 <tr>
 	<td align="left" width="169">Title:</td>
@@ -274,7 +297,7 @@
 </tr>
 <?php
 // Only show the username/email and password widgets to new users (or the admin, since he's allowed to call 'user_details.php' w/o any 'userID' when logged in):
-	if (!session_is_registered("loginEmail") | (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && !isset($userID)))
+	if (!session_is_registered("loginEmail") | (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && ($userID == "")))
 	{
 ?>
 <tr>
@@ -288,7 +311,35 @@
 	<td align="left"><b>Password:</b></td>
 	<td><? echo fieldError("loginPassword", $errors); ?>
 
-		<input type="password" name="loginPassword" value="<? echo $formVars["loginPassword"]; ?>" size="30">
+		<input type="password" name="loginPassword" value="" size="30">
+	</td>
+</tr>
+<tr>
+	<td align="left"><b>Verify Password:</b></td>
+	<td><? echo fieldError("loginPasswordRetyped", $errors); ?>
+
+		<input type="password" name="loginPasswordRetyped" value="" size="30">
+	</td>
+</tr>
+<?php
+	}
+// if a user is logged in, we also show the password field (but with a different label text) so that the user is able to change his password later on:
+// (just keep the password field empty, if you don't want to change your password)
+	elseif (session_is_registered("loginEmail") && isset($userID))
+	{
+?>
+<tr>
+	<td align="left">New Password:</td>
+	<td><? echo fieldError("loginPassword", $errors); ?>
+
+		<input type="password" name="loginPassword" value="" size="30">
+	</td>
+</tr>
+<tr>
+	<td align="left">Verify New Password:</td>
+	<td><? echo fieldError("loginPasswordRetyped", $errors); ?>
+
+		<input type="password" name="loginPasswordRetyped" value="" size="30">
 	</td>
 </tr>
 <?php
@@ -297,7 +348,27 @@
 <tr>
 	<td align="left"></td>
 	<td>
+<?php
+	// The submit button reads 'Add' if an authorized user uses 'user_details.php' to add a new user (-> 'userID' is empty!)
+	// This should make it more clear that submitting the form is going to add a new user without any further approval!
+	// INSERTs are allowed to:
+	//         1. EVERYONE who's not logged in (but ONLY if variable '$addNewUsers' in 'ini.inc.php' is set to "everyone"!)
+	//            (Note that this feature is actually only meant to add the very first user to the users table.
+	//             After you've done so, it is highly recommended to change the value of '$addNewUsers' to 'admin'!)
+	//   -or-  2. the ADMIN only (if variable '$addNewUsers' in 'ini.inc.php' is set to "admin")
+	if ((!session_is_registered("loginEmail") && ($addNewUsers == "everyone") && ($_REQUEST['userID'] == "")) | (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && ($userID == "")))
+	{
+?>
+		<input type="submit" value="Add User">
+<?php
+	}
+	else // ...otherwise the submit button reads (guess what) 'Submit' (i.e., solely an email will be sent to the admin for further approval):
+	{
+?>
 		<input type="submit" value="Submit">
+<?php
+	}
+?>
 	</td>
 </tr>
 </table>
