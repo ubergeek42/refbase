@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./rss.php
 	// Created:    25-Sep-04, 12:10
-	// Modified:   03-Oct-04, 17:23
+	// Modified:   10-Oct-04, 18:06
 
 	// This script will generate a dynamic RSS feed for the current query.
 	// Useage: Perform your query until you've got the desired results. Then, copy the "track" link in the header
@@ -17,8 +17,8 @@
 	*/
 
 	// Incorporate some include files:
-	include 'include.inc.php'; // include common functions
-	include "ini.inc.php"; // include common variables
+	include 'includes/include.inc.php'; // include common functions
+	include 'initialize/ini.inc.php'; // include common variables
 
 	// --------------------------------------------------------------------
 
@@ -107,6 +107,8 @@
 	// --------------------------------------------------------------------
 
 	// (4) DISPLAY search results as RSS feed:
+	header('Content-type: text/plain; charset=' . $contentTypeCharset); // set mimetype to 'text/plain' and character encoding to the one given in '$contentTypeCharset' (which is defined in 'ini.inc.php')
+
 	echo $rssFeed;
 
 	// --------------------------------------------------------------------
