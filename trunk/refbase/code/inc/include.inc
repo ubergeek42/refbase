@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc
 	// Created:    16-Apr-02, 10:54
-	// Modified:   07-Sep-03, 16:38
+	// Modified:   02-Dec-04, 17:25
 
 	// This file contains important
 	// functions that are shared
@@ -80,11 +80,15 @@
 		global $errorMsg;
 		
 		// Extract checkbox variable values from the request:
-		$recordSerialsArray = $_REQUEST['marked']; // extract the values of all checked checkboxes (i.e., the serials of all selected records)	
+		if (isset($_REQUEST['marked']))
+			$recordSerialsArray = $_REQUEST['marked']; // extract the values of all checked checkboxes (i.e., the serials of all selected records)	
+		else
+			$recordSerialsArray = "";
+		$recordSerialsString = ""; // initialize variable
 		// join array elements:
 		if (!empty($recordSerialsArray)) // the user did check some checkboxes
 			$recordSerialsString = implode("&marked[]=", $recordSerialsArray); // prefix each record serial (except the first one) with "&marked[]="
-			$recordSerialsString = "&marked[]=" . $recordSerialsString; // prefix also the very first record serial with "&marked[]="
+		$recordSerialsString = "&marked[]=" . $recordSerialsString; // prefix also the very first record serial with "&marked[]="
 		
 		// based on the refering script we adjust the parameters that get included in the link:
 		if (ereg(".*(index|simple_search|advanced_search|sql_search|library_search|extract|users|user_details|user_receipt)\.php", $_SERVER["SCRIPT_NAME"]))
@@ -133,7 +137,12 @@
 		else
 			{
 				$loginWelcomeMsg = "";
-				$loginStatus = "";
+
+				if (ereg(".*(record|import[^.]*)\.php", $_SERVER["SCRIPT_NAME"]))
+					$loginStatus = "<span class=\"warning\">You must be logged in<br>to submit this form!</span>";
+				else
+					$loginStatus = "";
+
 				$loginLinks = "<a href=\"user_login.php?referer=" . rawurlencode($referer) . "\">Login</a>";
 			}
 	}
@@ -202,7 +211,8 @@
 						. "Return-Path: " . $adminLoginEmail . "\n"
 						. "X-Sender: " . $adminLoginEmail . "\n"
 						. "X-Mailer: PHP\n"
-						. "X-Priority: 3";
+						. "X-Priority: 3\n"
+						. "Content-Type: text/plain; charset=ISO-8859-1";
 
 		// Send the email:
 		mail($emailRecipient, $emailSubject, $emailBody, $emailHeaders);
@@ -246,6 +256,12 @@
 				$orig_fieldname = "first_page"; // adjust '$orig_fieldname' variable accordingly
 			}
 
+		if ("$orig_fieldname" == "volume") // when original field name = 'volume' then...
+			{
+				$newORDER = str_replace("ORDER BY volume", "ORDER BY volume_numeric DESC", $newORDER); // ...sort by 'volume_numeric' instead
+				$orig_fieldname = "volume_numeric"; // adjust '$orig_fieldname' variable accordingly
+			}
+
 		if ("$orig_fieldname" == "marked") // when original field name = 'marked' then...
 			$newORDER = str_replace("ORDER BY marked", "ORDER BY marked DESC", $newORDER); // ...sort 'marked' column in DESCENDING order (so that 'yes' sorts before 'no')
 
@@ -267,10 +283,10 @@
 		$tableHeaderLink = "$HTMLbeforeLink<a href=\"$href?sqlQuery=$queryURLNewOrder&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;formType=$formType&amp;showRows=$showRows&amp;rowOffset=$rowOffset&amp;submit=$submitType&amp;orderBy=" . rawurlencode($orderBy) . "&amp;oldQuery=" . rawurlencode($oldQuery) . "\">$linkName</a>";
 
 		// append sort indicator after the 1st-level sort attribute:
-		if (preg_match("/ORDER BY $orig_fieldname(?! DESC)(?=,|$)/", $query)) // if 1st-level sort is by this attribute (in ASCending order)...
-			$tableHeaderLink .= "&nbsp;<img src=\"img/sort_asc.gif\" alt=\"(up)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append an upward arrow image
+		if (preg_match("/ORDER BY $orig_fieldname(?! DESC)(?=,| LIMIT|$)/", $query)) // if 1st-level sort is by this attribute (in ASCending order)...
+			$tableHeaderLink .= "&nbsp;<img src=\"img/sort_asc.gif\" alt=\"(up)\" title=\"sorted by field '" . $orig_fieldname . "' (ascending order)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append an upward arrow image
 		elseif (preg_match("/ORDER BY $orig_fieldname DESC/", $query)) // if 1st-level sort is by this attribute (in DESCending order)...
-			$tableHeaderLink .= "&nbsp;<img src=\"img/sort_desc.gif\" alt=\"(down)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append a downward arrow image
+			$tableHeaderLink .= "&nbsp;<img src=\"img/sort_desc.gif\" alt=\"(down)\" title=\"sorted by field '" . $orig_fieldname . "' (descending order)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append a downward arrow image
 
 		$tableHeaderLink .=  $HTMLafterLink; // append any necessary HTML
 
@@ -446,7 +462,7 @@
 	function buildRefineSearchElements($href, $queryURL, $showQuery, $showLinks, $showRows, $NoColumns, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected)
 	{
 		// Start a FORM:
-		$RefineSearchRow .= "\n<form action=\"$href\" method=\"POST\" name=\"refineSearch\">"
+		$RefineSearchRow = "\n<form action=\"$href\" method=\"POST\" name=\"refineSearch\">"
 				. "\n\t<input type=\"hidden\" name=\"formType\" value=\"refineSearch\">"
 				. "\n\t<input type=\"hidden\" name=\"sqlQuery\" value=\"$queryURL\">" // embed the current sqlQuery so that it can be re-applied when displaying refined results
 				. "\n\t<input type=\"hidden\" name=\"showQuery\" value=\"$showQuery\">" // embed the current value of '$showQuery' so that it's available when displaying refined results
@@ -517,6 +533,86 @@
 		$newString = implode($joinDelim, $piecesArray);
 
 		return $newString;
+	}
+
+	// --------------------------------------------------------------------
+
+	// EXTRACT AUTHOR'S LAST NAME
+	// this function takes the contents of the author field and will extract the last name of a particular author (specified by position)
+	// (e.g., setting '$authorPosition' to "1" will return the 1st author's last name)
+	//  Note: this function assumes that:
+	//			1. within one author object, there's only *one* delimiter separating author name & initials!
+	//			2. author objects are stored in the db as "<author_name><author_initials_delimiter><author_initials>", i.e., initials follow *after* the author's name!
+	function extractAuthorsLastName($oldBetweenAuthorsDelim, $oldAuthorsInitialsDelim, $authorPosition, $authorContents)
+	{
+		$authorsArray = split($oldBetweenAuthorsDelim, $authorContents); // get a list of all authors for this record
+
+		$authorPosition = ($authorPosition-1); // php array elements start with "0", so we decrease the authors position by 1
+		$singleAuthor = $authorsArray[$authorPosition]; // for the author in question, extract the full author name (last name & initials)
+		$singleAuthorArray = split($oldAuthorsInitialsDelim, $singleAuthor); // then, extract author name & initials to separate list items
+		$singleAuthorsLastName = $singleAuthorArray[0]; // extract this author's last name into a new variable
+
+		return $singleAuthorsLastName;
+	}
+
+	// --------------------------------------------------------------------
+
+	// GET UPLOAD INFO
+	// Given the name of a file upload field, return a four (or five) element associative
+	// array containing information about the file. The element names are:
+
+	//     name     - original name of file on client
+	//     type     - MIME type of file
+	//     tmp_name - name of temporary file on server
+	//     error    - holds an error number >0 if something went wrong, otherwise 0 (I don't know when this element was added. It may not be present in your PHP version... ?:-/)
+	//     size     - size of file in bytes
+
+	// depending what happend on upload, they will contain the following values (PHP 4.1 and above):
+	//              no file upload  upload exceeds 'upload_max_filesize'  successful upload
+	//              --------------  ------------------------------------  -----------------
+	//     name           ""                       [name]                      [name]
+	//     type           ""                         ""                        [type]
+	//     tmp_name       ""                         ""                      [tmp_name]
+	//     error          4                          1                           0
+	//     size           0                          0                         [size]
+	
+	// The function prefers the $_FILES array if it is available, falling back
+	// to $HTTP_POST_FILES and $HTTP_POST_VARS as necessary.
+	
+	function getUploadInfo($name)
+	{
+	global $HTTP_POST_FILES, $HTTP_POST_VARS;
+	
+		unset ($unset);
+
+		// Look for information in PHP 4.1 $_FILES array first.
+		// Note: The entry in $_FILES might be present even if no file was uploaded (see above).
+		//       Check the 'tmp_name' and/or the 'error' member to make sure there is a file.
+		if (isset($_FILES))
+			if (isset($_FILES[$name]))
+				return ($_FILES[$name]);
+
+		// Look for information in PHP 4 $HTTP_POST_FILES array next.
+		// (Again, check the 'tmp_name' and/or the 'error' member to make sure there is a file.)
+		if (isset($HTTP_POST_FILES))
+			if (isset($HTTP_POST_FILES[$name]))
+				return ($HTTP_POST_FILES[$name]);
+
+		// Look for PHP 3 style upload variables.
+		// Check the _name member, because $HTTP_POST_VARS[$name] might not
+		// actually be a file field.
+		if (isset($HTTP_POST_VARS[$name])
+			&& isset($HTTP_POST_VARS[$name . "_name"]))
+		{
+			// Map PHP 3 elements to PHP 4-style element names
+			$info = array ();
+			$info["name"] = $HTTP_POST_VARS[$name . "_name"];
+			$info["tmp_name"] = $HTTP_POST_VARS[$name];
+			$info["size"] = $HTTP_POST_VARS[$name . "_size"];
+			$info["type"] = $HTTP_POST_VARS[$name . "_type"];
+			return ($info);
+		}
+		return (@$unset);
 	}
 
 	// --------------------------------------------------------------------
