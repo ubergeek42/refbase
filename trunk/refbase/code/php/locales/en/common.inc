@@ -1,0 +1,36 @@
+"Welcome"=>"Wecome!",
+"Literature"=>"literature",
+"ThisDatabase"=>"This database provides access to ",
+"Home"=>"Home",
+"GoToHome"=>"Go to main page",
+"SimpleSearch"=>"Simple Search",
+"SimpleSearchLinkTitle"=>"search the main fields of the database",
+"AdvSearch"=>"Advanced Search",
+"AdvSearchLinkTitle"=>"search all fields of the database",
+"AddRecord"=>"Add Record",
+"AddRecordLinkTitle"=>"add a record to the database",
+"CSAImport"=>"CSA Import",
+"CSAImportLinkTitle"=>"import a record from Cambridge Scientific Abstracts",
+"Help"=>"Hilfe",
+"HelpLinkTitle"=>"show help",
+"NoResults"=>"Sorry, but your query didn't produce any results!",
+"Go Back"=>"Go Back",
+"NoRecordsSelected"=>"No records selected! Please select one or more records by clicking the appropriate checkboxes.",
+"Select All"=>"Select All",
+"Deselect"=>"Deselect",
+"Author"=>"author",
+"Year"=>"Year",
+"Title"=>"Title",
+"Publication"=>"Publication",
+"Show"=>"Show",
+"Field"=>"Field",
+"That..."=>"That...",
+"Searchstring"=>"Search String",
+"contains"=>"contains",
+"or"=>"or",
+
+
+
+
+
+
