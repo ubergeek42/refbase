@@ -1,60 +1,46 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-	"http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-	<title>IP&Ouml; Literature Database -- Advanced Search</title>
-	<meta name="date" content=<?php echo "\"" . date("d-M-y") . "\""; ?>>
-	<meta name="robots" content="index,follow">
-	<meta name="description" lang="en" content="Search the IP&Ouml; Literature Database">
-	<meta name="keywords" lang="en" content="search citation web database polar marine science literature references mysql php">
-	<meta http-equiv="content-language" content="en">
-	<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
-	<meta http-equiv="Content-Style-Type" content="text/css">
-	<link rel="stylesheet" href="style.css" type="text/css" title="CSS Definition">
-	<script language="JavaScript" type="text/javascript">
-		function checkall(val){
-			x=0;
-			while(document.queryForm.elements[x]){
-				if(document.queryForm.elements[x].type=="checkbox"){
-					document.queryForm.elements[x].checked=val;
-				}
-				x++;
-			}
-		}
-	</script> 
-</head>
-<body>
 <?php
 	// Search formular providing all of the fields
-
-	// This is included to hide the username and password:
-	include 'db.inc';
-	include 'error.inc';
-	include 'header.inc';
-	include 'footer.inc';
 
 	/*
 	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
 	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
 	*/
 	
+	// Incorporate some include files:
+	include 'db.inc'; // 'db.inc' is included to hide username and password
+	include 'header.inc'; // include header
+	include 'footer.inc'; // include footer
+	include 'include.inc'; // include common functions
+
+	// --------------------------------------------------------------------
+
+	// Connect to a session
+	session_start();
+
+	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+
 	// --------------------------------------------------------------------
 
 	// (1) Open the database connection and use the literature database:
 	if (!($connection = @ mysql_connect($hostName,$username,$password)))
-	{
-		showheader($result, "The following error occurred while trying to connect to the host:");
-		showerror();
-	}
+		showErrorMsg("The following error occurred while trying to connect to the host:", "");
 
 	if (!(mysql_select_db($databaseName, $connection)))
-	{
-		showheader($result, "The following error occurred while trying to connect to the database:");
-		showerror();
-	}
+		showErrorMsg("The following error occurred while trying to connect to the database:", "");
+
+	// If there's no stored message available:
+	if (!session_is_registered("HeaderString"))
+		$HeaderString = "Search all fields of the database:"; // Provide the default message
+	else
+		session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
+
+	// Show the login status:
+	showLogin(); // (function 'showLogin()' is defined in 'include.inc')
 
 	// (2a) Display header:
-	showheader($result, "Search all fields of the database:");
+	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+	displayHTMLhead("IP&Ouml; Literature Database -- Advanced Search", "index,follow", "Search the IP&Ouml; Literature Database", "", true, "");
+	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
 
 	// (2b) Start <form> and <table> holding the form elements:
 	echo "\n<form action=\"search.php\" method=\"POST\" name=\"queryForm\">";
@@ -921,10 +907,7 @@
 
 	// (5) Close the database connection:
 	if (!(mysql_close($connection)))
-	{
-		showheader($result, "The following error occurred while trying to disconnect from the database:");
-		showerror();
-	}
+		showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
 
 	// --------------------------------------------------------------------
 
@@ -945,16 +928,13 @@
 	// Query to find distinct values of $columnName
 	// in $tableName
 	if ($RestrictToField == "")
-		 $distinctQuery = "SELECT DISTINCT $columnName
-						FROM $tableName ORDER BY $columnName";
+		 $distinctQuery = "SELECT DISTINCT $columnName FROM $tableName ORDER BY $columnName";
 	else
-		 $distinctQuery = "SELECT DISTINCT $columnName
-						FROM $tableName WHERE $RestrictToField RLIKE $RestrictToFieldContents ORDER BY $columnName";
+		 $distinctQuery = "SELECT DISTINCT $columnName FROM $tableName WHERE $RestrictToField RLIKE $RestrictToFieldContents ORDER BY $columnName";
 
 	// Run the distinctQuery on the databaseName
-	if (!($resultId = @ mysql_query ($distinctQuery, 
-										$connection)))
-		showerror();
+	if (!($resultId = @ mysql_query($distinctQuery, $connection)))
+		showErrorMsg("Your query:\n<br>\n<br>\n<code>$distinctQuery</code>\n<br>\n<br>\n caused the following error:", "");
 
 	// Retrieve all distinct values
 	$i = 0;
@@ -1019,29 +999,11 @@
 
 	// --------------------------------------------------------------------
 
-	// BUILD THE HTML HEADER:
-	function showheader($result, $HeaderString)
-	{
-		// call the 'displayheader()' function from 'header.inc'):
-		displayheader();
-
-		// finalize header containing the appropriate header string:
-		echo "\n<tr>"
-//			. "\n\t<td>&nbsp;</td>" // img in 'header.inc' now spans this row (by rowspan="2")
-			. "\n\t<td>$HeaderString</td>"
-			. "\n</tr>"
-			. "\n</table>"
-			. "\n<hr align=\"center\" width=\"95%\">";
-	}
-
-	// --------------------------------------------------------------------
-
 	// DISPLAY THE HTML FOOTER:
 	// call the 'displayfooter()' function from 'footer.inc')
 	displayfooter("");
 
 	// --------------------------------------------------------------------
-
 ?>
 </body>
 </html> 
