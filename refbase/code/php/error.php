@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./error.php
 	// Created:    5-Jan-03, 16:35
-	// Modified:   29-Aug-04, 22:49
+	// Modified:   16-Feb-05, 20:47
 
 	// This php script will display an error page
 	// showing any error that did occur. It will display
@@ -69,7 +69,7 @@
 
 	// (4a) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Error", "noindex,nofollow", "Feedback page that shows any error that occurred while using the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Error", "noindex,nofollow", "Feedback page that shows any error that occurred while using the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
 
 
@@ -90,7 +90,7 @@
 				. "\n\t\t<a href=\"search.php?" . $oldQueryPartlyEncoded . "\">Display previous search results</a>";
 
 	$links .= "\n\t\t&nbsp;&nbsp;-OR-&nbsp;&nbsp;"
-			. "\n\t\t<a href=\"index.php\">Goto " . htmlentities($officialDatabaseName) . " Home</a>" // we include the link to the home page here
+			. "\n\t\t<a href=\"index.php\">Goto " . encodeHTML($officialDatabaseName) . " Home</a>" // we include the link to the home page here
 			. "\n\t</td>"
 			. "\n</tr>";
 
