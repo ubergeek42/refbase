@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_receipt.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   23-Feb-05, 22:21
+	// Modified:   27-Feb-05, 22:48
 
 	// This script shows the user a receipt for their user UPDATE or INSERT.
 	// It carries out no database actions and can be bookmarked.
@@ -36,7 +36,8 @@
 		$userID = ""; // we do it for clarity reasons here (and in order to prevent any 'Undefined variable...' messages)
 
 	// Check if the user is logged in
-	if (!isset($_SESSION['loginEmail']) && ($userID != 0))
+	if (!isset($_SESSION['loginEmail']) && ($userID != -1))
+	// Note: 'user_validation.php' uses the non-existing user ID '-1' as trigger to show the email notification receipt page (instead of the standard receipt page)
 	{
 		// save an error message:
 		$HeaderString = "<b><span class=\"warning\">You must login to view your user account details and options!</span></b>";
@@ -130,7 +131,7 @@
 	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 	// Show the user confirmation:
-	if ($userID == 0) // 'userID=0' is sent by 'user_validation.php' to indicate a NEW user who has successfully submitted 'user_details.php'
+	if ($userID == -1) // 'userID=-1' is sent by 'user_validation.php' to indicate a NEW user who has successfully submitted 'user_details.php'
 		showEmailConfirmation($userID);
 	else
 		showUserData($userID, $userAction, $connection);
@@ -197,6 +198,7 @@
 		global $loginEmail;
 		global $adminLoginEmail;
 		global $officialDatabaseName;
+		global $defaultLanguage;
 		global $tableUsers; // defined in 'db.inc.php'
 
 		// CONSTRUCT SQL QUERY:
@@ -212,6 +214,8 @@
 		if (!isset($_SESSION['HeaderString'])) // if there's no saved message
 			if ($userAction == "Delete") // provide an appropriate header message:
 				$HeaderString = "<b><span class=\"warning\">Delete user</span> " . encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . $row["email"] . ")</b>:";
+			elseif (empty($userID))
+				$HeaderString = "Account details and options for anyone who isn't logged in:";
 			else // provide the default message:
 				$HeaderString = "Account details and options for <b>" . encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . $row["email"] . ")</b>:";
 		else
@@ -229,107 +233,112 @@
 		// Start main table:
 		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays user account details and options\">";
 
-		if (mysql_num_rows($result) == 1) // If there's a user associated with this user ID
-		{
 			echo "\n<tr>"
-				. "\n\t<td valign=\"top\">";
+				. "\n\t<td valign=\"top\" width=\"28%\">";
 
 			// Start left sub-table:
 			echo "\n\t\t<table border=\"0\" cellpadding=\"0\" cellspacing=\"10\" summary=\"User account details\">";
 
 			echo "\n\t\t<tr>\n\t\t\t<th align=\"left\" class=\"smaller\">Account Details:</th>\n\t\t</tr>";
 
-			// Display a password reminder:
-			// (but only if a normal user is logged in -OR- the admin is logged in AND the updated user data are his own!)
-			if (($loginEmail != $adminLoginEmail) | (($loginEmail == $adminLoginEmail) && ($userID == getUserID($loginEmail))))
-				echo "\n\t\t<tr>\n\t\t\t<td><i>Please record your password somewhere safe for future use!</i></td>\n\t\t</tr>";
-	
-			// Print title, first name, last name and institutional abbreviation:
-			echo "\n\t\t<tr>\n\t\t\t<td>\n\t\t\t\t";
-			if (!empty($row["title"]))
-				echo $row["title"] . ". ";
-			echo encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . encodeHTML($row["abbrev_institution"]) . ")"; // Since the first name, last name and abbrev. institution fields are mandatory, we don't need to check if they're empty
-	
-			// Print institution name:
-			if (!empty($row["institution"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["institution"]);
-	
-			// Print corporate institution name:
-			if (!empty($row["corporate_institution"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["corporate_institution"]);
-	
-			// If any of the address lines contain data, add a spacer row:
-			if (!empty($row["address_line_1"]) || !empty($row["address_line_2"]) || !empty($row["address_line_3"]) || !empty($row["zip_code"]) || !empty($row["city"]) || !empty($row["state"]) || !empty($row["country"]))
-				echo "\n\t\t\t\t<br>";
-	
-			// Print first address line:
-			if (!empty($row["address_line_1"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["address_line_1"]);
-	
-			// Print second address line:
-			if (!empty($row["address_line_2"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["address_line_2"]);
-	
-			// Print third address line:
-			if (!empty($row["address_line_3"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["address_line_3"]);
-	
-			// Print zip code and city:
-			if (!empty($row["zip_code"]) && !empty($row["city"])) // both fields are available
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["zip_code"]) . " " . encodeHTML($row["city"]);
-			elseif (!empty($row["zip_code"]) && empty($row["city"])) // only 'zip_code' available
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["zip_code"]);
-			elseif (empty($row["zip_code"]) && !empty($row["city"])) // only 'city' field available
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["city"]);
-	
-			// Print state:
-			if (!empty($row["state"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["state"]);
-	
-			// Print country:
-			if (!empty($row["country"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["country"]);
-	
-			// If any of the phone/url/email fields contain data, add a spacer row:
-			if (!empty($row["phone"]) || !empty($row["url"]) || !empty($row["email"]))
-				echo "\n\t\t\t\t<br>";
-	
-			// Print phone number:
-			if (!empty($row["phone"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . "Phone: " . encodeHTML($row["phone"]);
-	
-			// Print URL:
-			if (!empty($row["url"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . "URL: <a href=\"" . $row["url"] . "\">" . $row["url"] . "</a>";
-	
-			// Print email:
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . "Email: <a href=\"mailto:" . $row["email"] . "\">" . $row["email"] . "</a>"; // Since the email field is mandatory, we don't need to check if it's empty
-
-			echo "\n\t\t\t</td>\n\t\t</tr>";
-
-			// If the admin is logged in, allow the display of a button that will delete the currently shown user:
-			if (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail)) // ('$adminLoginEmail' is specified in 'ini.inc.php')
+			if (mysql_num_rows($result) == 1) // If there's a user associated with this user ID
 			{
-				if ($userAction == "Delete")
+				// Display a password reminder:
+				// (but only if a normal user is logged in -OR- the admin is logged in AND the updated user data are his own!)
+				if (($loginEmail != $adminLoginEmail) | (($loginEmail == $adminLoginEmail) && ($userID == getUserID($loginEmail))))
+					echo "\n\t\t<tr>\n\t\t\t<td><i>Please record your password somewhere safe for future use!</i></td>\n\t\t</tr>";
+		
+				// Print title, first name, last name and institutional abbreviation:
+				echo "\n\t\t<tr>\n\t\t\t<td>\n\t\t\t\t";
+				if (!empty($row["title"]))
+					echo $row["title"] . ". ";
+				echo encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . encodeHTML($row["abbrev_institution"]) . ")"; // Since the first name, last name and abbrev. institution fields are mandatory, we don't need to check if they're empty
+		
+				// Print institution name:
+				if (!empty($row["institution"]))
+					echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["institution"]);
+		
+				// Print corporate institution name:
+				if (!empty($row["corporate_institution"]))
+					echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["corporate_institution"]);
+		
+				// If any of the address lines contain data, add a spacer row:
+				if (!empty($row["address_line_1"]) || !empty($row["address_line_2"]) || !empty($row["address_line_3"]) || !empty($row["zip_code"]) || !empty($row["city"]) || !empty($row["state"]) || !empty($row["country"]))
+					echo "\n\t\t\t\t<br>";
+		
+				// Print first address line:
+				if (!empty($row["address_line_1"]))
+					echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["address_line_1"]);
+		
+				// Print second address line:
+				if (!empty($row["address_line_2"]))
+					echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["address_line_2"]);
+		
+				// Print third address line:
+				if (!empty($row["address_line_3"]))
+					echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["address_line_3"]);
+		
+				// Print zip code and city:
+				if (!empty($row["zip_code"]) && !empty($row["city"])) // both fields are available
+					echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["zip_code"]) . " " . encodeHTML($row["city"]);
+				elseif (!empty($row["zip_code"]) && empty($row["city"])) // only 'zip_code' available
+					echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["zip_code"]);
+				elseif (empty($row["zip_code"]) && !empty($row["city"])) // only 'city' field available
+					echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["city"]);
+		
+				// Print state:
+				if (!empty($row["state"]))
+					echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["state"]);
+		
+				// Print country:
+				if (!empty($row["country"]))
+					echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["country"]);
+		
+				// If any of the phone/url/email fields contain data, add a spacer row:
+				if (!empty($row["phone"]) || !empty($row["url"]) || !empty($row["email"]))
+					echo "\n\t\t\t\t<br>";
+		
+				// Print phone number:
+				if (!empty($row["phone"]))
+					echo "\n\t\t\t\t<br>\n\t\t\t\t" . "Phone: " . encodeHTML($row["phone"]);
+		
+				// Print URL:
+				if (!empty($row["url"]))
+					echo "\n\t\t\t\t<br>\n\t\t\t\t" . "URL: <a href=\"" . $row["url"] . "\">" . $row["url"] . "</a>";
+		
+				// Print email:
+					echo "\n\t\t\t\t<br>\n\t\t\t\t" . "Email: <a href=\"mailto:" . $row["email"] . "\">" . $row["email"] . "</a>"; // Since the email field is mandatory, we don't need to check if it's empty
+	
+				echo "\n\t\t\t</td>\n\t\t</tr>";
+	
+				// If the admin is logged in, allow the display of a button that will delete the currently shown user:
+				if (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail)) // ('$adminLoginEmail' is specified in 'ini.inc.php')
+				{
+					if ($userAction == "Delete")
+						echo "\n\t\t<tr>"
+							. "\n\t\t\t<td>"
+							. "\n\t\t\t\t<form action=\"user_removal.php\" method=\"POST\">"
+							. "\n\t\t\t\t\t<input type=\"hidden\" name=\"userID\" value=\"" . $userID . "\">"
+							. "\n\t\t\t\t\t<input type=\"submit\" value=\"" . $userAction . " User\">"
+							. "\n\t\t\t\t</form>"
+							. "\n\t\t\t</td>"
+							. "\n\t\t</tr>";
+				}
+	
+				if ($userAction != "Delete")
 					echo "\n\t\t<tr>"
 						. "\n\t\t\t<td>"
-						. "\n\t\t\t\t<form action=\"user_removal.php\" method=\"POST\">"
+						. "\n\t\t\t\t<form action=\"user_details.php\" method=\"POST\">"
 						. "\n\t\t\t\t\t<input type=\"hidden\" name=\"userID\" value=\"" . $userID . "\">"
-						. "\n\t\t\t\t\t<input type=\"submit\" value=\"" . $userAction . " User\">"
+						. "\n\t\t\t\t\t<input type=\"submit\" value=\"" . $userAction . " Details\">"
 						. "\n\t\t\t\t</form>"
 						. "\n\t\t\t</td>"
 						. "\n\t\t</tr>";
 			}
-
-			if ($userAction != "Delete")
-				echo "\n\t\t<tr>"
-					. "\n\t\t\t<td>"
-					. "\n\t\t\t\t<form action=\"user_details.php\" method=\"POST\">"
-					. "\n\t\t\t\t\t<input type=\"hidden\" name=\"userID\" value=\"" . $userID . "\">"
-					. "\n\t\t\t\t\t<input type=\"submit\" value=\"" . $userAction . " Details\">"
-					. "\n\t\t\t\t</form>"
-					. "\n\t\t\t</td>"
-					. "\n\t\t</tr>";
+			else // no user exists with this user ID
+			{
+				echo "\n\t\t<tr>\n\t\t\t<td>(none)</td>\n\t\t</tr>";
+			}
 
 			// Close left sub-table:
 			echo "\n\t\t</table>";
@@ -348,58 +357,125 @@
 			echo "\n\t\t<tr>\n\t\t\t<th align=\"left\" class=\"smaller\" colspan=\"2\">Display Options:</th>\n\t\t</tr>";
 
 			echo "\n\t\t<tr valign=\"top\">"
-				. "\n\t\t\t<td>Use language:</td>"
-				. "\n\t\t\t<td>" . $row["language"] . "</td>"
-				. "\n\t\t</tr>";
+				. "\n\t\t\t<td>Use language:</td>";
 
-		if ($loginEmail == $adminLoginEmail) // if the admin is logged in
-		{
-			$ShowEnabledDescriptor = "Enabled";
+			if (mysql_num_rows($result) == 1) // If there's a user associated with this user ID
+				echo "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>" . $row["language"] . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>";
+			else // no user exists with this user ID
+				echo "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>" . $defaultLanguage . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>";
 
-			// get all formats/styles/types that are available and were enabled by the admin for the current user:
-			$userTypesArray = getEnabledUserFormatsStylesTypes($userID, "type", "", false); // function 'getEnabledUserFormatsStylesTypes()' is defined in 'include.inc.php'
+			echo "\n\t\t</tr>";
 
-			$citationStylesArray = getEnabledUserFormatsStylesTypes($userID, "style", "", false);
-		
-			$exportFormatsArray = getEnabledUserFormatsStylesTypes($userID, "format", "export", false);
-		}
-		else // if a normal user is logged in
-		{
-			$ShowEnabledDescriptor = "Show";
-
-			// get all formats/styles/types that were selected by the current user
-			// and (if some formats/styles/types were found) save them as semicolon-delimited string to an appropriate session variable:
-			$userTypesArray = getVisibleUserFormatsStylesTypes($userID, "type", ""); // function 'getVisibleUserFormatsStylesTypes()' is defined in 'include.inc.php'
-
-			$citationStylesArray = getVisibleUserFormatsStylesTypes($userID, "style", "");
-		
-			$exportFormatsArray = getVisibleUserFormatsStylesTypes($userID, "format", "export");
-
-			// Note: the function 'getVisibleUserFormatsStylesTypes()' will only update the appropriate session variables if
-			//       either a normal user is logged in -OR- the admin is logged in AND the updated user data are his own(*);
-			//       otherwise, the function will simply return an array containing all matching values
-			//       (*) the admin-condition won't apply here, though, since this function gets only called for normal users. This means, that
-			//           the admin is currently not able to hide any items from his popup lists via the admin interface (he'll need to hack the MySQL tables)!
-		}
+			if ($loginEmail == $adminLoginEmail) // if the admin is logged in
+			{
+				$ShowEnabledDescriptor = "Enabled";
+	
+				// get all formats/styles/types that are available and were enabled by the admin for the current user:
+				$userTypesArray = getEnabledUserFormatsStylesTypes($userID, "type", "", false); // function 'getEnabledUserFormatsStylesTypes()' is defined in 'include.inc.php'
+	
+				$citationStylesArray = getEnabledUserFormatsStylesTypes($userID, "style", "", false);
+			
+				$exportFormatsArray = getEnabledUserFormatsStylesTypes($userID, "format", "export", false);
+			}
+			else // if a normal user is logged in
+			{
+				$ShowEnabledDescriptor = "Show";
+	
+				// get all formats/styles/types that were selected by the current user
+				// and (if some formats/styles/types were found) save them as semicolon-delimited string to an appropriate session variable:
+				$userTypesArray = getVisibleUserFormatsStylesTypes($userID, "type", ""); // function 'getVisibleUserFormatsStylesTypes()' is defined in 'include.inc.php'
+	
+				$citationStylesArray = getVisibleUserFormatsStylesTypes($userID, "style", "");
+			
+				$exportFormatsArray = getVisibleUserFormatsStylesTypes($userID, "format", "export");
+	
+				// Note: the function 'getVisibleUserFormatsStylesTypes()' will only update the appropriate session variables if
+				//       either a normal user is logged in -OR- the admin is logged in AND the updated user data are his own(*);
+				//       otherwise, the function will simply return an array containing all matching values
+				//       (*) the admin-condition won't apply here, though, since this function gets only called for normal users. This means, that
+				//           the admin is currently not able to hide any items from his popup lists via the admin interface (he'll need to hack the MySQL tables)!
+			}
 		
 			echo "\n\t\t<tr valign=\"top\">"
 				. "\n\t\t\t<td>" . $ShowEnabledDescriptor . " reference types:</td>"
-				. "\n\t\t\t<td>" . implode(", ", $userTypesArray) . "</td>"
+				. "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>" . implode("</li>\n\t\t\t\t\t<li>", $userTypesArray) . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
 				. "\n\t\t</tr>";
 
 			echo "\n\t\t<tr valign=\"top\">"
 				. "\n\t\t\t<td>" . $ShowEnabledDescriptor . " citation styles:</td>"
-				. "\n\t\t\t<td>" . implode(", ", $citationStylesArray) . "</td>"
+				. "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>" . implode("</li>\n\t\t\t\t\t<li>", $citationStylesArray) . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
 				. "\n\t\t</tr>";
 
 			echo "\n\t\t<tr valign=\"top\">"
 				. "\n\t\t\t<td>" . $ShowEnabledDescriptor . " export formats:</td>"
-				. "\n\t\t\t<td>" . implode(", ", $exportFormatsArray) . "</td>"
+				. "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>" . implode("</li>\n\t\t\t\t\t<li>", $exportFormatsArray) . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
 				. "\n\t\t</tr>";
+
+			if ($loginEmail == $adminLoginEmail) // if the admin is logged in
+			{
+				// get all user permissions for the current user:
+				$userPermissionsArray = getPermissions($userID, "user", false); // function 'getPermissions()' is defined in 'include.inc.php'
+
+				$enabledUserActionsArray = array(); // initialize array variables
+				$disabledUserActionsArray = array();
+
+				// separate enabled permission settings from disabled ones:
+				foreach($userPermissionsArray as $permissionKey => $permissionValue)
+					if ($permissionValue == 'yes')
+						$enabledUserActionsArray[] = $permissionKey; // append this field's permission name (as value) to the array of enabled user actions
+					else
+						$disabledUserActionsArray[] = $permissionKey; // append this field's permission name (as value) to the array of disabled user actions
+
+				// convert the raw field names from table 'user_permissions' into somewhat more readable names:
+				$searchReplaceActionsArray = array('allow_add'                => 'Add records',
+													'allow_edit'             => 'Edit records',
+													'allow_delete'           => 'Delete records',
+													'allow_download'         => 'File download',
+													'allow_upload'           => 'File upload',
+													'allow_details_view'     => 'Details view',
+													'allow_print_view'       => 'Print view',
+													'allow_sql_search'       => 'SQL search',
+													'allow_user_groups'      => 'User groups',
+													'allow_user_queries'     => 'User queries',
+													'allow_rss_feeds'        => 'RSS feeds',
+													'allow_import'           => 'Import',
+													'allow_export'           => 'Export',
+													'allow_cite'             => 'Cite',
+													'allow_batch_import'     => 'Batch import',
+													'allow_batch_export'     => 'Batch export',
+													'allow_modify_options'   => 'Modify options');
+//													'allow_edit_call_number' => 'Edit call number');
+
+				if (empty($enabledUserActionsArray))
+					$enabledUserActionsArray[] = "(none)";
+				else
+					foreach($enabledUserActionsArray as $permissionKey => $permissionName)
+						$enabledUserActionsArray[$permissionKey] = searchReplaceText($searchReplaceActionsArray, $permissionName); // function 'searchReplaceText()' is defined in 'include.inc.php'
+
+				if (empty($disabledUserActionsArray))
+					$disabledUserActionsArray[] = "(none)";
+				else
+					foreach($disabledUserActionsArray as $permissionKey => $permissionName)
+						$disabledUserActionsArray[$permissionKey] = searchReplaceText($searchReplaceActionsArray, $permissionName); // function 'searchReplaceText()' is defined in 'include.inc.php'
+
+				echo "\n\t\t<tr>\n\t\t\t<td colspan=\"2\"></td>\n\t\t</tr>";
+
+				echo "\n\t\t<tr>\n\t\t\t<th align=\"left\" class=\"smaller\" colspan=\"2\">User Permissions:</th>\n\t\t</tr>";
+
+				echo "\n\t\t<tr valign=\"top\">"
+					. "\n\t\t\t<td>Enabled features:</td>"
+					. "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>" . implode("</li>\n\t\t\t\t\t<li>", $enabledUserActionsArray) . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
+					. "\n\t\t</tr>";
+
+				echo "\n\t\t<tr valign=\"top\">"
+					. "\n\t\t\t<td>Disabled features:</td>"
+					. "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>" . implode("</li>\n\t\t\t\t\t<li>", $disabledUserActionsArray) . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
+					. "\n\t\t</tr>";
+			}
 
 			if ($userAction != "Delete")
 				echo "\n\t\t<tr>"
-					. "\n\t\t\t<td>"
+					. "\n\t\t\t<td colspan=\"2\">"
 					. "\n\t\t\t\t<form action=\"user_options.php\" method=\"POST\">"
 					. "\n\t\t\t\t\t<input type=\"hidden\" name=\"userID\" value=\"" . $userID . "\">"
 					. "\n\t\t\t\t\t<input type=\"submit\" value=\"" . $userAction . " Options\">"
@@ -414,9 +490,6 @@
 			echo "\n\t</td>";
 
 			echo "\n</tr>";
-		}
-		else // no user exists with this user ID
-			echo "\n<tr>\n\t<td>(No user exists with this user ID!)</td>\n</tr>";
 
 		// Close main table:
 		echo "\n</table>";
