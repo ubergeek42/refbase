@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   03-Oct-04, 21:55
+	// Modified:   14-Oct-04, 23:43
 
 	// This file contains important
 	// functions that are shared
@@ -17,8 +17,8 @@
 	*/
 
 	// Incorporate some include files:
-	include 'db.inc.php'; // 'db.inc.php' is included to hide username and password
-	include "ini.inc.php"; // include common variables
+	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
+	include 'initialize/ini.inc.php'; // include common variables
 
 	// --------------------------------------------------------------------
 
@@ -61,15 +61,15 @@
 		{
 			// Get all export formats that were selected by the admin to be visible if a user isn't logged in
 			// and (if some formats were found) save them as semicolon-delimited string to the session variable 'user_formats':
-			getUserFormatsStylesTypes(0, "format");
+			getUserFormatsStylesTypes(0, "format", "export");
 
 			// Get all citation styles that were selected by the admin to be visible if a user isn't logged in
 			// and (if some styles were found) save them as semicolon-delimited string to the session variable 'user_styles':
-			getUserFormatsStylesTypes(0, "style");
+			getUserFormatsStylesTypes(0, "style", "");
 
 			// Get all document types that were selected by the admin to be visible if a user isn't logged in
 			// and (if some types were found) save them as semicolon-delimited string to the session variable 'user_types':
-			getUserFormatsStylesTypes(0, "type");
+			getUserFormatsStylesTypes(0, "type", "");
 
 			// Get the user permissions for the current user
 			// and save all allowed user actions as semicolon-delimited string to the session variable 'user_permissions':
@@ -1180,15 +1180,39 @@ EOF;
 
 	// Get all user formats/styles/types that are enabled for the current user (by admins choice) AND which this user has choosen to be visible:
 	// and (if some formats/styles/types were found) save them each as semicolon-delimited string to the session variables 'user_formats', 'user_styles' or 'user_types', respectively:
-	function getUserFormatsStylesTypes($userID, $dataType) // '$dataType' must be one of the following: 'format', 'style', 'type'
+	function getUserFormatsStylesTypes($userID, $dataType, $formatType) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export' or 'import'
 	{
 		connectToMySQLDatabase("");
 
 		// CONSTRUCT SQL QUERY:
-		// Find all enabled+visible formats (or styles or types, respectively) in the appropriate table 'user_formats' (or table 'user_styles' or 'user_types', respectively) belonging to the current user:
-		$query = "SELECT " . $dataType . "_name FROM " . $dataType . "s LEFT JOIN user_" . $dataType . "s USING (" . $dataType . "_id) WHERE user_id = '" . $userID . "' AND show_" . $dataType . " = 'true' ORDER BY " . $dataType . "s.order_by, " . $dataType . "s." . $dataType . "_name";
+		if ($dataType == "format")
+		{
+			// Find all enabled+visible formats in table 'user_formats' belonging to the current user:
+			// Note: following conditions must be matched to have a format "enabled+visible" for a particular user:
 
-		// As an example, for '$dataType=style' and '$userID=1' the above line will resolve to: "SELECT style_name FROM styles LEFT JOIN user_styles USING (style_id) WHERE user_id = 1 AND show_style = 'true' ORDER BY styles.order_by, styles.style_name"
+			//       - 'formats' table: the 'format_enabled' field must contain 'true' for the given format
+			//                          (the 'formats' table gives the admin control over which formats are available to the database users)
+
+			//       - 'depends' table: the 'depends_enabled' field must contain 'true' for the 'depends_id' that matches the 'depends_id' of the given format in table 'formats'
+			//                          (the 'depends' table specifies whether there are any external tools required for a particular format and if these tools are available)
+
+			//       - 'user_formats' table: there must be an entry for the given user where the 'format_id' matches the 'format_id' of the given format in table 'formats' -AND-
+			//                               the 'show_format' field must contain 'true' for the 'format_id' that matches the 'format_id' of the given format in table 'formats'
+			//                               (the 'user_formats' table specifies all of the available formats for a particular user that have been selected by this user to be included in the format popups)
+			$query = "SELECT format_name FROM formats LEFT JOIN user_formats on formats.format_id = user_formats.format_id LEFT JOIN depends ON formats.depends_id = depends.depends_id WHERE format_type = '" . $formatType . "' AND format_enabled = 'true' AND depends_enabled = 'true' AND user_id = '" . $userID . "' AND show_format = 'true' ORDER BY formats.order_by, formats.format_name";
+		}
+		elseif ($dataType == "style")
+		{
+			// Find all enabled+visible styles in table 'user_styles' belonging to the current user:
+			// (same conditions apply as for formats)
+			$query = "SELECT style_name FROM styles LEFT JOIN user_styles on styles.style_id = user_styles.style_id LEFT JOIN depends ON styles.depends_id = depends.depends_id WHERE style_enabled = 'true' AND depends_enabled = 'true' AND user_id = '" . $userID . "' AND show_style = 'true' ORDER BY styles.order_by, styles.style_name";
+		}
+		elseif ($dataType == "type")
+		{
+			// Find all enabled+visible types in table 'user_types' belonging to the current user:
+			// (opposed to formats & styles, we're not checking for any dependencies here)
+			$query = "SELECT type_name FROM types LEFT JOIN user_types USING (type_id) WHERE user_id = '" . $userID . "' AND show_type = 'true' ORDER BY types.order_by, types.type_name";
+		}
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 
@@ -1228,17 +1252,39 @@ EOF;
 
 		return($row["style_spec"]);
 	}
-  function getFormatFile($exportFormat)
+
+	// --------------------------------------------------------------------
+
+	// Fetch the path/name of the format file that's associated with the format given in '$formatName'
+	function getFormatFile($formatName, $formatType) // '$formatType' must be either 'export' or 'import'
 	{
 		connectToMySQLDatabase("");
 
 		// CONSTRUCT SQL QUERY:
-		// get the 'format_spec' for the record entry in table 'formats' whose 'format_name' matches that in '$exportStyle':
-		$query = "SELECT format_spec FROM formats WHERE format_name = '$exportFormat'";
+		// get the 'format_spec' for the record entry in table 'formats' whose 'format_name' matches that in '$formatName':
+		$query = "SELECT format_spec FROM formats WHERE format_name = '" . $formatName . "' AND format_type = '" . $formatType . "'";
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 		$row = mysql_fetch_array($result);
+
 		return($row["format_spec"]);
+	}
+
+	// --------------------------------------------------------------------
+
+	// Fetch the path of the external utility that's required for a particular import/export format
+	function getExternalUtilityPath($externalUtilityName)
+	{
+		connectToMySQLDatabase("");
+
+		// CONSTRUCT SQL QUERY:
+		// get the path for the record entry in table 'depends' whose field 'depends_external' matches that in '$externalUtilityName':
+		$query = "SELECT depends_path FROM depends WHERE depends_external = '" . $externalUtilityName . "'";
+
+		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
+		$row = mysql_fetch_array($result);
+
+		return($row["depends_path"]);
 	}
 
 	// --------------------------------------------------------------------
@@ -1512,11 +1558,12 @@ EOF;
 		global $feedbackEmail;
 		global $defaultCiteStyle;
 		global $markupSearchReplacePatterns;
+		global $contentTypeCharset;
 
 		$currentDateTimeStamp = date('r'); // get the current date & time (in UNIX time stamp format => "date('D, j M Y H:i:s O')")
 
 		// write RSS header:
-		$rssData = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"\?>"
+		$rssData = "<?xml version=\"1.0\" encoding=\"" . $contentTypeCharset . "\"?>"
 					. "\n<rss version=\"2.0\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">";
 
 		// write channel info:
@@ -1547,7 +1594,7 @@ EOF;
 			$citeStyleFile = getStyleFile($defaultCiteStyle); // fetch the name of the citation style file that's associated with the style given in '$defaultCiteStyle' (which, in turn, is defined in 'ini.inc.php')
 
 			// include the found citation style file *once*:
-			include_once "styles/" . $citeStyleFile; // instead of 'include_once' we could also use: 'if ($rowCounter == 0) { include "styles/" . $citeStyleFile; }'
+			include_once "cite/" . $citeStyleFile; // instead of 'include_once' we could also use: 'if ($rowCounter == 0) { include "cite/" . $citeStyleFile; }'
 
 			// Generate a proper citation for this record, ordering attributes according to the chosen output style & record type:
 			$record = citeRecord($row, $defaultCiteStyle); // function 'citeRecord()' is defined in the citation style file given in '$citeStyleFile' (which, in turn, must reside in the 'styles' directory of the refbase root directory)
