@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 00:25
-	// Modified:   26-Oct-04, 22:49
+	// Modified:   17-Feb-05, 20:30
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -136,7 +136,7 @@
 	// --- Embedded sql query: ----------------------
 	if ($formType == "sqlSearch") // the admin used a link with an embedded sql query for searching...
 	{
-		$query = eregi_replace(' FROM users',', user_id FROM users',$sqlQuery); // add 'user_id' column (which is required in order to obtain unique checkbox names as well as for use in the 'getUserID()' function)
+		$query = eregi_replace(" FROM $tableUsers",", user_id FROM $tableUsers",$sqlQuery); // add 'user_id' column (which is required in order to obtain unique checkbox names as well as for use in the 'getUserID()' function)
 		$query = str_replace('\"','"',$query); // replace any \" with "
 		$query = str_replace('\\\\','\\',$query);
 	}
@@ -144,7 +144,7 @@
 	// --- 'Search within Results' & 'Display Options' forms within 'users.php': ---------------
 	elseif ($formType == "refineSearch" OR $formType == "displayOptions") // the user used the "Search within Results" (or "Display Options") form above the query results list (that was produced by 'users.php')
 	{
-		$query = extractFormElementsRefineDisplay("users", $displayType, $sqlQuery, $showLinks, ""); // function 'extractFormElementsRefineDisplay()' is defined in 'include.inc.php' since it's also used by 'users.php'
+		$query = extractFormElementsRefineDisplay($tableUsers, $displayType, $sqlQuery, $showLinks, ""); // function 'extractFormElementsRefineDisplay()' is defined in 'include.inc.php' since it's also used by 'users.php'
 	}
 
 	// --- 'Show User Group' form within 'users.php': ---------------------
@@ -161,7 +161,7 @@
 
 	else // build the default query:
 	{
-		$query = "SELECT first_name, last_name, abbrev_institution, email, last_login, logins, user_id FROM users WHERE user_id RLIKE \".+\" ORDER BY last_login DESC, last_name, first_name";
+		$query = "SELECT first_name, last_name, abbrev_institution, email, last_login, logins, user_id FROM $tableUsers WHERE user_id RLIKE \".+\" ORDER BY last_login DESC, last_name, first_name";
 	}
 
 
@@ -176,7 +176,7 @@
 	// ----------------------------------------------
 
 	// (4a) DISPLAY header:
-	$query = eregi_replace(', user_id FROM users',' FROM users',$query); // strip 'user_id' column from SQL query (so that it won't get displayed in query strings)
+	$query = eregi_replace(", user_id FROM $tableUsers"," FROM $tableUsers",$query); // strip 'user_id' column from SQL query (so that it won't get displayed in query strings)
 
 	$queryURL = rawurlencode($query); // URL encode SQL query
 
@@ -255,7 +255,7 @@
 	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 	// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Manage Users", "noindex,nofollow", "Administration page that lists users of the " . htmlentities($officialDatabaseName) . ", with links for adding, editing or deleting any users", "", true, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Manage Users", "noindex,nofollow", "Administration page that lists users of the " . encodeHTML($officialDatabaseName) . ", with links for adding, editing or deleting any users", "", true, "", $viewType);
 	if ($viewType != "Print") // Note: we ommit the visible header in print view! ('viewType=Print')
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
@@ -398,7 +398,6 @@
 	
 				// ... and print out each of the attributes
 				// in that row as a separate TD (Table Data)
-				// (Note: 'htmlentities($row[$i])' for HTML encoding higher ASCII will only work correctly if character encoding of data is ISO-8859-1!)
 				for ($i=0; $i<$fieldsToDisplay; $i++)
 				{
 					// the following two lines will fetch the current attribute name:
@@ -408,7 +407,7 @@
 					if (ereg("^email$", $orig_fieldname))
 						echo "\n\t<td valign=\"top\"><a href=\"mailto:" . $row["email"] . "\">" . $row["email"] . "</a></td>";
 					else
-						echo "\n\t<td valign=\"top\">" . htmlentities($row[$i]) . "</td>";
+						echo "\n\t<td valign=\"top\">" . encodeHTML($row[$i]) . "</td>";
 				}
 
 				// embed appropriate links (if available):
@@ -538,10 +537,12 @@
 	// Build the database query from user input provided by the "Show User Group" form above the query results list (that was produced by 'users.php'):
 	function extractFormElementsGroup($sqlQuery)
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		if (!empty($sqlQuery)) // if there's a previous SQL query available
 		{
-			$query = preg_replace("/(SELECT .+?) FROM users.+/i", "\\1", $sqlQuery); // use the custom set of colums chosen by the user
-			$queryOrderBy = preg_replace("/.+( ORDER BY .+?)(?=LIMIT.*|GROUP BY.*|HAVING.*|PROCEDURE.*|FOR UPDATE.*|LOCK IN.*|$)/i", "\\1", $sqlQuery); // user the custom ORDER BY clause chosen by the user
+			$query = preg_replace("/(SELECT .+?) FROM $tableUsers.+/i", "\\1", $sqlQuery); // use the custom set of colums chosen by the user
+			$queryOrderBy = preg_replace("/.+( ORDER BY .+?)(?=LIMIT.*|GROUP BY.*|HAVING.*|PROCEDURE.*|FOR UPDATE.*|LOCK IN.*|$)/i", "\\1", $sqlQuery); // use the custom ORDER BY clause chosen by the user
 		}
 		else
 		{
@@ -554,7 +555,7 @@
 		$query .= ", user_id"; // add 'user_id' column (although it won't be visible the 'user_id' column gets included in every search query)
 								// (which is required in order to obtain unique checkbox names as well as for use in the 'getUserID()' function)
 
-		$query .= " FROM users"; // add FROM clause
+		$query .= " FROM $tableUsers"; // add FROM clause
 
 		$query .= " WHERE user_groups RLIKE \"(^|.*;) *$groupSearchSelector *(;.*|$)\""; // add WHERE clause
 
@@ -597,11 +598,11 @@
 			$recordSerialsString = "0"; // we use '0' which definitely doesn't exist as serial, resulting in a "nothing found" feedback
 
 
-		modifyUserGroups("users", $displayType, $recordSerialsArray, $recordSerialsString, "", $userGroup, $userGroupActionRadio); // add (remove) selected records to (from) the specified user group (function 'modifyUserGroups()' is defined in 'include.inc.php')
+		modifyUserGroups($tableUsers, $displayType, $recordSerialsArray, $recordSerialsString, "", $userGroup, $userGroupActionRadio); // add (remove) selected records to (from) the specified user group (function 'modifyUserGroups()' is defined in 'include.inc.php')
 
 
 		// re-apply the current sqlQuery:
-		$query = eregi_replace(' FROM users',', user_id FROM users',$sqlQuery); // add 'user_id' column (which is required in order to obtain unique checkbox names)
+		$query = eregi_replace(" FROM $tableUsers",", user_id FROM $tableUsers",$sqlQuery); // add 'user_id' column (which is required in order to obtain unique checkbox names)
 
 		return $query;
 	}
