@@ -17,7 +17,7 @@ orig_title	Translated Title [11]
 publication	Journal Book Title Generic [A_15]
 abbrev_journal	Abbrev. Journal Title [46]
 year	Date of Publication [20]
-month	(none)
+date	(none)
 volume	Volume ID [22]
 volume_numeric	Volume Numeric
 issue	Issue ID [24]
@@ -79,7 +79,7 @@ orig_title	TEXT
 publication	VARCHAR(255)
 abbrev_journal	VARCHAR(100)
 year	SMALLINT
-month	VARCHAR(50)
+date	VARCHAR(50)
 volume	VARCHAR(50)
 volume_numeric	SMALLINT UNSIGNED
 issue	VARCHAR(50)
@@ -131,7 +131,7 @@ modified_by	VARCHAR(100)
 table creation code
 -------------------
 
-CREATE TABLE refs (author TEXT, address TEXT, corporate_author VARCHAR(255), first_author VARCHAR(100), author_count TINYINT UNSIGNED, title TEXT, orig_title TEXT, publication VARCHAR(255), abbrev_journal VARCHAR(100), year SMALLINT, month VARCHAR(50), volume VARCHAR(50), volume_numeric SMALLINT UNSIGNED, issue VARCHAR(50), pages VARCHAR(50), first_page MEDIUMINT UNSIGNED, keywords TEXT, abstract TEXT, edition TINYINT UNSIGNED, editor TEXT, publisher VARCHAR(255), place VARCHAR(100), medium VARCHAR(50), series_editor TEXT, series_title TEXT, abbrev_series_title VARCHAR(100), series_volume VARCHAR(50), series_volume_numeric SMALLINT UNSIGNED, series_issue VARCHAR(50), issn VARCHAR(100), isbn VARCHAR(100), language VARCHAR(100), summary_language VARCHAR(100), area VARCHAR(255), type VARCHAR(100), publication_status ENUM("published","in print","submitted","unpublished"), thesis ENUM("Bachelor's thesis","Master's thesis","Ph.D. thesis","Diploma thesis","Doctoral thesis","Habilitation thesis"), expedition VARCHAR(255), doi VARCHAR(100), conference VARCHAR(255), url VARCHAR(255), call_number TEXT, location TEXT, contribution_id VARCHAR(100), online_publication ENUM("no","yes") NOT NULL, online_citation VARCHAR(255), file VARCHAR(255), notes TEXT, serial MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, orig_record MEDIUMINT, approved ENUM("no","yes") NOT NULL, created_date DATE, created_time TIME, created_by VARCHAR(100), modified_date DATE, modified_time TIME, modified_by VARCHAR(100));
+CREATE TABLE refs (author TEXT, address TEXT, corporate_author VARCHAR(255), first_author VARCHAR(100), author_count TINYINT UNSIGNED, title TEXT, orig_title TEXT, publication VARCHAR(255), abbrev_journal VARCHAR(100), year SMALLINT, date VARCHAR(50), volume VARCHAR(50), volume_numeric SMALLINT UNSIGNED, issue VARCHAR(50), pages VARCHAR(50), first_page MEDIUMINT UNSIGNED, keywords TEXT, abstract TEXT, edition TINYINT UNSIGNED, editor TEXT, publisher VARCHAR(255), place VARCHAR(100), medium VARCHAR(50), series_editor TEXT, series_title TEXT, abbrev_series_title VARCHAR(100), series_volume VARCHAR(50), series_volume_numeric SMALLINT UNSIGNED, series_issue VARCHAR(50), issn VARCHAR(100), isbn VARCHAR(100), language VARCHAR(100), summary_language VARCHAR(100), area VARCHAR(255), type VARCHAR(100), publication_status ENUM("published","in print","submitted","unpublished"), thesis ENUM("Bachelor's thesis","Master's thesis","Ph.D. thesis","Diploma thesis","Doctoral thesis","Habilitation thesis"), expedition VARCHAR(255), doi VARCHAR(100), conference VARCHAR(255), url VARCHAR(255), call_number TEXT, location TEXT, contribution_id VARCHAR(100), online_publication ENUM("no","yes") NOT NULL, online_citation VARCHAR(255), file VARCHAR(255), notes TEXT, serial MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, orig_record MEDIUMINT, approved ENUM("no","yes") NOT NULL, created_date DATE, created_time TIME, created_by VARCHAR(100), modified_date DATE, modified_time TIME, modified_by VARCHAR(100));
 
 
 rules for data import
