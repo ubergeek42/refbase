@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   02-Dec-04, 13:46
+	// Modified:   14-Dec-04, 00:31
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -1874,34 +1874,52 @@
 		$query = "SELECT"; // (Note: we care about the wrong "SELECT, author" etc. syntax later on...)
 
 		// ... if the user has checked the checkbox next to 'Author', we'll add that column to the SELECT query:
-		$showAuthor = $_POST['showAuthor'];
-		if ("$showAuthor" == "1")
-			$query .= ", author"; // add 'author' column
+		if (isset($_POST['showAuthor']))
+		{
+			$showAuthor = $_POST['showAuthor'];
+			if ("$showAuthor" == "1")
+				$query .= ", author"; // add 'author' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Title', we'll add that column to the SELECT query:
-		$showTitle = $_POST['showTitle'];
-		if ("$showTitle" == "1")
-			$query .= ", title"; // add 'title' column
+		if (isset($_POST['showTitle']))
+		{
+			$showTitle = $_POST['showTitle'];
+			if ("$showTitle" == "1")
+				$query .= ", title"; // add 'title' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Year', we'll add that column to the SELECT query:
-		$showYear = $_POST['showYear'];
-		if ("$showYear" == "1")
-			$query .= ", year"; // add 'year' column
+		if (isset($_POST['showYear']))
+		{
+			$showYear = $_POST['showYear'];
+			if ("$showYear" == "1")
+				$query .= ", year"; // add 'year' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Publication', we'll add that column to the SELECT query:
-		$showPublication = $_POST['showPublication'];
-		if ("$showPublication" == "1")
-			$query .= ", publication"; // add 'publication' column
+		if (isset($_POST['showPublication']))
+		{
+			$showPublication = $_POST['showPublication'];
+			if ("$showPublication" == "1")
+				$query .= ", publication"; // add 'publication' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Volume', we'll add that column to the SELECT query:
-		$showVolume = $_POST['showVolume'];
-		if ("$showVolume" == "1")
-			$query .= ", volume"; // add 'volume' column
+		if (isset($_POST['showVolume']))
+		{
+			$showVolume = $_POST['showVolume'];
+			if ("$showVolume" == "1")
+				$query .= ", volume"; // add 'volume' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Pages', we'll add that column to the SELECT query:
-		$showPages = $_POST['showPages'];
-		if ("$showPages" == "1")
-			$query .= ", pages"; // add 'pages' column
+		if (isset($_POST['showPages']))
+		{
+			$showPages = $_POST['showPages'];
+			if ("$showPages" == "1")
+				$query .= ", pages"; // add 'pages' column
+		}
 
 		// ... we still have to trap the case that the (silly!) user hasn't checked any of the column checkboxes above:
 		if ($query == "SELECT")
@@ -2117,64 +2135,100 @@
 		$query = "SELECT"; // (Note: we care about the wrong "SELECT, author" etc. syntax later on...)
 
 		// ... if the user has checked the checkbox next to 'Author', we'll add that column to the SELECT query:
-		$showAuthor = $_POST['showAuthor'];
-		if ("$showAuthor" == "1")
-			$query .= ", author"; // add 'author' column
+		if (isset($_POST['showAuthor']))
+		{
+			$showAuthor = $_POST['showAuthor'];
+			if ("$showAuthor" == "1")
+				$query .= ", author"; // add 'author' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Title', we'll add that column to the SELECT query:
-		$showTitle = $_POST['showTitle'];
-		if ("$showTitle" == "1")
-			$query .= ", title"; // add 'title' column
+		if (isset($_POST['showTitle']))
+		{
+			$showTitle = $_POST['showTitle'];
+			if ("$showTitle" == "1")
+				$query .= ", title"; // add 'title' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Year', we'll add that column to the SELECT query:
-		$showYear = $_POST['showYear'];
-		if ("$showYear" == "1")
-			$query .= ", year"; // add 'year' column
+		if (isset($_POST['showYear']))
+		{
+			$showYear = $_POST['showYear'];
+			if ("$showYear" == "1")
+				$query .= ", year"; // add 'year' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Editor', we'll add that column to the SELECT query:
-		$showEditor = $_POST['showEditor'];
-		if ("$showEditor" == "1")
-			$query .= ", editor"; // add 'editor' column
+		if (isset($_POST['showEditor']))
+		{
+			$showEditor = $_POST['showEditor'];
+			if ("$showEditor" == "1")
+				$query .= ", editor"; // add 'editor' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Series', we'll add that column to the SELECT query:
-		$showSeriesTitle = $_POST['showSeriesTitle'];
-		if ("$showSeriesTitle" == "1")
-			$query .= ", series_title"; // add 'series_title' column
+		if (isset($_POST['showSeriesTitle']))
+		{
+			$showSeriesTitle = $_POST['showSeriesTitle'];
+			if ("$showSeriesTitle" == "1")
+				$query .= ", series_title"; // add 'series_title' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Volume', we'll add that column to the SELECT query:
-		$showVolume = $_POST['showVolume'];
-		if ("$showVolume" == "1")
-			$query .= ", series_volume"; // add 'series_volume' column
+		if (isset($_POST['showVolume']))
+		{
+			$showVolume = $_POST['showVolume'];
+			if ("$showVolume" == "1")
+				$query .= ", series_volume"; // add 'series_volume' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Pages', we'll add that column to the SELECT query:
-		$showPages = $_POST['showPages'];
-		if ("$showPages" == "1")
-			$query .= ", pages"; // add 'pages' column
+		if (isset($_POST['showPages']))
+		{
+			$showPages = $_POST['showPages'];
+			if ("$showPages" == "1")
+				$query .= ", pages"; // add 'pages' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Publisher', we'll add that column to the SELECT query:
-		$showPublisher = $_POST['showPublisher'];
-		if ("$showPublisher" == "1")
-			$query .= ", publisher"; // add 'publisher' column
+		if (isset($_POST['showPublisher']))
+		{
+			$showPublisher = $_POST['showPublisher'];
+			if ("$showPublisher" == "1")
+				$query .= ", publisher"; // add 'publisher' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Place', we'll add that column to the SELECT query:
-		$showPlace = $_POST['showPlace'];
-		if ("$showPlace" == "1")
-			$query .= ", place"; // add 'place' column
+		if (isset($_POST['showPlace']))
+		{
+			$showPlace = $_POST['showPlace'];
+			if ("$showPlace" == "1")
+				$query .= ", place"; // add 'place' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Signature', we'll add that column to the SELECT query:
-		$showCallNumber = $_POST['showCallNumber'];
-		if ("$showCallNumber" == "1")
-			$query .= ", call_number"; // add 'call_number' column
+		if (isset($_POST['showCallNumber']))
+		{
+			$showCallNumber = $_POST['showCallNumber'];
+			if ("$showCallNumber" == "1")
+				$query .= ", call_number"; // add 'call_number' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Keywords', we'll add that column to the SELECT query:
-		$showKeywords = $_POST['showKeywords'];
-		if ("$showKeywords" == "1")
-			$query .= ", keywords"; // add 'keywords' column
+		if (isset($_POST['showKeywords']))
+		{
+			$showKeywords = $_POST['showKeywords'];
+			if ("$showKeywords" == "1")
+				$query .= ", keywords"; // add 'keywords' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Notes', we'll add that column to the SELECT query:
-		$showNotes = $_POST['showNotes'];
-		if ("$showNotes" == "1")
-			$query .= ", notes"; // add 'notes' column
+		if (isset($_POST['showNotes']))
+		{
+			$showNotes = $_POST['showNotes'];
+			if ("$showNotes" == "1")
+				$query .= ", notes"; // add 'notes' column
+		}
 
 		// ... we still have to trap the case that the (silly!) user hasn't checked any of the column checkboxes above:
 		if ($query == "SELECT")
@@ -2504,264 +2558,420 @@
 		$query = "SELECT"; // (Note: we care about the wrong "SELECT, author" etc. syntax later on...)
 
 		// ... if the user has checked the checkbox next to 'Author', we'll add that column to the SELECT query:
-		$showAuthor = $_POST['showAuthor'];
-		if ("$showAuthor" == "1")
-			$query .= ", author"; // add 'author' column
+		if (isset($_POST['showAuthor']))
+		{
+			$showAuthor = $_POST['showAuthor'];
+			if ("$showAuthor" == "1")
+				$query .= ", author"; // add 'author' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Address', we'll add that column to the SELECT query:
-		$showAddress = $_POST['showAddress'];
-		if ("$showAddress" == "1")
-			$query .= ", address"; // add 'address' column
+		if (isset($_POST['showAddress']))
+		{
+			$showAddress = $_POST['showAddress'];
+			if ("$showAddress" == "1")
+				$query .= ", address"; // add 'address' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Corporate Author', we'll add that column to the SELECT query:
-		$showCorporateAuthor = $_POST['showCorporateAuthor'];
-		if ("$showCorporateAuthor" == "1")
-			$query .= ", corporate_author"; // add 'corporate_author' column
+		if (isset($_POST['showCorporateAuthor']))
+		{
+			$showCorporateAuthor = $_POST['showCorporateAuthor'];
+			if ("$showCorporateAuthor" == "1")
+				$query .= ", corporate_author"; // add 'corporate_author' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Thesis', we'll add that column to the SELECT query:
-		$showThesis = $_POST['showThesis'];
-		if ("$showThesis" == "1")
-			$query .= ", thesis"; // add 'thesis' column
+		if (isset($_POST['showThesis']))
+		{
+			$showThesis = $_POST['showThesis'];
+			if ("$showThesis" == "1")
+				$query .= ", thesis"; // add 'thesis' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Title', we'll add that column to the SELECT query:
-		$showTitle = $_POST['showTitle'];
-		if ("$showTitle" == "1")
-			$query .= ", title"; // add 'title' column
+		if (isset($_POST['showTitle']))
+		{
+			$showTitle = $_POST['showTitle'];
+			if ("$showTitle" == "1")
+				$query .= ", title"; // add 'title' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Original Title', we'll add that column to the SELECT query:
-		$showOrigTitle = $_POST['showOrigTitle'];
-		if ("$showOrigTitle" == "1")
-			$query .= ", orig_title"; // add 'orig_title' column
+		if (isset($_POST['showOrigTitle']))
+		{
+			$showOrigTitle = $_POST['showOrigTitle'];
+			if ("$showOrigTitle" == "1")
+				$query .= ", orig_title"; // add 'orig_title' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Year', we'll add that column to the SELECT query:
-		$showYear = $_POST['showYear'];
-		if ("$showYear" == "1")
-			$query .= ", year"; // add 'year' column
+		if (isset($_POST['showYear']))
+		{
+			$showYear = $_POST['showYear'];
+			if ("$showYear" == "1")
+				$query .= ", year"; // add 'year' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Publication', we'll add that column to the SELECT query:
-		$showPublication = $_POST['showPublication'];
-		if ("$showPublication" == "1")
-			$query .= ", publication"; // add 'publication' column
+		if (isset($_POST['showPublication']))
+		{
+			$showPublication = $_POST['showPublication'];
+			if ("$showPublication" == "1")
+				$query .= ", publication"; // add 'publication' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Abbreviated Journal', we'll add that column to the SELECT query:
-		$showAbbrevJournal = $_POST['showAbbrevJournal'];
-		if ("$showAbbrevJournal" == "1")
-			$query .= ", abbrev_journal"; // add 'abbrev_journal' column
+		if (isset($_POST['showAbbrevJournal']))
+		{
+			$showAbbrevJournal = $_POST['showAbbrevJournal'];
+			if ("$showAbbrevJournal" == "1")
+				$query .= ", abbrev_journal"; // add 'abbrev_journal' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Editor', we'll add that column to the SELECT query:
-		$showEditor = $_POST['showEditor'];
-		if ("$showEditor" == "1")
-			$query .= ", editor"; // add 'editor' column
+		if (isset($_POST['showEditor']))
+		{
+			$showEditor = $_POST['showEditor'];
+			if ("$showEditor" == "1")
+				$query .= ", editor"; // add 'editor' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Volume', we'll add that column to the SELECT query:
-		$showVolume = $_POST['showVolume'];
-		if ("$showVolume" == "1")
-			$query .= ", volume"; // add 'volume' column
+		if (isset($_POST['showVolume']))
+		{
+			$showVolume = $_POST['showVolume'];
+			if ("$showVolume" == "1")
+				$query .= ", volume"; // add 'volume' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Issue', we'll add that column to the SELECT query:
-		$showIssue = $_POST['showIssue'];
-		if ("$showIssue" == "1")
-			$query .= ", issue"; // add 'issue' column
+		if (isset($_POST['showIssue']))
+		{
+			$showIssue = $_POST['showIssue'];
+			if ("$showIssue" == "1")
+				$query .= ", issue"; // add 'issue' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Pages', we'll add that column to the SELECT query:
-		$showPages = $_POST['showPages'];
-		if ("$showPages" == "1")
-			$query .= ", pages"; // add 'pages' column
+		if (isset($_POST['showPages']))
+		{
+			$showPages = $_POST['showPages'];
+			if ("$showPages" == "1")
+				$query .= ", pages"; // add 'pages' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Series', we'll add that column to the SELECT query:
-		$showSeriesTitle = $_POST['showSeriesTitle'];
-		if ("$showSeriesTitle" == "1")
-			$query .= ", series_title"; // add 'series_title' column
+		if (isset($_POST['showSeriesTitle']))
+		{
+			$showSeriesTitle = $_POST['showSeriesTitle'];
+			if ("$showSeriesTitle" == "1")
+				$query .= ", series_title"; // add 'series_title' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Abbreviated Series Title', we'll add that column to the SELECT query:
-		$showAbbrevSeriesTitle = $_POST['showAbbrevSeriesTitle'];
-		if ("$showAbbrevSeriesTitle" == "1")
-			$query .= ", abbrev_series_Title"; // add 'abbrev_series_Title' column
+		if (isset($_POST['showAbbrevSeriesTitle']))
+		{
+			$showAbbrevSeriesTitle = $_POST['showAbbrevSeriesTitle'];
+			if ("$showAbbrevSeriesTitle" == "1")
+				$query .= ", abbrev_series_Title"; // add 'abbrev_series_Title' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Series Editor', we'll add that column to the SELECT query:
-		$showSeriesEditor = $_POST['showSeriesEditor'];
-		if ("$showSeriesEditor" == "1")
-			$query .= ", series_editor"; // add 'series_editor' column
+		if (isset($_POST['showSeriesEditor']))
+		{
+			$showSeriesEditor = $_POST['showSeriesEditor'];
+			if ("$showSeriesEditor" == "1")
+				$query .= ", series_editor"; // add 'series_editor' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Series Volume', we'll add that column to the SELECT query:
-		$showVolume = $_POST['showSeriesVolume'];
-		if ("$showSeriesVolume" == "1")
-			$query .= ", series_volume"; // add 'series_volume' column
+		if (isset($_POST['showSeriesVolume']))
+		{
+			$showSeriesVolume = $_POST['showSeriesVolume'];
+			if ("$showSeriesVolume" == "1")
+				$query .= ", series_volume"; // add 'series_volume' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Series Issue', we'll add that column to the SELECT query:
-		$showSeriesIssue = $_POST['showSeriesIssue'];
-		if ("$showSeriesIssue" == "1")
-			$query .= ", series_issue"; // add 'series_issue' column
+		if (isset($_POST['showSeriesIssue']))
+		{
+			$showSeriesIssue = $_POST['showSeriesIssue'];
+			if ("$showSeriesIssue" == "1")
+				$query .= ", series_issue"; // add 'series_issue' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Publisher', we'll add that column to the SELECT query:
-		$showPublisher = $_POST['showPublisher'];
-		if ("$showPublisher" == "1")
-			$query .= ", publisher"; // add 'publisher' column
+		if (isset($_POST['showPublisher']))
+		{
+			$showPublisher = $_POST['showPublisher'];
+			if ("$showPublisher" == "1")
+				$query .= ", publisher"; // add 'publisher' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Place of Publication', we'll add that column to the SELECT query:
-		$showPlace = $_POST['showPlace'];
-		if ("$showPlace" == "1")
-			$query .= ", place"; // add 'place' column
+		if (isset($_POST['showPlace']))
+		{
+			$showPlace = $_POST['showPlace'];
+			if ("$showPlace" == "1")
+				$query .= ", place"; // add 'place' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Edition', we'll add that column to the SELECT query:
-		$showEdition = $_POST['showEdition'];
-		if ("$showEdition" == "1")
-			$query .= ", edition"; // add 'edition' column
+		if (isset($_POST['showEdition']))
+		{
+			$showEdition = $_POST['showEdition'];
+			if ("$showEdition" == "1")
+				$query .= ", edition"; // add 'edition' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Medium', we'll add that column to the SELECT query:
-		$showMedium = $_POST['showMedium'];
-		if ("$showMedium" == "1")
-			$query .= ", medium"; // add 'medium' column
+		if (isset($_POST['showMedium']))
+		{
+			$showMedium = $_POST['showMedium'];
+			if ("$showMedium" == "1")
+				$query .= ", medium"; // add 'medium' column
+		}
 
 		// ... if the user has checked the checkbox next to 'ISSN', we'll add that column to the SELECT query:
-		$showISSN = $_POST['showISSN'];
-		if ("$showISSN" == "1")
-			$query .= ", issn"; // add 'issn' column
+		if (isset($_POST['showISSN']))
+		{
+			$showISSN = $_POST['showISSN'];
+			if ("$showISSN" == "1")
+				$query .= ", issn"; // add 'issn' column
+		}
 
 		// ... if the user has checked the checkbox next to 'ISBN', we'll add that column to the SELECT query:
-		$showISBN = $_POST['showISBN'];
-		if ("$showISBN" == "1")
-			$query .= ", isbn"; // add 'isbn' column
+		if (isset($_POST['showISBN']))
+		{
+			$showISBN = $_POST['showISBN'];
+			if ("$showISBN" == "1")
+				$query .= ", isbn"; // add 'isbn' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Language', we'll add that column to the SELECT query:
-		$showLanguage = $_POST['showLanguage'];
-		if ("$showLanguage" == "1")
-			$query .= ", language"; // add 'language' column
+		if (isset($_POST['showLanguage']))
+		{
+			$showLanguage = $_POST['showLanguage'];
+			if ("$showLanguage" == "1")
+				$query .= ", language"; // add 'language' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Summary Language', we'll add that column to the SELECT query:
-		$showSummaryLanguage = $_POST['showSummaryLanguage'];
-		if ("$showSummaryLanguage" == "1")
-			$query .= ", summary_language"; // add 'summary_language' column
+		if (isset($_POST['showSummaryLanguage']))
+		{
+			$showSummaryLanguage = $_POST['showSummaryLanguage'];
+			if ("$showSummaryLanguage" == "1")
+				$query .= ", summary_language"; // add 'summary_language' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Keywords', we'll add that column to the SELECT query:
-		$showKeywords = $_POST['showKeywords'];
-		if ("$showKeywords" == "1")
-			$query .= ", keywords"; // add 'keywords' column
+		if (isset($_POST['showKeywords']))
+		{
+			$showKeywords = $_POST['showKeywords'];
+			if ("$showKeywords" == "1")
+				$query .= ", keywords"; // add 'keywords' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Abstract', we'll add that column to the SELECT query:
-		$showAbstract = $_POST['showAbstract'];
-		if ("$showAbstract" == "1")
-			$query .= ", abstract"; // add 'abstract' column
+		if (isset($_POST['showAbstract']))
+		{
+			$showAbstract = $_POST['showAbstract'];
+			if ("$showAbstract" == "1")
+				$query .= ", abstract"; // add 'abstract' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Area', we'll add that column to the SELECT query:
-		$showArea = $_POST['showArea'];
-		if ("$showArea" == "1")
-			$query .= ", area"; // add 'area' column
+		if (isset($_POST['showArea']))
+		{
+			$showArea = $_POST['showArea'];
+			if ("$showArea" == "1")
+				$query .= ", area"; // add 'area' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Expedition', we'll add that column to the SELECT query:
-		$showExpedition = $_POST['showExpedition'];
-		if ("$showExpedition" == "1")
-			$query .= ", expedition"; // add 'expedition' column
+		if (isset($_POST['showExpedition']))
+		{
+			$showExpedition = $_POST['showExpedition'];
+			if ("$showExpedition" == "1")
+				$query .= ", expedition"; // add 'expedition' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Conference', we'll add that column to the SELECT query:
-		$showConference = $_POST['showConference'];
-		if ("$showConference" == "1")
-			$query .= ", conference"; // add 'conference' column
+		if (isset($_POST['showConference']))
+		{
+			$showConference = $_POST['showConference'];
+			if ("$showConference" == "1")
+				$query .= ", conference"; // add 'conference' column
+		}
 
 		// ... if the user has checked the checkbox next to 'DOI', we'll add that column to the SELECT query:
-		$showDOI = $_POST['showDOI'];
-		if ("$showDOI" == "1")
-			$query .= ", doi"; // add 'doi' column
+		if (isset($_POST['showDOI']))
+		{
+			$showDOI = $_POST['showDOI'];
+			if ("$showDOI" == "1")
+				$query .= ", doi"; // add 'doi' column
+		}
 
 		// ... if the user has checked the checkbox next to 'URL', we'll add that column to the SELECT query:
-		$showURL = $_POST['showURL'];
-		if ("$showURL" == "1")
-			$query .= ", url"; // add 'url' column
+		if (isset($_POST['showURL']))
+		{
+			$showURL = $_POST['showURL'];
+			if ("$showURL" == "1")
+				$query .= ", url"; // add 'url' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Location', we'll add that column to the SELECT query:
-		$showLocation = $_POST['showLocation'];
-		if ("$showLocation" == "1")
-			$query .= ", location"; // add 'location' column
+		if (isset($_POST['showLocation']))
+		{
+			$showLocation = $_POST['showLocation'];
+			if ("$showLocation" == "1")
+				$query .= ", location"; // add 'location' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Call Number', we'll add that column to the SELECT query:
-		$showCallNumber = $_POST['showCallNumber'];
-		if ("$showCallNumber" == "1")
-			$query .= ", call_number"; // add 'call_number' column
+		if (isset($_POST['showCallNumber']))
+		{
+			$showCallNumber = $_POST['showCallNumber'];
+			if ("$showCallNumber" == "1")
+				$query .= ", call_number"; // add 'call_number' column
+		}
 
 		// ... if the user has checked the checkbox next to 'File Name', we'll add that column to the SELECT query:
-		$showFile = $_POST['showFile'];
-		if ("$showFile" == "1")
-			$query .= ", file"; // add 'file' column
+		if (isset($_POST['showFile']))
+		{
+			$showFile = $_POST['showFile'];
+			if ("$showFile" == "1")
+				$query .= ", file"; // add 'file' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Copy', we'll add that column to the SELECT query:
-		$showCopy = $_POST['showCopy'];
-		if ("$showCopy" == "1")
-			$query .= ", copy"; // add 'copy' column
+		if (isset($_POST['showCopy']))
+		{
+			$showCopy = $_POST['showCopy'];
+			if ("$showCopy" == "1")
+				$query .= ", copy"; // add 'copy' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Notes', we'll add that column to the SELECT query:
-		$showNotes = $_POST['showNotes'];
-		if ("$showNotes" == "1")
-			$query .= ", notes"; // add 'notes' column
+		if (isset($_POST['showNotes']))
+		{
+			$showNotes = $_POST['showNotes'];
+			if ("$showNotes" == "1")
+				$query .= ", notes"; // add 'notes' column
+		}
 
 		// ... if the user has checked the checkbox next to 'User Keys', we'll add that column to the SELECT query:
-		$showUserKeys = $_POST['showUserKeys'];
-		if ("$showUserKeys" == "1")
-			$query .= ", user_keys"; // add 'user_keys' column
+		if (isset($_POST['showUserKeys']))
+		{
+			$showUserKeys = $_POST['showUserKeys'];
+			if ("$showUserKeys" == "1")
+				$query .= ", user_keys"; // add 'user_keys' column
+		}
 
 		// ... if the user has checked the checkbox next to 'User Notes', we'll add that column to the SELECT query:
-		$showUserNotes = $_POST['showUserNotes'];
-		if ("$showUserNotes" == "1")
-			$query .= ", user_notes"; // add 'user_notes' column
+		if (isset($_POST['showUserNotes']))
+		{
+			$showUserNotes = $_POST['showUserNotes'];
+			if ("$showUserNotes" == "1")
+				$query .= ", user_notes"; // add 'user_notes' column
+		}
 
 		// ... if the user has checked the checkbox next to 'User File', we'll add that column to the SELECT query:
-		$showUserFile = $_POST['showUserFile'];
-		if ("$showUserFile" == "1")
-			$query .= ", user_file"; // add 'user_file' column
+		if (isset($_POST['showUserFile']))
+		{
+			$showUserFile = $_POST['showUserFile'];
+			if ("$showUserFile" == "1")
+				$query .= ", user_file"; // add 'user_file' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Serial', we'll add that column to the SELECT query:
-		$showSerial = $_POST['showSerial'];
-		if ("$showSerial" == "1")
-			$query .= ", serial"; // add 'serial' column
+		if (isset($_POST['showSerial']))
+		{
+			$showSerial = $_POST['showSerial'];
+			if ("$showSerial" == "1")
+				$query .= ", serial"; // add 'serial' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Type', we'll add that column to the SELECT query:
-		$showType = $_POST['showType'];
-		if ("$showType" == "1")
-			$query .= ", type"; // add 'type' column
+		if (isset($_POST['showType']))
+		{
+			$showType = $_POST['showType'];
+			if ("$showType" == "1")
+				$query .= ", type"; // add 'type' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Marked', we'll add that column to the SELECT query:
-		$showMarked = $_POST['showMarked'];
-		if ("$showMarked" == "1")
-			$query .= ", marked"; // add 'marked' column
+		if (isset($_POST['showMarked']))
+		{
+			$showMarked = $_POST['showMarked'];
+			if ("$showMarked" == "1")
+				$query .= ", marked"; // add 'marked' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Selected', we'll add that column to the SELECT query:
-		$showSelected = $_POST['showSelected'];
-		if ("$showSelected" == "1")
-			$query .= ", selected"; // add 'selected' column
+		if (isset($_POST['showSelected']))
+		{
+			$showSelected = $_POST['showSelected'];
+			if ("$showSelected" == "1")
+				$query .= ", selected"; // add 'selected' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Approved', we'll add that column to the SELECT query:
-		$showApproved = $_POST['showApproved'];
-		if ("$showApproved" == "1")
-			$query .= ", approved"; // add 'approved' column
+		if (isset($_POST['showApproved']))
+		{
+			$showApproved = $_POST['showApproved'];
+			if ("$showApproved" == "1")
+				$query .= ", approved"; // add 'approved' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Date Created', we'll add that column to the SELECT query:
-		$showCreatedDate = $_POST['showCreatedDate'];
-		if ("$showCreatedDate" == "1")
-			$query .= ", created_date"; // add 'created_date' column
+		if (isset($_POST['showCreatedDate']))
+		{
+			$showCreatedDate = $_POST['showCreatedDate'];
+			if ("$showCreatedDate" == "1")
+				$query .= ", created_date"; // add 'created_date' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Time Created', we'll add that column to the SELECT query:
-		$showCreatedTime = $_POST['showCreatedTime'];
-		if ("$showCreatedTime" == "1")
-			$query .= ", created_time"; // add 'created_time' column
+		if (isset($_POST['showCreatedTime']))
+		{
+			$showCreatedTime = $_POST['showCreatedTime'];
+			if ("$showCreatedTime" == "1")
+				$query .= ", created_time"; // add 'created_time' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Created By', we'll add that column to the SELECT query:
-		$showCreatedBy = $_POST['showCreatedBy'];
-		if ("$showCreatedBy" == "1")
-			$query .= ", created_by"; // add 'created_by' column
+		if (isset($_POST['showCreatedBy']))
+		{
+			$showCreatedBy = $_POST['showCreatedBy'];
+			if ("$showCreatedBy" == "1")
+				$query .= ", created_by"; // add 'created_by' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Date Modified', we'll add that column to the SELECT query:
-		$showModifiedDate = $_POST['showModifiedDate'];
-		if ("$showModifiedDate" == "1")
-			$query .= ", modified_date"; // add 'modified_date' column
+		if (isset($_POST['showModifiedDate']))
+		{
+			$showModifiedDate = $_POST['showModifiedDate'];
+			if ("$showModifiedDate" == "1")
+				$query .= ", modified_date"; // add 'modified_date' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Time Modified', we'll add that column to the SELECT query:
-		$showModifiedTime = $_POST['showModifiedTime'];
-		if ("$showModifiedTime" == "1")
-			$query .= ", modified_time"; // add 'modified_time' column
+		if (isset($_POST['showModifiedTime']))
+		{
+			$showModifiedTime = $_POST['showModifiedTime'];
+			if ("$showModifiedTime" == "1")
+				$query .= ", modified_time"; // add 'modified_time' column
+		}
 
 		// ... if the user has checked the checkbox next to 'Modified By', we'll add that column to the SELECT query:
-		$showModifiedBy = $_POST['showModifiedBy'];
-		if ("$showModifiedBy" == "1")
-			$query .= ", modified_by"; // add 'modified_by' column
+		if (isset($_POST['showModifiedBy']))
+		{
+			$showModifiedBy = $_POST['showModifiedBy'];
+			if ("$showModifiedBy" == "1")
+				$query .= ", modified_by"; // add 'modified_by' column
+		}
 
 		// ... we still have to trap the case that the (silly!) user hasn't checked any of the column checkboxes above:
 		if ($query == "SELECT")
@@ -3951,25 +4161,34 @@
 		}
 
 		// ... if the user has selected a radio button for 'Marked', add the corresponding value for 'marked' as an AND clause:
-		$markedRadio = $_POST['markedRadio'];
-		if ("$markedRadio" == "1")
-			$query .= " AND marked = \"yes\"";		
-		elseif ("$markedRadio" == "0")
-			$query .= " AND marked = \"no\"";
+		if (isset($_POST['markedRadio']))
+		{
+			$markedRadio = $_POST['markedRadio'];
+			if ("$markedRadio" == "1")
+				$query .= " AND marked = \"yes\"";		
+			elseif ("$markedRadio" == "0")
+				$query .= " AND marked = \"no\"";
+		}
 
 		// ... if the user has selected a radio button for 'Selected', add the corresponding value for 'selected' as an AND clause:
-		$selectedRadio = $_POST['selectedRadio'];
-		if ("$selectedRadio" == "1")
-			$query .= " AND selected = \"yes\"";		
-		elseif ("$selectedRadio" == "0")
-			$query .= " AND selected = \"no\"";
+		if (isset($_POST['selectedRadio']))
+		{
+			$selectedRadio = $_POST['selectedRadio'];
+			if ("$selectedRadio" == "1")
+				$query .= " AND selected = \"yes\"";		
+			elseif ("$selectedRadio" == "0")
+				$query .= " AND selected = \"no\"";
+		}
 
 		// ... if the user has selected a radio button for 'Approved', add the corresponding value for 'approved' as an AND clause:
-		$approvedRadio = $_POST['approvedRadio'];
-		if ("$approvedRadio" == "1")
-			$query .= " AND approved = \"yes\"";		
-		elseif ("$approvedRadio" == "0")
-			$query .= " AND approved = \"no\"";
+		if (isset($_POST['approvedRadio']))
+		{
+			$approvedRadio = $_POST['approvedRadio'];
+			if ("$approvedRadio" == "1")
+				$query .= " AND approved = \"yes\"";		
+			elseif ("$approvedRadio" == "0")
+				$query .= " AND approved = \"no\"";
+		}
 
 		// ... if the user has specified a created date, add the value of '$createdDateNo' as an AND clause:
 		$createdDateNo = $_POST['createdDateNo'];
