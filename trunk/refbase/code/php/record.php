@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./record.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   01-Nov-04, 21:39
+	// Modified:   17-Feb-05, 19:37
 
 	// Form that offers to add
 	// records or edit/delete
@@ -159,10 +159,10 @@
 		// (note: we also add the 'serial' column at the end in order to provide standardized input [compare processing of form 'sql_search.php' in 'search.php'])
 		if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
 			$query = "SELECT author, title, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, approved, notes, file, serial, location, type, call_number, created_date, created_time, created_by, modified_date, modified_time, modified_by, orig_record, contribution_id, online_publication, online_citation, marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key, related, serial, url, doi"
-					. " FROM refs LEFT JOIN user_data ON serial = record_id AND user_id =" . $loginUserID . " WHERE serial RLIKE \"^(" . $serialNo . ")$\""; // since we'll only fetch one record, the ORDER BY clause is obsolete here
+					. " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id =" . $loginUserID . " WHERE serial RLIKE \"^(" . $serialNo . ")$\""; // since we'll only fetch one record, the ORDER BY clause is obsolete here
 		else // if NO user logged in, don't display any user specific fields:
 			$query = "SELECT author, title, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, approved, notes, file, serial, location, type, call_number, created_date, created_time, created_by, modified_date, modified_time, modified_by, orig_record, contribution_id, online_publication, online_citation, serial, url, doi"
-					. " FROM refs WHERE serial RLIKE \"^(" . $serialNo . ")$\""; // since we'll only fetch one record, the ORDER BY clause is obsolete here
+					. " FROM $tableRefs WHERE serial RLIKE \"^(" . $serialNo . ")$\""; // since we'll only fetch one record, the ORDER BY clause is obsolete here
 	}
 
 	// --------------------------------------------------------------------
@@ -186,39 +186,39 @@
 				$row = mysql_fetch_array($result); //fetch the current row into the array $row (it'll be always *one* row, but anyhow)
 				
 				// fetch attributes of the current record into variables:
-				$authorName = htmlentities($row['author']);
-				$titleName = htmlentities($row['title']);
-				$yearNo = htmlentities($row['year']);
-				$publicationName = htmlentities($row['publication']);
-				$abbrevJournalName = htmlentities($row['abbrev_journal']);
-				$volumeNo = htmlentities($row['volume']);
-				$issueNo = htmlentities($row['issue']);
-				$pagesNo = htmlentities($row['pages']);
-				$addressName = htmlentities($row['address']);
-				$corporateAuthorName = htmlentities($row['corporate_author']);
-				$keywordsName = htmlentities($row['keywords']);
-				$abstractName = htmlentities($row['abstract']);
-				$publisherName = htmlentities($row['publisher']);
-				$placeName = htmlentities($row['place']);
-				$editorName = htmlentities($row['editor']);
-				$languageName = htmlentities($row['language']);
-				$summaryLanguageName = htmlentities($row['summary_language']);
-				$origTitleName = htmlentities($row['orig_title']);
-				$seriesEditorName = htmlentities($row['series_editor']);
-				$seriesTitleName = htmlentities($row['series_title']);
-				$abbrevSeriesTitleName = htmlentities($row['abbrev_series_title']);
-				$seriesVolumeNo = htmlentities($row['series_volume']);
-				$seriesIssueNo = htmlentities($row['series_issue']);
-				$editionNo = htmlentities($row['edition']);
-				$issnName = htmlentities($row['issn']);
-				$isbnName = htmlentities($row['isbn']);
-				$mediumName = htmlentities($row['medium']);
-				$areaName = htmlentities($row['area']);
-				$expeditionName = htmlentities($row['expedition']);
-				$conferenceName = htmlentities($row['conference']);
-				$notesName = htmlentities($row['notes']);
-				$approvedRadio = htmlentities($row['approved']);
-				$locationName = htmlentities($row['location']);
+				$authorName = encodeHTML($row['author']);
+				$titleName = encodeHTML($row['title']);
+				$yearNo = encodeHTML($row['year']);
+				$publicationName = encodeHTML($row['publication']);
+				$abbrevJournalName = encodeHTML($row['abbrev_journal']);
+				$volumeNo = encodeHTML($row['volume']);
+				$issueNo = encodeHTML($row['issue']);
+				$pagesNo = encodeHTML($row['pages']);
+				$addressName = encodeHTML($row['address']);
+				$corporateAuthorName = encodeHTML($row['corporate_author']);
+				$keywordsName = encodeHTML($row['keywords']);
+				$abstractName = encodeHTML($row['abstract']);
+				$publisherName = encodeHTML($row['publisher']);
+				$placeName = encodeHTML($row['place']);
+				$editorName = encodeHTML($row['editor']);
+				$languageName = encodeHTML($row['language']);
+				$summaryLanguageName = encodeHTML($row['summary_language']);
+				$origTitleName = encodeHTML($row['orig_title']);
+				$seriesEditorName = encodeHTML($row['series_editor']);
+				$seriesTitleName = encodeHTML($row['series_title']);
+				$abbrevSeriesTitleName = encodeHTML($row['abbrev_series_title']);
+				$seriesVolumeNo = encodeHTML($row['series_volume']);
+				$seriesIssueNo = encodeHTML($row['series_issue']);
+				$editionNo = encodeHTML($row['edition']);
+				$issnName = encodeHTML($row['issn']);
+				$isbnName = encodeHTML($row['isbn']);
+				$mediumName = encodeHTML($row['medium']);
+				$areaName = encodeHTML($row['area']);
+				$expeditionName = encodeHTML($row['expedition']);
+				$conferenceName = encodeHTML($row['conference']);
+				$notesName = encodeHTML($row['notes']);
+				$approvedRadio = encodeHTML($row['approved']);
+				$locationName = encodeHTML($row['location']);
 				$callNumberName = $row['call_number']; // contents of the 'call_number' field will get encoded depending on who's logged in (normal user vs. admin)
 													// (for normal users being logged in, the field's contents won't get HTML encoded at all, since the data will
 													//  get *rawurlencoded* when including them within a hidden form tag; for the admin being logged in, the data
@@ -230,7 +230,7 @@
 					if (ereg("(^|.*;) *$callNumberPrefix *@ +([^@;]+)", $callNumberName)) // if the user's call number prefix occurs within the contents of the 'call_number' field
 					{
 						$callNumberNameUserOnly = ereg_replace("(^|.*;) *$callNumberPrefix *@ +([^@;]+).*", "\\2", $callNumberName); // extract the user's *own* call number from the full contents of the 'call_number' field
-						$callNumberNameUserOnly = htmlentities($callNumberNameUserOnly);
+						$callNumberNameUserOnly = encodeHTML($callNumberNameUserOnly);
 					}
 					else
 						$callNumberNameUserOnly = "";
@@ -238,7 +238,7 @@
 				elseif ((isset($loginEmail)) AND ($loginEmail != $adminLoginEmail)) // admin logged in
 				{
 					$callNumberNameUserOnly = ""; // the 'call_number' field will be empty if no user is logged in (note that '$callNumberNameUserOnly' won't be used at all, if the admin is logged in)
-					$callNumberName = htmlentities($callNumberName); // if the admin is logged in we display the full contents of the 'call_number' field, so we'll need to HTML encode the data
+					$callNumberName = encodeHTML($callNumberName); // if the admin is logged in we display the full contents of the 'call_number' field, so we'll need to HTML encode the data
 				}
 				else // nobody logged in
 				{
@@ -246,67 +246,67 @@
 					// note that, as for normal users being logged in, the call number field contents won't get HTML encoded here, since the data will get *rawurlencoded* when including them within a hidden form tag
 				}
 
-				$serialNo = htmlentities($row['serial']);
-				$typeName = htmlentities($row['type']);
-				$thesisName = htmlentities($row['thesis']);
+				$serialNo = encodeHTML($row['serial']);
+				$typeName = encodeHTML($row['type']);
+				$thesisName = encodeHTML($row['thesis']);
 
 				if (isset($row['marked'])) // 'marked' field is only provided if a user is logged in
-					$markedRadio = htmlentities($row['marked']);
+					$markedRadio = encodeHTML($row['marked']);
 				else
 					$markedRadio = "";
 
 				if (isset($row['copy'])) // 'copy' field is only provided if a user is logged in
-					$copyName = htmlentities($row['copy']);
+					$copyName = encodeHTML($row['copy']);
 				else
 					$copyName = "";
 
 				if (isset($row['selected'])) // 'selected' field is only provided if a user is logged in
-					$selectedRadio = htmlentities($row['selected']);
+					$selectedRadio = encodeHTML($row['selected']);
 				else
 					$selectedRadio = "";
 
 				if (isset($row['user_keys'])) // 'user_keys' field is only provided if a user is logged in
-					$userKeysName = htmlentities($row['user_keys']);
+					$userKeysName = encodeHTML($row['user_keys']);
 				else
 					$userKeysName = "";
 
 				if (isset($row['user_notes'])) // 'user_notes' field is only provided if a user is logged in
-					$userNotesName = htmlentities($row['user_notes']);
+					$userNotesName = encodeHTML($row['user_notes']);
 				else
 					$userNotesName = "";
 
 				if (isset($row['user_file'])) // 'user_file' field is only provided if a user is logged in
-					$userFileName = htmlentities($row['user_file']);
+					$userFileName = encodeHTML($row['user_file']);
 				else
 					$userFileName = "";
 
 				if (isset($row['user_groups'])) // 'user_groups' field is only provided if a user is logged in
-					$userGroupsName = htmlentities($row['user_groups']);
+					$userGroupsName = encodeHTML($row['user_groups']);
 				else
 					$userGroupsName = "";
 
 				if (isset($row['cite_key'])) // 'cite_key' field is only provided if a user is logged in
-					$citeKeyName = htmlentities($row['cite_key']);
+					$citeKeyName = encodeHTML($row['cite_key']);
 				else
 					$citeKeyName = "";
 
 				if (isset($row['related'])) // 'related' field is only provided if a user is logged in
-					$relatedName = htmlentities($row['related']);
+					$relatedName = encodeHTML($row['related']);
 				else
 					$relatedName = "";
 
-				$fileName = htmlentities($row['file']);
-				$urlName = htmlentities($row['url']);
-				$doiName = htmlentities($row['doi']);
+				$fileName = encodeHTML($row['file']);
+				$urlName = encodeHTML($row['url']);
+				$doiName = encodeHTML($row['doi']);
 				$contributionID = $row['contribution_id'];
 				$onlinePublication = $row['online_publication'];
 				$onlineCitationName = $row['online_citation'];
 				$createdDate = $row['created_date'];
 				$createdTime = $row['created_time'];
-				$createdBy = htmlentities($row['created_by']);
+				$createdBy = encodeHTML($row['created_by']);
 				$modifiedDate = $row['modified_date'];
 				$modifiedTime = $row['modified_time'];
-				$modifiedBy = htmlentities($row['modified_by']);
+				$modifiedBy = encodeHTML($row['modified_by']);
 				$origRecord = $row['orig_record'];
 			}
 			else
@@ -687,7 +687,7 @@
 
 	// (4a) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- " . $pageTitle, "index,follow", "Add, edit or delete a record in the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $pageTitle, "index,follow", "Add, edit or delete a record in the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
 
 	// (4b) DISPLAY results:
@@ -1010,7 +1010,7 @@
 			$n = "";
 
 		echo "\n\t<td colspan=\"2\" class=\"otherfieldsbg\">\n\t\t<input type=\"checkbox\" name=\"contributionIDCheckBox\" value=\"1\"$contributionIDCheckBoxIsChecked title=\"mark this checkbox if one of the authors of this publication belongs to your own institution\"$contributionIDCheckBoxLock>&nbsp;"
-				. "\n\t\tThis is a" . $n . " " . htmlentities($abbrevInstitution) . " publication.\n\t</td>"; // we make use of the session variable '$abbrevInstitution' here
+				. "\n\t\tThis is a" . $n . " " . encodeHTML($abbrevInstitution) . " publication.\n\t</td>"; // we make use of the session variable '$abbrevInstitution' here
 	}
 	else
 	{
