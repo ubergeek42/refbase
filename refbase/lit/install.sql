@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./install.sql
 # Created:    02-Oct-04, 20:11
-# Modified:   02-Oct-04, 20:40
+# Modified:   03-Oct-04, 19:06
 
 # MySQL database structure & initial data
 
@@ -124,7 +124,7 @@ CREATE TABLE `formats` (
 # data for table `formats`
 #
 
-INSERT INTO `formats` VALUES (1, 'MODS XML', 'true', 'export_format_1.inc.php', '1');
+INSERT INTO `formats` VALUES (1, 'MODS XML', 'true', 'MODS_XML.inc.php', '1');
 
 # --------------------------------------------------------
 
@@ -153,7 +153,7 @@ CREATE TABLE `group_permissions` (
   `allow_rss_feeds` enum('yes','no') NOT NULL default 'yes',
   `allow_sql_search` enum('yes','no') NOT NULL default 'yes',
   `allow_change_personinfo` enum('yes','no') NOT NULL default 'yes',
-  `allow_edit_call_number` enum('yes','no') NOT NULL default 'yes',
+  `allow_edit_call_number` enum('no','yes') NOT NULL default 'no',
   PRIMARY KEY  (`group_permission_id`),
   KEY `group_id` (`group_id`)
 ) TYPE=MyISAM AUTO_INCREMENT=2 ;
@@ -531,7 +531,7 @@ CREATE TABLE `user_permissions` (
   `allow_rss_feeds` enum('yes','no') NOT NULL default 'yes',
   `allow_sql_search` enum('yes','no') NOT NULL default 'yes',
   `allow_change_personinfo` enum('yes','no') NOT NULL default 'yes',
-  `allow_edit_call_number` enum('yes','no') NOT NULL default 'yes',
+  `allow_edit_call_number` enum('no','yes') NOT NULL default 'no',
   PRIMARY KEY  (`user_permission_id`),
   KEY `user_id` (`user_id`)
 ) TYPE=MyISAM AUTO_INCREMENT=5 ;
