@@ -87,9 +87,6 @@
 //			. "\n\t<td>&nbsp;</td>" // img in 'header.inc' now spans this row (by rowspan="2")
 			. "\n\t<td>$HeaderString</td>"
 			. "\n</tr>"
-			. "\n<tr align=\"center\">"
-			. "\n\t<td colspan=\"2\">&nbsp;</td>"
-			. "\n</tr>"
 			. "\n</table>"
 			. "\n<hr align=\"center\" width=\"80%\">";
 	}
