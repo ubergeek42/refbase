@@ -1,5 +1,3 @@
-How to update?
---------------
 Please follow the steps below to update an existing refbase-0.7 installation to
 refbase-0.8.0:
 
@@ -40,7 +38,7 @@ refbase-0.8.0:
     <http://SERVER_ADDRESS/PATH_ON_SERVER/update.php>
 
    (where the string 'SERVER_ADDRESS' is replaced by your server name and
-   'PATH_ON_SERVER' is the actual path to your refbase-0.8.0 web directory)
+    'PATH_ON_SERVER' is the actual path to your refbase-0.8.0 web directory)
 
   This should bring up the update form.  Edit the contents of all text entry
   fields to match your server setup and supply the MySQL admin password, then
