@@ -4,8 +4,8 @@
 	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_removal.php
-	// Created:    16-Apr-02, 10:54 Uhr
-	// Modified:   01-Jul-03, 0:44 Uhr
+	// Created:    16-Apr-02, 10:54
+	// Modified:   30-May-04, 17:52
 
 	// This script deletes a user from the 'users' and 'auth' tables.
 	// The script can be only called by the admin. If the removal succeeds, it redirects to 'users.php'.
@@ -23,19 +23,22 @@
 
 	// --------------------------------------------------------------------
 
-	// Initialize a session
-	session_start();
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session();
 
-	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
-	
 	// Check if the admin is logged in
-	if (!(session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail))) // ('$adminLoginEmail' is specified in 'ini.inc.php')
+	if (!(isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail))) // ('$adminLoginEmail' is specified in 'ini.inc.php')
 	{
-		session_register("HeaderString"); // save an error message
+		// save an error message:
 		$HeaderString = "<b><span class=\"warning\">You must be logged in as admin to remove any users!</span></b>";
 
-		session_register("referer"); // save the URL of the currently displayed page
-		$referer = $HTTP_REFERER;
+		// save the URL of the currently displayed page:
+		$referer = $_SERVER['HTTP_REFERER'];
+
+		// Write back session variables:
+		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+		saveSessionVariable("referer", $referer);
 
 		header("Location: index.php");
 		exit;
@@ -44,11 +47,14 @@
 	// Check the correct parameters have been passed
 	if ($userID == "")
 	{
-		session_register("HeaderString"); // save an error message
+		// save an error message:
 		$HeaderString = "<b><span class=\"warning\">Incorrect parameters to script 'user_removal.php'!</span></b>";
 
+		// Write back session variables:
+		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+
 		// Redirect the browser back to the calling page
-		header("Location: index.php"); // Note: if 'header("Location: $HTTP_REFERER")' is used, the error message won't get displayed! ?:-/
+		header("Location: index.php"); // Note: if 'header("Location: " . $_SERVER['HTTP_REFERER'])' is used, the error message won't get displayed! ?:-/
 		exit;
 	}
 
@@ -56,7 +62,7 @@
 
 	// CONSTRUCT SQL QUERY:
 	// If the admin is logged in:
-	if (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail)) // -> perform a delete action:
+	if (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail)) // -> perform a delete action:
 	{
 		// DELETE - construct a query to delete the relevant record
 		// ... from the users table:
@@ -68,42 +74,28 @@
 
 	// --------------------------------------------------------------------
 
-	// (1) OPEN CONNECTION, (2) SELECT DATABASE, (3) RUN QUERY, (4) DISPLAY RECEIPT, (5) CLOSE CONNECTION
-
-	// (1) OPEN the database connection:
-	//      (variables are set by include file 'db.inc.php'!)
-	if (!($connection = @ mysql_connect($hostName, $username, $password)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to connect to the host:", "");
-
-	// (2) SELECT the database:
-	//      (variables are set by include file 'db.inc.php'!)
-	if (!(mysql_select_db($databaseName, $connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to connect to the database:", "");
+	// (1) OPEN CONNECTION, (2) SELECT DATABASE
+	connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 	// (3a) RUN the first query on the database through the connection:
-	if (!($result = @ mysql_query($query, $connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+	$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 	// (3b) RUN the second query on the database through the connection:
-	if (!($result = @ mysql_query($query2, $connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("Your query:\n<br>\n<br>\n<code>$query2</code>\n<br>\n<br>\n caused the following error:", "");
+	$result = queryMySQLDatabase($query2, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 	// ----------------------------------------------
 
 	// (4) File a message and go back to the list of users:
-	session_register("HeaderString"); // save an informative message
+	// save an informative message:
 	$HeaderString = "User was deleted successfully!";
+
+	// Write back session variables:
+	saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 
 	header("Location: users.php"); // re-direct to the list of users
 
 	// (5) CLOSE the database connection:
-	if (!(mysql_close($connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
+	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 ?>
