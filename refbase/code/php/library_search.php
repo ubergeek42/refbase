@@ -14,7 +14,7 @@
 </head>
 <body>
 <?php
-	// Search formular providing the main fields
+	// Search formular providing the main fields. Searches will be restricted to records belonging to the IPOE library
 
 	// This is included to hide the username and password:
 	include 'db.inc';
