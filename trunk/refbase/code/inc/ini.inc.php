@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   10-Jan-04, 22:03
+	// Modified:   01-Oct-04, 21:38
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -18,7 +18,7 @@
 
 
 	// The base url for this literature database (i.e., the URL to the root directory):
-	// It will be used when sending notification emails to database users.
+	// It will be used within RSS feeds and when sending notification emails to database users.
 	// (IMPORTANT: the base url MUST end with a slash!)
 	$databaseBaseURL = "http://YOUR_SERVER_ADDRESS/PATH_ON_SERVER/"; // e.g. "http://polaris.ipoe.uni-kiel.de/refs/"
 
@@ -69,6 +69,31 @@
 	$mailingListEmail = "ANNOUNCEMENT_EMAIL_ADDRESS"; // e.g. "ipoelit-announce@ipoe.uni-kiel.de"
 
 
+	// The character encoding that's used as content-type for HTML output and announcement emails:
+	// Note: the encoding type specified here must match the type of encoding you've chosen on install
+	//       for your refbase MySQL tables!
+	$contentTypeCharset = "ISO-8859-1"; // e.g. "ISO-8859-1" or "UTF-8"
+
+
+	// Specify who'll be allowed to see files associated with any records:
+	// Set this variable to "everyone" if you want _any_ visitor of your database (whether he's logged
+	// in or not) to be able to see links to any associated files. If you choose "login" instead, a user
+	// must be logged in to view any files. Finally, use "user-specific" if you want to set this permission
+	// individually for each user. Note that, setting this variable to either "everyone" or "login" will
+	// override the user-specific permission setting for file downloads ("allow_download" permission).
+	$fileVisibility = "user-specific"; // possible values: "everyone", "login", "user-specific"
+
+
+	// [CAUTION: This is an advanced option. If you're new to refbase, just don't bother with it!]
+	// This variable can be used to specify a condition where the above rule of file visibility can be
+	// by-passed (thus allowing download access to some particular files while all other files are protected
+	// by the above rule). Files will be shown regardless of the above rule if the specified condition is
+	// met. First param must be a valid field name from table 'refs', second param the conditional expression
+	// (specified as /perl regular expression/). The given example will *always* show links to files where
+	// the 'thesis' field of the corresponding record is not empty.
+	$fileVisibilityException = array("thesis", "/.+/"); // "/.../i" will invoke case insensitive matching
+
+
 	// The base DIR path to your default file directory:
 	// I.e., the local path to the root directory where any PDF files etc. are stored. This must be a
 	// valid path specification to a local directory that's accessible (read+write) by the server. As an
@@ -100,6 +125,12 @@
 	// directly to the CSA databases you have access to.
 	// e.g. "http://www.csa1.co.uk/htbin/dbrng.cgi?username=...&amp;access=...&amp;cat=aquatic&amp;quick=1"
 	$importCSArecordsURL = "http://www.csa1.co.uk/csa/index.html";
+
+
+	// The name of the default citation style:
+	// This name must correspond to an entry within the 'styles' MySQL table.
+	// It will be used for citation output within 'show.php' and the 'generateRSS()' function.
+	$defaultCiteStyle = "Polar Biol";
 
 
 	// The default language selection, can be overwritten by userdefined language
