@@ -1,11 +1,11 @@
-<?
+<?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
 	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
 	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
 	//             Please see the GNU General Public License for more details.
 	// File:       ./header.inc
 	// Created:    28-Jul-02, 11:21
-	// Modified:   19-Jan-03, 14:46
+	// Modified:   16-Nov-03, 21:30
 
 	// This is the header include file.
 	// It contains functions that provide the HTML header
@@ -26,7 +26,7 @@
 			. "\n<html>"
 			. "\n<head>"
 			. "\n\t<title>" . $pageTitle . "</title>"
-			. "\n\t<meta name=\"date\" content=\"" . date("d-M-y") . "\">"
+			. "\n\t<meta name=\"date\" content=\"" . date('d-M-y') . "\">"
 			. "\n\t<meta name=\"robots\" content=\"" . $metaRobots . "\">"
 			. "\n\t<meta name=\"description\" lang=\"en\" content=\"" . $metaDescription . "\">"
 			. "\n\t<meta name=\"keywords\" lang=\"en\" content=\"search citation web database polar marine science literature references mysql php\">"
@@ -60,7 +60,7 @@
 	// --------------------------------------------------------------------
 
 	// Displays the visible header:
-	function showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks)
+	function showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery)
 	{
 		global $officialDatabaseName;
 		global $hostInstitutionAbbrevName;
@@ -69,8 +69,11 @@
 		echo "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This holds the title logo and info\">"
 			. "\n<tr>"
 			. "\n\t<td valign=\"middle\" rowspan=\"2\" align=\"left\" width=\"170\"><a href=\"$hostInstitutionURL\"><img src=\"img/logo.gif\" border=\"0\" alt=\"" . htmlentities($hostInstitutionAbbrevName) . " Logo\" width=\"143\" height=\"107\"></a></td>"
-			. "\n\t<td><br><h2>" . htmlentities($officialDatabaseName) . "</h2></td>" // the <br> tag works around a display glitch in OmniWeb
-			. "\n\t<td align=\"right\" valign=\"middle\"><br><br>" . $loginWelcomeMsg . "<br>" . $loginStatus . "</td>" // the <br> tag works around a display glitch in OmniWeb
+			. "\n\t<td>"
+			. "\n\t\t<h2>" . htmlentities($officialDatabaseName) . "</h2>"
+			. "\n\t\t<span class=\"smallup\"><a href=\"index.php\">Home</a>&nbsp;|&nbsp;<a href=\"simple_search.php\">Simple Search</a>&nbsp;|&nbsp;<a href=\"advanced_search.php\">Advanced Search</a>&nbsp;|&nbsp;<a href=\"record.php?recordAction=add&amp;oldQuery=" . rawurlencode($oldQuery) . "\">Add Record</a>&nbsp;|&nbsp;<a href=\"import_csa.php\">CSA Import</a></span>"
+			. "\n\t</td>"
+			. "\n\t<td align=\"right\" valign=\"middle\">" . $loginWelcomeMsg . "<br>" . $loginStatus . "</td>"
 			. "\n</tr>"
 			. "\n<tr>"
 //			. "\n\t<td>&nbsp;</td>" // img in 'header.inc' now spans this row (by rowspan="2")
