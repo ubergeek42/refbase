@@ -105,7 +105,7 @@
 			else // no checkboxes were marked
 				$nothingChecked = true;
 	
-			$query = extractFormElementsQueryResults($displayType);
+			$query = extractFormElementsQueryResults($displayType, $showLinks);
 		}
 
 	// --- Form 'extract.php': ---------------------
@@ -254,10 +254,15 @@
 	// SHOW THE RESULTS IN AN HTML <TABLE> (columnar layout)
 	function displayColumns($result, $rowsFound, $query, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $exportFormat)
 	{
+		$orderBy = str_replace('LIMIT','¥LIMIT',$query); // put a unique delimiter in front of the 'LIMIT'... parameter (in order to keep any 'LIMIT' parameter)
+		$orderBy = ereg_replace(".+ORDER BY ([^¥]+)","\\1",$orderBy); // extract 'ORDER BY'... parameter
+
 		// Start a form
 		echo "\n<form action=\"search.php\" method=\"POST\" name=\"queryResults\">"
 				. "\n<input type=\"hidden\" name=\"formType\" value=\"queryResults\">"
-				. "\n<input type=\"hidden\" name=\"submit\" value=\"Display\">"; // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
+				. "\n<input type=\"hidden\" name=\"submit\" value=\"Display\">" // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
+				. "\n<input type=\"hidden\" name=\"orderBy\" value=\"$orderBy\">" // embed the current ORDER BY parameter so that it can be re-applied when displaying details
+				. "\n<input type=\"hidden\" name=\"showLinks\" value=\"$showLinks\">"; // embed the current value of '$showLinks' so that it's available on 'display details'
 		// Start a table, with column headers
 		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"80%\" summary=\"This table holds the database results for your query\">";
 		
@@ -267,13 +272,9 @@
 		// BEGIN RESULTS HEADER --------------------
 		// 1) First, initialize some variables that we'll need later on
 		if ("$showLinks" == "1")
-			{
-				$CounterMax = "2"; // When displaying a 'Links' column truncate the last two columns (i.e., hide the 'url' and 'doi' columns)
-			}
+			$CounterMax = "2"; // When displaying a 'Links' column truncate the last two columns (i.e., hide the 'url' and 'doi' columns)
 		else
-			{
-				$CounterMax = "0"; // Otherwise don't hide any columns
-			}
+			$CounterMax = "0"; // Otherwise don't hide any columns
 
 		// count the number of fields
 		$fieldsFound = mysql_num_fields($result);
@@ -282,13 +283,9 @@
 
 		// Calculate the number of all visible columns (which is needed as colspan value inside some TD tags)
 		if ("$showLinks" == "1")
-			{
-				$NoColumns = (1+$fieldsToDisplay+1); // add checkbox & Links column
-			}
+			$NoColumns = (1+$fieldsToDisplay+1); // add checkbox & Links column
 		else
-			{
-				$NoColumns = (1+$fieldsToDisplay); // add checkbox column
-			}
+			$NoColumns = (1+$fieldsToDisplay); // add checkbox column
 
 		// 2) Build a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages
 		//    call the 'buildBrowseLinks()' function:
@@ -352,7 +349,7 @@
 			{
 				echo "\n\t<td valign=\"top\">";
 				if (!empty($row["url"]))
-					echo "<a href=\"" . $row["url"] . "\"><img src=\"img/link.jpg\" alt=\"url\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
+					echo "<a href=\"" . $row["url"] . "\"><img src=\"img/link.gif\" alt=\"url\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
 	
 				if (!empty($row["doi"]))
 					echo "<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/doi.gif\" alt=\"doi\" width=\"20\" height=\"10\" hspace=\"0\" border=\"0\"></a>";
@@ -400,29 +397,28 @@
 				. "\n<input type=\"hidden\" name=\"formType\" value=\"queryResults\">"
 				. "\n<input type=\"hidden\" name=\"submit\" value=\"Display\">"; // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
 		// Start a table, with column headers
-		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"80%\" summary=\"This table holds the database results for your query\">";
+		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" width=\"80%\" summary=\"This table holds the database results for your query\">";
 		
 	// If the query has results ...
 	if ($rowsFound > 0) 
 	{
 		// BEGIN RESULTS HEADER --------------------
-//		// 1) First, initialize some variables that we'll need later on
-//		if ("$showLinks" == "1")
-//			{
-//				$CounterMax = "2"; // When displaying a 'Links' column truncate the last two columns (i.e., hide the 'url' and 'doi' columns)
-//			}
-//		else
-//			{
-//				$CounterMax = "0"; // Otherwise don't hide any columns
-//			}
+		// 1) First, initialize some variables that we'll need later on
+		if ("$showLinks" == "1")
+			$CounterMax = "2"; // When displaying a 'Links' column truncate the last two columns (i.e., hide the 'url' and 'doi' columns)
+		else
+			$CounterMax = "0"; // Otherwise don't hide any columns
 
 		// count the number of fields
 		$fieldsFound = mysql_num_fields($result);
 		// hide those last columns that were added by the script and not by the user
-		$fieldsToDisplay = $fieldsFound-1; // -> $fieldsFound is decreased by 1 in order to hide the serial column (which was added to make the checkbox work)
+		$fieldsToDisplay = $fieldsFound-(1+$CounterMax); // (1+$CounterMax) -> $CounterMax is increased by 1 in order to hide the serial column (which was added to make the checkbox work)
 
 		// Calculate the number of all visible columns (which is needed as colspan value inside some TD tags)
-		$NoColumns = 3; // in 'display details' layout, we simply set it to a fixed value
+		if ("$showLinks" == "1") // in 'display details' layout, we simply set it to a fixed no of columns:
+			$NoColumns = 8; // 8 columns: checkbox, 3 x (field name + field contents), links
+		else
+			$NoColumns = 7; // 7 columns: checkbox, field name, field contents
 
 		// 2) Build a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages
 		//    call the 'buildBrowseLinks()' function:
@@ -440,7 +436,19 @@
 				$recordHeader = "Record"; // use singular form if there's only one record to display
 		else
 				$recordHeader = "Records"; // use plural form if there are multiple records to display
-		echo "\n\t<th align=\"left\" valign=\"top\" colspan=\"2\">$recordHeader</th>";
+		echo "\n\t<th align=\"left\" valign=\"top\" colspan=\"6\">$recordHeader</th>";
+
+		if ("$showLinks" == "1")
+			{
+				$newORDER = ("ORDER BY url DESC, doi DESC"); // Build the appropriate ORDER BY clause to facilitate sorting by Links column
+
+				$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
+				$HTMLafterLink = "</th>"; // close the table header tag
+				// call the 'buildFieldNameLinks()' function (which will return a properly formatted table header tag holding the current field's name
+				// as well as the URL encoded query with the appropriate ORDER clause):
+				$tableHeaderLink = buildFieldNameLinks($query, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "Display", "Links", "url");
+				echo $tableHeaderLink; // print the attribute name as link
+			}
 
 		// Finish the row
 		echo "\n</tr>";
@@ -457,59 +465,99 @@
 
 			for ($i=0; $i<$fieldsToDisplay; $i++)
 				{
-					if (!empty($row[$i])) // if the current attribute contains any data ...
+					// the following two lines will fetch the current attribute name:
+					$info = mysql_fetch_field ($result, $i); // get the meta-data for the attribute
+					$orig_fieldname = $info->name; // get the attribute name
+
+					if (ereg("^(address)$", $orig_fieldname)) // insret a spacer row before address field
+						$recordData .= "\n<tr>"
+									. "\n\t<td valign=\"top\" width=\"10\">&nbsp;</td>"
+									. "\n\t<td colspan=\"6\"><hr align=\"left\" width=\"100%\"></td>"
+									. "\n\t<td valign=\"top\">&nbsp;</td>"
+									. "\n</tr>";
+
+					// for all the fields specified:
+					if (ereg("^(author|title|year|volume|address|keywords|abstract|publisher|language|series_editor|series_volume|issn|area|location|marked|serial|created_date|modified_date|user_keys)$", $orig_fieldname))
 						{
-							// ... start a TABLE row ...
-							$recordData .= "\n<tr>";
-		
+							$recordData .= "\n<tr>"; // ...start a new TABLE row
+
 							if ($i == "0") // ... print a column with a checkbox if it's the first row of attribute data:
 								$recordData .= "\n\t<td align=\"left\" valign=\"top\" width=\"10\"><input type=\"checkbox\" name=\"marked[]\" value=\"" . $row["serial"] . "\"></td>";
 							else // ... otherwise simply print an empty TD tag:
-								$recordData .= "\n\t<td align=\"left\" valign=\"top\" width=\"10\">&nbsp;</td>";
+								$recordData .= "\n\t<td valign=\"top\" width=\"10\">&nbsp;</td>";
+						}
 
-							// ... and print out each of the attribute names
-							// in that row as a bold link...
-							$HTMLbeforeLink = "\n\t<td align=\"left\" valign=\"top\" width=\"75\"><b>"; // start the (bold) table data tag
-							$HTMLafterLink = "</b></td>"; // close the (bold) table data tag
-							// call the 'buildFieldNameLinks()' function (which will return a properly formatted table data tag holding the current field's name
-							// as well as the URL encoded query with the appropriate ORDER clause):
-							$recordData .= buildFieldNameLinks($query, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "Display", "", "");
+					// ... and print out each of the ATTRIBUTE NAMES:
+					// in that row as a bold link...
+					$HTMLbeforeLink = "\n\t<td valign=\"top\" width=\"75\"><b>"; // start the (bold) TD tag
+					$HTMLafterLink = "</b></td>"; // close the (bold) TD tag
+					// call the 'buildFieldNameLinks()' function (which will return a properly formatted table data tag holding the current field's name
+					// as well as the URL encoded query with the appropriate ORDER clause):
+					$recordData .= buildFieldNameLinks($query, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "Display", "", "");
 
-							// Note: 'htmlentities($row[$i])' for HTML encoding higher ASCII will only work correctly if character encoding of data is ISO-8859-1!
-							$recordData .= "\n\t<td valign=\"top\">"; // start the table data tag
-							if (ereg("^(Author|Title|Year)$", $fieldname)) // print author, title & year fields in bold
-								$recordData .= "<b>";
-							$recordData .= htmlentities($row[$i]); // print the attribute data
-							if (ereg("^(Author|Title|Year)$", $fieldname))
-								$recordData .= "</b>";							
-							$recordData .= "</td>"; // finish the table data tag
+					// print the ATTRIBUTE DATA:
+					// first, calculate the correct cosplan value for all the fields specified:
+					if (ereg("^(author|title|keywords|abstract)$", $orig_fieldname))
+						$ColspanFields = 5; // supply an appropriate colspan value
+					elseif (ereg("^(address|user_keys)$", $orig_fieldname))
+						$ColspanFields = 3; // supply an appropriate colspan value
 
-							$recordData .= "\n</tr>"; // finish the row
+					// then, start the TD tag, for all the fields specified:
+					if (ereg("^(author|title|keywords|abstract|address|user_keys)$", $orig_fieldname))
+						$recordData .= "\n\t<td valign=\"top\" colspan=\"$ColspanFields\">"; // ...with colspan attribute & appropriate value
+					else // for all other fields:
+						$recordData .= "\n\t<td valign=\"top\">"; // ...without colspan attribute
+		
+					if (ereg("^(author|title|year)$", $orig_fieldname)) // print author, title & year fields in bold
+						$recordData .= "<b>";
+
+					// Note: 'htmlentities($row[$i])' for HTML encoding higher ASCII will only work correctly if character encoding of data is ISO-8859-1!
+					$recordData .= htmlentities($row[$i]); // print the attribute data
+
+					if (ereg("^(author|title|year)$", $orig_fieldname))
+						$recordData .= "</b>";							
+
+					$recordData .= "</td>"; // finish the TD tag
+
+					// for all the fields specified:
+					if (ereg("^(author|title|abbrev_journal|pages|corporate_author|keywords|abstract|editor|medium|orig_title|abbrev_series_title|edition|conference|reprint_status|file|notes|created_by|modified_by|user_notes)$", $orig_fieldname))
+						{
+							if ("$showLinks" == "1")
+								{
+									// ...embed appropriate links (if available):
+									if ($i == "0") // ... print a column with links if it's the first row of attribute data:
+									{
+										$recordData .= "\n\t<td valign=\"top\">";
+										if (!empty($row["url"]))
+											$recordData .= "<a href=\"" . $row["url"] . "\"><img src=\"img/link.gif\" alt=\"url\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
+							
+										if (!empty($row["doi"]))
+											$recordData .= "<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/doi.gif\" alt=\"doi\" width=\"20\" height=\"10\" hspace=\"0\" border=\"0\"></a>";
+							
+										if (empty($row["url"]) AND (empty($row["doi"])))
+											$recordData .= "&nbsp;&nbsp;";
+										$recordData .= "</td>";
+									}
+									else // ... otherwise simply print an empty TD tag:
+										$recordData .= "\n\t<td valign=\"top\">&nbsp;</td>";
+								}
+
+							$recordData .= "\n</tr>"; // ...and finish the row
 						}
 				}
 
 				if (($rowsFound > 0) && ($rowCounter < ($showRows - 1))) // if statement noch buggy!! ¥¥¥¥¥¥¥
 					$recordData .= "\n<tr>"
-						. "\n\t<td colspan=\"3\"><hr align=\"left\" width=\"100%\"></td>"
+						. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>"
+						. "\n</tr>"
+						. "\n<tr>"
+						. "\n\t<td colspan=\"$NoColumns\"><hr align=\"left\" width=\"100%\"></td>"
+						. "\n</tr>"
+						. "\n<tr>"
+						. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>"
 						. "\n</tr>";
 				
-//				$recordData = preg_replace("/<td[^>]+>(<b><a href=[^ ]+>/Year</a></b>)</td>\s*<td[^>]+>([^<>]+)</td>\s*(?:</?tr>\s*)+<td[^>]+>&nbsp;</td>/s", "", $recordData);
-
-				echo $recordData;
-//			// embed appropriate links (if available):
-//			if ("$showLinks" == "1")
-//			{
-//				echo "\n\t<td valign=\"top\">";
-//				if (!empty($row["url"]))
-//					echo "<a href=\"" . $row["url"] . "\"><img src=\"img/link.jpg\" alt=\"url\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
-//	
-//				if (!empty($row["doi"]))
-//					echo "<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/doi.gif\" alt=\"doi\" width=\"20\" height=\"10\" hspace=\"0\" border=\"0\"></a>";
-//	
-//				if (empty($row["url"]) AND (empty($row["doi"])))
-//					echo "&nbsp;&nbsp;";
-//				echo "</td>";
-//			}
+			echo $recordData;
 		}
 		// END RESULTS DATA COLUMNS ----------------
 
@@ -3598,8 +3646,10 @@
 	// --------------------------------------------------------------------
 
 	// Build the database query from records selected by the user within the query results list (which, in turn, was returned by 'search.php'):
-	function extractFormElementsQueryResults($displayType)
+	function extractFormElementsQueryResults($displayType, $showLinks)
 	{
+		$orderBy = $_POST['orderBy']; // extract the current ORDER BY parameter so that it can be re-applied when displaying details
+
 		// Extract checkbox variable values from the request:
 		$recordSerialsArray = $_POST['marked']; // extract the values of all checked checkboxes (i.e., the serials of all selected records)	
 		// join array elements:
@@ -3617,7 +3667,13 @@
 		else // $displayType == "Display" (hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
 			{
 				// for the selected records, select *all* available fields:
-				$query = "SELECT author, title, year, publication, abbrev_journal, volume, issue, pages, publisher, place, address, corporate_author, first_author, author_count, orig_title, keywords, abstract, edition, editor, medium, series_editor, series_title, abbrev_series_title, series_volume, series_issue, issn, isbn, language, summary_language, area, type, expedition, doi, conference, url, reprint_status, call_number, location, file, notes, serial, marked, approved, created_date, created_time, created_by, modified_date, modified_time, modified_by, user_keys, user_notes FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY author, year DESC, publication, volume DESC";
+				// (note: we also add the 'serial' column at the end in order to provide standardized input [compare processing of form 'sql_search.php'])
+				$query = "SELECT author, title, year, publication, abbrev_journal, volume, issue, pages, address, corporate_author, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, location, call_number, reprint_status, marked, approved, file, serial, type, notes, user_keys, user_notes, serial";
+
+				if ("$showLinks" == "1")
+					$query .= ", url, doi"; // add 'url' & 'doi' columns
+
+				$query .= " FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY $orderBy";
 			}
 
 
@@ -3674,7 +3730,8 @@
 
 		$query .= " FROM refs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
 		
-		$query .= " AND $quickSearchSelector RLIKE \"$quickSearchName\""; // add search field name & value
+		if ("$quickSearchName" != "") // if the user typed a search string into the text entry field...
+			$query .= " AND $quickSearchSelector RLIKE \"$quickSearchName\""; // ...add search field name & value to the sql query
 
 		$query .= " ORDER BY author, year DESC, publication"; // add the default ORDER BY clause
 
