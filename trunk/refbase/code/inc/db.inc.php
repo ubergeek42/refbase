@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/db.inc.php
 	// Created:    15-Oct-02, 19:11
-	// Modified:   17-Feb-05, 19:29
+	// Modified:   01-Mar-05, 22:16
 
 	// This file holds crucial
 	// database access information.
@@ -55,19 +55,20 @@
 	// If you need to put the refbase tables into an existing MySQL database, you may want to
 	// rename the refbase tables to avoid any name conflicts. If you do so, you need to adopt
 	// the table names here accordingly.
-	$tableAuth = "auth"; // in code comments referred to as table 'auth'
-	$tableDeleted = "deleted"; // in code comments referred to as table 'deleted'
-	$tableDepends = "depends"; // in code comments referred to as table 'depends'
-	$tableFormats = "formats"; // in code comments referred to as table 'formats'
-	$tableLanguages = "languages"; // in code comments referred to as table 'languages'
-	$tableQueries = "queries"; // in code comments referred to as table 'queries'
-	$tableRefs = "refs"; // in code comments referred to as table 'refs'
-	$tableStyles = "styles"; // in code comments referred to as table 'styles'
-	$tableTypes = "types"; // in code comments referred to as table 'types'
-	$tableUserData = "user_data"; // in code comments referred to as table 'user_data'
-	$tableUserFormats = "user_formats"; // in code comments referred to as table 'user_formats'
-	$tableUserPermissions = "user_permissions"; // in code comments referred to as table 'user_permissions'
-	$tableUserStyles = "user_styles"; // in code comments referred to as table 'user_styles'
-	$tableUserTypes = "user_types"; // in code comments referred to as table 'user_types'
-	$tableUsers = "users"; // in code comments referred to as table 'users'
+	//                      ->  in code comments referred to as table:
+	$tableAuth = "auth"; // ->  'auth'
+	$tableDeleted = "deleted"; // -> 'deleted'
+	$tableDepends = "depends"; // -> 'depends'
+	$tableFormats = "formats"; // -> 'formats'
+	$tableLanguages = "languages"; // -> 'languages'
+	$tableQueries = "queries"; // -> 'queries'
+	$tableRefs = "refs"; // -> 'refs'
+	$tableStyles = "styles"; // -> 'styles'
+	$tableTypes = "types"; // -> 'types'
+	$tableUserData = "user_data"; // -> 'user_data'
+	$tableUserFormats = "user_formats"; // -> 'user_formats'
+	$tableUserPermissions = "user_permissions"; // -> 'user_permissions'
+	$tableUserStyles = "user_styles"; // -> 'user_styles'
+	$tableUserTypes = "user_types"; // -> 'user_types'
+	$tableUsers = "users"; // -> 'users'
 ?>
