@@ -10,11 +10,3 @@ We are aware of the following problems, bugs and/or limitations:
   will cause unpredictable results. So, until we have a functional
   support of transactions, please remember to reload record data if
   you kept a record's "edit" form open for a longer period of time.
-
-* If you delete a particular record, the database won't check if this
-  record belongs to other users as well. This will be addressed in a
-  future release.
-
-* When adding a new record, your data won't get reloaded after a
-  validation error occurred. As a work around, please use the back
-  button of your browser to regain access to your record data.
