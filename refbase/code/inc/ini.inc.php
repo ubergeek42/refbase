@@ -102,6 +102,10 @@
 	$importCSArecordsURL = "http://www.csa1.co.uk/csa/index.html";
 
 
+	// The default language selection, can be overwritten by userdefined language
+	$defaultLanguage = "en"; // e.g. "en" oder "de"
+
+
 	// The following search & replace actions will be applied to the 'title', 'keywords' and 'abstract'
 	// fields. This feature is meant to provide richer text capabilities (like displaying italics or
 	// super-/subscript) from the plain text data delivered by the MySQL database. It works by means of
