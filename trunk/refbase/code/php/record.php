@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./record.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   14-Oct-04, 20:22
+	// Modified:   01-Nov-04, 21:39
 
 	// Form that offers to add
 	// records or edit/delete
@@ -158,7 +158,7 @@
 		// for the selected record, select *all* available fields:
 		// (note: we also add the 'serial' column at the end in order to provide standardized input [compare processing of form 'sql_search.php' in 'search.php'])
 		if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
-			$query = "SELECT author, title, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, approved, notes, file, serial, location, type, call_number, created_date, created_time, created_by, modified_date, modified_time, modified_by, orig_record, contribution_id, online_publication, online_citation, marked, copy, selected, user_keys, user_notes, user_file, user_groups, bibtex_id, related, serial, url, doi"
+			$query = "SELECT author, title, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, approved, notes, file, serial, location, type, call_number, created_date, created_time, created_by, modified_date, modified_time, modified_by, orig_record, contribution_id, online_publication, online_citation, marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key, related, serial, url, doi"
 					. " FROM refs LEFT JOIN user_data ON serial = record_id AND user_id =" . $loginUserID . " WHERE serial RLIKE \"^(" . $serialNo . ")$\""; // since we'll only fetch one record, the ORDER BY clause is obsolete here
 		else // if NO user logged in, don't display any user specific fields:
 			$query = "SELECT author, title, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, approved, notes, file, serial, location, type, call_number, created_date, created_time, created_by, modified_date, modified_time, modified_by, orig_record, contribution_id, online_publication, online_citation, serial, url, doi"
@@ -285,10 +285,10 @@
 				else
 					$userGroupsName = "";
 
-				if (isset($row['bibtex_id'])) // 'bibtex_id' field is only provided if a user is logged in
-					$bibtexIDName = htmlentities($row['bibtex_id']);
+				if (isset($row['cite_key'])) // 'cite_key' field is only provided if a user is logged in
+					$citeKeyName = htmlentities($row['cite_key']);
 				else
-					$bibtexIDName = "";
+					$citeKeyName = "";
 
 				if (isset($row['related'])) // 'related' field is only provided if a user is logged in
 					$relatedName = htmlentities($row['related']);
@@ -490,7 +490,7 @@
 				$userNotesName = "";
 				$userFileName = "";
 				$userGroupsName = "";
-				$bibtexIDName = "";
+				$citeKeyName = "";
 				$relatedName = "";
 				$fileName = "";
 
@@ -583,7 +583,7 @@
 					$userNotesName = $formVars['userNotesName'];
 					$userFileName = $formVars['userFileName'];
 					$userGroupsName = $formVars['userGroupsName'];
-					$bibtexIDName = $formVars['bibtexIDName'];
+					$citeKeyName = $formVars['citeKeyName'];
 					$relatedName = $formVars['relatedName'];
 					$fileName = $formVars['fileName'];
 					$urlName = $formVars['urlName'];
@@ -663,7 +663,7 @@
 					$userNotesName = "";
 					$userFileName = "";
 					$userGroupsName = "";
-					$bibtexIDName = "";
+					$citeKeyName = "";
 					$relatedName = "";
 					$fileName = "";
 					$urlName = "";
@@ -764,7 +764,7 @@
 	
 	if (isset($_SESSION['user_types']))
 	{
-		$optionTags = buildSelectMenuOptions($_SESSION['user_types'], " *; *", "\t\t\t"); // build properly formatted <option> tag elements from the items listed in the 'user_types' session variable
+		$optionTags = buildSelectMenuOptions($_SESSION['user_types'], " *; *", "\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'user_types' session variable
 		$recordType .= $optionTags;
 	}
 	else
@@ -949,8 +949,8 @@
 	}
 
 	echo "\n\t<td colspan=\"3\" class=\"userfieldsbg\"><input type=\"text\" name=\"userGroupsName\" value=\"$userGroupsName\" size=\"48\"$userGroupsFieldLock title=\"$userGroupsTitle\"></td>"
-			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>BibTeX ID</b></td>"
-			. "\n\t<td align=\"right\" class=\"userfieldsbg\"><input type=\"text\" name=\"bibtexIDName\" value=\"$bibtexIDName\" size=\"14\" title=\"the custom identifier that uniquely describes this record when working with BibTeX (keep empty for automatic ID generation)\"></td>"
+			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>Cite Key</b></td>"
+			. "\n\t<td align=\"right\" class=\"userfieldsbg\"><input type=\"text\" name=\"citeKeyName\" value=\"$citeKeyName\" size=\"14\" title=\"the custom identifier that uniquely describes this record when citing it (keep empty for automatic cite key generation on export)\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>Related</b></td>"
