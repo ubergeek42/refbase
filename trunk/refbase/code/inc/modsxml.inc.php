@@ -33,8 +33,6 @@
   //   There's a lot of overlap in the portions that depend on types.  I plan
   //     on refactoring this, so that they can make calls to the same function.
 
-  // Separate keywords on ';' and ','
-  
   // I need to add these fields:
   //   series_editor
   //   series_title
@@ -247,9 +245,24 @@
 
     // subject
     //   keywords
-    if (!empty($row['keywords']))
-      $record->setTagContent($row['keywords'], "mods/subject/topic");
+    if (!empty($row['keywords'])) {
+      $subjectArray = array();
+      $subjectArray = split("; ", $row['keywords']); // "unrealted" keywords
+      foreach ($subjectArray as $singleSubject) {
+        $subjectBranch = new XMLBranch("subject");
 
+        $topicArray = array();
+        $topicArray = split(", ", $singleSubject); // "related" keywords
+        foreach ($topicArray as $singleTopic) {
+          $topicBranch = new XMLBranch("topic");
+          $topicBranch->setTagContent($singleTopic);
+
+          $subjectBranch->addXMLBranch($topicBranch);
+        }
+        $record->addXMLBranch($subjectBranch);
+      }
+    }
+ 
     // notes
     if (!empty($row['notes']))
       $record->setTagContent($row['notes'], "mods/note");
@@ -356,15 +369,15 @@
       //   thesis
       if (!empty($row['thesis'])) {
         $thesismarc = new XMLBranch("genre");
-	$thesis = new XMLBranch("genre");
+        $thesis = new XMLBranch("genre");
 
-	$thesismarc->setTagContent("theses");
+        $thesismarc->setTagContent("theses");
         $thesismarc->setTagAttribute("authority", "marc");
 
-	$thesis->setTagContent($row['thesis']);
+        $thesis->setTagContent($row['thesis']);
 
-	$record->addXMLBranch($thesismarc);
-	$record->addXMLBranch($thesis);
+        $record->addXMLBranch($thesismarc);
+        $record->addXMLBranch($thesis);
       }
 
       // identifier
@@ -457,15 +470,15 @@
       //   thesis
       if (!empty($row['thesis'])) {
         $thesismarc = new XMLBranch("genre");
-	$thesis = new XMLBranch("genre");
+        $thesis = new XMLBranch("genre");
 
-	$thesismarc->setTagContent("theses");
+        $thesismarc->setTagContent("theses");
         $thesismarc->setTagAttribute("authority", "marc");
 
-	$thesis->setTagContent($row['thesis']);
+        $thesis->setTagContent($row['thesis']);
 
-	$related->addXMLBranch($thesismarc);
-	$related->addXMLBranch($thesis);
+        $related->addXMLBranch($thesismarc);
+        $related->addXMLBranch($thesis);
       }
 
       if ((!empty($row['year'])) || (!empty($row['volume'])) ||
