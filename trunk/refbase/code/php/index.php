@@ -95,9 +95,10 @@
 	// --------------------------------------------------------------------
 ?>
 
-<table align="center" border="0" cellpadding="0" cellspacing="5" width="75%" summary="This table explains features, goals and usage of the IP&Ouml; literature database">
+<table align="center" border="0" cellpadding="2" cellspacing="5" width="75%" summary="This table explains features, goals and usage of the IP&Ouml; literature database">
 	<tr>
 		<td colspan="2"><h3>Goals &amp; Features</h3></td>
+		<td width="80" valign="bottom"><div class="header"><b>Login:</b></div></td>
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
@@ -115,9 +116,23 @@
 				<li>various display &amp; export options</li>
 			</ul>
 		</td>
+		<td width="80" valign="top">
+			<form action="login.php" method="POST">
+				User Name:
+				<br>
+				<input type="text" name="loginName" size="12">
+				<br>
+				Password:
+				<br>
+				<input type="text" name="pwdName" size="12">
+				<br>
+				<input type="submit" value="Login">
+			</form>
+		</td>
 	</tr>
 	<tr>
 		<td colspan="2"><h3>Search</h3></td>
+		<td width="80" valign="bottom"><div class="header"><b>Quick Search:</b></div></td>
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
@@ -140,13 +155,32 @@
 	echo "\n\t\t\t</ul>\n";
 ?>
 		</td>
+		<td width="80" valign="top">
+			<form action="search.php" method="POST">
+				<input type="hidden" name="formType" value="quickSearch">
+				<input type="hidden" name="showQuery" value="0">
+				<input type="hidden" name="showLinks" value="1">
+				<select name="quickSearchSelector">
+					<option selected>author</option>
+					<option>title</option>
+					<option>year</option>
+					<option>keywords</option>
+					<option>abstract</option>
+				</select>
+				<br>
+				<input type="text" name="quickSearchName" size="12">
+				<br>
+				<input type="submit" value="Search">
+			</form>
+		</td>
 	</tr>
 	<tr>
-		<td colspan="2"><h3>About</h3></td>
+		<td colspan="3"><h3>About</h3></td>
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
 		<td>This literature database is maintained by the <a href="http://www.uni-kiel.de/ipoe/">Institut f&uuml;r Polar&ouml;kologie</a> (IP&Ouml;), Kiel. You're welcome to send any questions or suggestions to our <a href="mailto:&#105;&#112;&#111;&#101;&#108;&#105;&#116;&#64;&#105;&#112;&#111;&#101;&#46;&#117;&#110;&#105;&#45;&#107;&#105;&#101;&#108;&#46;&#100;&#101;">feedback</a> address. The database is powered by <a href="http://www.refbase.net">refbase</a>, an open source database front-end for managing scientific literature &amp; citations that was initiated at IP&Ouml;.</td>
+		<td width="80" valign="top"><a href="http://www.refbase.net/"><img src="images/refbase_credit.gif" alt="powered by refbase" width="80" height="44" hspace="0" border="0"></a></td>
 	</tr>
 </table><?php
 	// --------------------------------------------------------------------
