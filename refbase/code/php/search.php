@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   12-Mar-05, 17:18
+	// Modified:   27-Mar-05, 00:07
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -69,7 +69,7 @@
 		if (isset($_SESSION['user_permissions']) AND !ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain 'allow_details_view'...
 		{
 			// save an appropriate error message:
-			$HeaderString = "<b><span class=\"warning\">". $loc["You have no permission"]." ".$loc["ForDisplayDetails"]."!</span></b>";
+			$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForDisplayDetails"]."!</span></b>";
 
 			// Write back session variables:
 			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -84,7 +84,7 @@
 		if (isset($_SESSION['user_permissions']) AND !ereg("allow_cite", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain 'allow_cite'...
 		{
 			// save an appropriate error message:
-			$HeaderString = "<b><span class=\"warning\">". $loc["You have no permission"]." ".$loc["ForCite"]."!</span></b>";
+			$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForCite"]."!</span></b>";
 
 			// Write back session variables:
 			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -102,7 +102,7 @@
 		if (isset($_SESSION['user_permissions']) AND !ereg("(allow_export|allow_batch_export)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain either 'allow_export' or 'allow_batch_export'...
 		{
 			// save an appropriate error message:
-			$HeaderString = "<b><span class=\"warning\">". $loc["You have no permission"]." ".$loc["ForExport"]."!</span></b>";
+			$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForExport"]."!</span></b>";
 
 			// Write back session variables:
 			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -125,7 +125,7 @@
 			if ($formType == "sqlSearch" AND !ereg(".+/search.php", $referer)) // if the calling URL contained 'formType=sqlSearch' but wasn't sent by 'search.php' (but, e.g., by 'sql_search.php')
 			{
 				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">". $loc["You have no permission"]." ".$loc["ForSQL"]."!</span></b>";
+				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForSQL"]."!</span></b>";
 	
 				// Write back session variables:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
