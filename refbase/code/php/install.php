@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./install.php
 	// Created:    07-Jan-04, 22:00
-	// Modified:   11-Jan-04, 17:00
+	// Modified:   28-Feb-04, 20:43
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -247,13 +247,16 @@
 			// Check if the specified path resolves to the mysql application
 			$errors["pathToMYSQL"] = "Your path specification is invalid (command not found):";
 
-		elseif (!is_executable($formVars["pathToMYSQL"]))
-			// Check if the given file is executable
-			$errors["pathToMYSQL"] = "This file does not appear to be an executable command:";
+//		Note: Currently, the checks for whether the function is executable or whether it is mysql have been commented out,
+//			  since they don't seem to work on windows! (see <http://sourceforge.net/forum/forum.php?thread_id=1021143&forum_id=218758>)
 
-		elseif (!ereg("(^|.*/)mysql$", $formVars["pathToMYSQL"]))
-			// Make sure that the given file is 'mysql'
-			$errors["pathToMYSQL"] = "This does not appear to be the 'mysql' command line interpreter:";
+//		elseif (!is_executable($formVars["pathToMYSQL"]))
+//			// Check if the given file is executable
+//			$errors["pathToMYSQL"] = "This file does not appear to be an executable command:";
+
+//		elseif (!ereg("(^|.*/)mysql$", $formVars["pathToMYSQL"]))
+//			// Make sure that the given file is 'mysql'
+//			$errors["pathToMYSQL"] = "This does not appear to be the 'mysql' command line interpreter:";
 
 
 		// Validate the 'databaseStructureFile' field:
