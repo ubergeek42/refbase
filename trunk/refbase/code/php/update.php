@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./update.php
 	// Created:    01-Mar-05, 20:47
-	// Modified:   12-Mar-05, 20:20
+	// Modified:   24-Mar-05, 13:59
 
 	// This file will update any refbase MySQL database installation from v0.7 to v0.8.
 	// (Note that this script currently doesn't offer any conversion from 'latin1' to 'utf8')
@@ -326,17 +326,20 @@
 
 
 		// Validate the 'pathToBibutils' field:
-		if (ereg("[;|]", $formVars["pathToBibutils"]))
-			// For security reasons, the 'pathToBibutils' field cannot contain the characters ';' or '|' (which would tie multiple shell commands together)
-			$errors["pathToBibutils"] = "Due to security reasons this field cannot contain the characters ';' or '|':";
-
-		elseif (!is_readable($formVars["pathToBibutils"]))
-			// Check if the specified path resolves to an existing directory
-			$errors["pathToBibutils"] = "Your path specification is invalid (directory not found):";
-
-		elseif (!is_dir($formVars["pathToBibutils"]))
-			// Check if the specified path resolves to a directory (and not a file)
-			$errors["pathToBibutils"] = "You must specify a directory! Please give the path to the directory containing the bibutils utilities:";
+		if (!empty($formVars["pathToBibutils"])) // we'll only validate the 'pathToBibutils' field if it isn't empty (installation of bibutils is optional)
+		{
+			if (ereg("[;|]", $formVars["pathToBibutils"]))
+				// For security reasons, the 'pathToBibutils' field cannot contain the characters ';' or '|' (which would tie multiple shell commands together)
+				$errors["pathToBibutils"] = "Due to security reasons this field cannot contain the characters ';' or '|':";
+	
+			elseif (!is_readable($formVars["pathToBibutils"]))
+				// Check if the specified path resolves to an existing directory
+				$errors["pathToBibutils"] = "Your path specification is invalid (directory not found):";
+	
+			elseif (!is_dir($formVars["pathToBibutils"]))
+				// Check if the specified path resolves to a directory (and not a file)
+				$errors["pathToBibutils"] = "You must specify a directory! Please give the path to the directory containing the bibutils utilities:";
+		}
 
 
 		// Validate the 'defaultCharacterSet' field:
@@ -511,8 +514,9 @@
 			$queryArray[] = $queryInsertUserPermissions;
 		}
 
-		// Prepare query which updates the path to the bibutils utilities in table 'depends':
-		$queryArray[] = "UPDATE " . $databaseName . ".depends SET depends_path = \"" . $pathToBibutils . "\" WHERE depends_external = \"bibutils\""; // update the bibutils path spec
+		if (!empty($pathToBibutils)) // we'll only update the bibutils path if '$pathToBibutils' isn't empty (installation of bibutils is optional)
+			// Prepare query which updates the path to the bibutils utilities in table 'depends':
+			$queryArray[] = "UPDATE " . $databaseName . ".depends SET depends_path = \"" . $pathToBibutils . "\" WHERE depends_external = \"bibutils\""; // update the bibutils path spec
 
 
 		// (2) Run the UPDATE queries on the mysql database through the connection:
@@ -594,7 +598,7 @@
 	<tr>
 		<td valign="top"><b>Important Note:</b></td>
 		<td>
-			The files <em>update.php</em> and <em>update.sql</em> are only provided for update purposes and are not needed anymore. Due to security considerations you should <span class="warning">remove these files</span> from your web directory NOW!!
+			The files <em>update.php</em> and <em>update.sql</em> (as well as <em>install.php</em> and <em>install.sql</em>) are only provided for update/installation purposes and are not needed anymore. Due to security considerations you should <span class="warning">remove these files</span> from your web directory NOW!!
 		</td>
 	</tr>
 	<tr>
