@@ -25,7 +25,7 @@
 
 	// START A SESSION:
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
-	start_session();
+	start_session(true);
 
 	// Clear any errors that might have been found previously:
 	$errors = array();
