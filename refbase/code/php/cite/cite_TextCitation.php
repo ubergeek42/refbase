@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./cite/cite_TextCitation.php
 	// Created:    28-Sep-04, 23:46
-	// Modified:   13-Oct-04, 22:58
+	// Modified:   24-Feb-05, 14:46
 
 	// This is a citation style file (which must reside within the 'cite/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecord()' function that outputs a reference list from selected records according to the citation style used
@@ -23,6 +23,8 @@
 
 	function citeRecord($row, $citeStyle)
 	{
+		global $preferCiteKeyInTextCitation; // defined in 'ini.inc.php'
+
 		// output records suitable for citation within a text, like: "Ambrose 1991 {3735}", "Ambrose & Renaud 1995 {3243}" or "Ambrose et al. 2001 {4774}"
 
 		// currently the following parameters are not available via the GUI but are provided as fixed values here:
@@ -33,6 +35,7 @@
 		$recordIDStartDelimiter = "{"; // specifies the string that prefixes the record id
 		$recordIDEndDelimiter = "}"; // specifies the string that suffixes the record id
 		
+
 		// Call the 'extractAuthorsLastName()' function (defined in 'include.inc.php') to extract the last name of a particular author (specified by position). Required Parameters:
 		//   1. pattern describing delimiter that separates different authors
 		//   2. pattern describing delimiter that separates author name & initials (within one author)
@@ -43,11 +46,20 @@
 											1,
 											$row['author']);
 
+
+		// assign the correct record identifier:
+		if (($preferCiteKeyInTextCitation == "yes") && (!empty($row['cite_key'])))
+			$recordIdentifier = $row['cite_key'];
+		else
+			$recordIdentifier = $row['serial'];
+
+
+		// output text citation:
 		if ($row['author_count'] == "1") // one author, like: "Ambrose 1991 {3735}"
 			if ($yearWithBrackets)
-				$record .= " (" . $row['year'] . ") " . $recordIDStartDelimiter . $row['serial'] . $recordIDEndDelimiter;
+				$record .= " (" . $row['year'] . ") " . $recordIDStartDelimiter . $recordIdentifier . $recordIDEndDelimiter;
 			else
-				$record .= " " . $row['year'] . " " . $recordIDStartDelimiter . $row['serial'] . $recordIDEndDelimiter;
+				$record .= " " . $row['year'] . " " . $recordIDStartDelimiter . $recordIdentifier . $recordIDEndDelimiter;
 
 
 		elseif ($row['author_count'] == "2") // two authors, like "Ambrose & Renaud 1995 {3243}"
@@ -65,10 +77,11 @@
 												$row['author']);
 
 			if ($yearWithBrackets)
-				$record .= " (" . $row['year'] . ") " . $recordIDStartDelimiter . $row['serial'] . $recordIDEndDelimiter;
+				$record .= " (" . $row['year'] . ") " . $recordIDStartDelimiter . $recordIdentifier . $recordIDEndDelimiter;
 			else
-				$record .= " " . $row['year'] . " " . $recordIDStartDelimiter . $row['serial'] . $recordIDEndDelimiter;
+				$record .= " " . $row['year'] . " " . $recordIDStartDelimiter . $recordIdentifier . $recordIDEndDelimiter;
 		}
+
 
 		elseif ($row['author_count'] == "3") // three or more authors, like "Ambrose et al. 2001 {4774}"
 		{
@@ -86,9 +99,9 @@
 				$record .= "</i>";
 
 			if ($yearWithBrackets)
-				$record .= " (" . $row['year'] . ") " . $recordIDStartDelimiter . $row['serial'] . $recordIDEndDelimiter;
+				$record .= " (" . $row['year'] . ") " . $recordIDStartDelimiter . $recordIdentifier . $recordIDEndDelimiter;
 			else
-				$record .= " " . $row['year'] . " " . $recordIDStartDelimiter . $row['serial'] . $recordIDEndDelimiter;
+				$record .= " " . $row['year'] . " " . $recordIDStartDelimiter . $recordIdentifier . $recordIDEndDelimiter;
 		}
 
 
