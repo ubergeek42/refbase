@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./simple_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   20-Jan-03, 23:29
+	// Modified:   16-Nov-03, 21:46
 
 	// Search formular providing access to the main fields of the database.
 	// It offers some output options (like how many records to display per page)
@@ -53,7 +53,7 @@
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
 	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Simple Search", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "");
-	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
+	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (2b) Start <form> and <table> holding the form elements:
 	echo "\n<form action=\"search.php\" method=\"POST\">";
