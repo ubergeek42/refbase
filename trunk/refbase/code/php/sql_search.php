@@ -20,6 +20,7 @@
 	include 'header.inc'; // include header
 	include 'footer.inc'; // include footer
 	include 'include.inc'; // include common functions
+	include "ini.inc.php"; // include common variables
 
 	// --------------------------------------------------------------------
 
@@ -41,7 +42,7 @@
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
-	displayHTMLhead("IP&Ouml; Literature Database -- SQL Search", "index,follow", "Search the IP&Ouml; Literature Database", "", false, "");
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- SQL Search", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "");
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
 
 	// Check if the script was called with parameters (like: 'sql_search.php?customQuery=1&sqlQuery=...&showQuery=...&showLinks=...')

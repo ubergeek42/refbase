@@ -21,6 +21,7 @@
 	include 'header.inc'; // include header
 	include 'footer.inc'; // include footer
 	include 'include.inc'; // include common functions
+	include "ini.inc.php"; // include common variables
 
 	// --------------------------------------------------------------------
 
@@ -250,14 +251,14 @@
 			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
-		displayHTMLhead("IP&Ouml; Literature Database -- User Login", "index,follow", "User login page. You must be logged in to the IP&Ouml; Literature Database in order to add, edit or delete records", "", false, "");
+		displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Login", "index,follow", "User login page. You must be logged in to the " . htmlentities($officialDatabaseName) . " in order to add, edit or delete records", "", false, "");
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
 
 		// Build the login form:
 ?>
 
 <form method="POST" action="user_login.php">
-<table align="center" border="0" cellpadding="2" cellspacing="5" width="95%" summary="This table holds a login form for the IP&Ouml; literature database">
+<table align="center" border="0" cellpadding="2" cellspacing="5" width="95%" summary="This table holds a login form for the <? echo htmlentities($officialDatabaseName); ?>">
 	<tr>
 		<td width="174" valign="bottom">
 			<b>Email Address:</b>

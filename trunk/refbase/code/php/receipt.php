@@ -21,6 +21,7 @@
 	include 'header.inc'; // include header
 	include 'footer.inc'; // include footer
 	include 'include.inc'; // include common functions
+	include "ini.inc.php"; // include common variables
 
 	// --------------------------------------------------------------------
 
@@ -60,7 +61,7 @@
 
 	// (4a) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
-	displayHTMLhead("IP&Ouml; Literature Database -- Record Action Feedback", "noindex,nofollow", "Feedback page that confirms any adding, editing or deleting of records in the IP&Ouml; Literature Database", "", false, "");
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Record Action Feedback", "noindex,nofollow", "Feedback page that confirms any adding, editing or deleting of records in the " . htmlentities($officialDatabaseName), "", false, "");
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
 
 
@@ -95,7 +96,7 @@
 	if ($recordAction != "delet" || $oldQuery != "")
 		echo "\n\t\t&nbsp;&nbsp;-OR-&nbsp;&nbsp;";
 
-		echo "\n\t\t<a href=\"index.php\">Goto Literature Database Home</a>"; // we include the link to the home page here so that "Choose how to proceed:" never stands without any link to go
+		echo "\n\t\t<a href=\"index.php\">Goto " . htmlentities($officialDatabaseName) . " Home</a>"; // we include the link to the home page here so that "Choose how to proceed:" never stands without any link to go
 
 	echo "\n\t</td>"
 		. "\n</tr>"
