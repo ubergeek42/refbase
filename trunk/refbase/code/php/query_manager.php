@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./query_manager.php
 	// Created:    04-Feb-04, 22:29
-	// Modified:   16-Feb-05, 20:47
+	// Modified:   25-Feb-05, 23:43
 
 	// This script enables you to manage your custom queries.
 	// It offers a form to save the current query or update/delete any of your saved queries.
@@ -152,7 +152,7 @@
 	{
 		$pageTitle = "Edit Query"; // set the correct page title
 
-		$helpText = "Modify the elements of your query as needed and click the <em>Save Query</em> button. You can change the name of your query, refine the SQL query string or modify any of the display options.";
+		$helpText = "Modify the elements of your query as needed and click the <em>Edit Query</em> button. You can change the name of your query, refine the SQL query string or modify any of the display options.";
 	}
 	else // *add* query
 	{
@@ -405,7 +405,7 @@
 	<tr>
 		<td valign="top">&nbsp;</td>
 		<td>&nbsp;</td>
-		<td>The <a href="http://www.mysql.com/documentation/index.html">MySQL online manual</a> has a <a href="http://www.mysql.com/documentation/mysql/bychapter/manual_Tutorial.html">tutorial introduction</a> on using MySQL and provides a detailed description of the <a href="http://www.mysql.com/doc/S/E/SELECT.html"><code>SELECT</code> syntax</a>.</td>
+		<td>The <a href="http://www.mysql.com/documentation/index.html">MySQL online manual</a> has a <a href="http://dev.mysql.com/doc/mysql/en/tutorial.html">tutorial introduction</a> on using MySQL and provides a detailed description of the <a href="http://www.mysql.com/doc/S/E/SELECT.html"><code>SELECT</code> syntax</a>.</td>
 	</tr>
 </table>
 </form><?php
