@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./install.php
 	// Created:    07-Jan-04, 22:00
-	// Modified:   24-Mar-05, 13:48
+	// Modified:   24-Mar-05, 14:15
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -396,6 +396,8 @@
 
 		if (!empty($pathToBibutils)) // we'll only update the bibutils path if '$pathToBibutils' isn't empty (installation of bibutils is optional)
 			$queryUpdateDependsTable = "UPDATE " . $databaseName . ".depends SET depends_path = \"" . $pathToBibutils . "\" WHERE depends_external = \"bibutils\""; // update the bibutils path spec
+		else // we set the 'depends_enabled' field in table 'depends' to 'false' to indicate that bibutils isn't installed
+			$queryUpdateDependsTable = "UPDATE " . $databaseName . ".depends SET depends_enabled = \"false\" WHERE depends_external = \"bibutils\""; // disable bibutils functionality
 
 		// (2) Run the INSTALL queries on the mysql database through the connection:
 		if (!($result = @ mysql_query ($queryGrantStatement, $connection)))
@@ -416,11 +418,10 @@
 		// reporting's done. The solution is to add the code "2>&1" to the end of your shell command, which redirects
 		// stderr to stdout, which you can then easily print using something like print `shellcommand 2>&1`.
 
-		if (!empty($pathToBibutils)) // we'll only update the bibutils path if '$pathToBibutils' isn't empty (installation of bibutils is optional)
-			// run the UPDATE query on the depends table of the (just imported) literature database:
-			if (!($result = @ mysql_query ($queryUpdateDependsTable, $connection)))
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-					showErrorMsg("The following error occurred while trying to query the database:", "");
+		// run the UPDATE query on the depends table of the (just imported) literature database:
+		if (!($result = @ mysql_query ($queryUpdateDependsTable, $connection)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to query the database:", "");
 
 		// (5) Close the database connection:
 		if (!(mysql_close($connection)))
