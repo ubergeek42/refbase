@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 00:25
-	// Modified:   27-Feb-05, 00:30
+	// Modified:   27-Feb-05, 12:45
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -537,23 +537,23 @@
 								. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Disallow\" title=\"do not allow the selected users to use the specified option\">&nbsp;&nbsp;&nbsp;feature:&nbsp;&nbsp;"
 								. "\n\t\t<select name=\"userPermissionSelector\" title=\"select the permission setting you'd like to change for the selected users\">";
 
-		$userPermissionsArray = array('allow_add'                 => 'add records',
-										'allow_edit'              => 'edit records',
-										'allow_delete'            => 'delete records',
-										'allow_download'          => 'file download',
-										'allow_upload'            => 'file upload',
-										'allow_details_view'      => 'details view',
-										'allow_print_view'        => 'print view',
-										'allow_cite'              => 'cite',
-										'allow_import'            => 'import',
-										'allow_batch_import'      => 'batch import',
-										'allow_export'            => 'export',
-										'allow_batch_export'      => 'batch export',
-										'allow_user_groups'       => 'user groups',
-										'allow_user_queries'      => 'user queries',
-										'allow_rss_feeds'         => 'RSS feeds',
+		$userPermissionsArray = array('allow_add'                 => 'Add records',
+										'allow_edit'              => 'Edit records',
+										'allow_delete'            => 'Delete records',
+										'allow_download'          => 'File download',
+										'allow_upload'            => 'File upload',
+										'allow_details_view'      => 'Details view',
+										'allow_print_view'        => 'Print view',
 										'allow_sql_search'        => 'SQL search',
-										'allow_change_personinfo' => 'change personal info');
+										'allow_user_groups'       => 'User groups',
+										'allow_user_queries'      => 'User queries',
+										'allow_rss_feeds'         => 'RSS feeds',
+										'allow_import'            => 'Import',
+										'allow_export'            => 'Export',
+										'allow_cite'              => 'Cite',
+										'allow_batch_import'      => 'Batch import',
+										'allow_batch_export'      => 'Batch export',
+										'allow_change_personinfo' => 'Change personal info');
 //										'allow_edit_call_number'  => 'edit call number');
 
 		$optionTags = buildSelectMenuOptions($userPermissionsArray, "", "\t\t\t", true); // build properly formatted <option> tag elements from the items listed in the '$userPermissionsArray' variable
