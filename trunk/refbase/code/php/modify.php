@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./modify.php
 	// Created:    18-Dec-02, 23:08
-	// Modified:   20-Jan-03, 23:29
+	// Modified:   05-Sep-03, 23:20
 
 	// This php script will perform adding, editing & deleting of records.
 	// It then calls 'receipt.php' which displays links to the modified/added record
@@ -71,6 +71,7 @@
 
 	// Extract all form values provided by 'record.php':
 	$authorName = $_REQUEST['authorName'];
+	$isEditorCheckBox = $_REQUEST['isEditorCheckBox'];
 	$titleName = $_REQUEST['titleName'];
 	$yearNo = $_REQUEST['yearNo'];
 	$publicationName = $_REQUEST['publicationName'];
@@ -102,7 +103,7 @@
 	$conferenceName = $_REQUEST['conferenceName'];
 	$locationName = $_REQUEST['locationName'];
 	$callNumberName = $_REQUEST['callNumberName'];
-	$reprintStatusName = $_REQUEST['reprintStatusName'];
+	$copyName = $_REQUEST['copyName'];
 	$markedRadio = $_REQUEST['markedRadio'];
 	$approvedRadio = $_REQUEST['approvedRadio'];
 	$fileName = $_REQUEST['fileName'];
@@ -111,8 +112,10 @@
 	$notesName = $_REQUEST['notesName'];
 	$userKeysName = $_REQUEST['userKeysName'];
 	$userNotesName = $_REQUEST['userNotesName'];
+	$userFileName = $_REQUEST['userFileName'];
 	$urlName = $_REQUEST['urlName'];
 	$doiName = $_REQUEST['doiName'];
+	$locationSelector = $_REQUEST['locationSelector'];
 
 	// --------------------------------------------------------------------
 
@@ -194,6 +197,22 @@
 
 	// If we made it here, then the data is considered valid!
 
+	// (1) OPEN CONNECTION, (2) SELECT DATABASE
+
+	// (1) OPEN the database connection:
+	//      (variables are set by include file 'db.inc'!)
+	if (!($connection = @ mysql_connect($hostName, $username, $password)))
+		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+			showErrorMsg("The following error occurred while trying to connect to the host:", $oldQuery);
+
+	// (2) SELECT the database:
+	//      (variables are set by include file 'db.inc'!)
+	if (!(mysql_select_db($databaseName, $connection)))
+		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+			showErrorMsg("The following error occurred while trying to connect to the database:", $oldQuery);
+
+	// --------------------------------------------------------------------
+
 	// CONSTRUCT SQL QUERY:
 	// First, setup some required variables:
 	$currentDate = date('Y-m-d'); // get the current date in a format recognized by mySQL (which is 'YYYY-MM-DD', e.g.: '2003-12-31')
@@ -204,66 +223,64 @@
 	$loginEmailUserName = $loginEmailArray[0]; // extract the user name (which is the first element of the array '$loginEmailArray')
 	$callNumberPrefix = $abbrevInstitution . " @ " . $loginEmailUserName; // again, we use session variables to construct a correct call number prefix, like: 'IP… @ msteffens'
 
+	if ($isEditorCheckBox == "1" OR ereg("^(Book Whole|Journal|Manuscript|Map)$", $typeName)) // if the user did mark the 'is Editor' checkbox -OR- if the record type is either 'Book Whole', 'Journal', 'Map' or 'Manuscript'...
+		if (!empty($editorName) AND empty($authorName)) // ...and if the 'Editor' field has some content while the 'Author' field is blank...
+		{
+			$authorName = $editorName; // duplicate field contents from 'editor' to 'author' field
+			$isEditorCheckBox = "1"; // since the user entered something in the 'editor' field (but not the 'author' field), we need to make sure that the 'is Editor' is marked
+		}
+
+	if ($isEditorCheckBox == "1" AND ereg("^(Book Whole|Journal|Manuscript|Map)$", $typeName)) // if the user did mark the 'is Editor' checkbox -AND- the record type is either 'Book Whole', 'Journal', 'Map' or 'Manuscript'...
+	{
+		$authorName = ereg_replace(" *\(eds?\)$","",$authorName); // ...remove any existing editor info from the 'author' string, i.e., kill any trailing " (ed)" or " (eds)"
+
+		if (!empty($authorName)) // if the 'Author' field has some content...
+			$editorName = $authorName; // ...duplicate field contents from 'author' to 'editor' field (CAUTION: this will overwrite any existing contents in the 'editor' field!)
+
+		if (!empty($authorName)) // if 'author' field isn't empty
+		{
+			if (!ereg(";", $authorName)) // if the 'author' field does NOT contain a ';' (which would delimit multiple authors) => single author
+				$authorName .= " (ed)"; // append " (ed)" to the end of the 'author' string
+			else // the 'author' field does contain at least one ';' => multiple authors
+				$authorName .= " (eds)"; // append " (eds)" to the end of the 'author' string
+		}
+	}
+	else // the 'is Editor' checkbox is NOT checked -OR- the record type is NOT 'Book Whole', 'Journal', 'Map' or 'Manuscript'...
+	{
+		if (ereg(" *\(eds?\)$", $authorName)) // if 'author' field ends with either " (ed)" or " (eds)"
+			$authorName = ereg_replace(" *\(eds?\)$","",$authorName); // remove any existing editor info from the 'author' string, i.e., kill any trailing " (ed)" or " (eds)"
+
+		if ($authorName == $editorName) // if the 'Author' field contents equal the 'Editor' field contents...
+			$editorName = ""; // ...clear contents of 'editor' field (that is, we assume that the user did uncheck the 'is Editor' checkbox, which was previously marked)
+	}
+	
+
+	if (!empty($authorName))
+	{
+		$first_author = ereg_replace("^([^;]+).*","\\1",$authorName); // extract first author from 'author' field
+		$first_author = trim($first_author); // remove leading & trailing whitespace (if any)
+
+		if (!ereg(";", $authorName)) // if the 'author' field does NOT contain a ';' (which would delimit multiple authors) => single author
+			$author_count = "1"; // indicates a single author
+		elseif (ereg("^[^;]+;[^;]+$", $authorName)) // the 'author' field does contain exactly one ';' => two authors
+			$author_count = "2"; // indicates two authors
+		elseif (ereg("^[^;]+;[^;]+;[^;]+", $authorName)) // the 'author' field does contain at least two ';' => more than two authors
+			$author_count = "3"; // indicates three (or more) authors
+	}
+
+	if (!empty($pagesNo))
+		$first_page = ereg_replace("^[^0-9]*([0-9]+).*","\\1",$pagesNo); // extract first page from 'pages' field
+
+
 	// Is this an update?
 	if ($recordAction == "edit") // alternative method to check for an 'edit' action: if (ereg("^[0-9]+$",$serialNo)) // a valid serial number must be an integer
 								// yes, the form already contains a valid serial number, so we'll have to update the relevant record:
-			// UPDATE - construct a query to update the relevant record
-			$query = "UPDATE refs SET "
-					. "author = \"$authorName\", "
-					. "title = \"$titleName\", "
-					. "year = \"$yearNo\", "
-					. "publication = \"$publicationName\", "
-					. "abbrev_journal = \"$abbrevJournalName\", "
-					. "volume = \"$volumeNo\", "
-					. "issue = \"$issueNo\", "
-					. "pages = \"$pagesNo\", "
-					. "address = \"$addressName\", "
-					. "corporate_author = \"$corporateAuthorName\", "
-					. "keywords = \"$keywordsName\", "
-					. "abstract = \"$abstractName\", "
-					. "publisher = \"$publisherName\", "
-					. "place = \"$placeName\", "
-					. "editor = \"$editorName\", "
-					. "language = \"$languageName\", "
-					. "summary_language = \"$summaryLanguageName\", "
-					. "orig_title = \"$OrigTitleName\", "
-					. "series_editor = \"$seriesEditorName\", "
-					. "series_title = \"$seriesTitleName\", "
-					. "abbrev_series_title = \"$abbrevSeriesTitleName\", "
-					. "series_volume = \"$seriesVolumeNo\", "
-					. "series_issue = \"$seriesIssueNo\", "
-					. "edition = \"$editionNo\", "
-					. "issn = \"$issnName\", "
-					. "isbn = \"$isbnName\", "
-					. "medium = \"$mediumName\", "
-					. "area = \"$areaName\", "
-					. "expedition = \"$expeditionName\", "
-					. "conference = \"$conferenceName\", "
-					. "location = \"$locationName\", "
-					. "call_number = \"$callNumberName\", "
-					. "reprint_status = \"$reprintStatusName\", "
-					. "marked = \"$markedRadio\", "
-					. "approved = \"$approvedRadio\", "
-					. "file = \"$fileName\", "
-					. "type = \"$typeName\", "
-					. "notes = \"$notesName\", "
-					. "user_keys = \"$userKeysName\", "
-					. "user_notes = \"$userNotesName\", "
-					. "url = \"$urlName\", "
-					. "doi = \"$doiName\", "
-					. "modified_date = \"$currentDate\", "
-					. "modified_time = \"$currentTime\", "
-					. "modified_by = \"$currentUser\" "
-					. "WHERE serial = $serialNo";
-
-	elseif ($recordAction == "delet")
-			$query = "DELETE FROM refs WHERE serial = $serialNo";
-
-	else // if the form does NOT contain a valid serial number, we'll have to add the data:
 	{
-			// INSERT - construct a query to add data as new record
-			$query = "INSERT INTO refs SET "
+			// UPDATE - construct queries to update the relevant record
+			$queryRefs = "UPDATE refs SET "
 					. "author = \"$authorName\", "
+					. "first_author = \"$first_author\", "
+					. "author_count = \"$author_count\", "
 					. "title = \"$titleName\", "
 					. "year = \"$yearNo\", "
 					. "publication = \"$publicationName\", "
@@ -271,6 +288,7 @@
 					. "volume = \"$volumeNo\", "
 					. "issue = \"$issueNo\", "
 					. "pages = \"$pagesNo\", "
+					. "first_page = \"$first_page\", "
 					. "address = \"$addressName\", "
 					. "corporate_author = \"$corporateAuthorName\", "
 					. "keywords = \"$keywordsName\", "
@@ -294,27 +312,123 @@
 					. "expedition = \"$expeditionName\", "
 					. "conference = \"$conferenceName\", ";
 
-			if ($locationName == "") // if there's no location info provided by the user...
-				$query .= "location = \"$currentUser\", "; // ...insert the current user
-			else
-				$query .= "location = \"$locationName\", "; // ...use the information as entered by the user
+			if (($locationSelector == "Add") AND (!ereg("$loginEmail", $locationName))) // add the current user to the 'location' field (if he/she isn't listed already within the 'location' field):
+			{
+				$locationName = ereg_replace("(.+)", "\\1; $currentUser", $locationName); // the 'location' field does already contain some content
+				$locationName = ereg_replace("^$", "$currentUser", $locationName); // the 'location' field is empty
+			}
+			elseif ($locationSelector == "Remove") // remove the current user from the 'location' field:
+			{ // the only pattern that's really unique is the users email address, the user's name may change (since it can be modified by the user). This is why we dont use '$currentUser' here:
+				$locationName = ereg_replace("^[^;]*\( *$loginEmail *\) *; *", "", $locationName); // the current user occurs after some other user within the 'location' field
+				$locationName = ereg_replace(" *;[^;]*\( *$loginEmail *\) *", "", $locationName); // the current user is listed at the very beginning of the 'location' field
+				$locationName = ereg_replace("^[^;]*\( *$loginEmail *\) *$", "", $locationName); // the current user is the only one listed within 'location' field
+			}
+			// else if $locationSelector == "Don't touch", we just accept the contents of the 'location' field as entered by the user
+
+			$queryRefs .= "location = \"$locationName\", "
+					. "call_number = \"$callNumberName\", "
+					. "approved = \"$approvedRadio\", "
+					. "file = \"$fileName\", "
+					. "type = \"$typeName\", "
+					. "notes = \"$notesName\", "
+					. "url = \"$urlName\", "
+					. "doi = \"$doiName\", "
+					. "modified_date = \"$currentDate\", "
+					. "modified_time = \"$currentTime\", "
+					. "modified_by = \"$currentUser\" "
+					. "WHERE serial = $serialNo";
+
+			// first, we need to check if there's already an entry for the current record & user within the 'user_data' table:
+			// CONSTRUCT SQL QUERY:
+			$query = "SELECT data_id FROM user_data WHERE record_id = $serialNo AND user_id = $loginUserID"; // '$loginUserID' is provided as session variable
+
+			if (!($result = @ mysql_query($query, $connection))) // (3) RUN the query on the database through the connection:
+				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+					showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+
+			if (mysql_num_rows($result) == 1) // if there's already an existing user_data entry, we perform an UPDATE action:
+				$queryUserData = "UPDATE user_data SET "
+								. "marked = \"$markedRadio\", "
+								. "copy = \"$copyName\", "
+								. "user_keys = \"$userKeysName\", "
+								. "user_notes = \"$userNotesName\", "
+								. "user_file = \"$userFileName\" "
+								. "WHERE record_id = $serialNo AND user_id = $loginUserID"; // '$loginUserID' is provided as session variable
+			else // otherwise we perform an INSERT action:
+				$queryUserData = "INSERT INTO user_data SET "
+								. "marked = \"$markedRadio\", "
+								. "copy = \"$copyName\", "
+								. "user_keys = \"$userKeysName\", "
+								. "user_notes = \"$userNotesName\", "
+								. "user_file = \"$userFileName\", "
+								. "record_id = \"$serialNo\", "
+								. "user_id = \"$loginUserID\", " // '$loginUserID' is provided as session variable
+								. "data_id = NULL"; // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
+	}
+
+	elseif ($recordAction == "delet") // (Note that if you delete the mother record within the 'refs' table, the corresponding child entry within the 'user_data' table will remain!)
+			$queryRefs = "DELETE FROM refs WHERE serial = $serialNo";
+
+	else // if the form does NOT contain a valid serial number, we'll have to add the data:
+	{
+			// INSERT - construct queries to add data as new record
+			$queryRefs = "INSERT INTO refs SET "
+					. "author = \"$authorName\", "
+					. "first_author = \"$first_author\", "
+					. "author_count = \"$author_count\", "
+					. "title = \"$titleName\", "
+					. "year = \"$yearNo\", "
+					. "publication = \"$publicationName\", "
+					. "abbrev_journal = \"$abbrevJournalName\", "
+					. "volume = \"$volumeNo\", "
+					. "issue = \"$issueNo\", "
+					. "pages = \"$pagesNo\", "
+					. "first_page = \"$first_page\", "
+					. "address = \"$addressName\", "
+					. "corporate_author = \"$corporateAuthorName\", "
+					. "keywords = \"$keywordsName\", "
+					. "abstract = \"$abstractName\", "
+					. "publisher = \"$publisherName\", "
+					. "place = \"$placeName\", "
+					. "editor = \"$editorName\", "
+					. "language = \"$languageName\", "
+					. "summary_language = \"$summaryLanguageName\", "
+					. "orig_title = \"$OrigTitleName\", "
+					. "series_editor = \"$seriesEditorName\", "
+					. "series_title = \"$seriesTitleName\", "
+					. "abbrev_series_title = \"$abbrevSeriesTitleName\", "
+					. "series_volume = \"$seriesVolumeNo\", "
+					. "series_issue = \"$seriesIssueNo\", "
+					. "edition = \"$editionNo\", "
+					. "issn = \"$issnName\", "
+					. "isbn = \"$isbnName\", "
+					. "medium = \"$mediumName\", "
+					. "area = \"$areaName\", "
+					. "expedition = \"$expeditionName\", "
+					. "conference = \"$conferenceName\", ";
+
+			// currently, the value for '$locationSelector' will be always '' when performing an INSERT, since the popup is fixed to 'Add' and disabled (which, in turn, will result in an empty value to be returned)
+			if (($locationSelector == "Add") OR ($locationSelector == ""))
+				$queryRefs .= "location = \"$currentUser\", "; // ...insert the current user
+
+// A (more relaxed) alternative way of processing the location field would be the following:
+//			if ($locationName == "") // if there's no location info provided by the user...
+//				$queryRefs .= "location = \"$currentUser\", "; // ...insert the current user
+//			else
+//				$queryRefs .= "location = \"$locationName\", "; // ...use the information as entered by the user
 
 			if ($callNumberName == "") // if there's no call number info provided by the user...
-				$query .= "call_number = \"$callNumberPrefix\", "; // ...insert the user's call number prefix
+				$queryRefs .= "call_number = \"$callNumberPrefix\", "; // ...insert the user's call number prefix
 			elseif (!ereg("@", $callNumberName)) // if there's a call number provided by the user that does NOT contain any '@' already...
-				$query .= "call_number = \"" . $callNumberPrefix . " @ " . $callNumberName . "\", "; // ...then we assume the user entered a call number for this record which should be prefixed with the user's call number prefix
+				$queryRefs .= "call_number = \"" . $callNumberPrefix . " @ " . $callNumberName . "\", "; // ...then we assume the user entered a call number for this record which should be prefixed with the user's call number prefix
 			else
-				$query .= "call_number = \"$callNumberName\", "; // ...use the information as entered by the user
+				$queryRefs .= "call_number = \"$callNumberName\", "; // ...use the information as entered by the user
 
-			$query .= "reprint_status = \"$reprintStatusName\", "
-					. "marked = \"$markedRadio\", "
-					. "approved = \"$approvedRadio\", "
+			$queryRefs .= "approved = \"$approvedRadio\", "
 					. "file = \"$fileName\", "
 					. "serial = NULL, " // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
 					. "type = \"$typeName\", "
 					. "notes = \"$notesName\", "
-					. "user_keys = \"$userKeysName\", "
-					. "user_notes = \"$userNotesName\", "
 					. "url = \"$urlName\", "
 					. "doi = \"$doiName\", "
 					. "created_date = \"$currentDate\", "
@@ -323,34 +437,62 @@
 					. "modified_date = \"$currentDate\", "
 					. "modified_time = \"$currentTime\", "
 					. "modified_by = \"$currentUser\"";
+
+			// '$queryUserData' will be set up after '$queryRefs' has been conducted (see below), since the serial number of the newly created 'refs' record is required for the '$queryUserData' query
 	}
+
+	// Apply some clean-up to the sql query:
+	// if a field of type=NUMBER is empty, we set it back to NULL (otherwise the empty string would be converted to "0" ?:-/)
+	if (ereg("^$|^0$",$volumeNo))
+		$queryRefs = ereg_replace("\"$volumeNo\"", "NULL", $queryRefs);
+	if (ereg("^$|^0$",$seriesVolumeNo))
+		$queryRefs = ereg_replace("\"$seriesVolumeNo\"", "NULL", $queryRefs);
+	if (ereg("^$|^0$",$editionNo))
+		$queryRefs = ereg_replace("\"$editionNo\"", "NULL", $queryRefs);
 
 	// --------------------------------------------------------------------
 
-	// (1) OPEN CONNECTION, (2) SELECT DATABASE, (3) RUN QUERY, (4) DISPLAY HEADER & RESULTS, (5) CLOSE CONNECTION
-
-	// (1) OPEN the database connection:
-	//      (variables are set by include file 'db.inc'!)
-	if (!($connection = @ mysql_connect($hostName, $username, $password)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to connect to the host:", $oldQuery);
-
-	// (2) SELECT the database:
-	//      (variables are set by include file 'db.inc'!)
-	if (!(mysql_select_db($databaseName, $connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to connect to the database:", $oldQuery);
+	// (3) RUN QUERY, (4) DISPLAY HEADER & RESULTS
 
 	// (3) RUN the query on the database through the connection:
-	if (!($result = @ mysql_query($query, $connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
+	if ($recordAction == "edit")
+	{
+		if (!($result = @ mysql_query($queryRefs, $connection)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("Your query:\n<br>\n<br>\n<code>$queryRefs</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
 
-	// Is this an insert?
-	if ($recordAction != "edit" && $recordAction != "delet") // alternative method to check for an 'add' action: if (!ereg("^[0-9]+$",$serialNo)) // -> Yes, this an insert -- since '$serialNo' doesn't contain an integer. We'll have to add the data as a new record.
-									//     [If there's no serial number yet, the string "(not assigned yet)" gets inserted by 'record.php' (on '$recordAction=add')]
-			$serialNo = mysql_insert_id(); // find out the unique ID number of the newly created record (Note: this function should be called immediately after the
-										// SQL INSERT statement! After any subsequent query it won't be possible to retrieve the auto_increment identifier value for THIS record!)
+		if (!($result = @ mysql_query($queryUserData, $connection)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("Your query:\n<br>\n<br>\n<code>$queryUserData</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
+	}
+	elseif ($recordAction == "add")
+	{
+		if (!($result = @ mysql_query($queryRefs, $connection)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("Your query:\n<br>\n<br>\n<code>$queryRefs</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
+
+		// Get the record id that was created
+		$serialNo = @ mysql_insert_id($connection); // find out the unique ID number of the newly created record (Note: this function should be called immediately after the
+													// SQL INSERT statement! After any subsequent query it won't be possible to retrieve the auto_increment identifier value for THIS record!)
+
+		$queryUserData = "INSERT INTO user_data SET "
+				. "marked = \"$markedRadio\", "
+				. "copy = \"$copyName\", "
+				. "user_keys = \"$userKeysName\", "
+				. "user_notes = \"$userNotesName\", "
+				. "user_file = \"$userFileName\", "
+				. "record_id = \"$serialNo\", "
+				. "user_id = \"$loginUserID\", " // '$loginUserID' is provided as session variable
+				. "data_id = NULL"; // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
+
+		if (!($result = @ mysql_query($queryUserData, $connection)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("Your query:\n<br>\n<br>\n<code>$queryUserData</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
+	}
+	else // '$recordAction' is "delet" (Note that if you delete the mother record within the 'refs' table, the corresponding child entry within the 'user_data' table will remain!)
+		if (!($result = @ mysql_query($queryRefs, $connection)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("Your query:\n<br>\n<br>\n<code>$queryRefs</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
 
 	// Build correct header message:
 	$headerMsg = "The record no. " . $serialNo . " has been successfully " . $recordAction . "ed.";
@@ -360,6 +502,9 @@
 	//     (routing feedback output to a different script page will avoid any reload problems effectively!)
 	header("Location: receipt.php?recordAction=" . $recordAction . "&serialNo=" . $serialNo . "&headerMsg=" . rawurlencode($headerMsg) . "&oldQuery=" . rawurlencode($oldQuery));
 
+	// --------------------------------------------------------------------
+
+	// (5) CLOSE CONNECTION
 
 	// (5) CLOSE the database connection:
 	if (!(mysql_close($connection)))
