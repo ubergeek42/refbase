@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_removal.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   17-Feb-05, 20:22
+	// Modified:   26-Feb-05, 13:33
 
 	// This script deletes a user from the 'users' and 'auth' tables.
 	// The script can be only called by the admin. If the removal succeeds, it redirects to 'users.php'.
@@ -70,12 +70,24 @@
 	// If the admin is logged in:
 	if (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail)) // -> perform a delete action:
 	{
-		// DELETE - construct a query to delete the relevant record
+		// DELETE - construct queries to delete the relevant record(s)
 		// ... from the users table:
-		$query = "DELETE FROM $tableUsers WHERE user_id = $userID";
+		$queryArray[] = "DELETE FROM $tableUsers WHERE user_id = $userID";
 
 		// ... from the auth table:
-		$query2 = "DELETE FROM $tableAuth WHERE user_id = $userID";
+		$queryArray[] = "DELETE FROM $tableAuth WHERE user_id = $userID";
+
+		// ... from the user_permissions table:
+		$queryArray[] = "DELETE FROM $tableUserPermissions WHERE user_id = $userID";
+
+		// ... from the user_formats table:
+		$queryArray[] = "DELETE FROM $tableUserFormats WHERE user_id = $userID";
+
+		// ... from the user_styles table:
+		$queryArray[] = "DELETE FROM $tableUserStyles WHERE user_id = $userID";
+
+		// ... from the user_types table:
+		$queryArray[] = "DELETE FROM $tableUserTypes WHERE user_id = $userID";
 	}
 
 	// --------------------------------------------------------------------
@@ -83,11 +95,9 @@
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE
 	connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
-	// (3a) RUN the first query on the database through the connection:
-	$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
-
-	// (3b) RUN the second query on the database through the connection:
-	$result = queryMySQLDatabase($query2, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+	// (3) RUN the queries on the database through the connection:
+	foreach($queryArray as $query)
+		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 	// ----------------------------------------------
 
