@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   27-Feb-05, 00:47
+	// Modified:   27-Feb-05, 13:25
 
 	// This file contains important
 	// functions that are shared
@@ -73,7 +73,7 @@
 
 			// Get the user permissions for the current user
 			// and save all allowed user actions as semicolon-delimited string to the session variable 'user_permissions':
-			getPermissions(0, "user");
+			getPermissions(0, "user", true);
 		}
 
 //		if (isset($_SESSION['referer']))
@@ -1669,8 +1669,8 @@ EOF;
 	// --------------------------------------------------------------------
 
 	// Get the user (or group) permissions for the current user
-	// and save all allowed user actions as semicolon-delimited string to the session variable 'user_permissions':
-	function getPermissions($user_OR_groupID, $permissionType) // '$permissionType' must be either 'user' or 'group'
+	// and (optionally) save all allowed user actions as semicolon-delimited string to the session variable 'user_permissions':
+	function getPermissions($user_OR_groupID, $permissionType, $savePermissionsToSessionVariable) // '$permissionType' must be either 'user' or 'group'; '$savePermissionsToSessionVariable' must be either 'true' or 'false'
 	{
 		connectToMySQLDatabase("");
 
@@ -1682,7 +1682,8 @@ EOF;
 
 		if (mysql_num_rows($result) == 1) // interpret query result: Do we have exactly one row?
 		{
-			$userPermissionsArray = array(); // initialize array variable
+			$userPermissionsArray = array(); // initialize array variables
+			$userPermissionsFieldNameArray = array();
 
 			$row = mysql_fetch_array($result); // fetch the one row into the array '$row'
 
@@ -1690,24 +1691,33 @@ EOF;
 
 			for ($i=0; $i<$fieldsFound; $i++)
 			{
-				if ($row["$i"] == "yes") // if the current permission is set to 'yes'...
-				{
-					$fieldInfo = mysql_fetch_field($result, $i); // get the meta-data for the attribute
-					$fieldName = $fieldInfo->name; // get the current attribute name
+				$fieldInfo = mysql_fetch_field($result, $i); // get the meta-data for the attribute
+				$fieldName = $fieldInfo->name; // get the current attribute name
 
-					$userPermissionsArray[] = $fieldName; // ... append this field's permission name to the array of allowed user actions
-				}
+				$userPermissionsArray[$fieldName] = $row[$i]; // ... append this field's permission value using the field's permission name as key
+
+				if ($row[$i] == "yes") // if the current permission is set to 'yes'...
+					$userPermissionsFieldNameArray[] = $fieldName; // ... append this field's permission name (as value) to the array of allowed user actions
 			}
 
-			// join array of user permissions with '; ' as separator:
-			$userPermissionsString = implode('; ', $userPermissionsArray);
+			// join array of allowed user actions with '; ' as separator:
+			$allowedUserActionsString = implode('; ', $userPermissionsFieldNameArray);
+	
+			if ($savePermissionsToSessionVariable)
+				// Write the resulting string of allowed user actions into a session variable:
+				saveSessionVariable("user_permissions", $allowedUserActionsString);
 
-			// Write the resulting string of user permissions into a session variable:
-			saveSessionVariable("user_permissions", $userPermissionsString);
+			return $userPermissionsArray;
 		}
-		else // since no (or more than one) user/group was found with the given ID, we fall back to the default permissions which apply when no user is logged in, i.e.,
-			 // we assume 'user_id' or 'group_id' is zero! (the 'start_session()' function will take care of setting up permissions when no user is logged in)
-			deleteSessionVariable("user_permissions"); // therefore, we delete any existing 'user_permissions' session variable (which is now outdated)
+		else
+		{
+			if ($savePermissionsToSessionVariable)
+				// since no (or more than one) user/group was found with the given ID, we fall back to the default permissions which apply when no user is logged in, i.e.,
+				// we assume 'user_id' or 'group_id' is zero! (the 'start_session()' function will take care of setting up permissions when no user is logged in)
+				deleteSessionVariable("user_permissions"); // therefore, we delete any existing 'user_permissions' session variable (which is now outdated)
+
+			return array();
+		}
 	}
 
 	// --------------------------------------------------------------------
