@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 00:25
-	// Modified:   03-Oct-04, 22:17
+	// Modified:   18-Oct-04, 00:34
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -19,6 +19,7 @@
 	// Incorporate some include files:
 	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
 	include 'includes/header.inc.php'; // include header
+	include 'includes/results_header.inc.php'; // include results header
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
 	include 'initialize/ini.inc.php'; // include common variables
@@ -76,6 +77,10 @@
 		$sqlQuery = $_REQUEST['sqlQuery'];
 	else
 		$sqlQuery = "";
+	if (ereg("%20", $sqlQuery)) // if '$sqlQuery' still contains URL encoded data... ('%20' is the URL encoded form of a space, see note below!)
+		$sqlQuery = rawurldecode($sqlQuery); // URL decode SQL query (it was URL encoded before incorporation into hidden tags of the 'groupSearch', 'refineSearch', 'displayOptions' and 'queryResults' forms to avoid any HTML syntax errors)
+											// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
+											//       But, opposed to that, URL encoded data that are included within a form by means of a hidden form tag will *NOT* get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
 
 	if (isset($_REQUEST['showQuery']))
 		$showQuery = $_REQUEST['showQuery'];
@@ -87,10 +92,14 @@
 	else
 		$showLinks = "";
 
+	// If $showLinks is empty we set it to true (i.e., show the links column by default):
+	if (empty($showLinks))
+		$showLinks = "1";
+
 	if (isset($_REQUEST['showRows']))
 		$showRows = $_REQUEST['showRows'];
 	else
-		$showRows = "";
+		$showRows = 0;
 
 	if (isset($_REQUEST['rowOffset']))
 		$rowOffset = $_REQUEST['rowOffset'];
@@ -108,28 +117,53 @@
 	else
 		$oldQuery = "";
 
-	// If $showLinks is empty we set it to true (i.e., show the links column by default):
-	if ($showLinks == "")
-		$showLinks = "1";
+	// Extract checkbox variable values from the request:
+	if (isset($_REQUEST['marked']))
+		$recordSerialsArray = $_REQUEST['marked']; // extract the values of all checked checkboxes (i.e., the serials of all selected records)
+	else
+		$recordSerialsArray = array();
+
+	// check if the user did mark any checkboxes (and set up variables accordingly)
+	if (empty($recordSerialsArray)) // no checkboxes were marked
+		$nothingChecked = true;
+	else // some checkboxes were marked
+		$nothingChecked = false;
 
 	// --------------------------------------------------------------------
 
 	// CONSTRUCT SQL QUERY:
 
 	// --- Embedded sql query: ----------------------
-	if ("$formType" == "sqlSearch") // the admin used a link with an embedded sql query for searching...
+	if ($formType == "sqlSearch") // the admin used a link with an embedded sql query for searching...
 	{
 		$query = eregi_replace(' FROM users',', user_id FROM users',$sqlQuery); // add 'user_id' column (which is required in order to obtain unique checkbox names as well as for use in the 'getUserID()' function)
 		$query = str_replace('\"','"',$query); // replace any \" with "
 		$query = str_replace('\\\\','\\',$query);
 	}
 
-	// --- Form within 'users.php': ---------------
-	elseif ("$formType" == "refineSearch") // the user used the "Search within Results" form above the query results list (that was produced by 'users.php')
-		$query = extractFormElementsRefine($displayType, $sqlQuery, $showLinks);
+	// --- 'Search within Results' & 'Display Options' forms within 'users.php': ---------------
+	elseif ($formType == "refineSearch" OR $formType == "displayOptions") // the user used the "Search within Results" (or "Display Options") form above the query results list (that was produced by 'users.php')
+	{
+		$query = extractFormElementsRefineDisplay("users", $displayType, $sqlQuery, $showLinks, ""); // function 'extractFormElementsRefineDisplay()' is defined in 'include.inc.php' since it's also used by 'users.php'
+	}
+
+	// --- 'Show User Group' form within 'users.php': ---------------------
+	elseif ($formType == "groupSearch") // the user used the 'Show User Group' form above the query results list (that was produced by 'users.php')
+	{
+		$query = extractFormElementsGroup($sqlQuery);
+	}
+
+	// --- Query results form within 'users.php': ---------------
+	elseif ($formType == "queryResults") // the user clicked one of the buttons under the query results list (that was produced by 'users.php')
+	{
+		$query = extractFormElementsQueryResults($displayType, $sqlQuery, $recordSerialsArray);
+	}
 
 	else // build the default query:
+	{
 		$query = "SELECT first_name, last_name, abbrev_institution, email, last_login, logins, user_id FROM users WHERE user_id RLIKE \".+\" ORDER BY last_login DESC, last_name, first_name";
+	}
+
 
 	// ----------------------------------------------
 
@@ -151,22 +185,41 @@
 	if ($rowsFound > 0) // If there were rows found ...
 		{
 			// ... setup variables in order to facilitate "previous" & "next" browsing:
-			// a) Set $rowOffset to zero if not previously defined, or if a wrong number (<=0) was given
-			if (empty($rowOffset) || ($rowOffset <= 0))
+			// a) Set '$rowOffset' to zero if not previously defined, or if a wrong number (<=0) was given
+			if (empty($rowOffset) || ($rowOffset <= 0) || ($showRows >= $rowsFound)) // the third condition is only necessary if '$rowOffset' gets embedded within the 'displayOptions' form (see function 'buildDisplayOptionsElements()' in 'include.inc.php')
 				$rowOffset = 0;
 
-			// Adjust the $showRows value, if a wrong number (<=0) was given
-			if ($showRows <= 0)
+			// Adjust the '$showRows' value if not previously defined, or if a wrong number (<=0 or float) was given
+			if (empty($showRows) || ($showRows <= 0) || !ereg("^[0-9]+$", $showRows))
 				$showRows = 10;
-			
+
+			// NOTE: The current value of '$rowOffset' is embedded as hidden tag within the 'displayOptions' form. By this, the current row offset can be re-applied
+			//       after the user pressed the 'Show'/'Hide' button within the 'displayOptions' form. But then, to avoid that browse links don't behave as expected,
+			//       we need to adjust the actual value of '$rowOffset' to an exact multiple of '$showRows':
+			$offsetRatio = ($rowOffset / $showRows);
+			if (!is_integer($offsetRatio)) // check whether the value of the '$offsetRatio' variable is not an integer
+			{ // if '$offsetRatio' is a float:
+				$offsetCorrectionFactor = floor($offsetRatio); // get it's next lower integer
+				if ($offsetCorrectionFactor != 0)
+					$rowOffset = ($offsetCorrectionFactor * $showRows); // correct the current row offset to the closest multiple of '$showRows' *below* the current row offset
+				else
+					$rowOffset = 0;
+			}
+
 			// b) The "Previous" page begins at the current offset LESS the number of rows per page
 			$previousOffset = $rowOffset - $showRows;
-			
+
 			// c) The "Next" page begins at the current offset PLUS the number of rows per page
 			$nextOffset = $rowOffset + $showRows;
-			
+
 			// d) Seek to the current offset
 			mysql_data_seek($result, $rowOffset);
+		}
+	else // set variables to zero in order to prevent 'Undefined variable...' messages when nothing was found ('$rowsFound = 0'):
+		{
+			$rowOffset = 0;
+			$previousOffset = 0;
+			$nextOffset = 0;
 		}
 
 	// Second, calculate the maximum result number on each page ('$showMaxRow' is required as parameter to the 'displayDetails()' function)
@@ -241,7 +294,7 @@
 			$fieldsToDisplay = $fieldsFound-(1+$CounterMax); // (1+$CounterMax) -> $CounterMax is increased by 1 in order to hide the user_id column (which was added to make the checkbox work)
 
 			// Calculate the number of all visible columns (which is needed as colspan value inside some TD tags)
-			if ("$showLinks" == "1")
+			if ($showLinks == "1")
 				$NoColumns = (1+$fieldsToDisplay+1); // add checkbox & Links column
 			else
 				$NoColumns = (1+$fieldsToDisplay); // add checkbox column
@@ -249,29 +302,50 @@
 			// Note: we ommit the 'Search Within Results' form in print view! ('viewType=Print')
 			if ($viewType != "Print")
 			{
-				// 2) Build a FORM & TABLE containing options to refine the search results as well as the diplayed columns
-				//    First, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
-				//    Since 'users.php' can be only called by the admin we simply specify all fields within the first variable...
-				$refineSearchSelectorElements1 = "first_name, last_name, title, institution, abbrev_institution, corporate_institution, address, address_line_1, address_line_2, address_line_3, zip_code, city, state, country, phone, email, url, keywords, notes, last_login, logins, user_id, marked, created_date, created_time, created_by, modified_date, modified_time, modified_by";
+				// Build a TABLE with forms containing options to show the user groups, refine the search results or change the displayed columns:
+
+				//    - Build a FORM with a popup containing the user groups:
+				$formElementsGroup = buildGroupSearchElements("users.php", $queryURL, $query, $showQuery, $showLinks, $showRows); // function 'buildGroupSearchElements()' is defined in 'include.inc.php'
+
+				//    - Build a FORM containing options to refine the search results:
+				//      First, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
+				//      Since 'users.php' can be only called by the admin we simply specify all fields within the first variable...
+				$refineSearchSelectorElements1 = "first_name, last_name, title, institution, abbrev_institution, corporate_institution, address_line_1, address_line_2, address_line_3, zip_code, city, state, country, phone, email, url, last_login, logins, user_id, user_groups, created_date, created_time, created_by, modified_date, modified_time, modified_by";
 				$refineSearchSelectorElements2 = ""; // ... and keep the second one blank (compare with 'search.php')
 				$refineSearchSelectorElementSelected = "last_name"; // this column will be selected by default
-				// Call the 'buildRefineSearchElements()' function (defined in 'include.inc.php') which does the actual work:
-				$RefineSearch = buildRefineSearchElements("users.php", $queryURL, $showQuery, $showLinks, $showRows, $NoColumns, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected);
-				echo $RefineSearch;
+				//      Call the 'buildRefineSearchElements()' function (defined in 'include.inc.php') which does the actual work:
+				$formElementsRefine = buildRefineSearchElements("users.php", $queryURL, $showQuery, $showLinks, $showRows, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected);
+
+				//    - Build a FORM containing display options (show/hide columns or change the number of records displayed per page):
+				//      Again, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
+				$displayOptionsSelectorElements1 = "first_name, last_name, title, institution, abbrev_institution, corporate_institution, address_line_1, address_line_2, address_line_3, zip_code, city, state, country, phone, email, url, last_login, logins, user_id, user_groups, created_date, created_time, created_by, modified_date, modified_time, modified_by";
+				$displayOptionsSelectorElements2 = ""; // again we'll keep the second one blank (compare with 'search.php')
+				$displayOptionsSelectorElementSelected = "last_name"; // this column will be selected by default
+				//      Call the 'buildDisplayOptionsElements()' function (defined in 'include.inc.php') which does the actual work:
+				$formElementsDisplayOptions = buildDisplayOptionsElements("users.php", $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $displayOptionsSelectorElements1, $displayOptionsSelectorElements2, $displayOptionsSelectorElementSelected, $fieldsToDisplay);
+
+				echo displayResultsHeader("users.php", $formElementsGroup, $formElementsRefine, $formElementsDisplayOptions); // function 'displayResultsHeader()' is defined in 'results_header.inc.php'
 			}
 
-		
+
+			// and insert a divider line (which separates the 'Search Within Results' form from the browse links & results data below):
+			if ($viewType != "Print") // Note: we ommit the divider line in print view! ('viewType=Print')
+				echo "\n<hr align=\"center\" width=\"93%\">";
+
 			// Build a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages
 			// call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
 			$BrowseLinks = buildBrowseLinks("users.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "", "", "", "", "", $viewType); // Note: we set the last 3 fields ('$citeOrder', '$orderBy' & $headerMsg') to "" since they aren't (yet) required here
 			echo $BrowseLinks;
 
-			//    and insert a divider line (which separates the 'Search Within Results' form & browse links from the results data below):
-			echo "\n<hr align=\"center\" width=\"93%\">";
-
 
 			// Start a FORM
-			echo "\n<form action=\"users.php\" method=\"POST\" name=\"queryResults\">";
+			echo "\n<form action=\"users.php\" method=\"POST\" name=\"queryResults\">"
+					. "\n<input type=\"hidden\" name=\"formType\" value=\"queryResults\">"
+					. "\n<input type=\"hidden\" name=\"submit\" value=\"Add\">" // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Add' button)
+					. "\n<input type=\"hidden\" name=\"showRows\" value=\"$showRows\">" // embed the current values of '$showRows', '$rowOffset' and the current sqlQuery so that they can be re-applied after the user pressed the 'Add' or 'Remove' button within the 'queryResults' form
+					. "\n<input type=\"hidden\" name=\"rowOffset\" value=\"$rowOffset\">"
+					. "\n<input type=\"hidden\" name=\"sqlQuery\" value=\"$queryURL\">"
+					. "\n<input type=\"hidden\" name=\"oldQuery\" value=\"" . rawurlencode($oldQuery) . "\">"; // embed the current value of '$oldQuery' so that it's available later on
 
 			// And start a TABLE
 			echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays users of this database\">";
@@ -296,7 +370,7 @@
 				echo $tableHeaderLink; // print the attribute name as link
 			 }
 	
-			if ("$showLinks" == "1")
+			if ($showLinks == "1")
 				{
 					$newORDER = ("ORDER BY user_id"); // Build the appropriate ORDER BY clause to facilitate sorting by Links column
 	
@@ -338,7 +412,7 @@
 				}
 
 				// embed appropriate links (if available):
-				if ("$showLinks" == "1")
+				if ($showLinks == "1")
 				{
 					echo "\n\t<td valign=\"top\">";
 	
@@ -366,12 +440,17 @@
 			// Note: we ommit the results footer in print view! ('viewType=Print')
 			if ($viewType != "Print")
 			{
-				// Insert a divider line (which separates the results data from the results footer):
-				echo "\n<hr align=\"center\" width=\"93%\">";
-
 				// Again, insert the (already constructed) BROWSE LINKS
 				// (i.e., a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages)
 				echo $BrowseLinks;
+
+				// Insert a divider line (which separates the results data from the results footer):
+				echo "\n<hr align=\"center\" width=\"93%\">";
+
+				// Build a TABLE containing rows with buttons for displaying/citing selected records
+				// Call the 'buildResultsFooter()' function (which does the actual work):
+				$userResultsFooter = buildUserResultsFooter($NoColumns);
+				echo $userResultsFooter;
 			}
 			// END RESULTS FOOTER ----------------------
 
@@ -391,68 +470,135 @@
 
 	// --------------------------------------------------------------------
 
-	// EXTRACT FORM VARIABLES SENT THROUGH POST
-	// (!! NOTE !!: for details see <http://www.php.net/release_4_2_1.php> & <http://www.php.net/manual/en/language.variables.predefined.php>)
-
-	// Build the database query from user input provided by the "Search within Results" form above the query results list (which, in turn, was returned by 'users.php'):
-	function extractFormElementsRefine($displayType, $sqlQuery, $showLinks)
+	//	BUILD USER RESULTS FOOTER
+	// (i.e., build a TABLE containing a row with buttons for assigning selected users to a particular group)
+	function buildUserResultsFooter($NoColumns)
 	{
-		$refineSearchSelector = $_POST['refineSearchSelector']; // extract field name chosen by the user
-		$refineSearchName = $_POST['refineSearchName']; // extract search text entered by the user
+		// Start a TABLE
+		$userResultsFooterRow = "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"90%\" summary=\"This table holds the results footer which offers a form to assign selected users to a group\">";
 
-		if (isset($_POST['showRefineSearchFieldRadio']))
-			$showRefineSearchFieldRadio = $_POST['showRefineSearchFieldRadio']; // extract user option whether searched field should be displayed
-		else
-			$showRefineSearchFieldRadio = "";
+		$userResultsFooterRow .= "\n<tr>"
 
-		$refineSearchActionRadio = $_POST['refineSearchActionRadio']; // extract user option whether matched records should be included or excluded
+								. "\n\t<td align=\"left\" valign=\"top\">"
+								. "Selected Users:"
+								. "</td>";
 
-		$query = rawurldecode($sqlQuery); // URL decode SQL query (it was URL encoded before incorporation into a hidden tag of the 'refineSearch' form to avoid any HTML syntax errors)
-											// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
-											//       But, opposed to that, URL encoded data that are included within a form by means of a hidden form tag will *NOT* get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
-
-		if ("$showRefineSearchFieldRadio" == "1") // if the user checked the radio button next to 'Show column'...
-			{
-				if (!preg_match("/SELECT.*\W$refineSearchSelector\W.*FROM users/i", $query)) // ...and the field is *not* already displayed...
-					$query = eregi_replace(" FROM users",", $refineSearchSelector FROM users",$query); // ...then SHOW the field that was used for refining the search results
-			}
-		elseif ("$showRefineSearchFieldRadio" == "0") // if the user checked the radio button next to 'Hide column'...
-			{
-				if (eregi("SELECT.+$refineSearchSelector.+FROM users", $query)) // ...and the field *is* currently displayed...
-					// for all columns except the first:
-					$query = preg_replace("/(SELECT.+?), $refineSearchSelector( .*FROM users)/i","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
-					// for all columns except the last:
-					$query = preg_replace("/(SELECT.*? )$refineSearchSelector, (.+FROM users)/i","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
-			}
-		// else if $showRefineSearchFieldRadio == "" (which is the form's default) we don't change the display of any columns
-
-		$query = eregi_replace(' FROM users',', user_id FROM users',$query); // add 'user_id' column (although it won't be visible the 'user_id' column gets included in every search query)
-																		// (which is required in order to obtain unique checkbox names as well as for use in the 'getUserID()' function)
-
-		if ("$refineSearchName" != "") // if the user typed a search string into the text entry field...
+		// Admin user groups functionality:
+		if (!isset($_SESSION['adminUserGroups']))
 		{
-			// Depending on the chosen output action, construct an appropriate SQL query:
-			if ($refineSearchActionRadio == "1") // if the user checked the radio button next to "Restrict to matched records"
-				{
-					// for the field 'marked=no', force NULL values to be matched:
-					if ($refineSearchSelector == "marked" AND $refineSearchName == "no")
-						$query = eregi_replace("WHERE","WHERE ($refineSearchSelector RLIKE \"$refineSearchName\" OR $refineSearchSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
-					else // add default 'WHERE' clause:
-						$query = eregi_replace("WHERE","WHERE $refineSearchSelector RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
-				}
-			else // $refineSearchActionRadio == "0" // if the user checked the radio button next to "Exclude matched records"
-				{
-					// for the field 'marked=yes', force NULL values to be excluded:
-					if ($refineSearchSelector == "marked" AND $refineSearchName == "yes")
-						$query = eregi_replace("WHERE","WHERE ($refineSearchSelector NOT RLIKE \"$refineSearchName\" OR $refineSearchSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
-					else // add default 'WHERE' clause:
-						$query = eregi_replace("WHERE","WHERE $refineSearchSelector NOT RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
-				}
-			$query = eregi_replace(' AND user_id RLIKE ".+"','',$query); // remove any 'AND user_id RLIKE ".+"' which isn't required anymore
+			$groupSearchDisabled = " disabled"; // disable the (part of the) 'Add to/Remove from group' form elements if the session variable holding the admin's user groups isn't available
+			$groupSearchPopupMenuChecked = "";
+			$groupSearchTextInputChecked = " checked";
+			$groupSearchSelectorTitle = "(to setup a new group with all selected users, enter a group name to the right, then click the 'Add' button)";
+			$groupSearchTextInputTitle = "to setup a new group with the selected users, specify the name of the group here, then click the 'Add' button";
+		}
+		else
+		{
+			$groupSearchDisabled = "";
+			$groupSearchPopupMenuChecked = " checked";
+			$groupSearchTextInputChecked = "";
+			$groupSearchSelectorTitle = "choose the group to which the selected users shall belong (or from which they shall be removed)";
+			$groupSearchTextInputTitle = "to setup a new group with the selected users, click the radio button to the left &amp; specify the name of the group here, then click the 'Add' button";
 		}
 
-		// else, if the user did NOT type a search string into the text entry field, we simply keep the old WHERE clause...
+		$userResultsFooterRow .= "\n\t<td align=\"left\" valign=\"top\" colspan=\"" . ($NoColumns - 1) . "\">"
+								. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Add\" title=\"add all selected users to the specified group\">&nbsp;"
+								. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Remove\" title=\"remove all selected users from the specified group\"$groupSearchDisabled>&nbsp;&nbsp;&nbsp;group:&nbsp;&nbsp;"
+								. "\n\t\t<input type=\"radio\" name=\"userGroupActionRadio\" value=\"1\" title=\"click here if you want to add (remove) the selected users to (from) an existing group; then, choose the group name from the popup menu to the right\"$groupSearchDisabled$groupSearchPopupMenuChecked>"
+								. "\n\t\t<select name=\"userGroupSelector\" title=\"$groupSearchSelectorTitle\"$groupSearchDisabled>";
 
+		if (!isset($_SESSION['adminUserGroups']))
+		{
+			$userResultsFooterRow .= "\n\t\t\t<option>(no groups available)</option>";
+		}
+		else
+		{
+			$optionTags = buildSelectMenuOptions($_SESSION['adminUserGroups'], " *; *", "\t\t\t"); // build properly formatted <option> tag elements from the items listed in the 'adminUserGroups' session variable
+			$userResultsFooterRow .= $optionTags;
+		}
+
+		$userResultsFooterRow .= "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
+								. "\n\t\t<input type=\"radio\" name=\"userGroupActionRadio\" value=\"0\" title=\"click here if you want to setup a new group; then, enter the group name in the text box to the right\"$groupSearchTextInputChecked>"
+								. "\n\t\t<input type=\"text\" name=\"userGroupName\" value=\"\" size=\"8\" title=\"$groupSearchTextInputTitle\">"
+								. "\n\t</td>"
+	
+								. "\n</tr>";
+
+		// Finish the table:
+		$userResultsFooterRow .= "\n</table>";
+
+		return $userResultsFooterRow;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Build the database query from user input provided by the "Show User Group" form above the query results list (that was produced by 'users.php'):
+	function extractFormElementsGroup($sqlQuery)
+	{
+		if (!empty($sqlQuery)) // if there's a previous SQL query available
+		{
+			$query = preg_replace("/(SELECT .+?) FROM users.+/i", "\\1", $sqlQuery); // use the custom set of colums chosen by the user
+			$queryOrderBy = preg_replace("/.+( ORDER BY .+?)(?=LIMIT.*|GROUP BY.*|HAVING.*|PROCEDURE.*|FOR UPDATE.*|LOCK IN.*|$)/i", "\\1", $sqlQuery); // user the custom ORDER BY clause chosen by the user
+		}
+		else
+		{
+			$query = "SELECT author, title, year, publication, volume, pages, user_groups"; // use the default SELECT statement
+			$queryOrderBy = " ORDER BY author, year DESC, publication"; // add the default ORDER BY clause
+		}
+
+		$groupSearchSelector = $_POST['groupSearchSelector']; // extract the user group chosen by the user
+
+		$query .= ", user_id"; // add 'user_id' column (although it won't be visible the 'user_id' column gets included in every search query)
+								// (which is required in order to obtain unique checkbox names as well as for use in the 'getUserID()' function)
+
+		$query .= " FROM users"; // add FROM clause
+
+		$query .= " WHERE user_groups RLIKE \"(^|.*;) *$groupSearchSelector *(;.*|$)\""; // add WHERE clause
+
+		$query .= $queryOrderBy; // add ORDER BY clause
+
+
+		return $query;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Build the database query from records selected by the user within the query results list (which, in turn, was returned by 'users.php'):
+	function extractFormElementsQueryResults($displayType, $sqlQuery, $recordSerialsArray)
+	{
+		$userGroupActionRadio = $_POST['userGroupActionRadio']; // extract user option whether we're supposed to process an existing group name or any custom/new group name that was specified by the user
+
+		// Extract the chosen user group from the request:
+		// first, we need to check whether the user did choose an existing group name from the popup menu
+		// -OR- if he/she did enter a custom group name in the text entry field:
+		if ($userGroupActionRadio == "1") // if the user checked the radio button next to the group popup menu ('userGroupSelector') [this is the default]
+		{
+			if (isset($_POST['userGroupSelector']))
+				$userGroup = $_POST['userGroupSelector']; // extract the value of the 'userGroupSelector' popup menu
+			else
+				$userGroup = "";
+		}
+		else // $userGroupActionRadio == "0" // if the user checked the radio button next to the group text entry field ('userGroupName')
+		{
+			if (isset($_POST['userGroupName']))
+				$userGroup = $_POST['userGroupName']; // extract the value of the 'userGroupName' text entry field
+			else
+				$userGroup = "";
+		}
+
+
+		// join array elements:
+		if (!empty($recordSerialsArray)) // the user did check some checkboxes
+			$recordSerialsString = implode("|", $recordSerialsArray); // separate record serials by "|" in order to facilitate regex querying...
+		else // the user didn't check any checkboxes
+			$recordSerialsString = "0"; // we use '0' which definitely doesn't exist as serial, resulting in a "nothing found" feedback
+
+
+		modifyUserGroups("users", $displayType, $recordSerialsArray, $recordSerialsString, "", $userGroup, $userGroupActionRadio); // add (remove) selected records to (from) the specified user group (function 'modifyUserGroups()' is defined in 'include.inc.php')
+
+
+		// re-apply the current sqlQuery:
+		$query = eregi_replace(' FROM users',', user_id FROM users',$sqlQuery); // add 'user_id' column (which is required in order to obtain unique checkbox names)
 
 		return $query;
 	}
