@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./simple_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   13-Feb-05, 21:12
+	// Modified:   28-Mar-05, 19:44
 
 	// Search form providing access to the main fields of the database.
 	// It offers some output options (like how many records to display per page)
@@ -37,7 +37,7 @@
 
 	// If there's no stored message available:
 	if (!isset($_SESSION['HeaderString']))
-		$HeaderString = "Search the main fields of the database:"; // Provide the default message
+		$HeaderString = $loc["Search"]." ".$loc["SearchMain"].":"; // Provide the default message
 	else
 	{
 		$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
@@ -58,40 +58,92 @@
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Simple Search", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $loc["Simple"] . " " . $loc["Search"], "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
+	// Define variables holding common drop-down elements, i.e. build properly formatted <option> tag elements:
+	$dropDownConditionals1Array = array("contains" => $loc["contains"],
+										"does not contain" => $loc["contains not"],
+										"is equal to" => $loc["equal to"],
+										"is not equal to" => $loc["equal to not"],
+										"starts with" => $loc["starts with"],
+										"ends with" => $loc["ends with"]);
+
+	$dropDownItems1 = buildSelectMenuOptions($dropDownConditionals1Array, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
+
+
+	$dropDownConditionals2Array = array("is greater than" => $loc["is greater than"],
+										"is less than" => $loc["is less than"]);
+
+	$dropDownItems2 = buildSelectMenuOptions($dropDownConditionals2Array, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
+
+
+	$dropDownFieldNameArray = array("author" => $loc["DropDownFieldName_Author"],
+									"title" => $loc["DropDownFieldName_Title"],
+									"year" => $loc["DropDownFieldName_Year"],
+									"publication" => $loc["DropDownFieldName_Publication"],
+									"volume_numeric" => $loc["DropDownFieldName_Volume"], // 'volume' should get replaced automatically by 'volume_numeric' (in function 'buildFieldNameLinks()') but it doesn't ?:-/
+									"pages" => $loc["DropDownFieldName_Pages"]);
+
+	$dropDownItems3 = buildSelectMenuOptions($dropDownFieldNameArray, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
+
 	// (2b) Start <form> and <table> holding the form elements:
-	echo "\n<form action=\"search.php\" method=\"POST\">";
-	echo "\n<input type=\"hidden\" name=\"formType\" value=\"simpleSearch\">"
-			. "\n<input type=\"hidden\" name=\"showQuery\" value=\"0\">";
-	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the search form\">"
-			. "\n<tr>"                
-			. "\n\t<th align=\"left\">".$loc["show"]."</th>\n\t<th align=\"left\">".$loc["Field"]."</th>\n\t<th align=\"left\">&nbsp;</th>\n\t<th align=\"left\">".$loc["That..."]."</th>\n\t<th align=\"left\">".$loc["Searchstring"]."</th>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td width=\"20\" valign=\"middle\"><input type=\"checkbox\" name=\"showAuthor\" value=\"1\" checked></td>"
-			. "\n\t<td width=\"40\"><b>".$loc["author"].":</b></td>\n\t<td width=\"10\">&nbsp;</td>"
-			. "\n\t<td width=\"125\">\n\t\t<select name=\"authorSelector\">\n\t\t\t<option>".$loc["contains"]."</option>\n\t\t\t<option>".$loc["contains not"]." </option>\n\t\t\t<option>".$loc["equal to"]."</option>\n\t\t\t<option>".$loc["equal to not"]."</option>\n\t\t\t<option>".$loc["starts with"]."</option>\n\t\t\t<option>".$loc["ends with"]."</option>\n\t\t</select>\n\t</td>"
-			. "\n\t<td><input type=\"text\" name=\"authorName\" size=\"42\"></td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showTitle\" value=\"1\" checked></td>"
-			. "\n\t<td><b>".$loc["title"].":</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>\n\t\t<select name=\"titleSelector\">\n\t\t\t<option>".$loc["contains"]."</option>\n\t\t\t<option>".$loc["contains not"]."</option>\n\t\t\t<option>".$loc["equal to"]."</option>\n\t\t\t<option>".$loc["equal to not"]."</option>\n\t\t\t<option>".$loc["starts with"]."</option>\n\t\t\t<option>".$loc["ends with"]."</option>\n\t\t</select>\n\t</td>"
-			. "\n\t<td><input type=\"text\" name=\"titleName\" size=\"42\"></td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showYear\" value=\"1\" checked></td>"
-			. "\n\t<td><b>".$loc["year"].":</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>\n\t\t<select name=\"yearSelector\">\n\t\t\t<option>".$loc["contains"]."</option>\n\t\t\t<option>".$loc["contains not"]."</option>\n\t\t\t<option>".$loc["equal to"]."</option>\n\t\t\t<option>".$loc["equal to not"]."</option>\n\t\t\t<option>".$loc["starts with"]."</option>\n\t\t\t<option>".$loc["ends with"]."</option>\n\t\t\t<option>".$loc["is greater than"]."</option>\n\t\t\t<option>".$loc["is less than"]."</option>\n\t\t</select>\n\t</td>"
-			. "\n\t<td><input type=\"text\" name=\"yearNo\" size=\"42\"></td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showPublication\" value=\"1\" checked></td>"
-			. "\n\t<td><b>".$loc["Publication"].":</b></td>\n\t<td align=\"center\"><input type=\"radio\" name=\"publicationRadio\" value=\"1\" checked></td>"
-			. "\n\t<td>\n\t\t<select name=\"publicationSelector\">\n\t\t\t<option>".$loc["contains"]."</option>\n\t\t\t<option>".$loc["contains not"]."</option>\n\t\t\t<option>".$loc["equal to"]."</option>\n\t\t\t<option>".$loc["equal to not"]."</option>\n\t\t\t<option>".$loc["starts with"]."</option>\n\t\t\t<option>".$loc["ends with"]."</option>\n\t\t</select>\n\t</td>"
-			. "\n\t<td>";
+?>
+
+<form action="search.php" method="POST">
+<input type="hidden" name="formType" value="simpleSearch">
+<input type="hidden" name="showQuery" value="0">
+<table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds the search form">
+<tr>
+	<th align="left"><?php echo $loc["Show"]; ?></th>
+	<th align="left"><?php echo $loc["Field"]; ?></th>
+	<th align="left">&nbsp;</th>
+	<th align="left"><?php echo $loc["That..."]; ?></th>
+	<th align="left"><?php echo $loc["Searchstring"]; ?></th>
+</tr>
+<tr>
+	<td width="20" valign="middle"><input type="checkbox" name="showAuthor" value="1" checked></td>
+	<td width="40"><b><?php echo $loc["Author"]; ?>:</b></td>
+	<td width="10">&nbsp;</td>
+	<td width="125">
+		<select name="authorSelector"><?php echo $dropDownItems1; ?>
+
+		</select>
+	</td>
+	<td><input type="text" name="authorName" size="42"></td>
+</tr>
+<tr>
+	<td valign="middle"><input type="checkbox" name="showTitle" value="1" checked></td>
+	<td><b><?php echo $loc["Title"]; ?>:</b></td>
+	<td>&nbsp;</td>
+	<td>
+		<select name="titleSelector"><?php echo $dropDownItems1; ?>
+
+		</select>
+	</td>
+	<td><input type="text" name="titleName" size="42"></td>
+</tr>
+<tr>
+	<td valign="middle"><input type="checkbox" name="showYear" value="1" checked></td>
+	<td><b><?php echo $loc["Year"]; ?>:</b></td>
+	<td>&nbsp;</td>
+	<td>
+		<select name="yearSelector"><?php echo $dropDownItems1 . $dropDownItems2; ?>
+
+		</select>
+	</td>
+	<td><input type="text" name="yearNo" size="42"></td>
+</tr>
+<tr>
+	<td valign="middle"><input type="checkbox" name="showPublication" value="1" checked></td>
+	<td><b><?php echo $loc["Publication"]; ?>:</b></td>
+	<td align="center"><input type="radio" name="publicationRadio" value="1" checked></td>
+	<td>
+		<select name="publicationSelector"><?php echo $dropDownItems1; ?>
+
+		</select>
+	</td>
+	<td><?php
 
 	// (3) Run the query on the literature database through the connection:
 	//     (here by use of the 'selectDistinct' function)
@@ -99,140 +151,156 @@
 	// Parameters:
 	// 1: Database connection
 	// 2. Table that contains values
-	// 3. Attribute that contains values
-	// 4. <SELECT> element name
-	// 5. An additional non-database value
-	// 6. Optional <OPTION SELECTED>
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value (display string)
+	// 11. String that gets submitted instead of the display string given in 10.
+	// 12. Optional <OPTION SELECTED>
+	// 13. Restrict query to field... (keep empty if no restriction wanted)
+	// 14. ...where field contents are...
+	// 15. Split field contents into substrings? (yes = true, no = false)
+	// 16. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
 				 $tableRefs,
+				 "serial",
+				 $tableUserData,
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
 				 "publication",
 				 "publicationName",
+				 $loc["All"],
 				 "All",
-				 "All");
+				 $loc["All"],
+				 "type",
+				 "\"journal\"",
+				 false,
+				 "");
+?>
 
-	echo "\n\t</td>"
-			. "\n</tr>";
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;</td>
+	<td align="right"><?php echo $loc["or"]; ?>:</td>
+	<td align="center"><input type="radio" name="publicationRadio" value="0"></td>
+	<td>
+		<select name="publicationSelector2"><?php echo $dropDownItems1; ?>
 
-	echo "\n<tr>"
-			. "\n\t<td>&nbsp;</td>"
-			. "\n\t<td align=\"right\">".$loc["or"].":</td>\n\t<td align=\"center\"><input type=\"radio\" name=\"publicationRadio\" value=\"0\"></td>"
-			. "\n\t<td>\n\t\t<select name=\"publicationSelector2\">\n\t\t\t<option>".$loc["contains"]."</option>\n\t\t\t<option>".$loc["contains not"]."</option>\n\t\t\t<option>".$loc["equal to"]."</option>\n\t\t\t<option>".$loc["equal to not"]."</option>\n\t\t\t<option>".$loc["starts with"]."</option>\n\t\t\t<option>".$loc["ends with"]."</option>\n\t\t</select>\n\t</td>"
-			. "\n\t<td><input type=\"text\" name=\"publicationName2\" size=\"42\"></td>"
-			. "\n</tr>";
+		</select>
+	</td>
+	<td><input type="text" name="publicationName2" size="42"></td>
+</tr>
+<tr>
+	<td valign="middle"><input type="checkbox" name="showVolume" value="1" checked></td>
+	<td><b><?php echo $loc["Volume"]; ?>:</b></td>
+	<td>&nbsp;</td>
+	<td>
+		<select name="volumeSelector"><?php echo $dropDownItems1 . $dropDownItems2; ?>
 
-	// (4) Complete the form:
-	echo "\n<tr>"
-			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showVolume\" value=\"1\" checked></td>"
-			. "\n\t<td><b>".$loc["Volume"].":</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>\n\t\t<select name=\"volumeSelector\">\n\t\t\t<option>".$loc["contains"]."</option>\n\t\t\t<option>".$loc["contains not"]."</option>\n\t\t\t<option>".$loc["equal to"]."</option>\n\t\t\t<option>".$loc["equal to not"]."</option>\n\t\t\t<option>".$loc["starts with"]."</option>\n\t\t\t<option>".$loc["ends with"]."</option>\n\t\t\t<option>".$loc["is greater than"]."</option>\n\t\t\t<option>".$loc["is less than"]."</option>\n\t\t</select>\n\t</td>"
-			. "\n\t<td><input type=\"text\" name=\"volumeNo\" size=\"42\"></td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showPages\" value=\"1\" checked></td>"
-			. "\n\t<td><b>".$loc["Pages"].":</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>\n\t\t<select name=\"pagesSelector\">\n\t\t\t<option>".$loc["contains"]."</option>\n\t\t\t<option>".$loc["contains not"]."</option>\n\t\t\t<option>".$loc["equal to"]."</option>\n\t\t\t<option>".$loc["equal to not"]."</option>\n\t\t\t<option>".$loc["starts with"]."</option>\n\t\t\t<option>".$loc["ends with"]."</option>\n\t\t</select>\n\t</td>"
-			. "\n\t<td><input type=\"text\" name=\"pagesNo\" size=\"42\"></td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td>&nbsp;</td>"
-			. "\n\t<td valign=\"top\"><b>".$loc["DisplayOptions"].":</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showLinks\" value=\"1\" checked>&nbsp;&nbsp;&nbsp;".$loc["display"]." ".$loc["Links"]."</td>"
-			. "\n\t<td valign=\"middle\">".$loc["show"]."&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"showRows\" value=\"10\" size=\"4\">&nbsp;&nbsp;&nbsp;".$loc["Records"]." ".$loc["per page"]
-			. "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"".$loc["Search"]."\"></td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td>&nbsp;</td>\n\t<td>1.&nbsp;".$loc["sort by"].":</td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>\n\t\t<select name=\"sortSelector1\">\n\t\t\t<option selected>".$loc["author"]."</option>\n\t\t\t<option>".$loc["title"]."</option>\n\t\t\t<option>".$loc["year"]."</option>\n\t\t\t<option>".$loc["Publication"]."</option>\n\t\t\t<option>".$loc["Volume"]."</option>\n\t\t\t<option>".$loc["Pages"]."</option>\n\t\t</select>\n\t</td>"
-			. "\n\t<td>\n\t\t<input type=\"radio\" name=\"sortRadio1\" value=\"0\" checked>&nbsp;&nbsp;&nbsp;".$loc["ascending"]."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-			. "\n\t\t<input type=\"radio\" name=\"sortRadio1\" value=\"1\">&nbsp;&nbsp;&nbsp;".$loc["descending"]."\n\t</td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td>&nbsp;</td>\n\t<td>2.&nbsp;".$loc["sort by"].":</td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>\n\t\t<select name=\"sortSelector2\">\n\t\t\t<option>".$loc["author"]."</option>\n\t\t\t<option>".$loc["title"]."</option>\n\t\t\t<option selected>".$loc["year"]."</option>\n\t\t\t<option>".$loc["Publication"]."</option>\n\t\t\t<option>".$loc["Volume"]."</option>\n\t\t\t<option>".$loc["Pages"]."</option>\n\t\t</select>\n\t</td>"
-			. "\n\t<td>\n\t\t<input type=\"radio\" name=\"sortRadio2\" value=\"0\">&nbsp;&nbsp;&nbsp;".$loc["ascending"]."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-			. "\n\t\t<input type=\"radio\" name=\"sortRadio2\" value=\"1\" checked>&nbsp;&nbsp;&nbsp;".$loc["descending"]."\n\t</td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td>&nbsp;</td>\n\t<td>3.&nbsp;".$loc["sort by"].":</td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>\n\t\t<select name=\"sortSelector3\">\n\t\t\t<option>".$loc["author"]."</option>\n\t\t\t<option>".$loc["title"]."</option>\n\t\t\t<option>".$loc["year"]."</option>\n\t\t\t<option selected>".$loc["Publication"]."</option>\n\t\t\t<option>".$loc["Volume"]."</option>\n\t\t\t<option>".$loc["Pages"]."</option>\n\t\t</select>\n\t</td>"
-			. "\n\t<td>\n\t\t<input type=\"radio\" name=\"sortRadio3\" value=\"0\" checked>&nbsp;&nbsp;&nbsp;".$loc["ascending"]."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-			. "\n\t\t<input type=\"radio\" name=\"sortRadio3\" value=\"1\">&nbsp;&nbsp;&nbsp;".$loc["descending"]."\n\t</td>"
-			. "\n</tr>"
-			. "\n</table>"
-			. "\n</form>";
-	
+		</select>
+	</td>
+	<td><input type="text" name="volumeNo" size="42"></td>
+</tr>
+<tr>
+	<td valign="middle"><input type="checkbox" name="showPages" value="1" checked></td>
+	<td><b><?php echo $loc["Pages"]; ?>:</b></td>
+	<td>&nbsp;</td>
+	<td>
+		<select name="pagesSelector"><?php echo $dropDownItems1; ?>
+
+		</select>
+	</td>
+	<td><input type="text" name="pagesNo" size="42"></td>
+</tr>
+<tr>
+	<td>&nbsp;</td>
+	<td>&nbsp;</td>
+	<td>&nbsp;</td>
+	<td>&nbsp;</td>
+	<td>&nbsp;</td>
+</tr>
+<tr>
+	<td>&nbsp;</td>
+	<td valign="top"><b><?php echo $loc["DisplayOptions"]; ?>:</b></td>
+	<td>&nbsp;</td>
+	<td valign="middle"><input type="checkbox" name="showLinks" value="1" checked>&nbsp;&nbsp;&nbsp;<?php echo $loc["ShowLinks"]; ?></td>
+	<td valign="middle"><?php echo $loc["Show"]; ?>&nbsp;&nbsp;&nbsp;<input type="text" name="showRows" value="10" size="4">&nbsp;&nbsp;&nbsp;<?php echo $loc["records"]." ".$loc["per page"]; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" value="<?php echo $loc["ButtonTitle_Search"]; ?>"></td>
+</tr>
+<tr>
+	<td>&nbsp;</td>
+	<td>&nbsp;</td>
+	<td>&nbsp;</td>
+	<td>&nbsp;</td>
+	<td>&nbsp;</td>
+</tr>
+<tr>
+	<td>&nbsp;</td>
+	<td>1.&nbsp;<?php echo $loc["sort by"]; ?>:</td>
+	<td>&nbsp;</td>
+	<td>
+		<select name="sortSelector1"><?php
+
+$sortSelector1DropDownItems = ereg_replace("<option([^>]*)>" . $loc["DropDownFieldName_Author"], "<option\\1 selected>" . $loc["DropDownFieldName_Author"], $dropDownItems3); // select the 'author' menu entry ...
+echo $sortSelector1DropDownItems;
+?>
+
+		</select>
+	</td>
+	<td>
+		<input type="radio" name="sortRadio1" value="0" checked>&nbsp;&nbsp;&nbsp;<?php echo $loc["ascending"]; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<input type="radio" name="sortRadio1" value="1">&nbsp;&nbsp;&nbsp;<?php echo $loc["descending"]; ?>
+
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;</td>
+	<td>2.&nbsp;<?php echo $loc["sort by"]; ?>:</td>
+	<td>&nbsp;</td>
+	<td>
+		<select name="sortSelector2"><?php
+
+$sortSelector2DropDownItems = ereg_replace("<option([^>]*)>" . $loc["DropDownFieldName_Year"], "<option\\1 selected>" . $loc["DropDownFieldName_Year"], $dropDownItems3); // select the 'year' menu entry ...
+echo $sortSelector2DropDownItems;
+?>
+
+		</select>
+	</td>
+	<td>
+		<input type="radio" name="sortRadio2" value="0">&nbsp;&nbsp;&nbsp;<?php echo $loc["ascending"]; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<input type="radio" name="sortRadio2" value="1" checked>&nbsp;&nbsp;&nbsp;<?php echo $loc["descending"]; ?>
+
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;</td>
+	<td>3.&nbsp;<?php echo $loc["sort by"]; ?>:</td>
+	<td>&nbsp;</td>
+	<td>
+		<select name="sortSelector3"><?php
+
+$sortSelector3DropDownItems = ereg_replace("<option([^>]*)>" . $loc["DropDownFieldName_Publication"], "<option\\1 selected>" . $loc["DropDownFieldName_Publication"], $dropDownItems3); // select the 'publication' menu entry ...
+echo $sortSelector3DropDownItems;
+?>
+
+		</select>
+	</td>
+	<td>
+		<input type="radio" name="sortRadio3" value="0" checked>&nbsp;&nbsp;&nbsp;<?php echo $loc["ascending"]; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<input type="radio" name="sortRadio3" value="1">&nbsp;&nbsp;&nbsp;<?php echo $loc["descending"]; ?>
+
+	</td>
+</tr>
+</table>
+</form><?php
+
 	// (5) Close the database connection:
 	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
-
-	// --------------------------------------------------------------------
-
-	// THE SELECTDISTINCT FUNCTION:
-	function selectDistinct ($connection,
-							$tableName,
-							$columnName,
-							$pulldownName,
-							$additionalOption,
-							$defaultValue)
-	{
-	 $defaultWithinResultSet = FALSE;
-
-	 // Query to find distinct values of $columnName
-	 // in $tableName
-	 // Note: in order to avoid book names we'll restrict the query to records whose record type contains 'journal'!
-	 $distinctQuery = "SELECT DISTINCT $columnName FROM $tableName WHERE type RLIKE \"journal\" ORDER BY $columnName";
-
-	 // Run the distinctQuery on the database through the connection:
-	$resultId = queryMySQLDatabase($distinctQuery, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
-
-	 // Retrieve all distinct values
-	 $i = 0;
-	 while ($row = @ mysql_fetch_array($resultId))
-		$resultBuffer[$i++] = $row[$columnName];
-
-	 // Start the select widget
-	 echo "\n\t\t<select name=\"$pulldownName\">";		 
-
-	 // Is there an additional option?
-	 if (isset($additionalOption))
-		// Yes, but is it the default option?
-		if ($defaultValue == $additionalOption)
-			// Show the additional option as selected
-			echo "\n\t\t\t<option selected>$additionalOption</option>";
-		else
-			// Just show the additional option
-			echo "\n\t\t\t<option>$additionalOption</option>";
-
-	 // check for a default value
-	 if (isset($defaultValue))
-	 {
-		// Yes, there's a default value specified
-
-		// Check if the defaultValue is in the 
-		// database values
-		foreach ($resultBuffer as $result)
-			if ($result == $defaultValue)
-				// Yes, show as selected
-				echo "\n\t\t\t<option selected>$result</option>";
-			else
-				// No, just show as an option
-				echo "\n\t\t\t<option>$result</option>";
-	 }	// end if defaultValue
-	 else 
-	 { 
-		// No defaultValue
-		
-		// Show database values as options
-		foreach ($resultBuffer as $result)
-			echo "\n\t\t\t<option>$result</option>";
-	 }
-	 echo "\n\t\t</select>";
-	} // end of function
 
 	// --------------------------------------------------------------------
 
