@@ -243,11 +243,11 @@
 		}
 		// finalize header containing the appropriate header string:
 		echo "\n<tr>"
-			. "\n\t<td>&nbsp;</td>"
-			. "\n\t<td colspan=\"2\">$FullHeaderString</td>"
+//			. "\n\t<td>&nbsp;</td>" // img in 'header.inc' now spans this row (by rowspan="2")
+			. "\n\t<td>$FullHeaderString</td>"
 			. "\n</tr>"
 			. "\n<tr align=\"center\">"
-			. "\n\t<td colspan=\"3\">&nbsp;</td>"
+			. "\n\t<td colspan=\"2\">&nbsp;</td>"
 			. "\n</tr>"
 			. "\n</table>"
 			. "\n<hr align=\"center\" width=\"80%\">"
@@ -1406,6 +1406,7 @@
 		$RefineSearchRow .= "\n\t<td align=\"center\" valign=\"top\" colspan=\"$NoColumns\">";
 		// Build the visible form elements:
 		$RefineSearchRow .= "\n\t\tSearch within Results:&nbsp;&nbsp;&nbsp;&nbsp;"
+							. "\n\t\t<input type=\"checkbox\" name=\"showRefineSearchField\" value=\"1\">&nbsp;"
 							. "\n\t\t<select name=\"refineSearchSelector\">"
 							. "\n\t\t\t<option selected>author</option>"
 							. "\n\t\t\t<option>title</option>"
@@ -3867,10 +3868,15 @@
 	// Build the database query from user input provided by the "Search within Results" form above the query results list (which, in turn, was returned by 'search.php'):
 	function extractFormElementsRefine($displayType, $sqlQuery, $showLinks)
 	{
+		$showRefineSearchField = $_POST['showRefineSearchField']; // extract user option whether searched field should be displayed
 		$refineSearchSelector = $_POST['refineSearchSelector']; // extract field name chosen by the user
 		$refineSearchName = $_POST['refineSearchName']; // extract search text entered by the user
 
 		$query = rawurldecode($sqlQuery); // URL decode SQL query (it was URL encoded before incorporation into a hidden tag of the 'refineSearch' form to avoid any HTML syntax errors)
+
+		if ("$showRefineSearchField" == "1") // if the user checked the checkbox next to the field popup...
+			if (ereg("SELECT.+$refineSearchSelector.+FROM refs", $query) != true) // ...and the field isn't already displayed...
+				$query = str_replace(" FROM refs",", $refineSearchSelector FROM refs",$query); // ...then show the field that was used for refining the search results
 
 		$query = str_replace(' FROM refs',', serial FROM refs',$query); // add 'serial' column (although it won't be visible the 'serial' column gets included in every search query)
 																		// (which is required in order to obtain unique checkbox names)
