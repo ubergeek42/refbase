@@ -374,7 +374,7 @@ CREATE TABLE `user_data` (
   `user_notes` text,
   `user_file` varchar(255) default NULL,
   `user_groups` text,
-  `bibtex_id` varchar(255) default NULL,
+  `cite_key` varchar(255) default NULL,
   `related` text,
   PRIMARY KEY  (`data_id`),
   KEY `user_id` (`user_id`,`record_id`)
