@@ -1,9 +1,15 @@
 <?
-/*
-IPOE literature database footer:
-*/
-?>
-<?
+	// This is the footer include file.
+	// It contains functions that build the footer
+	// which gets displayed on every page.
+
+	/*
+	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
+	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
+	*/
+
+	// --------------------------------------------------------------------
+
 	function displayfooter($oldQuery)
 	{
 		echo "\n<hr align=\"center\" width=\"95%\">"
