@@ -4,7 +4,7 @@ Suggestions for improving refbase:
   EndNote, ISI Web of Science, RIS, and Pubmed XML.
 
 - Provide additional citation formats, preferably via the use of a plugin
-  structure which would make it easy to add your own citation citation styles.
+  structure which would make it easy to add your own citation styles.
 
 - Simplify manual data input by providing record type specific forms.  These
   forms could guide a user by only showing those fields that are required for a
@@ -12,7 +12,7 @@ Suggestions for improving refbase:
 
 - Validation of data entered/imported by the user.
 
-- Offer the user means for handling duplicate database entries..
+- Offer the user means for handling duplicate database entries.
 
 - Provide administrative interface to deleted records.
 
