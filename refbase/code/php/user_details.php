@@ -27,7 +27,7 @@
 
 	// START A SESSION:
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
-	start_session();
+	start_session(true);
 
 	// Extract session variables (only necessary if register globals is OFF!):
 	if (isset($_SESSION['errors']))
