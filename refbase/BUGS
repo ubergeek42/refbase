@@ -16,6 +16,6 @@ We are aware of the following problems, bugs and/or limitations:
   with the same name as a file already on the server will overwrite it.  This
   will be addressed in the future by implementing a standard renaming scheme.
 
-- The 'type' drop-down in details view doesn't show the correct record type if the
-  type isn't among those types that were enabled by the admin and chosen to be
-  visible by the user.
+- The 'type' drop-down in details view doesn't show the correct record type if
+  the type isn't among those types that were enabled by the admin and chosen to
+  be visible by the user.
