@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   01-Oct-04, 21:38
+	// Modified:   14-Oct-04, 00:24
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -75,6 +75,14 @@
 	$contentTypeCharset = "ISO-8859-1"; // e.g. "ISO-8859-1" or "UTF-8"
 
 
+	// The path to the default CSS stylesheet which will be used for all page views except print view:
+	$defaultStyleSheet = "css/style.css"; // e.g. "css/style.css"
+
+
+	// The path to the CSS stylesheet which will be used for print view:
+	$printStyleSheet = "css/style_print.css"; // e.g. "css/style_print.css"
+
+
 	// Specify who'll be allowed to see files associated with any records:
 	// Set this variable to "everyone" if you want _any_ visitor of your database (whether he's logged
 	// in or not) to be able to see links to any associated files. If you choose "login" instead, a user
@@ -90,7 +98,8 @@
 	// by the above rule). Files will be shown regardless of the above rule if the specified condition is
 	// met. First param must be a valid field name from table 'refs', second param the conditional expression
 	// (specified as /perl regular expression/). The given example will *always* show links to files where
-	// the 'thesis' field of the corresponding record is not empty.
+	// the 'thesis' field of the corresponding record is not empty. If you do not wish to make any exception
+	// to the above rule, just specify an empty array, like: '$fileVisibilityException = array();'
 	$fileVisibilityException = array("thesis", "/.+/"); // "/.../i" will invoke case insensitive matching
 
 
@@ -150,6 +159,7 @@
 	// the equivalent HTML encoding). If you do not wish to perform any search and replace actions, just
 	// specify an empty array, like: '$markupSearchReplacePatterns = array();'
 	$markupSearchReplacePatterns = array("_(.+?)_"          =>  "<i>\\1</i>",
+										"\\*\\*(.+?)\\*\\*" =>  "<b>\\1</b>",
 										"\\[super:(.+?)\\]" =>  "<sup>\\1</sup>",
 										"\\[sub:(.+?)\\]"   =>  "<sub>\\1</sub>",
 										"\\[permil\\]"      =>  "&permil;",
