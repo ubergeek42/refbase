@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   17-Oct-04, 23:27
+	// Modified:   24-Oct-04, 21:05
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -146,7 +146,7 @@
 			$userID = $row["user_id"]; // extract the user's userID from the last query
 
 			// Now we need to get the user's first name and last name (e.g., in order to display them within the login welcome message)
-			$query = "SELECT user_id, first_name, last_name, abbrev_institution FROM users WHERE user_id = " . $userID; // CONSTRUCT SQL QUERY
+			$query = "SELECT user_id, first_name, last_name, abbrev_institution, language FROM users WHERE user_id = " . $userID; // CONSTRUCT SQL QUERY
 	
 			// RUN the query on the database through the connection:
 			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
@@ -161,6 +161,7 @@
 			saveSessionVariable("loginFirstName", $row2["first_name"]);
 			saveSessionVariable("loginLastName", $row2["last_name"]);
 			saveSessionVariable("abbrevInstitution", $row2["abbrev_institution"]);
+			saveSessionVariable("userLanguage", $row2["language"]);
 
 			// Get all user groups specified by the current user
 			// and (if some groups were found) save them as semicolon-delimited string to the session variable 'userGroups':
@@ -177,15 +178,15 @@
 
 			// Get all export formats that were selected previously by the current user
 			// and (if some formats were found) save them as semicolon-delimited string to the session variable 'user_formats':
-			getUserFormatsStylesTypes($row2["user_id"], "format", "export"); // function 'getUserFormatsStylesTypes()' is defined in 'include.inc.php'
+			getVisibleUserFormatsStylesTypes($row2["user_id"], "format", "export"); // function 'getVisibleUserFormatsStylesTypes()' is defined in 'include.inc.php'
 
 			// Get all citation styles that were selected previously by the current user
 			// and (if some styles were found) save them as semicolon-delimited string to the session variable 'user_styles':
-			getUserFormatsStylesTypes($row2["user_id"], "style", ""); // function 'getUserFormatsStylesTypes()' is defined in 'include.inc.php'
+			getVisibleUserFormatsStylesTypes($row2["user_id"], "style", ""); // function 'getVisibleUserFormatsStylesTypes()' is defined in 'include.inc.php'
 
 			// Get all document types that were selected previously by the current user
 			// and (if some types were found) save them as semicolon-delimited string to the session variable 'user_types':
-			getUserFormatsStylesTypes($row2["user_id"], "type", ""); // function 'getUserFormatsStylesTypes()' is defined in 'include.inc.php'
+			getVisibleUserFormatsStylesTypes($row2["user_id"], "type", ""); // function 'getVisibleUserFormatsStylesTypes()' is defined in 'include.inc.php'
 
 			// Get the user permissions for the current user
 			// and save all allowed user actions as semicolon-delimited string to the session variable 'user_permissions':
