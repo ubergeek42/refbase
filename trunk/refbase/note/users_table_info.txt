@@ -30,7 +30,7 @@ last_login	date & time of the user's last successful login to the database -> fu
 logins	total number of successful logins for this user -> future versions may offer simple usage statistics
 language	the user's preferred language -> future versions might offer language customization
 user_id	the user's unique ID number (which is simply the unique serial number of this record)
-group_id	the group's unique ID number (which corresponds to the group_id number of the group's record entry within the "groups" table)
+user_groups	the user groups to which this user belongs (note that this field contains names of *user* groups, which must not be confused with the user's personal groups that list groups of particular *references*)
 marked	gives the possibility to set a flag for this record
 created_date	the creation date of this record
 created_time	the creation time of this record
@@ -67,7 +67,7 @@ last_login	DATETIME
 logins	MEDIUMINT UNSIGNED NOT NULL
 language	VARCHAR(50)
 user_id	MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY
-group_id	MEDIUMINT UNSIGNED NOT NULL
+user_groups	TEXT
 marked	ENUM('no','yes') NOT NULL
 created_date	DATE
 created_time	TIME
@@ -81,7 +81,7 @@ modified_by	VARCHAR(100)
 table creation code
 -------------------
 
-CREATE TABLE users (first_name VARCHAR(50), last_name VARCHAR(50), title VARCHAR(25), institution VARCHAR(255), abbrev_institution VARCHAR(25), corporate_institution VARCHAR(255), address VARCHAR(255), address_line_1 VARCHAR(50), address_line_2 VARCHAR(50), address_line_3 VARCHAR(50), zip_code VARCHAR(25), city VARCHAR(40), state VARCHAR(50), country VARCHAR(40), phone VARCHAR(50), email VARCHAR(50), url VARCHAR(255), keywords TEXT, notes TEXT, last_login DATETIME, logins MEDIUMINT UNSIGNED NOT NULL, language VARCHAR(50), user_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, group_id MEDIUMINT UNSIGNED NOT NULL, marked ENUM('no','yes') NOT NULL, created_date DATE, created_time TIME, created_by VARCHAR(100), modified_date DATE, modified_time TIME, modified_by VARCHAR(100));
+CREATE TABLE users (first_name VARCHAR(50), last_name VARCHAR(50), title VARCHAR(25), institution VARCHAR(255), abbrev_institution VARCHAR(25), corporate_institution VARCHAR(255), address VARCHAR(255), address_line_1 VARCHAR(50), address_line_2 VARCHAR(50), address_line_3 VARCHAR(50), zip_code VARCHAR(25), city VARCHAR(40), state VARCHAR(50), country VARCHAR(40), phone VARCHAR(50), email VARCHAR(50), url VARCHAR(255), keywords TEXT, notes TEXT, last_login DATETIME, logins MEDIUMINT UNSIGNED NOT NULL, language VARCHAR(50), user_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_groups TEXT, marked ENUM('no','yes') NOT NULL, created_date DATE, created_time TIME, created_by VARCHAR(100), modified_date DATE, modified_time TIME, modified_by VARCHAR(100));
 
 
 rules for data import
