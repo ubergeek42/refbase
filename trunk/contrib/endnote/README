@@ -22,8 +22,8 @@ Use
       Macintosh HD\Applications\EndNote #\Styles
     (where # corresponds to a version #)
   - Open the Endnote file you wish to import into refbase.
-  - Choose the refbase Output Syle
-  - Export to endnote.txt
+  - Choose the refbase Output Style
+  - Export to 'endnote.txt'
   Part II: PHP
   - Executing 'php endnote2mysql.php' will produce 'import.txt'
     ('php' must be in your path or you should prefix it with the path to php)

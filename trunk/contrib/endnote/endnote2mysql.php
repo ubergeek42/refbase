@@ -28,7 +28,7 @@
   //  - Replaces '<Go to ISI>://*\t' with '\N' (bad URLs in Endnote)
 
   // TODO:
-  //  - Tabs with a fields aren't replaced!  This can screw things up!
+  //  - Tabs within fields aren't replaced!  This can screw things up!
   //  - Allow people to change import & export filenames
   //  - More fields (particularly all dates, first author, number of authors)
   //  - Better parsing of current fields (correct use of 'ed' vs 'eds)
