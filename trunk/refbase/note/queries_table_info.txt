@@ -10,14 +10,14 @@ fields available in table "queries"	description
 query_id	the unique ID number of this query entry
 user_id	the user's unique ID number (which corresponds to the user_id number of the user's record entry within the "users" table)
 query_name	the name that was assigned by the user to this query
-display_type	the type of display requested by the user: either 'Display', 'Export' or '' ('' will produce the default columnar output style)
+display_type	the type of display requested by the user: either 'Display', 'Cite' or '' ('' will produce the default columnar output style)
 view_type	the view type requested by the user: either 'Print', 'Web' or '' ('' will produce the default 'Web' output style)
 query	the SQL query
 show_query	specifies whether the SQL query will be displayed with the output ('1') or not ('0')
 show_links	specifies whether links will be displayed with the output ('1') or not ('0')
 show_rows	specifies how many rows will be displayed per results page (must be a positive integer)
-export_format_selector	the export format chosen by the user
-export_order	specifies how the data will get sorted on export (if this param is set to 'year', records will be listed in blocks sorted by year)
+cite_style_selector	the citation style chosen by the user
+cite_order	specifies how the data will get sorted on citation (if this param is set to 'year', records will be listed in blocks sorted by year)
 last_execution	the date & time this query was executed last
 
 
@@ -34,8 +34,8 @@ query	TEXT
 show_query	TINYINT UNSIGNED
 show_links	TINYINT UNSIGNED
 show_rows	MEDIUMINT UNSIGNED
-export_format_selector	VARCHAR(50)
-export_order	VARCHAR(25)
+cite_style_selector	VARCHAR(50)
+cite_order	VARCHAR(25)
 last_execution	DATETIME
 
 INDEX	(user_id,query_name)
@@ -45,7 +45,7 @@ INDEX	(user_id,query_name)
 table creation code
 -------------------
 
-CREATE TABLE queries (query_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id MEDIUMINT UNSIGNED NOT NULL, query_name VARCHAR(255), display_type VARCHAR(25), view_type VARCHAR(25), query TEXT, show_query TINYINT UNSIGNED, show_links TINYINT UNSIGNED, show_rows MEDIUMINT UNSIGNED, export_format_selector VARCHAR(50), export_order VARCHAR(25), last_execution DATETIME, INDEX (user_id,query_name));
+CREATE TABLE queries (query_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id MEDIUMINT UNSIGNED NOT NULL, query_name VARCHAR(255), display_type VARCHAR(25), view_type VARCHAR(25), query TEXT, show_query TINYINT UNSIGNED, show_links TINYINT UNSIGNED, show_rows MEDIUMINT UNSIGNED, cite_style_selector VARCHAR(50), cite_order VARCHAR(25), last_execution DATETIME, INDEX (user_id,query_name));
 
 
 rules for data import
