@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./query_manager.php
 	// Created:    04-Feb-04, 22:29
-	// Modified:   29-Aug-04, 20:39
+	// Modified:   16-Feb-05, 20:47
 
 	// This script enables you to manage your custom queries.
 	// It offers a form to save the current query or update/delete any of your saved queries.
@@ -17,6 +17,7 @@
 	*/
 	
 	// Incorporate some include files:
+	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
 	include 'includes/header.inc.php'; // include header
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
@@ -173,7 +174,7 @@
 		// CONSTRUCT SQL QUERY:
 		// for the selected query, select *all* fields that are available in the form:
 		$query = "SELECT query_id, user_id, query_name, display_type, view_type, query, show_query, show_links, show_rows, cite_style_selector, cite_order"
-				. " FROM queries WHERE query_id = $queryID"; // since we'll only fetch one record, the ORDER BY clause is obsolete here
+				. " FROM $tableQueries WHERE query_id = $queryID"; // since we'll only fetch one record, the ORDER BY clause is obsolete here
 
 
 		// (1) OPEN CONNECTION, (2) SELECT DATABASE
@@ -228,7 +229,7 @@
 			$showQuery = $row['show_query'];
 			$showLinks = $row['show_links'];
 			$showRows = $row['show_rows'];
-			$citeStyle = htmlentities($row['cite_style_selector']);
+			$citeStyle = encodeHTML($row['cite_style_selector']);
 			$citeOrder = $row['cite_order'];
 			$origQueryName = $row['query_name'];
 		}
@@ -256,7 +257,7 @@
 			else // if there was no previous SQL query provide the default query and options:
 			{
 				$displayType = ""; // ('' will produce the default columnar output style)
-				$sqlQuery = "SELECT author, title, year, created_by, modified_date, modified_time, modified_by FROM refs WHERE modified_date = CURDATE() ORDER BY modified_date DESC, modified_time DESC";
+				$sqlQuery = "SELECT author, title, year, created_by, modified_date, modified_time, modified_by FROM $tableRefs WHERE modified_date = CURDATE() ORDER BY modified_date DESC, modified_time DESC";
 				$showQuery = "0";
 				$showLinks = "1";
 				$showRows = "5";
@@ -334,7 +335,7 @@
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- " . $pageTitle, "index,follow", "Manage queries that are used to search the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $pageTitle, "index,follow", "Manage queries that are used to search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
 
 	// (2b) Start <form> and <table> holding the form elements:
@@ -356,7 +357,7 @@
 		<td width="58" valign="top"><b>Query Name:</b></td>
 		<td width="10">&nbsp;</td>
 		<td>
-			<? echo fieldError("queryName", $errors); ?><input type="text" name="queryName" value="<? echo htmlentities($queryName); ?>" size="33">
+			<? echo fieldError("queryName", $errors); ?><input type="text" name="queryName" value="<? echo encodeHTML($queryName); ?>" size="33">
 			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" name="submit" value="<? echo $pageTitle; ?>"><?php
 
 	if ($queryAction == "edit") // add a DELETE button (CAUTION: the delete button must be displayed *AFTER* the edit button, otherwise DELETE will be the default action if the user hits return!!)
