@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_removal.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   17-Oct-04, 15:31
+	// Modified:   17-Feb-05, 20:22
 
 	// This script deletes a user from the 'users' and 'auth' tables.
 	// The script can be only called by the admin. If the removal succeeds, it redirects to 'users.php'.
@@ -72,10 +72,10 @@
 	{
 		// DELETE - construct a query to delete the relevant record
 		// ... from the users table:
-		$query = "DELETE FROM users WHERE user_id = $userID";
+		$query = "DELETE FROM $tableUsers WHERE user_id = $userID";
 
 		// ... from the auth table:
-		$query2 = "DELETE FROM auth WHERE user_id = $userID";
+		$query2 = "DELETE FROM $tableAuth WHERE user_id = $userID";
 	}
 
 	// --------------------------------------------------------------------
