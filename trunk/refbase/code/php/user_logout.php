@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_logout.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   19-Jan-03, 13:02
+	// Modified:   14-Aug-03, 20:12
 
 	// This script logs a user out and redirects 
 	// to the calling page. If the script is called
@@ -28,6 +28,10 @@
 
 	// --------------------------------------------------------------------
 
+	$referer = $_REQUEST['referer']; // get the referring URL (if any)
+	if (empty($referer))
+		$referer = $HTTP_REFERER;
+
 	// Is the user logged in?
 	if (session_is_registered("loginEmail"))
 	{
@@ -48,8 +52,8 @@
 		$HeaderString = "<b><span class=\"warning\">You cannot logout since you are not logged in anymore!</span></b>";
 	}
 
-	if (!preg_match("/.*user(_details|_receipt|s)\.php.*/", $HTTP_REFERER))
-		header("Location: $HTTP_REFERER"); // redirect the user to the calling page
+	if (!preg_match("/.*user(_details|_receipt|s)\.php.*/", $referer))
+		header("Location: $referer"); // redirect the user to the calling page
 	else
 		header("Location: index.php"); // back to main page
 
