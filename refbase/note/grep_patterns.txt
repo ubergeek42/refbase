@@ -49,7 +49,10 @@ Script:	Find/Replace in Chosen Records
 Field(s):	Author, Analytic [01] & Author, Monographic [07]
 Search:	(?<=,)([^[:lower:];]+)([[:upper:]])[[:lower:]]+
 Replace:	\1\2
-Comments:	mehrmals ausfŸhren!
+Comments:	- mehrmals ausfŸhren!
+			- ACHTUNG: "Jr" darf nicht hinter Initialen stehen (sonst wird es zu "J" verkŸrzt!) -> sollte stattdessen nach Nachname stehen.
+			           Also "Smith Jr, WO" und nicht "Smith, WO Jr" o.Š.!!
+			- ACHTUNG: Higher ASCII Chars werden durch [:lower:] NICHT erkannt!!
 
 
 Initial und Nachname in richtige Reihenfolge bringen
