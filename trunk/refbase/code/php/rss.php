@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./rss.php
 	// Created:    25-Sep-04, 12:10
-	// Modified:   01-Oct-04, 21:15
+	// Modified:   03-Oct-04, 17:23
 
 	// This script will generate a dynamic RSS feed for the current query.
 	// Useage: Perform your query until you've got the desired results. Then, copy the "track" link in the header
@@ -102,15 +102,8 @@
 	// construct a meaningful channel description based on the specified 'WHERE' clause:
 	$rssChannelDescription = "Displays all newly added records where " . explainSQLQuery($queryWhereClause) . "."; // function 'explainSQLQuery()' is defined in 'include.inc.php'
 
-	if ($rowsFound > 0) // If there were rows found ...
-	{
-		// Generate RSS XML data from the result set (upto the limit given in '$showRows'):
-		$rssFeed = generateRSS($result, $showRows, $rssChannelDescription); // function 'generateRSS()' is defined in 'include.inc.php'
-	}
-	else // nothing was found ('$rowsFound = 0')
-	{
-		
-	}
+	// Generate RSS XML data from the result set (upto the limit given in '$showRows'):
+	$rssFeed = generateRSS($result, $showRows, $rssChannelDescription); // function 'generateRSS()' is defined in 'include.inc.php'
 	// --------------------------------------------------------------------
 
 	// (4) DISPLAY search results as RSS feed:
