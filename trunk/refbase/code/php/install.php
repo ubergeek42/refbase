@@ -17,10 +17,10 @@
 	*/
 
 	// Incorporate some include files:
-	include 'db.inc'; // 'db.inc' is included to hide username and password
-	include 'header.inc'; // include header
-	include 'footer.inc'; // include footer
-	include 'include.inc'; // include common functions
+	include 'db.inc.php'; // 'db.inc.php' is included to hide username and password
+	include 'header.inc.php'; // include header
+	include 'footer.inc.php'; // include footer
+	include 'include.inc.php'; // include common functions
 	include "ini.inc.php"; // include common variables
 
 	// --------------------------------------------------------------------
@@ -98,10 +98,10 @@
 			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 
 		// Show the login status:
-		showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+		showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 		// DISPLAY header:
-		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Installation", "index,follow", "Installation form for the " . htmlentities($officialDatabaseName), "", false, "");
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
@@ -119,7 +119,7 @@
 	<tr>
 		<td width="190" valign="top"><b>Important Note:</b></td>
 		<td valign="top" colspan="2">
-			Before executing this script, it is highly recommended to <span class="warning">open the include file <em>db.inc</em></span> in a text editor and edit the values of the variables <em>$databaseName</em>, <em>$username</em> and <em>$password</em> to suit your setup! Then, proceed with this form:
+			Before executing this script, it is highly recommended to <span class="warning">open the include file <em>db.inc.php</em></span> in a text editor and edit the values of the variables <em>$databaseName</em>, <em>$username</em> and <em>$password</em> to suit your setup! Then, proceed with this form:
 		</td>
 	</tr>
 	<tr>
@@ -181,7 +181,7 @@
 		// --------------------------------------------------------------------
 
 		// DISPLAY THE HTML FOOTER:
-		// call the 'displayfooter()' function from 'footer.inc')
+		// call the 'displayfooter()' function from 'footer.inc.php')
 		displayfooter("");
 
 		// --------------------------------------------------------------------
@@ -355,10 +355,10 @@
 			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 
 		// Show the login status:
-		showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+		showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 		// DISPLAY header:
-		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Installation Feedback", "index,follow", "Installation feedback for the " . htmlentities($officialDatabaseName), "", false, "");
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
@@ -431,7 +431,7 @@
 		// --------------------------------------------------------------------
 
 		// DISPLAY THE HTML FOOTER:
-		// call the 'displayfooter()' function from 'footer.inc')
+		// call the 'displayfooter()' function from 'footer.inc.php')
 		displayfooter("");
 
 		// --------------------------------------------------------------------

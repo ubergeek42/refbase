@@ -17,10 +17,10 @@
 	*/
 	
 	// Incorporate some include files:
-	include 'db.inc'; // 'db.inc' is included to hide username and password
-	include 'header.inc'; // include header
-	include 'footer.inc'; // include footer
-	include 'include.inc'; // include common functions
+	include 'db.inc.php'; // 'db.inc.php' is included to hide username and password
+	include 'header.inc.php'; // include header
+	include 'footer.inc.php'; // include footer
+	include 'include.inc.php'; // include common functions
 	include "ini.inc.php"; // include common variables
 
 	// --------------------------------------------------------------------
@@ -131,7 +131,7 @@
 
 	// For a normal user we only allow the use of SELECT queries (the admin is allowed to do everything that is allowed by his GRANT privileges):
 	// NOTE: This does only provide for minimal security!
-	//		 To avoid further security risks you should grant the mysql user (who's specified in 'db.inc') only those
+	//		 To avoid further security risks you should grant the mysql user (who's specified in 'db.inc.php') only those
 	//		 permissions that are required to access the literature database. This can be done by use of a GRANT statement:
 	//		 GRANT SELECT,INSERT,UPDATE,DELETE ON MYSQL_DATABASE_NAME_GOES_HERE.* TO MYSQL_USER_NAME_GOES_HERE@localhost IDENTIFIED BY 'MYSQL_PASSWORD_GOES_HERE';
 
@@ -155,13 +155,13 @@
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE
 
 	// (1) OPEN the database connection:
-	//      (variables are set by include file 'db.inc'!)
+	//      (variables are set by include file 'db.inc.php'!)
 	if (!($connection = @ mysql_connect($hostName, $username, $password)))
 		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 			showErrorMsg("The following error occurred while trying to connect to the host:", $oldQuery);
 
 	// (2) SELECT the database:
-	//      (variables are set by include file 'db.inc'!)
+	//      (variables are set by include file 'db.inc.php'!)
 	if (!(mysql_select_db($databaseName, $connection)))
 		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 			showErrorMsg("The following error occurred while trying to connect to the database:", $oldQuery);
@@ -172,7 +172,7 @@
 		$loginEmail = $HTTP_POST_VARS["loginEmail"]; // extract the email address of the currently logged in user
 
 	if (session_is_registered("loginEmail")) // if a user is logged in...
-		$userID = getUserID($loginEmail, $connection); // ...get the user's 'user_id' using his/her 'loginEmail' (function 'getUserID()' is defined in 'include.inc')
+		$userID = getUserID($loginEmail, $connection); // ...get the user's 'user_id' using his/her 'loginEmail' (function 'getUserID()' is defined in 'include.inc.php')
 	else
 		$userID = 0; // set variable to zero (a user with '$userID = 0' definitely doesn't exist) in order to prevent 'Undefined variable...' messages
 
@@ -416,9 +416,9 @@
 		session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 
 	// Now, show the login status:
-	showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
-	// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+	// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Query Results", "noindex,nofollow", "Results from the " . htmlentities($officialDatabaseName), "", true, "");
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
 
@@ -487,7 +487,7 @@
 		$refineSearchSelectorElements1 = "author, title, year, keywords, abstract, publication, abbrev_journal, volume, issue, pages, editor, publisher, area, type, location, call_number, notes"; // these columns will be always visible (no matter whether the user is logged in or not)
 		$refineSearchSelectorElements2 = "marked, copy, selected, user_keys, user_notes, user_file"; // these columns will be only visible to logged in users (in this case: the user specific fields from table 'user_data')
 		$refineSearchSelectorElementSelected = "author"; // this column will be selected by default
-		// Call the 'buildRefineSearchElements()' function (defined in 'include.inc') which does the actual work:
+		// Call the 'buildRefineSearchElements()' function (defined in 'include.inc.php') which does the actual work:
 		$RefineSearch = buildRefineSearchElements("search.php", $queryURL, $showQuery, $showLinks, $showRows, $NoColumns, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected);
 		echo $RefineSearch;
 
@@ -506,7 +506,7 @@
 		
 
 		// 4) Build a TABLE ROW with links for "previous" & "next" browsing, as well as links to intermediate pages
-		//    call the 'buildBrowseLinks()' function (defined in 'include.inc'):
+		//    call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
 		$BrowseLinks = buildBrowseLinks("search.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "", $exportFormat, $exportOrder, $orderBy, $headerMsg);
 		echo $BrowseLinks;
 
@@ -530,7 +530,7 @@
 			// in that row as a separate TH (Table Header)...
 			$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
 			$HTMLafterLink = "</th>"; // close the table header tag
-			// call the 'buildFieldNameLinks()' function (defined in 'include.inc'), which will return a properly formatted table header tag holding the current field's name
+			// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
 			// as well as the URL encoded query with the appropriate ORDER clause:
 			$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "", "", "");
 			echo $tableHeaderLink; // print the attribute name as link
@@ -542,7 +542,7 @@
 
 				$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
 				$HTMLafterLink = "</th>"; // close the table header tag
-				// call the 'buildFieldNameLinks()' function (defined in 'include.inc'), which will return a properly formatted table header tag holding the current field's name
+				// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
 				// as well as the URL encoded query with the appropriate ORDER clause:
 				$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "", "Links", "url");
 				echo $tableHeaderLink; // print the attribute name as link
@@ -743,7 +743,7 @@
 			$NoColumns = 7; // 7 columns: checkbox, field name, field contents
 
 		// 2) Build a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages
-		//    call the 'buildBrowseLinks()' function (defined in 'include.inc'):
+		//    call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
 		$BrowseLinks = buildBrowseLinks("search.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "Display", $exportFormat, $exportOrder, $orderBy, $headerMsg);
 		echo $BrowseLinks;
 
@@ -766,7 +766,7 @@
 
 				$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
 				$HTMLafterLink = "</th>"; // close the table header tag
-				// call the 'buildFieldNameLinks()' function (defined in 'include.inc'), which will return a properly formatted table header tag holding the current field's name
+				// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
 				// as well as the URL encoded query with the appropriate ORDER clause:
 				$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, $newORDER, $result, "", $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "Display", "Links", "url");
 				echo $tableHeaderLink; // print the attribute name as link
@@ -819,7 +819,7 @@
 							$HTMLbeforeLink = "\n\t<td valign=\"top\" width=\"75\"><b>"; // start the (bold) TD tag
 							$HTMLafterLink = "</b></td>"; // close the (bold) TD tag
 						}
-					// call the 'buildFieldNameLinks()' function (defined in 'include.inc'), which will return a properly formatted table data tag holding the current field's name
+					// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table data tag holding the current field's name
 					// as well as the URL encoded query with the appropriate ORDER clause:
 					$recordData .= buildFieldNameLinks("search.php", $query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "Display", "", "");
 
@@ -991,7 +991,7 @@
 			$NoColumns = 1;
 
 		// 2) Build a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages
-		//    call the 'buildBrowseLinks()' function (defined in 'include.inc'):
+		//    call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
 		$BrowseLinks = buildBrowseLinks("search.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "Export", $exportFormat, $exportOrder, $orderBy, $headerMsg);
 		echo $BrowseLinks;
 		// END RESULTS HEADER ----------------------
@@ -1619,7 +1619,7 @@
 				$recordIDStartDelimiter = "{"; // specifies the string that prefixes the record id
 				$recordIDEndDelimiter = "}"; // specifies the string that suffixes the record id
 				
-				// Call the 'extractAuthorsLastName()' function (defined in 'include.inc') to extract the last name of a particular author (specified by position). Required Parameters:
+				// Call the 'extractAuthorsLastName()' function (defined in 'include.inc.php') to extract the last name of a particular author (specified by position). Required Parameters:
 				//   1. pattern describing delimiter that separates different authors
 				//   2. pattern describing delimiter that separates author name & initials (within one author)
 				//   3. position of the author whose last name shall be extracted (e.g., "1" will return the 1st author's last name)
@@ -1640,7 +1640,7 @@
 					{
 						$record .= $authorConnector;
 	
-						// Call the 'extractAuthorsLastName()' function (defined in 'include.inc') extract the last name of a particular author (specified by position). Required Parameters:
+						// Call the 'extractAuthorsLastName()' function (defined in 'include.inc.php') extract the last name of a particular author (specified by position). Required Parameters:
 						//   1. pattern describing delimiter that separates different authors
 						//   2. pattern describing delimiter that separates author name & initials (within one author)
 						//   3. position of the author whose last name shall be extracted (e.g., "1" will return the 1st author's last name)
@@ -4560,7 +4560,7 @@
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
-	// call the 'displayfooter()' function from 'footer.inc')
+	// call the 'displayfooter()' function from 'footer.inc.php')
 	displayfooter($oldQuery);
 
 	// --------------------------------------------------------------------

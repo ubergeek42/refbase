@@ -17,10 +17,10 @@
 	*/
 
 	// Incorporate some include files:
-	include 'db.inc'; // 'db.inc' is included to hide username and password
-	include 'header.inc'; // include header
-	include 'footer.inc'; // include footer
-	include 'include.inc'; // include common functions
+	include 'db.inc.php'; // 'db.inc.php' is included to hide username and password
+	include 'header.inc.php'; // include header
+	include 'footer.inc.php'; // include footer
+	include 'include.inc.php'; // include common functions
 	include "ini.inc.php"; // include common variables
 
 	// --------------------------------------------------------------------
@@ -57,10 +57,10 @@
 	//     (NOTE: Since there's no need to query the database here, we won't perform any of the following: (1) OPEN CONNECTION, (2) SELECT DATABASE, (3) RUN QUERY, (5) CLOSE CONNECTION)
 
 	// Show the login status:
-	showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 	// (4a) DISPLAY header:
-	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Record Action Feedback", "noindex,nofollow", "Feedback page that confirms any adding, editing or deleting of records in the " . htmlentities($officialDatabaseName), "", false, "");
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
 
@@ -110,7 +110,7 @@
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
-	// call the 'displayfooter()' function from 'footer.inc')
+	// call the 'displayfooter()' function from 'footer.inc.php')
 	displayfooter($oldQuery);
 
 	// --------------------------------------------------------------------

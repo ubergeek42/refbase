@@ -17,9 +17,9 @@
 	*/
 
 	// Incorporate some include files:
-	include 'header.inc'; // include header
-	include 'footer.inc'; // include footer
-	include 'include.inc'; // include common functions
+	include 'header.inc.php'; // include header
+	include 'footer.inc.php'; // include footer
+	include 'include.inc.php'; // include common functions
 	include "ini.inc.php"; // include common variables
 
 	// --------------------------------------------------------------------
@@ -79,10 +79,10 @@
 			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 	
 		// Show the login status:
-		showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+		showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 	
 		// DISPLAY header:
-		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Show Record", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "");
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 	
@@ -111,7 +111,7 @@
 		// --------------------------------------------------------------------
 	
 		// DISPLAY THE HTML FOOTER:
-		// call the 'displayfooter()' function from 'footer.inc')
+		// call the 'displayfooter()' function from 'footer.inc.php')
 		displayfooter("");
 	
 		// --------------------------------------------------------------------

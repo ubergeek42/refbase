@@ -17,10 +17,10 @@
 	*/
 
 	// Incorporate some include files:
-	include 'db.inc'; // 'db.inc' is included to hide username and password
-	include 'header.inc'; // include header
-	include 'footer.inc'; // include footer
-	include 'include.inc'; // include common functions
+	include 'db.inc.php'; // 'db.inc.php' is included to hide username and password
+	include 'header.inc.php'; // include header
+	include 'footer.inc.php'; // include footer
+	include 'include.inc.php'; // include common functions
 	include "ini.inc.php"; // include common variables
 
 	// --------------------------------------------------------------------
@@ -120,13 +120,13 @@
 		// (1) OPEN CONNECTION, (2) SELECT DATABASE, (3) RUN QUERY, (5) CLOSE CONNECTION
 
 		// (1) OPEN the database connection:
-		//      (variables are set by include file 'db.inc'!)
+		//      (variables are set by include file 'db.inc.php'!)
 		if (!($connection = @ mysql_connect($hostName, $username, $password)))
 			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 				showErrorMsg("The following error occurred while trying to connect to the host:", "");
 
 		// (2) SELECT the database:
-		//      (variables are set by include file 'db.inc'!)
+		//      (variables are set by include file 'db.inc.php'!)
 		if (!(mysql_select_db($databaseName, $connection)))
 			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 				showErrorMsg("The following error occurred while trying to connect to the database:", "");
@@ -250,7 +250,7 @@
 		global $officialDatabaseName;
 
 		// Show login status (should be logged out!)
-		showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+		showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 		// If there's no stored message available:
 		if (!session_is_registered("HeaderString"))
@@ -258,7 +258,7 @@
 		else
 			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 
-		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Login", "index,follow", "User login page. You must be logged in to the " . htmlentities($officialDatabaseName) . " in order to add, edit or delete records", "", false, "");
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
@@ -298,7 +298,7 @@
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
-	// call the 'displayfooter()' function from 'footer.inc')
+	// call the 'displayfooter()' function from 'footer.inc.php')
 	displayfooter("");
 
 	// --------------------------------------------------------------------
