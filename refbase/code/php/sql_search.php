@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sql_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   05-Sep-03, 20:42
+	// Modified:   16-Nov-03, 21:49
 
 	// Search formular that offers to specify a custom sql query.
 	// It offers some output options (like how many records to display per page)
@@ -37,19 +37,14 @@
 	else
 		session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 
-	// Show the login status:
-	showLogin(); // (function 'showLogin()' is defined in 'include.inc')
-
-	// (2a) Display header:
-	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- SQL Search", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "");
-	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
-
 	// Check if the script was called with parameters (like: 'sql_search.php?customQuery=1&sqlQuery=...&showQuery=...&showLinks=...')
 	// If so, the parameter 'customQuery=1' will be set:
-	$customQuery = $_REQUEST['customQuery']; // accept any previous SQL queries
+	if (isset($_REQUEST['customQuery']))
+		$customQuery = $_REQUEST['customQuery']; // accept any previous SQL queries
+	else
+		$customQuery = "0";
 
-	if ("$customQuery" == "1") // the script was called with parameters
+	if ($customQuery == "1") // the script was called with parameters
 		{
 			$sqlQuery = $_REQUEST['sqlQuery']; // accept any previous SQL queries
 				$sqlQuery = str_replace('\"','"',$sqlQuery); // convert \" into "
@@ -93,6 +88,14 @@
 			$oldQuery = "";
 		}
 
+	// Show the login status:
+	showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+
+	// (2a) Display header:
+	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- SQL Search", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "");
+	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
+
 	// (2b) Start <form> and <table> holding the form elements:
 	echo "\n<form action=\"search.php\" method=\"POST\">";
 	echo "\n<input type=\"hidden\" name=\"formType\" value=\"sqlSearch\">"
@@ -132,7 +135,7 @@
 
 	// DISPLAY THE HTML FOOTER:
 	// call the 'displayfooter()' function from 'footer.inc')
-	displayfooter("");
+	displayfooter($oldQuery);
 
 	// --------------------------------------------------------------------
 ?>
