@@ -5,9 +5,9 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import_csa.php
 	// Created:    21-Nov-03, 22:05
-	// Modified:   21-Nov-03, 22:05
+	// Modified:   20-May-04, 23:06
 
-	// Import formular that offers to import records from the "Cambridge Scientific Abstracts" (CSA)
+	// Import form that offers to import records from the "Cambridge Scientific Abstracts" (CSA)
 	// Internet Database Service (<http://www.csa1.co.uk/csa/index.html>). This import form requires
 	// the "full record" format offered by the CSA Internet Database Service.
 
@@ -24,25 +24,36 @@
 	
 	// --------------------------------------------------------------------
 
-	// Connect to a session
-	session_start();
-
-	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session();
 
 	// --------------------------------------------------------------------
 
 	// If there's no stored message available:
-	if (!session_is_registered("HeaderString"))
+	if (!isset($_SESSION['HeaderString']))
 		$HeaderString = "Import a record from Cambridge Scientific Abstracts:"; // Provide the default message
 	else
-		session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
+	{
+		$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
+
+		// Note: though we clear the session variable, the current message is still available to this script via '$HeaderString':
+		deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+	}
+
+	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// ('' will produce the default 'Web' output style)
+	if (isset($_REQUEST['viewType']))
+		$viewType = $_REQUEST['viewType'];
+	else
+		$viewType = "";
 
 	// Show the login status:
 	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Import CSA Record", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "");
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Import CSA Record", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (2b) Start <form> and <table> holding the form elements:
@@ -153,5 +164,6 @@ BL: Bibliographic Level
 
 	// --------------------------------------------------------------------
 ?>
+
 </body>
 </html> 
