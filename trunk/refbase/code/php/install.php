@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./install.php
 	// Created:    07-Jan-04, 22:00
-	// Modified:   14-Oct-04, 01:21
+	// Modified:   16-Feb-05, 16:08
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -51,6 +51,11 @@
 	else
 		$databaseStructureFile = "";
 
+	if (isset($_POST['defaultCharacterSet']))
+		$defaultCharacterSet = $_POST['defaultCharacterSet'];
+	else
+		$defaultCharacterSet = "";
+
 	// --------------------------------------------------------------------
 
 	// START A SESSION:
@@ -93,6 +98,7 @@
 			$formVars["adminPassword"] = "";
 			$formVars["pathToMYSQL"] = "/usr/local/mysql/bin/mysql";
 			$formVars["databaseStructureFile"] = "./install.sql";
+			$formVars["defaultCharacterSet"] = "latin1";
 		}
 
 		// If there's no stored message available:
@@ -117,6 +123,18 @@
 			$viewType = $_REQUEST['viewType'];
 		else
 			$viewType = "";
+
+		// For the default character set, make sure that the correct popup menu entry is selected upon reload:
+		if ($formVars["defaultCharacterSet"] == "utf8")
+		{
+			$latin1CharacterSetSelected = "";
+			$unicodeCharacterSetSelected = " selected";
+		}
+		else // $formVars["defaultCharacterSet"] is 'latin1' or ''
+		{
+			$latin1CharacterSetSelected = " selected";
+			$unicodeCharacterSetSelected = "";
+		}
 
 		// Show the login status:
 		showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
@@ -188,6 +206,17 @@
 			<input type="text" name="databaseStructureFile" value="<?php echo $formVars["databaseStructureFile"]; ?>" size="30">
 		</td>
 		<td valign="top">Enter the full path to the SQL dump file containing the database structure &amp; data. Keep the default value, if you're installing refbase for the first time.</td>
+	</tr>
+	<tr>
+		<td valign="top"><b>Default character set:</b></td>
+		<td valign="top"><?php echo fieldError("defaultCharacterSet", $errors); ?>
+
+			<select name="defaultCharacterSet">
+				<option<? echo $latin1CharacterSetSelected; ?>>latin1</option>
+				<option<? echo $unicodeCharacterSetSelected; ?>>utf8</option>
+			</select>
+		</td>
+		<td valign="top">Specify the default character set for the MySQL database used by refbase. Note that 'utf8' (Unicode) requires MySQL 4.1.x or greater, otherwise 'latin1' (i.e., 'ISO-8859-1 West European') will be used by default.</td>
 	</tr>
 	<tr>
 		<td valign="top">&nbsp;</td>
@@ -290,6 +319,11 @@
 			// Check if the specified path resolves to the database structure file
 			$errors["databaseStructureFile"] = "Your path specification is invalid (file not found):";
 
+
+		// Validate the 'defaultCharacterSet' field:
+		// Note: Currently we're not generating an error & rooting back to the install form, if the user did choose 'utf8' but has some MySQL version < 4.1 installed.
+		//       In this case, we'll simply ignore the setting and 'latin1' will be used by default.
+
 		// --------------------------------------------------------------------
 
 		// Now the script has finished the validation, check if there were any errors:
@@ -307,14 +341,7 @@
 
 		// --------------------------------------------------------------------
 
-		// If we made it here, then the data is considered valid, which means that we can proceed with the actual installation procedure:
-
-		// Build the database queries required for installation:
-		$queryGrantStatement = "GRANT SELECT,INSERT,UPDATE,DELETE ON " . $databaseName . ".* TO " . $username . "@" . $hostName . " IDENTIFIED BY '" . $password . "'";
-
-		$queryCreateDB = "CREATE DATABASE IF NOT EXISTS " . $databaseName;
-
-		// --------------------------------------------------------------------
+		// If we made it here, then the data is considered valid!
 
 		// (1) Open the database connection and use the mysql database:
 		if (!($connection = @ mysql_connect($hostName,$adminUserName,$adminPassword)))
@@ -324,6 +351,33 @@
 		if (!(mysql_select_db($adminDatabaseName, $connection)))
 			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 				showErrorMsg("The following error occurred while trying to connect to the database:", "");
+
+
+		// First, check if we're a dealing with MySQL version 4.1.x or greater:
+		// (MySQL 4.1.x is required if the refbase MySQL database/tables shall be installed using Unicode/UTF-8 as default character set)
+		$queryCheckVersion = "SELECT VERSION()";
+
+		// (2) Run the version check query on the mysql database through the connection:
+		if (!($result = @ mysql_query ($queryCheckVersion, $connection)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to query the database:", "");
+
+		// (3) Extract result:
+		$row = mysql_fetch_row($result); //fetch the current row into the array $row (it'll be always *one* row, but anyhow)
+		$mysqlVersionString = $row[0]; // extract the contents of the first (and only) row (returned version string will be something like "4.0.20-standard" etc.)
+		$mysqlVersion = preg_replace("/^(\d+\.\d+).+/", "\\1", $mysqlVersionString); // extract main version number (e.g. "4.0") from version string
+
+		// --------------------------------------------------------------------
+
+		// Prepare the install queries and proceed with the actual installation procedure:
+
+		// Build the database queries required for installation:
+		$queryGrantStatement = "GRANT SELECT,INSERT,UPDATE,DELETE ON " . $databaseName . ".* TO " . $username . "@" . $hostName . " IDENTIFIED BY '" . $password . "'";
+
+		$queryCreateDB = "CREATE DATABASE IF NOT EXISTS " . $databaseName; // by default, 'latin1' will be used as default character set
+
+		if ($mysqlVersion >= 4.1) // if MySQL 4.1.x (or greater) is installed, we'll add the default character set chosen by the user:
+			$queryCreateDB = $queryCreateDB . " DEFAULT CHARACTER SET " . $defaultCharacterSet;
 
 		// (2) Run the install queries on the mysql database through the connection:
 		if (!($result = @ mysql_query ($queryGrantStatement, $connection)))
