@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sql_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   13-Feb-05, 21:05
+	// Modified:   27-Mar-05, 00:31
 
 	// Search form that offers to specify a custom sql query.
 	// It offers some output options (like how many records to display per page)
@@ -34,7 +34,7 @@
 
 	// If there's no stored message available:
 	if (!isset($_SESSION['HeaderString']))
-		$HeaderString = $loc["SearchSQL"]; // Provide the default message
+		$HeaderString = $loc["Search"]." ".$loc["SearchSQL"].":"; // Provide the default message
 	else
 	{
 		$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
@@ -91,7 +91,11 @@
 		}
 	else // if there was no previous SQL query provide the default one:
 		{
-			$sqlQuery = "SELECT author, title, year, publication, volume, pages FROM $tableRefs WHERE year &gt; 2001 ORDER BY year DESC, author";
+			if (isset($_SESSION['loginEmail']))
+				$sqlQuery = "SELECT author, title, year, publication, volume, pages FROM $tableRefs WHERE location RLIKE \"" . $loginEmail . "\" ORDER BY year DESC, author"; // '$loginEmail' is defined in function 'start_session()' (in 'include.inc.php')
+			else
+				$sqlQuery = "SELECT author, title, year, publication, volume, pages FROM $tableRefs WHERE year &gt; 2001 ORDER BY year DESC, author";
+
 			$checkQuery = "";
 			$checkLinks = " checked";
 			$showRows = "10";
@@ -106,34 +110,56 @@
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- SQL Search", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- SQL ".$loc["Search"], "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
 
 	// (2b) Start <form> and <table> holding the form elements:
-	echo "\n<form action=\"search.php\" method=\"POST\">";
-	echo "\n<input type=\"hidden\" name=\"formType\" value=\"sqlSearch\">"
-			. "\n<input type=\"hidden\" name=\"submit\" value=\"$displayType\">"
-			. "\n<input type=\"hidden\" name=\"citeStyleSelector\" value=\"" . rawurlencode($citeStyle) . "\">"
-			. "\n<input type=\"hidden\" name=\"citeOrder\" value=\"$citeOrder\">"
-			. "\n<input type=\"hidden\" name=\"oldQuery\" value=\"" . rawurlencode($oldQuery) . "\">";
-	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the search form\">"
-			. "\n<tr>\n\t<td width=\"58\" valign=\"top\"><b>".$loc["SQLQuery"].":</b></td>\n\t<td width=\"10\">&nbsp;</td>"
-			. "\n\t<td><textarea name=\"sqlQuery\" rows=\"6\" cols=\"60\">$sqlQuery</textarea></td>"
-			. "\n</tr>"
-			. "\n<tr>\n\t<td valign=\"top\"><b>".$loc["DisplayOptions"].":</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td valign=\"top\"><input type=\"checkbox\" name=\"showLinks\" value=\"1\"$checkLinks>&nbsp;&nbsp;&nbsp;".$loc["ShowLinks"]
-			. "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$loc["show"]."&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"showRows\" value=\"$showRows\" size=\"4\">&nbsp;&nbsp;&nbsp;".$loc["Records"]." ".$loc["per page"]."</td>"
-			. "\n</tr>"
-			. "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td valign=\"top\"><input type=\"checkbox\" name=\"showQuery\" value=\"1\"$checkQuery>&nbsp;&nbsp;&nbsp;".$loc["show"]." ".$loc["SQLQuery"]
-			. "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$loc["OutputType"].":&nbsp;&nbsp;"
-			. "\n\t\t<select name=\"viewType\">"
-			. "\n\t\t\t<option>".$loc["web"]."</option>"
-			. "\n\t\t\t<option>".$loc["print"]."</option>"
-			. "\n\t\t</select>"
-			. "\n\t</td>"
-			. "\n</tr>"
-			. "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>";
+?>
+
+<form action="search.php" method="POST">
+<input type="hidden" name="formType" value="sqlSearch">
+<input type="hidden" name="submit" value="<?php echo $displayType; ?>">
+<input type="hidden" name="citeStyleSelector" value="<?php rawurlencode($citeStyle); ?>">
+<input type="hidden" name="citeOrder" value="<?php echo $citeOrder; ?>">
+<input type="hidden" name="oldQuery" value="<?php rawurlencode($oldQuery); ?>">
+<table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds the search form">
+<tr>
+	<td width="58" valign="top"><b><?php echo $loc["SQLQuery"]; ?>:</b></td>
+	<td width="10">&nbsp;</td>
+	<td colspan="2">
+		<textarea name="sqlQuery" rows="6" cols="60"><?php echo $sqlQuery; ?></textarea>
+	</td>
+</tr>
+<tr>
+	<td valign="top"><b><?php echo $loc["DisplayOptions"]; ?>:</b></td>
+	<td>&nbsp;</td>
+	<td width="205" valign="top">
+		<input type="checkbox" name="showLinks" value="1"<?php echo $checkLinks; ?>>&nbsp;&nbsp;&nbsp;<?php echo $loc["ShowLinks"]; ?>
+
+	</td>
+	<td valign="top">
+		<?php echo $loc["Show"]; ?>&nbsp;&nbsp;&nbsp;<input type="text" name="showRows" value="<?php echo $showRows; ?>" size="4">&nbsp;&nbsp;&nbsp;<?php echo $loc["Records"]." ".$loc["per page"]; ?>
+
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;</td>
+	<td>&nbsp;</td>
+	<td valign="top">
+		<input type="checkbox" name="showQuery" value="1"<?php echo $checkQuery; ?>>&nbsp;&nbsp;&nbsp;<?php echo $loc["Display"]." ".$loc["SQLquery"]; ?>
+
+	</td>
+	<td valign="top">
+		<?php echo $loc["ViewType"]; ?>:&nbsp;&nbsp;
+		<select name="viewType">
+			<option><?php echo $loc["web"]; ?></option>
+			<option><?php echo $loc["print"]; ?></option>
+		</select>
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;</td>
+	<td>&nbsp;</td><?php
 
 	if (isset($_SESSION['user_permissions']) AND ereg("allow_sql_search", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_sql_search'...
 	// adjust the title string for the search button
@@ -143,26 +169,44 @@
 	}
 	else // Note, that disabling the submit button is just a cosmetic thing -- the user can still submit the form by pressing enter or by building the correct URL from scratch!
 	{
-		$sqlSearchButtonLock = " ".$loc["disabled"];
-		$sqlSearchTitle = $loc["You have no permission"];
+		$sqlSearchButtonLock = " disabled";
+		$sqlSearchTitle = $loc["NoPermission"]." ".$loc["NoPermission_ForSQL"];
 	}
+?>
 
-	echo "\n\t<td><br><input type=\"submit\" value=\"".$loc["Search"]."\"$sqlSearchButtonLock title=\"$sqlSearchTitle\"></td>"
-			. "\n</tr>"
-			. "\n<tr>\n\t<td align=\"center\" colspan=\"3\">&nbsp;</td>"
-			. "\n</tr>"
-			. "\n<tr>\n\t<td valign=\"top\"><b>".$loc["Examples"].":</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td><code>SELECT author, title, year, publication FROM $tableRefs WHERE publication = \"Polar Biology\" AND author RLIKE \"Legendre|Ambrose\" ORDER BY year DESC, author</code></td>"
-			. "\n</tr>"
-			. "\n<tr>\n\t<td valign=\"top\">&nbsp;</td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td><code>SELECT serial, author, title, year, publication, volume FROM $tableRefs ORDER BY serial DESC LIMIT 10</code></td>"
-			. "\n</tr>"
-			. "\n<tr>\n\t<td valign=\"top\"><b>".$loc["Help"].":</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>".$loc["MySQL-Info"]."</td>"
-			. "\n</tr>"
-			. "\n</table>"
-			. "\n</form>";
-	
+	<td colspan="2">
+		<br>
+		<input type="submit" value="<?php echo $loc["Search"]; ?>" title="<?php echo $sqlSearchTitle; ?>"<?php echo $sqlSearchButtonLock; ?>>
+	</td>
+</tr>
+<tr>
+	<td align="center" colspan="4">&nbsp;</td>
+</tr>
+<tr>
+	<td valign="top"><b><?php echo $loc["Examples"]; ?>:</b></td>
+	<td>&nbsp;</td>
+	<td colspan="2">
+		<code>SELECT author, title, year, publication FROM <?php echo $tableRefs; ?> WHERE publication = "Polar Biology" AND author RLIKE "Legendre|Ambrose" ORDER BY year DESC, author</code>
+	</td>
+</tr>
+<tr>
+	<td valign="top">&nbsp;</td>
+	<td>&nbsp;</td>
+	<td colspan="2">
+		<code>SELECT serial, author, title, year, publication, volume FROM <?php echo $tableRefs; ?> ORDER BY serial DESC LIMIT 10</code>
+	</td>
+</tr>
+<tr>
+	<td valign="top"><b><?php echo $loc["Help"]; ?>:</b></td>
+	<td>&nbsp;</td>
+	<td colspan="2">
+		<?php echo $loc["MySQL-Info"]; ?>
+
+	</td>
+</tr>
+</table>
+</form><?php
+
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
