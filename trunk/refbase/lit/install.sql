@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./install.sql
 # Created:    02-Oct-04, 20:11
-# Modified:   16-Feb-05, 22:49
+# Modified:   25-Feb-05, 23:50
 
 # MySQL database structure & initial data (for use with 'latin1' character set)
 
@@ -182,7 +182,7 @@ CREATE TABLE `languages` (
 #
 
 INSERT INTO `languages` VALUES (1,'en','true','1'),
-(2,'de','true','2');
+(2,'de','false','2');
 
 # --------------------------------------------------------
 
