@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   02-Nov-04, 01:06
+	// Modified:   17-Feb-05, 19:40
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -290,7 +290,7 @@
 				$HeaderString = "<b><span class=\"warning\">You're only permitted to execute SELECT queries!</span></b>";
 			}
 			// ...or the user tries to hack the SQL query (by providing the string "FROM refs" within the SELECT statement) -OR- if the user attempts to query anything other than the 'refs' or 'user_data' table:
-			elseif ((preg_match("/FROM refs.+ FROM /i", $sqlQuery)) OR (!preg_match("/FROM refs( LEFT JOIN user_data ON serial ?= ?record_id AND user_id ?= ?\d*)?(?= WHERE| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i", $sqlQuery)))
+			elseif ((preg_match("/FROM $tableRefs.+ FROM /i", $sqlQuery)) OR (!preg_match("/FROM $tableRefs( LEFT JOIN $tableUserData ON serial ?= ?record_id AND user_id ?= ?\d*)?(?= WHERE| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i", $sqlQuery)))
 			{
 				$notPermitted = true;
 				// save an appropriate error message:
@@ -359,7 +359,7 @@
 	// --- Form within 'search.php': ---------------
 	elseif ($formType == "refineSearch" OR $formType == "displayOptions") // the user used the "Search within Results" (or "Display Options") form above the query results list (that was produced by 'search.php')
 		{
-			$query = extractFormElementsRefineDisplay("refs", $displayType, $sqlQuery, $showLinks, $userID); // function 'extractFormElementsRefineDisplay()' is defined in 'include.inc.php' since it's also used by 'users.php'
+			$query = extractFormElementsRefineDisplay($tableRefs, $displayType, $sqlQuery, $showLinks, $userID); // function 'extractFormElementsRefineDisplay()' is defined in 'include.inc.php' since it's also used by 'users.php'
 		}
 
 	// --- Form within 'search.php': ---------------
@@ -397,7 +397,7 @@
 	// this is to support the '$fileVisibilityException' feature from 'ini.inc.php':
 	if (!empty($fileVisibilityException) AND !preg_match("/SELECT.+$fileVisibilityException[0].+FROM/i", $query))
 	{
-		$query = eregi_replace("(, orig_record)?(, serial)?(, file, url, doi)? FROM refs", ", $fileVisibilityException[0]\\1\\2\\3 FROM refs",$query); // add column that's given in '$fileVisibilityException'
+		$query = eregi_replace("(, orig_record)?(, serial)?(, file, url, doi)? FROM $tableRefs", ", $fileVisibilityException[0]\\1\\2\\3 FROM $tableRefs",$query); // add column that's given in '$fileVisibilityException'
 		$addCounterMax = 1; // this will ensure that the added column won't get displayed within the 'displayColumns()' function
 	}
 	else
@@ -430,14 +430,14 @@
 	// (4a) DISPLAY header:
 	// First, build the appropriate SQL query in order to embed it into the 'your query' URL:
 	if ($showLinks == "1")
-		$query = eregi_replace(', file, url, doi FROM refs',' FROM refs',$query); // strip 'file', 'url' & 'doi' columns from SQL query
+		$query = eregi_replace(", file, url, doi FROM $tableRefs"," FROM $tableRefs",$query); // strip 'file', 'url' & 'doi' columns from SQL query
 
-	$query = eregi_replace(', serial FROM refs',' FROM refs',$query); // strip 'serial' column from SQL query
+	$query = eregi_replace(", serial FROM $tableRefs"," FROM $tableRefs",$query); // strip 'serial' column from SQL query
 
-	$query = eregi_replace(', orig_record FROM refs',' FROM refs',$query); // strip 'orig_record' column from SQL query
+	$query = eregi_replace(", orig_record FROM $tableRefs"," FROM $tableRefs",$query); // strip 'orig_record' column from SQL query
 
 	if (!empty($fileVisibilityException))
-		$query = eregi_replace(", $fileVisibilityException[0] FROM refs",' FROM refs',$query); // strip column that's given in '$fileVisibilityException' (defined in 'ini.inc.php')
+		$query = eregi_replace(", $fileVisibilityException[0] FROM $tableRefs"," FROM $tableRefs",$query); // strip column that's given in '$fileVisibilityException' (defined in 'ini.inc.php')
 
 	if (ereg("(simple|advanced|library|quick)Search", $formType)) // if $formType is "simpleSearch", "advancedSearch", "librarySearch" or "quickSearch" and there is more than one WHERE clause (indicated by '...AND...'):
 		$query = eregi_replace('WHERE serial RLIKE "\.\+" AND','WHERE',$query); // strip first WHERE clause (which was added only due to an internal workaround)
@@ -601,7 +601,7 @@
 	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 	// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Query Results", "index,follow", "Results from the " . htmlentities($officialDatabaseName), "", true, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Query Results", "index,follow", "Results from the " . encodeHTML($officialDatabaseName), "", true, "", $viewType);
 	if ($viewType != "Print") // Note: we ommit the visible header in print view! ('viewType=Print')
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
 
@@ -631,6 +631,7 @@
 		global $markupSearchReplacePatterns; // defined in 'ini.inc.php'
 		global $fileVisibility; // defined in 'ini.inc.php'
 		global $fileVisibilityException; // defined in 'ini.inc.php'
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
 
 		if (eregi(".+LIMIT *[0-9]+",$query)) // query does contain the 'LIMIT' parameter
 			$orderBy = eregi_replace(".+ORDER BY (.+) LIMIT.+","\\1",$query); // extract 'ORDER BY'... parameter (without including any 'LIMIT' parameter)
@@ -784,10 +785,9 @@
 
 				// ... and print out each of the attributes
 				// in that row as a separate TD (Table Data)
-				// (Note: 'htmlentities($row[$i])' for HTML encoding higher ASCII will only work correctly if character encoding of data is ISO-8859-1!)
 				for ($i=0; $i<$fieldsToDisplay; $i++)
 				{
-					$row[$i] = htmlentities($row[$i]); // HTML encode higher ASCII characters
+					$row[$i] = encodeHTML($row[$i]); // HTML encode higher ASCII characters
 
 					// the following two lines will fetch the current attribute name:
 					$info = mysql_fetch_field ($result, $i); // get the meta-data for the attribute
@@ -811,10 +811,10 @@
 						// ... display a link that opens the 'details view' for this record:
 						if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
 							echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20cite_key%2C%20related%20"
-								. "FROM%20refs%20LEFT%20JOIN%20user_data%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
+								. "FROM%20" . $tableRefs . "%20LEFT%20JOIN%20" . $tableUserData . "%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
 						else // if NO user logged in, don't display any user specific fields:
 							echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%20"
-								. "FROM%20refs%20";
+								. "FROM%20" . $tableRefs . "%20";
 
 						echo "WHERE%20serial%20RLIKE%20%22%5E%28" . $row["serial"]
 							. "%29%24%22%20ORDER%20BY%20" . rawurlencode($orderBy)
@@ -862,7 +862,7 @@
 					if (!empty($row["doi"]))
 						echo "\n\t\t<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/link.gif\" alt=\"doi\" title=\"goto web page (via DOI)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
 					elseif (!empty($row["url"])) // 'htmlentities()' is used to convert any '&' into '&amp;'
-						echo "\n\t\t<a href=\"" . htmlentities($row["url"]) . "\"><img src=\"img/link.gif\" alt=\"url\" title=\"goto web page\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+						echo "\n\t\t<a href=\"" . encodeHTML($row["url"]) . "\"><img src=\"img/link.gif\" alt=\"url\" title=\"goto web page\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
 
 	// 				// as an alternative, print out DOI and URL links individually:
 	//
@@ -1090,8 +1090,7 @@
 					if (ereg("^(author|title|year)$", $orig_fieldname)) // print author, title & year fields in bold
 						$recordData .= "<b>";
 
-					// Note: 'htmlentities($row[$i])' for HTML encoding higher ASCII will only work correctly if character encoding of data is ISO-8859-1!
-					$row[$i] = htmlentities($row[$i]); // HTML encode higher ASCII characters
+					$row[$i] = encodeHTML($row[$i]); // HTML encode higher ASCII characters
 
 					if (ereg("^abstract$", $orig_fieldname)) // for the abstract field, transform newline ('\n') characters into <br> tags
 						$row[$i] = ereg_replace("\n", "<br>", $row[$i]);
@@ -1170,7 +1169,7 @@
 											$recordData .= "<br>";
 
 										if (!empty($row["url"])) // 'htmlentities()' is used to convert any '&' into '&amp;'
-											$recordData .= "\n\t\t<a href=\"" . htmlentities($row["url"]) . "\"><img src=\"img/www.gif\" alt=\"url\" title=\"goto web page\" width=\"17\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
+											$recordData .= "\n\t\t<a href=\"" . encodeHTML($row["url"]) . "\"><img src=\"img/www.gif\" alt=\"url\" title=\"goto web page\" width=\"17\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
 
 										if ((($linkElementCounterLoggedOut > 2) OR (isset($_SESSION['loginEmail']) AND $linkElementCounterLoggedIn > 2)) AND !empty($row["url"]))
 											$recordData .= "&nbsp;";
@@ -1324,9 +1323,9 @@
 			}
 
 			// call the 'displayHTMLhead()' function (defined in 'header.inc.php'):
-			displayHTMLhead(htmlentities($officialDatabaseName) . " -- Exported Data", "index,follow", "Data exported from the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+			displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Exported Data", "index,follow", "Data exported from the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 
-			$exportText = "\n\t<pre>\n" . htmlentities($exportText) . "\n\t</pre>\n</body>\n</html>\n";
+			$exportText = "\n\t<pre>\n" . encodeHTML($exportText) . "\n\t</pre>\n</body>\n</html>\n";
 
 			if ($exportType == "email")
 				$exportText = "\n\t<p>"
@@ -1349,6 +1348,7 @@
 	function generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $headerMsg, $userID, $viewType, $selectedRecordsArray)
 	{
 		global $markupSearchReplacePatterns; // defined in 'ini.inc.php'
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
 
 		// If the query has results ...
 		if ($rowsFound > 0)
@@ -1384,8 +1384,7 @@
 				foreach ($row as $rowFieldName => $rowFieldValue)
 					if (!ereg($rowFieldName, "^(author|editor)$")) // we HTML encode higher ASCII chars for all but the author & editor fields. The author & editor fields are excluded here
 						// since these fields must be passed *without* HTML entities to the 'reArrangeAuthorContents()' function (which will then handle the HTML encoding by itself)
-						// (Note: 'htmlentities($row[$i])' for HTML encoding higher ASCII will only work correctly if character encoding of data is ISO-8859-1!)
-						$row[$rowFieldName] = htmlentities($row[$rowFieldName]); // HTML encode higher ASCII characters within each of the fields
+						$row[$rowFieldName] = encodeHTML($row[$rowFieldName]); // HTML encode higher ASCII characters within each of the fields
 
 				// Perform search & replace actions on the text of the 'title' field:
 				// (the array '$markupSearchReplacePatterns' in 'ini.inc.php' defines which search & replace actions will be employed)
@@ -1426,10 +1425,10 @@
 							// ... display a link that opens the 'details view' for this record:
 							if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
 								echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20cite_key%2C%20related%20"
-									. "FROM%20refs%20LEFT%20JOIN%20user_data%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
+									. "FROM%20" . $tableRefs . "%20LEFT%20JOIN%20" . $tableUserData . "%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
 							else // if NO user logged in, don't display any user specific fields:
 								echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%20"
-									. "FROM%20refs%20";
+									. "FROM%20" . $tableRefs . "%20";
 
 							echo "WHERE%20serial%20RLIKE%20%22%5E%28" . $row['serial']
 								. "%29%24%22%20ORDER%20BY%20" . rawurlencode($orderBy)
@@ -1674,6 +1673,8 @@
 	// Build the database query from user input provided by the 'simple_search.php' form:
 	function extractFormElementsSimple($showLinks)
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		$query = "SELECT"; // (Note: we care about the wrong "SELECT, author" etc. syntax later on...)
 
 		// ... if the user has checked the checkbox next to 'Author', we'll add that column to the SELECT query:
@@ -1741,7 +1742,7 @@
 		$query = eregi_replace("SELECT, ","SELECT ",$query);
 
 		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
-		$query .= " FROM refs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
+		$query .= " FROM $tableRefs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
 
 		// ---------------------------------------
 
@@ -1936,6 +1937,7 @@
 	function extractFormElementsLibrary($showLinks)
 	{
 		global $librarySearchPattern; // defined in 'ini.inc.php'
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
 
 		$query = "SELECT"; // (Note: we care about the wrong "SELECT, author" etc. syntax later on...)
 
@@ -2052,7 +2054,7 @@
 		$query = eregi_replace("SELECT, ","SELECT ",$query);
 
 		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
-		$query .= " FROM refs WHERE serial RLIKE \".+\" AND " . $librarySearchPattern[0] . " RLIKE \"" . $librarySearchPattern[1] . "\""; // add FROM & (initial) WHERE clause
+		$query .= " FROM $tableRefs WHERE serial RLIKE \".+\" AND " . $librarySearchPattern[0] . " RLIKE \"" . $librarySearchPattern[1] . "\""; // add FROM & (initial) WHERE clause
 		// Note: we'll restrict the query to records where the pattern given in array element '$librarySearchPattern[1]' (defined in 'ini.inc.php')
 		//       matches the contents of the field given in array element '$librarySearchPattern[0]'
 
@@ -2362,6 +2364,8 @@
 	// Build the database query from user input provided by the 'advanced_search.php' form:
 	function extractFormElementsAdvanced($showLinks, $loginEmail, $userID)
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		$query = "SELECT"; // (Note: we care about the wrong "SELECT, author" etc. syntax later on...)
 
 		// ... if the user has checked the checkbox next to 'Author', we'll add that column to the SELECT query:
@@ -2813,9 +2817,9 @@
 		$query = eregi_replace("SELECT, ","SELECT ",$query);
 
 		if (isset($_SESSION['loginEmail'])) // if a user is logged in...
-			$query .= " FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = " . $userID . " WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
+			$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID . " WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
 		else // NO user logged in
-			$query .= " FROM refs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
+			$query .= " FROM $tableRefs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
 
 		// ---------------------------------------
 
@@ -4328,6 +4332,8 @@
 	// Build the database query from records selected by the user within the query results list (which, in turn, was returned by 'search.php'):
 	function extractFormElementsQueryResults($displayType, $showLinks, $citeOrder, $orderBy, $userID, $sqlQuery, $referer, $recordSerialsArray)
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_groups", $_SESSION['user_permissions']))) // if a user is logged in AND the 'user_permissions' session variable contains 'allow_user_groups', extract form elements which add/remove the selected records to/from a user's group:
 		{
 			$userGroupActionRadio = $_POST['userGroupActionRadio']; // extract user option whether we're supposed to process an existing group name or any custom/new group name that was specified by the user
@@ -4364,9 +4370,9 @@
 			{
 			// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
 			if ($citeOrder == "year") // sort records first by year (descending), then in the usual way:
-				$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY year DESC, first_author, author_count, author, title";
+				$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial FROM $tableRefs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY year DESC, first_author, author_count, author, title";
 			else // if any other or no '$citeOrder' parameter is specified, we supply the default ORDER BY pattern (which is suitable for citation in a journal etc.):
-				$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY first_author, author_count, author, year, title";
+				$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial FROM $tableRefs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY first_author, author_count, author, year, title";
 			}
 
 		elseif (ereg("^(Display|Export)$", $displayType)) // (hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
@@ -4387,9 +4393,9 @@
 					$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
 
 				if (isset($_SESSION['loginEmail'])) // if a user is logged in...
-					$query .= " FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = " . $userID . " WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY $orderBy";
+					$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID . " WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY $orderBy";
 				else // NO user logged in
-					$query .= " FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY $orderBy";
+					$query .= " FROM $tableRefs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY $orderBy";
 			}
 
 		elseif (isset($_SESSION['loginEmail']) AND ereg("^(Remember|Add|Remove)$", $displayType)) // if a user (who's logged in) clicked the 'Remember', 'Add' or 'Remove' button...
@@ -4400,15 +4406,15 @@
 						saveSessionVariable("selectedRecords", $recordSerialsArray); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 
 				if (ereg("^(Add|Remove)$", $displayType) AND !empty($userGroup)) // the user clicked either the 'Add' or the 'Remove' button
-					modifyUserGroups("user_data", $displayType, $recordSerialsArray, $recordSerialsString, $userID, $userGroup, $userGroupActionRadio); // add (remove) selected records to (from) the specified user group (function 'modifyUserGroups()' is defined in 'include.inc.php')
+					modifyUserGroups($tableUserData, $displayType, $recordSerialsArray, $recordSerialsString, $userID, $userGroup, $userGroupActionRadio); // add (remove) selected records to (from) the specified user group (function 'modifyUserGroups()' is defined in 'include.inc.php')
 
 
 				// re-apply the current sqlQuery:
-				$query = eregi_replace(' FROM refs',', orig_record FROM refs',$sqlQuery); // add 'orig_record' column (which is required in order to present visual feedback on duplicate records)
-				$query = eregi_replace(' FROM refs',', serial FROM refs',$query); // add 'serial' column (which is required in order to obtain unique checkbox names)
+				$query = eregi_replace(" FROM $tableRefs",", orig_record FROM $tableRefs",$sqlQuery); // add 'orig_record' column (which is required in order to present visual feedback on duplicate records)
+				$query = eregi_replace(" FROM $tableRefs",", serial FROM $tableRefs",$query); // add 'serial' column (which is required in order to obtain unique checkbox names)
 
 				if ($showLinks == "1")
-					$query = eregi_replace(' FROM refs',', file, url, doi FROM refs',$query); // add 'file', 'url' & 'doi' columns
+					$query = eregi_replace(" FROM $tableRefs",", file, url, doi FROM $tableRefs",$query); // add 'file', 'url' & 'doi' columns
 			}
 
 		return $query;
@@ -4419,6 +4425,8 @@
 	// Build the database query from user input provided by the 'extract.php' form:
 	function extractFormElementsExtract($citeOrder)
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		// Extract form elements (that are unique to the 'extract.php' form):
 		$sourceText = $_POST['sourceText']; // get the source text that contains the record serial numbers
 		$startDelim = $_POST['startDelim']; // get the start delimiter that precedes record serial numbers
@@ -4435,9 +4443,9 @@
 		// Construct the SQL query:
 		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
 		if ($citeOrder == "year") // sort records first by year (descending), then in the usual way:
-			$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY year DESC, first_author, author_count, author, title";
+			$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial FROM $tableRefs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY year DESC, first_author, author_count, author, title";
 		else // if any other or no '$citeOrder' parameter is specified, we supply the default ORDER BY pattern (which is suitable for citation in a journal etc.):
-			$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY first_author, author_count, author, year, title";
+			$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial FROM $tableRefs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY first_author, author_count, author, year, title";
 
 
 		return $query;
@@ -4448,6 +4456,8 @@
 	// Build the database query from user input provided by the "Quick Search" form on the main page ('index.php'):
 	function extractFormElementsQuick($showLinks)
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		$query = "SELECT author, title, year, publication";
 
 		$quickSearchSelector = $_POST['quickSearchSelector']; // extract field name chosen by the user
@@ -4470,7 +4480,7 @@
 			$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
 
 		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
-		$query .= " FROM refs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
+		$query .= " FROM $tableRefs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
 
 		if ($quickSearchName != "") // if the user typed a search string into the text entry field...
 			$query .= " AND $quickSearchSelector RLIKE \"$quickSearchName\""; // ...add search field name & value to the sql query
@@ -4486,9 +4496,11 @@
 	// Build the database query from user input provided by the "Show My Group" form on the main page ('index.php') or above the query results list (that was produced by 'search.php'):
 	function extractFormElementsGroup($sqlQuery, $showLinks, $userID)
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		if (!empty($sqlQuery)) // if there's a previous SQL query available (as is the case if the group search originated from a search results page - and not from the main page 'index.php')
 		{
-			$query = preg_replace("/(SELECT .+?) FROM refs.+/i", "\\1", $sqlQuery); // use the custom set of colums chosen by the user
+			$query = preg_replace("/(SELECT .+?) FROM $tableRefs.+/i", "\\1", $sqlQuery); // use the custom set of colums chosen by the user
 			$queryOrderBy = preg_replace("/.+( ORDER BY .+?)(?=LIMIT.*|GROUP BY.*|HAVING.*|PROCEDURE.*|FOR UPDATE.*|LOCK IN.*|$)/i", "\\1", $sqlQuery); // user the custom ORDER BY clause chosen by the user
 		}
 		else
@@ -4508,7 +4520,7 @@
 		if ($showLinks == "1")
 			$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
 
-		$query .= " FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = " . $userID; // add FROM clause
+		$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID; // add FROM clause
 
 		$query .= " WHERE user_groups RLIKE \"(^|.*;) *$groupSearchSelector *(;.*|$)\""; // add WHERE clause
 
@@ -4527,6 +4539,8 @@
 	//       'showLogin()' function (from 'include.inc.php').
 	function extractFormElementsMyRefs($showLinks, $loginEmail, $userID)
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		$query = "SELECT author, title, year, publication, volume, pages";
 
 		$myRefsRadio = $_REQUEST['myRefsRadio']; // will be "1" if the user wants to display ALL of his records, otherwise it will be "0"
@@ -4627,7 +4641,7 @@
 		if ($showLinks == "1")
 			$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
 
-		$query .= " FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = " . $userID . " WHERE location RLIKE \"$loginEmail\""; // add FROM & (initial) WHERE clause
+		$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID . " WHERE location RLIKE \"$loginEmail\""; // add FROM & (initial) WHERE clause
 
 
 		if ($myRefsRadio == "0") // if the user only wants to display a subset of his records:
