@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./install.sql
 # Created:    02-Oct-04, 20:11
-# Modified:   03-Oct-04, 19:06
+# Modified:   13-Oct-04, 01:12
 
 # MySQL database structure & initial data
 
@@ -106,6 +106,28 @@ CREATE TABLE `deleted` (
 # --------------------------------------------------------
 
 #
+# table structure for table `depends`
+#
+
+DROP TABLE IF EXISTS `depends`;
+CREATE TABLE `depends` (
+  `depends_id` mediumint(8) unsigned NOT NULL auto_increment,
+  `depends_external` varchar(100) default NULL,
+  `depends_enabled` enum('true','false') NOT NULL default 'true',
+  `depends_path` varchar(255) default NULL,
+  PRIMARY KEY  (`depends_id`)
+) TYPE=MyISAM AUTO_INCREMENT=3 ;
+
+#
+# data for table `depends`
+#
+
+INSERT INTO `depends` VALUES (1, 'refbase', 'true', NULL),
+(2, 'bibutils', 'true', NULL);
+
+# --------------------------------------------------------
+
+#
 # table structure for table `formats`
 #
 
@@ -113,18 +135,30 @@ DROP TABLE IF EXISTS `formats`;
 CREATE TABLE `formats` (
   `format_id` mediumint(8) unsigned NOT NULL auto_increment,
   `format_name` varchar(100) default NULL,
+  `format_type` enum('export','import') NOT NULL default 'export',
   `format_enabled` enum('true','false') NOT NULL default 'true',
   `format_spec` varchar(255) default NULL,
   `order_by` varchar(25) default NULL,
+  `depends_id` mediumint(8) unsigned NOT NULL default '0',
   PRIMARY KEY  (`format_id`),
   KEY `format_name` (`format_name`)
-) TYPE=MyISAM AUTO_INCREMENT=2 ;
+) TYPE=MyISAM AUTO_INCREMENT=12 ;
 
 #
 # data for table `formats`
 #
 
-INSERT INTO `formats` VALUES (1, 'MODS XML', 'true', 'MODS_XML.inc.php', '1');
+INSERT INTO `formats` VALUES (1, 'MODS XML','import', 'true', 'import_modsxml.php', '6', 1),
+(2, 'MODS XML','export', 'true', 'export_modsxml.php', '6', 1),
+(3, 'Text (CSV)','export', 'true', 'export_textcsv.php', '7', 1),
+(4, 'Bibtex','import', 'true', 'bibutils/import_bib2xml.php', '1', 2),
+(5, 'Bibtex','export', 'true', 'bibutils/export_xml2bib.php', '1', 2),
+(6, 'Endnote','import', 'true', 'bibutils/import_end2xml.php', '2', 2),
+(7, 'Endnote','export', 'true', 'bibutils/export_xml2end.php', '2', 2),
+(8, 'Pubmed XML','import', 'true', 'bibutils/import_med2xml.php', '5', 2),
+(9, 'RIS', 'import','true', 'bibutils/import_ris2xml.php', '3', 2),
+(10, 'RIS', 'export','true', 'bibutils/export_xml2ris.php', '3', 2),
+(11, 'RIS (ISI)','import', 'true', 'bibutils/import_isi2xml.php', '4', 2);
 
 # --------------------------------------------------------
 
@@ -292,7 +326,7 @@ CREATE TABLE `queries` (
   `last_execution` datetime default NULL,
   PRIMARY KEY  (`query_id`),
   KEY `user_id` (`user_id`,`query_name`)
-) TYPE=MyISAM AUTO_INCREMENT=6 ;
+) TYPE=MyISAM AUTO_INCREMENT=5 ;
 
 #
 # data for table `queries`
@@ -366,7 +400,7 @@ CREATE TABLE `refs` (
   `modified_time` time default NULL,
   `modified_by` varchar(100) default NULL,
   PRIMARY KEY  (`serial`)
-) TYPE=MyISAM AUTO_INCREMENT=15 ;
+) TYPE=MyISAM AUTO_INCREMENT=13 ;
 
 #
 # data for table `refs`
@@ -381,7 +415,7 @@ INSERT INTO `refs` VALUES ('Chapelle, G; Peck, LS', NULL, NULL, 'Chapelle, G', 2
 ('Thomas, DN; Dieckmann, GS (eds)', 'Thomas: School of Ocean Sciences, University of Wales, Bangor, UK; Dieckmann: Alfred Wegener Institute for Polar and Marine Research, Bremerhaven, Germany', NULL, 'Thomas, DN', 2, 'Sea ice - an introduction to its physics, chemistry, biology and geology', NULL, NULL, NULL, 2003, NULL, NULL, NULL, '402 pp', 402, 'Sea Ice', 'Sea ice, which covers up to 7% of the planetís surface, is a major component of the worldís oceans, partly driving ocean circulation and global climate patterns. It provides a habitat for a rich diversity of marine organisms, and is a valuable source of information in studies of global climate change and the evolution of present day life forms. Increasingly, sea ice is being used as a proxy for extraterrestrial ice covered systems.\r\n\r\n_Sea Ice_ provides a comprehensive review of our current available knowledge of polar pack ice, the study of which is severely constrained by the logistic difficulties of working in such harsh and remote regions of the earth. The bookís editors, Drs Thomas and Dieckmann have drawn together an impressive group of international contributing authors, providing a well-edited and integrated volume, which will stand for many years as the standard work on the subject. Contents of the book include details of the growth, microstructure and properties of sea ice, large-scale variations in thickness and characteristics, its primary production, micro-and macrobiology, sea ice as a habitat for birds and mammals, sea ice biogeochemistry, particulate flux, and the distribution and significance of palaeo sea ice.', NULL, 'Thomas, DN; Dieckmann, GS', 'Blackwell Science Ltd', 'Oxford', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0-632-05808-0', 'English', NULL, NULL, 'Book Whole', NULL, NULL, NULL, NULL, 'http://www.blackwellpublishing.com/book.asp?ref=0632058080&site=1', 'refbase @ user @ library-34/436/1', 'Initial refbase user (user@refbase.net)', NULL, 'no', NULL, NULL, '40 Illustrations', 7, NULL, 'yes', '2003-12-02', '13:27:50', 'Initial refbase user (user@refbase.net)', '2004-01-08', '21:18:26', 'Initial refbase user (user@refbase.net)'),
 ('de Castellvi, J (ed)', NULL, NULL, 'de Castellvi, J', 1, 'Actas des tercer symposium espanol de estudios Antarcticos. Gredos, 3 al 5 de octubre de 1989', NULL, NULL, NULL, 1990, NULL, NULL, NULL, '379 pp', 379, NULL, NULL, NULL, 'de Castellvi, J', 'Comision interministerial de Cienctia y Technologia', 'Madrid', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Spanish', NULL, NULL, 'Book Whole', NULL, NULL, NULL, NULL, NULL, 'refbase @ user @ library-32/19/20', 'Initial refbase user (user@refbase.net)', NULL, 'no', NULL, NULL, NULL, 9, NULL, 'no', '1997-08-22', '00:00:00', 'Initial refbase user (user@refbase.net)', '2004-01-08', '21:20:49', 'Initial refbase user (user@refbase.net)'),
 ('Aberle, N; Witte, U', 'Aberle, Witte: Max Planck Institute for Marine Microbiology, Celsiusstr. 1, 28359 Bremen, Germany; Aberle: Present address: Max Planck Institute for Limnology, August-Thienemann-Str. 2, 24306 Plˆn, Germany; Email: aberle@mpil-ploen.mpg.de', NULL, 'Aberle, N', 2, 'Deep-sea macrofauna exposed to a simulated sedimentation event in the abyssal NE Atlantic: _in situ_ pulse-chase experiments using [super:13]C-labelled phytodetritus', NULL, 'Marine Ecology Progress Series', 'Mar Ecol Prog Ser', 2003, '251', 251, NULL, '37-47', 37, 'Deep-sea; Pulse-chase experiment; [delta][super:13]C; Benthic carbon remineralisation; Macrofauna; Atlantic Ocean, Porcupine Abyssal Plain', 'Tracer experiments with [super:13]C-labelled diatoms _Thalassiosira rotula_ (Bacillariophycea, 98% [super:13]C-labelled) were conducted at the Porcupine Abyssal Plain (PAP) in the NE Atlantic (BENGAL Station; 48?50\'N, 16?30\'W, 4850 m depth) during May/June 2000. _In situ_ enrichment experiments were carried out using deep-sea benthic chamber landers: within the chambers a spring bloom was simulated and the fate of this food-pulse within the abyssal macrobenthic community was followed. In focus was the role of different macrofauna taxa and their vertical distribution within the sediment column in consuming and reworking the freshly deposited material. _T. rotula_ is one of the most abundant pelagic diatoms in the NE Atlantic and therefore 0.2 g of freeze dried _T. rotula_, equivalent to 1 g algal C m[super:-2] yr[super:-1], was injected into each incubation chamber. Three different incubation times of 2.5, 8 and 23 d were chosen in order to follow the uptake of [super:13]C-labelled phytodetritus by macrofauna. After only 2.5 d, 77% of all macrofauna organisms showed tracer uptake. After 23 d the highest degree of enrichment was measured and 95% of the individuals had taken up [super:13]C from the introduced algal material. In addition to that a downward transport of organic matter was observed, even though the mixing was not very intense. The initial processing of carbon was dominated by polychaetes that made up a percentage of 52% of total macrofauna. In general macrofauna organisms that lived close to the sediment surface had higher access to the simulated food-pulse, confirming the hypothesis that individuals close to the sediment surface have the strongest impact on the decomposition of phytodetritus. In our study we observed only modest vertical entrainment of [super:13]C tracers into the sediment. With regard to contradictory results from former [super:13]C-enrichment experiments in bathyal regions, compared to results from our study site in the abyssal plain, we thus propose pronounced differences in feeding strategies between macrofauna communities from continental margins and abyssal plains.', NULL, NULL, 'Inter-Research', 'Oldendorf/Luhe', NULL, NULL, NULL, NULL, NULL, NULL, '0171-8630', NULL, 'English', 'English', 'NE Atlantic', 'Journal Article', NULL, NULL, NULL, NULL, 'http://www.int-res.com/abstracts/meps/v251/p37-47.html', 'refbase @ user @ 706', 'Initial refbase user (user@refbase.net)', NULL, 'no', NULL, 'marecolprogser/m251p037.pdf', NULL, 4, NULL, 'no', '2003-11-17', '17:36:44', 'Initial refbase user (user@refbase.net)', '2004-10-02', '18:18:59', 'refbase user (testuser@refbase.net)'),
-('Bischof, K; Peralta, G; Kräbs, G; van de Poll, WH; Perez-Llorens, JL; Breeman, AM', NULL, NULL, 'Bischof, K', 3, 'Effects of solar UV-B radiation on canopy structure of _Ulva_ communities from southern Spain', NULL, 'Journal of Experimental Botany', 'J Exp Bot', 2002, '53', 53, '379', '2411-2421', 2411, 'canopy formation; photosynthesis; ultraviolet radiation; _Ulva rotundata_', 'Within the sheltered creeks of C·diz bay, _Ulva_ thalli form extended mat-like canopies. The effect of solar ultraviolet radiation on photosynthetic activity, the composition of photosynthetic and xanthophyll cycle pigments, and the amount of RubisCO, chaperonin 60 (CPN 60), and the induction of DNA damage in _Ulva_ aff. _rotundata_ Bliding from southern Spain was assessed in the field. Samples collected from the natural community were covered by screening filters, generating different radiation conditions. During daily cycles, individual thalli showed photoinhibitory effects of the natural solar radiation. This inhibition was even more pronounced in samples only exposed to photosynthetically active radiation (PAR). Strongly increased heat dissipation in these samples indicated the activity of regulatory mechanisms involved in dynamic photoinhibition. Adverse effects of UV-B radiation on photosynthesis were only observed in combination with high levels of PAR, indicating the synergistic effects of the two wavelength ranges. In samples exposed either to PAR+UV-A or to UV-B+UV-A without PAR, no inhibition of photosynthetic quantum yield was found in the course of the day. At the natural site, the top layer of the mat-like canopies is generally completely bleached. Artificially designed _Ulva_ canopies exhibited fast bleaching of the top layer under the natural solar radiation conditions, while this was not observed in canopies either shielded from UV or from PAR. The bleached first layer of the canopies acts as a selective UV-B filter, and thus prevents subcanopy thalli from exposure to harmful radiation. This was confirmed by the differences in photosynthetic activity, pigment composition, and the concentration of RubisCO in thalli with different positions within the canopy. In addition, the induction of the stress protein CPN 60 under UV exposure and the low accumulation of DNA damage indicate the presence of physiological protection mechanisms against harmful UV-B. A mechanism of UV-B-induced inhibition of photosynthesis under field conditions is proposed.', NULL, NULL, 'Oxford University Press', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'English', 'English', 'southern Spain', 'Journal Article', NULL, NULL, '10.1093/jxb/erf091', NULL, 'http://jxb.oupjournals.org/cgi/content/abstract/53/379/2411', 'refbase @ user @ ', 'Initial refbase user (user@refbase.net)', NULL, 'no', NULL, 'jexpbot/jxb-erf091.pdf', NULL, 12, NULL, 'no', '2003-11-17', '17:47:02', 'Initial refbase user (user@refbase.net)', '2004-05-24', '22:50:50', 'Initial refbase user (user@refbase.net)'),
+('Bischof, K; Peralta, G; Kräbs, G; van de Poll, WH; Perez-Llorens, JL; Breeman, AM', NULL, NULL, 'Bischof, K', 3, 'Effects of solar UV-B radiation on canopy structure of _Ulva_ communities from southern Spain', NULL, 'Journal of Experimental Botany', 'J Exp Bot', 2002, '53', 53, '379', '2411-2421', 2411, 'canopy formation; photosynthesis; ultraviolet radiation; _Ulva rotundata_', 'Within the sheltered creeks of Cádiz bay, _Ulva_ thalli form extended mat-like canopies. The effect of solar ultraviolet radiation on photosynthetic activity, the composition of photosynthetic and xanthophyll cycle pigments, and the amount of RubisCO, chaperonin 60 (CPN 60), and the induction of DNA damage in _Ulva_ aff. _rotundata_ Bliding from southern Spain was assessed in the field. Samples collected from the natural community were covered by screening filters, generating different radiation conditions. During daily cycles, individual thalli showed photoinhibitory effects of the natural solar radiation. This inhibition was even more pronounced in samples only exposed to photosynthetically active radiation (PAR). Strongly increased heat dissipation in these samples indicated the activity of regulatory mechanisms involved in dynamic photoinhibition. Adverse effects of UV-B radiation on photosynthesis were only observed in combination with high levels of PAR, indicating the synergistic effects of the two wavelength ranges. In samples exposed either to PAR+UV-A or to UV-B+UV-A without PAR, no inhibition of photosynthetic quantum yield was found in the course of the day. At the natural site, the top layer of the mat-like canopies is generally completely bleached. Artificially designed _Ulva_ canopies exhibited fast bleaching of the top layer under the natural solar radiation conditions, while this was not observed in canopies either shielded from UV or from PAR. The bleached first layer of the canopies acts as a selective UV-B filter, and thus prevents subcanopy thalli from exposure to harmful radiation. This was confirmed by the differences in photosynthetic activity, pigment composition, and the concentration of RubisCO in thalli with different positions within the canopy. In addition, the induction of the stress protein CPN 60 under UV exposure and the low accumulation of DNA damage indicate the presence of physiological protection mechanisms against harmful UV-B. A mechanism of UV-B-induced inhibition of photosynthesis under field conditions is proposed.', NULL, NULL, 'Oxford University Press', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'English', 'English', 'southern Spain', 'Journal Article', NULL, NULL, '10.1093/jxb/erf091', NULL, 'http://jxb.oupjournals.org/cgi/content/abstract/53/379/2411', 'refbase @ user @ ', 'Initial refbase user (user@refbase.net)', NULL, 'no', NULL, 'jexpbot/jxb-erf091.pdf', NULL, 12, NULL, 'no', '2003-11-17', '17:47:02', 'Initial refbase user (user@refbase.net)', '2004-05-24', '22:50:50', 'Initial refbase user (user@refbase.net)'),
 ('Amon, RMW; Budéus, G; Meon, B', NULL, NULL, 'Amon, RMW', 3, 'Dissolved organic carbon distribution and origin in the Nordic Seas: Exchanges with the Arctic Ocean and the North Atlantic', NULL, 'Journal of Geophysical Research', 'J Geophys Res', 2003, '108', 108, 'C7', NULL, NULL, 'dissolved organic matter; dissolved organic carbon; chromophoric dissolved organic matter; fluorescence; vertical carbon transport', 'Dissolved organic carbon (DOC) and in situ fluorescence were measured along with hydrographic parameters in the Greenland, Iceland, and Norwegian Seas (Nordic Seas). Surface (<100 m) concentrations of DOC ranged from 60 to 118 µM with elevated values in the East Greenland Current (EGC) which transports water from the Arctic Ocean to the North Atlantic. EGC surface waters also showed a pronounced fluorescence maximum between 30 and 120 m depth in all EGC sections indicating the abundance of Arctic river derived DOC in this current. Based on fluorescence we estimated that 20ñ50% of the annual river discharge to the Arctic Ocean was exported in the EGC. The fluorescence maximum was typically associated with salinity around 33 and temperatures below -1?C which are characteristic of surface and upper halocline water in the Arctic Ocean. The elevated fluorescence in this water mass suggests a strong Eurasian shelf component and also suggests that in situ fluorescence could be used to trace Eurasian shelf water in the central Arctic Ocean. DOC concentrations in the Nordic Sea basins (>1000 m) were relatively high (~50 µM DOC) compared with other ocean basins indicating active vertical transport of DOC in this region on decadal timescales. Based on existing vertical transport estimates and 15 µM of semilabile DOC we calculated an annual vertical net DOC export of 3.5 Tg C yr[super:-1] in the Greenland Sea and about 36 Tg C yr[super:-1] for the entire Arctic Mediterranean Sea (AMS) including the Greenland-Scotland Ridge overflow. It appears that physical processes play a determining role for the distribution of DOC in the AMS.', NULL, NULL, 'American Geophysical Union', 'Washington, DC', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'English', 'English', 'Nordic Seas', 'Journal Article', NULL, NULL, '10.1029/2002JC001594', NULL, 'http://www.agu.org/pubs/crossref/2003/2002JC001594.shtml', 'refbase @ user @ ms', 'Initial refbase user (user@refbase.net)', NULL, 'yes', '3221', 'jgeophysres/2002JC001594.pdf', NULL, 5, NULL, 'no', '2003-11-23', '14:28:56', 'Initial refbase user (user@refbase.net)', '2004-05-24', '22:50:40', 'Initial refbase user (user@refbase.net)'),
 ('Gerland, S; Winther, J-G; Örbæk, JB; Ivanov, BV', 'Norwegian Polar Institute, Polar Environmental Centre, N-9296 Tromsoe, Norway', NULL, 'Gerland, S', 3, 'Physical properties, spectral reflectance and thickness development of first year fast ice in Kongsfjorden, Svalbard', NULL, 'Proceedings of the International Symposium on Polar Aspects of Global Change', NULL, 1999, NULL, NULL, NULL, '275-282', 275, 'Fast ice; Ice properties; Reflectance; Ice thickness; Physical properties; PNE, Norway, Svalbard, Kongsfjorden', 'A ground truth study was performed on first year fast ice in Kongsfjorden, Svalbard, during spring 1997 and 1998. The survey included sea ice thickness monitoring as well as observation of surface albedo, attenuation of optical radiation in the ice, physical properties and texture of snow and sea ice. The average total sea ice thickness in May was about 0.9 m, including a 0.2 m thick snow layer on top. Within a few weeks in both years, the snow melted almost completely, whereas the ice thickness decreased by not more than 0.05 m. During spring, the lower part of the snow refroze into a solid layer. The sea ice became more porous. Temperatures in the sea ice increased and the measurable salinity of the sea ice decreased with time. Due to snow cover thinning and snow grain growth, maximum surface albedo decreased from 0.96 to 0.74. Texture analysis on cores showed columnar ice with large crystals (max. crystal length > 0.1 m) below a 0.11 m thick mixed surface layer of granular ice with smaller crystals. In both years, we observed sea ice algae at the bottom part of the ice. This layer has a significant effect on the radiation transmissivity.', NULL, NULL, 'Norsk Polarinstitutt', NULL, NULL, NULL, 'Polar Research', 'Polar Res', 18, '2', '0800-0395', NULL, 'English', 'English', NULL, 'Book Chapter', NULL, NULL, NULL, 'International Symposium on Polar Aspects of Global Change, Tromso (Norway), 24-28 Aug 1998', NULL, 'refbase @ user @ 726', 'Initial refbase user (user@refbase.net)', NULL, 'no', NULL, 'gerland_etal.99.doc', 'Conference', 6, NULL, 'no', '2003-11-24', '19:00:20', 'Initial refbase user (user@refbase.net)', '2004-05-24', '22:49:56', 'Initial refbase user (user@refbase.net)');
 
@@ -398,6 +432,7 @@ CREATE TABLE `styles` (
   `style_enabled` enum('true','false') NOT NULL default 'true',
   `style_spec` varchar(255) default NULL,
   `order_by` varchar(25) default NULL,
+  `depends_id` mediumint(8) unsigned NOT NULL default '0',
   PRIMARY KEY  (`style_id`),
   KEY `style_name` (`style_name`)
 ) TYPE=MyISAM AUTO_INCREMENT=6 ;
@@ -406,13 +441,11 @@ CREATE TABLE `styles` (
 # data for table `styles`
 #
 
-INSERT INTO `styles` VALUES (1, 'Polar Biol', 'true', 'PolarBiol_MarBiol_MEPS.inc.php', '1'),
-(2, 'Mar Biol', 'true', 'PolarBiol_MarBiol_MEPS.inc.php', '2'),
-(3, 'MEPS', 'true', 'PolarBiol_MarBiol_MEPS.inc.php', '3'),
-(4, 'Deep Sea Res', 'true', 'DeepSeaRes.inc.php', '4'),
-# Uncomment the following line to use MODS XML as a citation style.
-#(6, 'MODS XML', 'true', 'MODS_XML.inc.php', '6'),
-(5, 'Text Citation', 'true', 'TextCitation.inc.php', '5');
+INSERT INTO `styles` VALUES (1, 'Polar Biol', 'true', 'cite_PolarBiol_MarBiol_MEPS.php', '1', 1),
+(2, 'Mar Biol', 'true', 'cite_PolarBiol_MarBiol_MEPS.php', '2', 1),
+(3, 'MEPS', 'true', 'cite_PolarBiol_MarBiol_MEPS.php', '3', 1),
+(4, 'Deep Sea Res', 'true', 'cite_DeepSeaRes.php', '4', 1),
+(5, 'Text Citation', 'true', 'cite_TextCitation.php', '5', 1);
 
 # --------------------------------------------------------
 
@@ -464,24 +497,24 @@ CREATE TABLE `user_data` (
   `related` text,
   PRIMARY KEY  (`data_id`),
   KEY `user_id` (`user_id`,`record_id`)
-) TYPE=MyISAM AUTO_INCREMENT=29 ;
+) TYPE=MyISAM AUTO_INCREMENT=13 ;
 
 #
 # data for table `user_data`
 #
 
-INSERT INTO `user_data` VALUES (1, 1, 1, 'no', 'true', 'no', 'Oxygen; Environmental Impact; Crustacea; Amphipoda', '', '', 'Test', NULL, NULL),
+INSERT INTO `user_data` VALUES (1, 1, 1, 'no', 'true', 'no', 'Oxygen; Environmental Impact; Crustacea; Amphipoda', '', '', '', NULL, NULL),
 (2, 1, 2, 'yes', 'false', 'no', 'Modeling; NAO; Ice Export; Ice Transport; Ice Thickness; Ice Extent / Cover; Ice Concentration; Ice Drift', 'Dissertation 2001, Mathematisch-Naturwissenschaftliche Fakultät der CAU Kiel', '', '', '', ''),
 (3, 1, 3, 'no', 'true', 'no', 'Isotopes; Pelagic-Benthic Coupling; Polynya; Primary Production', '', '', 'Ecology; Primary Production; Stable Isotopes', '', 'orig_record RLIKE "^-?3$"'),
 (4, 1, 4, 'yes', 'true', 'no', '', '', '', 'Ecology; Stable Isotopes', '', 'user_groups:Ecology'),
-(5, 1, 5, 'no', 'fetch', 'no', '', '', '', 'Test', '', ''),
+(5, 1, 5, 'no', 'fetch', 'no', '', '', '', '', '', ''),
 (6, 1, 6, 'no', 'false', 'no', '', '', '', 'Ice', '', ''),
 (7, 1, 7, 'yes', 'fetch', 'yes', '', '', '', 'Ice', NULL, NULL),
 (8, 1, 8, 'no', 'false', 'no', '', '', '', NULL, NULL, NULL),
-(9, 1, 9, 'no', 'false', 'no', '', '', '', 'Test', NULL, NULL),
+(9, 1, 9, 'no', 'false', 'no', '', '', '', '', NULL, NULL),
 (10, 1, 10, 'no', 'false', 'no', '', '', '', 'Ecology; Primary Production; Stable Isotopes', '', '3'),
 (11, 1, 11, 'no', 'false', 'no', NULL, NULL, NULL, 'Ecology; Stable Isotopes', NULL, NULL),
-(12, 1, 12, 'no', 'false', 'no', '', '', '', 'Test', '', '');
+(12, 1, 12, 'no', 'false', 'no', '', '', '', '', '', '');
 
 # --------------------------------------------------------
 
@@ -497,14 +530,34 @@ CREATE TABLE `user_formats` (
   `show_format` enum('true','false') NOT NULL default 'true',
   PRIMARY KEY  (`user_format_id`),
   KEY `format_id` (`format_id`,`user_id`)
-) TYPE=MyISAM AUTO_INCREMENT=5 ;
+) TYPE=MyISAM AUTO_INCREMENT=23 ;
 
 #
 # data for table `user_formats`
 #
 
 INSERT INTO `user_formats` VALUES (1, 1, 1, 'true'),
-(2, 1, 0, 'false');
+(2, 2, 1, 'true'),
+(3, 3, 1, 'true'),
+(4, 4, 1, 'true'),
+(5, 5, 1, 'true'),
+(6, 6, 1, 'true'),
+(7, 7, 1, 'true'),
+(8, 8, 1, 'true'),
+(9, 9, 1, 'true'),
+(10, 10, 1, 'true'),
+(11, 11, 1, 'true'),
+(12, 1, 0, 'true'),
+(13, 2, 0, 'false'),
+(14, 3, 0, 'false'),
+(15, 4, 0, 'true'),
+(16, 5, 0, 'false'),
+(17, 6, 0, 'true'),
+(18, 7, 0, 'false'),
+(19, 8, 0, 'true'),
+(20, 9, 0, 'true'),
+(21, 10, 0, 'false'),
+(22, 11, 0, 'true');
 
 # --------------------------------------------------------
 
@@ -536,13 +589,13 @@ CREATE TABLE `user_permissions` (
   `allow_edit_call_number` enum('no','yes') NOT NULL default 'no',
   PRIMARY KEY  (`user_permission_id`),
   KEY `user_id` (`user_id`)
-) TYPE=MyISAM AUTO_INCREMENT=5 ;
+) TYPE=MyISAM AUTO_INCREMENT=3 ;
 
 #
 # data for table `user_permissions`
 #
 
-INSERT INTO `user_permissions` VALUES (1, 0, 'no', 'no', 'no', 'no', 'no', 'yes', 'yes', 'yes', 'no', 'no', 'no', 'no', 'no', 'no', 'yes', 'yes', 'no', 'no'),
+INSERT INTO `user_permissions` VALUES (1, 0, 'no', 'no', 'no', 'no', 'no', 'yes', 'yes', 'yes', 'no', 'no', 'no', 'no', 'no', 'no', 'yes', 'no', 'no', 'no'),
 (2, 1, 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'no');
 
 # --------------------------------------------------------
@@ -559,7 +612,7 @@ CREATE TABLE `user_styles` (
   `show_style` enum('true','false') NOT NULL default 'true',
   PRIMARY KEY  (`user_style_id`),
   KEY `style_id` (`style_id`,`user_id`)
-) TYPE=MyISAM AUTO_INCREMENT=21 ;
+) TYPE=MyISAM AUTO_INCREMENT=11 ;
 
 #
 # data for table `user_styles`
@@ -590,7 +643,7 @@ CREATE TABLE `user_types` (
   `show_type` enum('true','false') NOT NULL default 'true',
   PRIMARY KEY  (`user_type_id`),
   KEY `type_id` (`type_id`,`user_id`)
-) TYPE=MyISAM AUTO_INCREMENT=25 ;
+) TYPE=MyISAM AUTO_INCREMENT=13 ;
 
 #
 # data for table `user_types`
@@ -649,7 +702,7 @@ CREATE TABLE `users` (
   `modified_time` time default NULL,
   `modified_by` varchar(100) default NULL,
   PRIMARY KEY  (`user_id`)
-) TYPE=MyISAM AUTO_INCREMENT=4 ;
+) TYPE=MyISAM AUTO_INCREMENT=2 ;
 
 #
 # data for table `users`
