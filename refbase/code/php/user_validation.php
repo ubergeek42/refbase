@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   24-Oct-04, 20:59
+	// Modified:   17-Feb-05, 20:23
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -190,7 +190,7 @@
 
 		else // Check if the email address is already in use in the database:
 		{
-			$query = "SELECT * FROM auth WHERE email = '" . $formVars["email"] . "'"; // CONSTRUCT SQL QUERY
+			$query = "SELECT * FROM $tableAuth WHERE email = '" . $formVars["email"] . "'"; // CONSTRUCT SQL QUERY
 	
 			// (3) RUN the query on the database through the connection:
 			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
@@ -252,7 +252,7 @@
 			$userID = $_REQUEST['userID']; // ...in this case we accept 'userID' from the GET/POST request (it got included as hidden form tag by 'user_details.php')
 
 		// UPDATE - construct a query to update the relevant record
-		$query = "UPDATE users SET "
+		$query = "UPDATE $tableUsers SET "
 				. "first_name = \"" . $formVars["firstName"] . "\", "
 				. "last_name = \"" . $formVars["lastName"] . "\", "
 				. "title = \"" . $formVars["title"] . "\", "
@@ -290,7 +290,7 @@
 	elseif ((!isset($_SESSION['loginEmail']) && ($addNewUsers == "everyone") && ($_REQUEST['userID'] == "")) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == ""))) // -> perform an insert:
 	{
 		// INSERT - construct a query to add data as new record
-		$query = "INSERT INTO users SET "
+		$query = "INSERT INTO $tableUsers SET "
 				. "first_name = \"" . $formVars["firstName"] . "\", "
 				. "last_name = \"" . $formVars["lastName"] . "\", "
 				. "title = \"" . $formVars["title"] . "\", "
@@ -331,7 +331,7 @@
 	elseif ($addNewUsers == "admin" && ($_REQUEST['userID'] == ""))
 	{
 		// First, we have to query for the proper admin name, so that we can include this name within the emails:
-		$query = "SELECT first_name, last_name FROM users WHERE email = '" . $adminLoginEmail . "'"; // CONSTRUCT SQL QUERY ('$adminLoginEmail' is specified in 'ini.inc.php')
+		$query = "SELECT first_name, last_name FROM $tableUsers WHERE email = '" . $adminLoginEmail . "'"; // CONSTRUCT SQL QUERY ('$adminLoginEmail' is specified in 'ini.inc.php')
 
 		// (3a) RUN the query on the database through the connection:
 		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
@@ -414,7 +414,7 @@
 			$stored_password = crypt($formVars["loginPassword"], $salt);
 	
 			// Update the user's password within the auth table
-			$query = "UPDATE auth SET "
+			$query = "UPDATE $tableAuth SET "
 					. "password = '" . $stored_password . "' "
 					. "WHERE user_id = $userID";
 	
@@ -422,7 +422,7 @@
 		}
 	}
 
-	// If this was an INSERT, we need to INSERT also into the 'auth' table (which contains the login credentials for each user):
+	// If this was an INSERT, we'll also need to INSERT into the 'auth' table (which contains the login credentials for each user) as well as into some 'user_*' tables:
 	// INSERTs are allowed to:
 	//         1. EVERYONE who's not logged in (but ONLY if variable '$addNewUsers' in 'ini.inc.php' is set to "everyone"!)
 	//            (Note that this feature is actually only meant to add the very first user to the users table.
@@ -440,12 +440,18 @@
 		$stored_password = crypt($formVars["loginPassword"], $salt);
 
 		// Insert a new user into the auth table
-		$query = "INSERT INTO auth SET "
+		$query = "INSERT INTO $tableAuth SET "
 				. "user_id = " . $userID . ", "
 				. "email = '" . $formVars["email"] . "', "
 				. "password = '" . $stored_password . "'";
 
 		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+
+		// Insert a row for this new user into the 'user_permissions' table:
+		$defaultUserPermissionsString = implode("\", \"", $defaultUserPermissions); // '$defaultUserPermissions' is defined in 'ini.inc.php'
+		$query2 = "INSERT INTO $tableUserPermissions VALUES (NULL, " . $userID . ", \"" . $defaultUserPermissionsString . "\")";
+
+		$result2 = queryMySQLDatabase($query2, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		// if EVERYONE who's not logged in is able to add a new user (which is the case if the variable '$addNewUsers' in 'ini.inc.php'
 		// is set to "everyone", see note above!), then we have to make sure that this visitor gets logged into his new
@@ -459,6 +465,10 @@
 			$loginFirstName = $formVars["firstName"];
 			$loginLastName = $formVars["lastName"];
 			$abbrevInstitution = $formVars["abbrevInstitution"];
+
+			// Get the user permissions for the newly created user
+			// and save all allowed user actions as semicolon-delimited string to the session variable 'user_permissions':
+			getPermissions($userID, "user"); // function 'getPermissions()' is defined in 'include.inc.php'
 		}
 	}
 
@@ -475,12 +485,12 @@
 
 	// Get all user groups specified by the current user
 	// and (if some groups were found) save them as semicolon-delimited string to the session variable 'userGroups':
-	getUserGroups("user_data", $loginUserID); // function 'getUserGroups()' is defined in 'include.inc.php'
+	getUserGroups($tableUserData, $loginUserID); // function 'getUserGroups()' is defined in 'include.inc.php'
 
 	if ($loginEmail == $adminLoginEmail) // ('$adminLoginEmail' is specified in 'ini.inc.php')
 		// Get all user groups specified by the admin
 		// and (if some groups were found) save them as semicolon-delimited string to the session variable 'adminUserGroups':
-		getUserGroups("users", $loginUserID); // function 'getUserGroups()' is defined in 'include.inc.php'
+		getUserGroups($tableUsers, $loginUserID); // function 'getUserGroups()' is defined in 'include.inc.php'
 
 	// Similarly, get all queries that were saved previously by the current user
 	// and (if some queries were found) save them as semicolon-delimited string to the session variable 'userQueries':
