@@ -4,8 +4,8 @@
 	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
-	// Created:    29-Jun-03, 0:25 Uhr
-	// Modified:   16-Nov-03, 21:33 Uhr
+	// Created:    29-Jun-03, 00:25
+	// Modified:   27-Sep-04, 20:04
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -25,19 +25,22 @@
 
 	// --------------------------------------------------------------------
 
-	// Re-establish the existing session
-	session_start();
-	
-	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session();
 
 	// Check if the admin is logged in
-	if (!(session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail)))
+	if (!(isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail)))
 	{
-		session_register("HeaderString"); // save an error message
+		// save an error message:
 		$HeaderString = "<b><span class=\"warning\">You must be logged in as admin to view any user account details!</span></b>";
 
-		session_register("referer"); // save the URL of the currently displayed page
-		$referer = $HTTP_REFERER;
+		// save the URL of the currently displayed page:
+		$referer = $_SERVER['HTTP_REFERER'];
+
+		// Write back session variables:
+		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+		saveSessionVariable("referer", $referer);
 
 		header("Location: index.php");
 		exit;
@@ -54,12 +57,19 @@
 	else
 		$formType = "";
 	
-	// Extract the type of display requested by the user (either 'Display', 'Export' or ''):
+	// Extract the type of display requested by the user (either 'Display', 'Cite' or ''):
 	// ('' will produce the default columnar output style)
 	if (isset($_REQUEST['submit']))
 		$displayType = $_REQUEST['submit'];
 	else
 		$displayType = "";
+
+	// For a given display type, extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// ('' will produce the default 'Web' output style)
+	if (isset($_REQUEST['viewType']))
+		$viewType = $_REQUEST['viewType'];
+	else
+		$viewType = "";
 
 	// Extract other variables from the request:
 	if (isset($_REQUEST['sqlQuery']))
@@ -88,10 +98,10 @@
 		$rowOffset = "";
 
 	// In order to generalize routines we have to query further variables here:
-	if (isset($_REQUEST['exportFormatSelector']))
-		$exportFormat = $_REQUEST['exportFormatSelector']; // get the export format chosen by the user (only occurs in 'extract.php' form  and in query result lists)
+	if (isset($_REQUEST['citeStyleSelector']))
+		$citeStyle = $_REQUEST['citeStyleSelector']; // get the cite style chosen by the user (only occurs in 'extract.php' form  and in query result lists)
 	else
-		$exportFormat = "";
+		$citeStyle = "";
 
 	if (isset($_REQUEST['oldQuery']))
 		$oldQuery = $_REQUEST['oldQuery']; // get the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
@@ -114,7 +124,7 @@
 		$query = str_replace('\\\\','\\',$query);
 	}
 
-	// --- Form within 'search.php': ---------------
+	// --- Form within 'users.php': ---------------
 	elseif ("$formType" == "refineSearch") // the user used the "Search within Results" form above the query results list (that was produced by 'users.php')
 		$query = extractFormElementsRefine($displayType, $sqlQuery, $showLinks);
 
@@ -123,24 +133,11 @@
 
 	// ----------------------------------------------
 
-	// (1) OPEN CONNECTION, (2) SELECT DATABASE, (3) RUN QUERY, (4) DISPLAY USERS, (5) CLOSE CONNECTION
-
-	// (1) OPEN the database connection:
-	//      (variables are set by include file 'db.inc.php'!)
-	if (!($connection = @ mysql_connect($hostName, $username, $password)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to connect to the host:", "");
-
-	// (2) SELECT the database:
-	//      (variables are set by include file 'db.inc.php'!)
-	if (!(mysql_select_db($databaseName, $connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to connect to the database:", "");
+	// (1) OPEN CONNECTION, (2) SELECT DATABASE
+	connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 	// (3) RUN the query on the database through the connection:
-	if (!($result = @ mysql_query($query, $connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+	$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 	// ----------------------------------------------
 
@@ -172,14 +169,14 @@
 			mysql_data_seek($result, $rowOffset);
 		}
 
-	// Second, calculate the maximum result number on each page ('$showMaxRow' is required as parameter to the 'displayRows()' function)
+	// Second, calculate the maximum result number on each page ('$showMaxRow' is required as parameter to the 'displayDetails()' function)
 	if (($rowOffset + $showRows) < $rowsFound)
 		$showMaxRow = ($rowOffset + $showRows); // maximum result number on each page
 	else
 		$showMaxRow = $rowsFound; // for the last results page, correct the maximum result number if necessary
 
 	// Third, build the appropriate header string (which is required as parameter to the 'showPageHeader()' function):
-	if (!session_is_registered("HeaderString")) // if there's no stored message available provide the default message:
+	if (!isset($_SESSION['HeaderString'])) // if there's no stored message available provide the default message:
 	{
 		if ($rowsFound == 1)
 			$HeaderString = " user found:";
@@ -194,29 +191,33 @@
 			$HeaderString = $HeaderString; // well, this is actually bad coding but I do it for clearity reasons...
 	}
 	else
-		session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
+	{
+		$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
+
+		// Note: though we clear the session variable, the current message is still available to this script via '$HeaderString':
+		deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+	}
 
 	// Now, show the login status:
 	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 	// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Manage Users", "noindex,nofollow", "Administration page that lists users of the " . htmlentities($officialDatabaseName) . ", with links for adding, editing or deleting any users", "", false, "");
-	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Manage Users", "noindex,nofollow", "Administration page that lists users of the " . htmlentities($officialDatabaseName) . ", with links for adding, editing or deleting any users", "", true, "", $viewType);
+	if ($viewType != "Print") // Note: we ommit the visible header in print view! ('viewType=Print')
+		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (4b) DISPLAY results:
-	showUsers($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $exportFormat, $showMaxRow); // show all users
+	showUsers($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $citeStyle, $showMaxRow, $viewType); // show all users
 
 	// ----------------------------------------------
 
 	// (5) CLOSE the database connection:
-	if (!(mysql_close($connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
+	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 	
 	// Display all users listed within the 'users' table
-	function showUsers($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $exportFormat, $showMaxRow)
+	function showUsers($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $citeStyle, $showMaxRow, $viewType)
 	{
 		global $connection;
 		global $HeaderString;
@@ -245,35 +246,42 @@
 			else
 				$NoColumns = (1+$fieldsToDisplay); // add checkbox column
 
-			// 2) Build a FORM & TABLE containing options to refine the search results as well as the diplayed columns
-			//    First, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
-			//    Since 'users.php' can be only called by the admin we simply specify all fields within the first variable...
-			$refineSearchSelectorElements1 = "first_name, last_name, title, institution, abbrev_institution, corporate_institution, address, address_line_1, address_line_2, address_line_3, zip_code, city, state, country, phone, email, url, keywords, notes, last_login, logins, user_id, marked, created_date, created_time, created_by, modified_date, modified_time, modified_by";
-			$refineSearchSelectorElements2 = ""; // ... and keep the second one blank (compare with 'search.php')
-			$refineSearchSelectorElementSelected = "last_name"; // this column will be selected by default
-			// Call the 'buildRefineSearchElements()' function (defined in 'include.inc.php') which does the actual work:
-			$RefineSearch = buildRefineSearchElements("users.php", $queryURL, $showQuery, $showLinks, $showRows, $NoColumns, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected);
-			echo $RefineSearch;
+			// Note: we ommit the 'Search Within Results' form in print view! ('viewType=Print')
+			if ($viewType != "Print")
+			{
+				// 2) Build a FORM & TABLE containing options to refine the search results as well as the diplayed columns
+				//    First, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
+				//    Since 'users.php' can be only called by the admin we simply specify all fields within the first variable...
+				$refineSearchSelectorElements1 = "first_name, last_name, title, institution, abbrev_institution, corporate_institution, address, address_line_1, address_line_2, address_line_3, zip_code, city, state, country, phone, email, url, keywords, notes, last_login, logins, user_id, marked, created_date, created_time, created_by, modified_date, modified_time, modified_by";
+				$refineSearchSelectorElements2 = ""; // ... and keep the second one blank (compare with 'search.php')
+				$refineSearchSelectorElementSelected = "last_name"; // this column will be selected by default
+				// Call the 'buildRefineSearchElements()' function (defined in 'include.inc.php') which does the actual work:
+				$RefineSearch = buildRefineSearchElements("users.php", $queryURL, $showQuery, $showLinks, $showRows, $NoColumns, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected);
+				echo $RefineSearch;
+			}
 
-			// Start a TABLE
-			echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays all users of this database\">";
 		
-			// Build a TABLE ROW with links for "previous" & "next" browsing, as well as links to intermediate pages
+			// Build a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages
 			// call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
-			$BrowseLinks = buildBrowseLinks("users.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "", "", "", "", ""); // Note: we set the last 3 fields ('$exportOrder', '$orderBy' & $headerMsg') to "" since they aren't (yet) required here
+			$BrowseLinks = buildBrowseLinks("users.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "", "", "", "", "", $viewType); // Note: we set the last 3 fields ('$citeOrder', '$orderBy' & $headerMsg') to "" since they aren't (yet) required here
 			echo $BrowseLinks;
 
-			//    and insert a spacer TABLE ROW:
-			echo "\n<tr align=\"center\">"
-//				. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>" // uncomment this line and comment the next one if you prefer white space (instead of a divider line)
-				. "\n\t<td colspan=\"$NoColumns\"><hr align=\"center\" width=\"100%\"></td>"
-				. "\n</tr>";
+			//    and insert a divider line (which separates the 'Search Within Results' form & browse links from the results data below):
+			echo "\n<hr align=\"center\" width=\"93%\">";
+
+
+			// Start a FORM
+			echo "\n<form action=\"users.php\" method=\"POST\" name=\"queryResults\">";
+
+			// And start a TABLE
+			echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays users of this database\">";
 
 			// For the column headers, start another TABLE ROW ...
 			echo "\n<tr>";
 	
 			// ... print a marker ('x') column (which will hold the checkboxes within the results part)
-			echo "\n\t<th align=\"left\" valign=\"top\">&nbsp;</th>";
+			if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
+				echo "\n\t<th align=\"left\" valign=\"top\">&nbsp;</th>";
 	
 			// for each of the attributes in the result set...
 			for ($i=0; $i<$fieldsToDisplay; $i++)
@@ -284,7 +292,7 @@
 				$HTMLafterLink = "</th>"; // close the table header tag
 				// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
 				// as well as the URL encoded query with the appropriate ORDER clause:
-				$tableHeaderLink = buildFieldNameLinks("users.php", $query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "", "", "");
+				$tableHeaderLink = buildFieldNameLinks("users.php", $query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "", "", "", $viewType);
 				echo $tableHeaderLink; // print the attribute name as link
 			 }
 	
@@ -296,7 +304,7 @@
 					$HTMLafterLink = "</th>"; // close the table header tag
 					// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
 					// as well as the URL encoded query with the appropriate ORDER clause:
-					$tableHeaderLink = buildFieldNameLinks("users.php", $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "", "Links", "user_id");
+					$tableHeaderLink = buildFieldNameLinks("users.php", $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "", "Links", "user_id", $viewType);
 					echo $tableHeaderLink; // print the attribute name as link
 				}
 	
@@ -311,7 +319,8 @@
 				echo "\n<tr>";
 	
 				// ... print a column with a checkbox
-				echo "\n\t<td align=\"left\" valign=\"top\" width=\"10\"><input type=\"checkbox\" name=\"marked[]\" value=\"" . $row["user_id"] . "\"></td>";
+				if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
+					echo "\n\t<td align=\"left\" valign=\"top\" width=\"10\"><input type=\"checkbox\" name=\"marked[]\" value=\"" . $row["user_id"] . "\"></td>";
 	
 				// ... and print out each of the attributes
 				// in that row as a separate TD (Table Data)
@@ -339,7 +348,7 @@
 					echo "\n\t\t<a href=\"user_details.php?userID=" . $row["user_id"]
 						. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit user\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
 	
-					$adminUserID = getUserID($adminLoginEmail, $connection); // ...get the admin's 'user_id' using his/her 'adminLoginEmail' (function 'getUserID()' is defined in 'include.inc.php')
+					$adminUserID = getUserID($adminLoginEmail); // ...get the admin's 'user_id' using his/her 'adminLoginEmail' (function 'getUserID()' is defined in 'include.inc.php')
 					if ($row["user_id"] != $adminUserID) // we only provide a delete link if this user isn't the admin:
 						echo "\n\t\t<a href=\"user_receipt.php?userID=" . $row["user_id"] . "&amp;userAction=Delete"
 							. "\"><img src=\"img/delete.gif\" alt=\"delete\" title=\"delete user\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
@@ -349,27 +358,30 @@
 				// Finish the row
 				echo "\n</tr>";
 			}
-
-			// BEGIN RESULTS FOOTER --------------------
-			// Insert a spacer TABLE ROW:
-			echo "\n<tr align=\"center\">"
-//				. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>" // uncomment this line and comment the next one if you prefer white space (instead of a divider line)
-				. "\n\t<td colspan=\"$NoColumns\"><hr align=\"center\" width=\"100%\"></td>"
-				. "\n</tr>";
-
-			// Again, insert the (already constructed) BROWSE LINKS
-			// (i.e., a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages)
-			echo $BrowseLinks;
-			// END RESULTS FOOTER ----------------------
-
 			// Then, finish the table
 			echo "\n</table>";
 			// END RESULTS DATA COLUMNS ----------------
+
+			// BEGIN RESULTS FOOTER --------------------
+			// Note: we ommit the results footer in print view! ('viewType=Print')
+			if ($viewType != "Print")
+			{
+				// Insert a divider line (which separates the results data from the results footer):
+				echo "\n<hr align=\"center\" width=\"93%\">";
+
+				// Again, insert the (already constructed) BROWSE LINKS
+				// (i.e., a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages)
+				echo $BrowseLinks;
+			}
+			// END RESULTS FOOTER ----------------------
+
+			// Finally, finish the form
+			echo "\n</form>";
 		}
 		else
 		{
 			// Report that nothing was found:
-			echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays all users of this database\">"
+			echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays users of this database\">"
 					. "\n<tr>"
 					. "\n\t<td valign=\"top\">Sorry, but your query didn't produce any results!&nbsp;&nbsp;<a href=\"javascript:history.back()\">Go Back</a></td>"
 					. "\n</tr>"
@@ -449,9 +461,11 @@
 
 	// DISPLAY THE HTML FOOTER:
 	// call the 'displayfooter()' function from 'footer.inc.php')
-	displayfooter("");
+	if ($viewType != "Print") // Note: we ommit the footer in print view! ('viewType=Print')
+		displayfooter("");
 
 	// --------------------------------------------------------------------
 ?>
+
 </body>
 </html>
