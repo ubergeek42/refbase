@@ -52,7 +52,7 @@
   function serialBranch($series_editor, $series_title, $abbrev_series_title,
                         $series_volume, $series_issue) {
     $series = new XMLBranch("relatedItem");
-    $series->setTagAttribute("type", "host");
+    $series->setTagAttribute("type", "series");
 
     // title
     if (!empty($series_title))
