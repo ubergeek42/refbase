@@ -62,13 +62,13 @@
   function separateNames($betweenNamesDelim, $nameGivenDelim,
                          $betweenGivensDelim, $names, $type, $role) {
     $nameArray = array();
-    $nameArray = split($betweenNamesDelim, $names); // get a list of all authors
+    $nameArray = preg_split($betweenNamesDelim, $names); // get a list of all authors
     foreach ($nameArray as $singleName){
       $nameBranch = new XMLBranch("name");
       $nameBranch->setTagAttribute("type", $type);
 
-      list($singleNameFamily, $singleNameGivens) = split($nameGivenDelim,
-                                                         $singleName);
+      list($singleNameFamily, $singleNameGivens) = preg_split($nameGivenDelim,
+                                                              $singleName);
 
       $nameFamilyBranch = new XMLBranch("namePart");
       $nameFamilyBranch->setTagAttribute("type", "family");
@@ -175,15 +175,15 @@
     if (!empty($row['author'])) {
       if (ereg(" *\(eds?\)$", $row['author'])) {
         $author = ereg_replace("[ \r\n]*\(eds?\)", "", $row['author']);
-        $nameArray = separateNames("; ", ", ", " ", $author, "personal",
+        $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $author, "personal",
                                    "editor");
       }
       else if ($row['type'] == "Map") {
-        $nameArray = separateNames("; ", ", ", " ", $row['author'], "personal",
+        $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $row['author'], "personal",
                                    "cartographer");
       }
       else {
-        $nameArray = separateNames("; ", ", ", " ", $row['author'], "personal",
+        $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $row['author'], "personal",
                                    "author");
       }
       foreach ($nameArray as $singleName) {
@@ -237,7 +237,7 @@
     if (!empty($row['abstract'])) {
       $abstract = new XMLBranch("abstract");
       $abstract->setTagContent($row['abstract']);
-      if (!empty($row['summary_languange'])) {
+      if (!empty($row['summary_language'])) {
         $abstract->setTagAttribute("lang", $row['summary_language']);
       }
       $record->addXMLBranch($abstract);
@@ -247,12 +247,12 @@
     //   keywords
     if (!empty($row['keywords'])) {
       $subjectArray = array();
-      $subjectArray = split("; ", $row['keywords']); // "unrealted" keywords
+      $subjectArray = preg_split("/\s*;\s*/", $row['keywords']); // "unrelated" keywords
       foreach ($subjectArray as $singleSubject) {
         $subjectBranch = new XMLBranch("subject");
 
         $topicArray = array();
-        $topicArray = split(", ", $singleSubject); // "related" keywords
+        $topicArray = preg_split("/\s*,\s*/", $singleSubject); // "related" keywords
         foreach ($topicArray as $singleTopic) {
           $topicBranch = new XMLBranch("topic");
           $topicBranch->setTagContent($singleTopic);
@@ -287,7 +287,13 @@
     //         This should also be parsed later
     if (!empty($row['location'])) {
       $location = new XMLBranch("location");
-      $location->setTagContent($row['location'], "location/physicalLocation");
+      $locationArray = array();
+      $locationArray = preg_split("/\s*;\s*/", $row['location']);
+      foreach ($locationArray as $singleLocation) {
+        $locationBranch = new XMLBranch("physicalLocation");
+        $locationBranch->setTagContent($singleLocation);
+        $location->addXMLBranch($locationBranch);
+      }
       $record->addXMLBranch($location);
     }
     //   URL (also an identifier)
@@ -322,10 +328,14 @@
     //   local--CALL NUMBER
     //   NOTE: This should really be parsed!
     if (!empty($row['call_number'])) {
-      $identifier = new XMLBranch("identifier");
-      $identifier->setTagContent($row['call_number']);
-      $identifier->setTagAttribute("type","local");
-      $record->addXMLBranch($identifier);
+      $identifierArray = array();
+      $identifierArray = preg_split("/\s*;\s*/", $row['call_number']);
+      foreach ($identifierArray as $singleIdentifier) {
+        $identifierBranch = new XMLBranch("identifier");
+        $identifierBranch->setTagContent($singleIdentifier);
+        $identifierBranch->setTagAttribute("type","local");
+        $record->addXMLBranch($identifierBranch);
+      }
     }
 
     // --- END TYPE * ---
@@ -362,9 +372,9 @@
       else if (!empty($row['type'])) { // catch-all: don't use a MARC genre
         $genre->setTagContent($row['type']);
       }
-      if ($genremarc->hasBranch())
+      if ($genremarc->hasLeaf())
         $record->addXMLBranch($genremarc);
-      if ($genre->hasBranch())
+      if ($genre->hasLeaf())
         $record->addXMLBranch($genre);
       //   thesis
       if (!empty($row['thesis'])) {
@@ -399,7 +409,7 @@
       // name
       //   editor
       if (!empty($row['editor']))
-        $nameArray = separateNames("; ", ", ", " ", $row['editor'], "personal",
+        $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $row['editor'], "personal",
                                    "editor");
     }
 
@@ -502,7 +512,7 @@
           $pages = new XMLBranch("extent");
           if (ereg("[0-9] *- *[0-9]", $row['pages'])) { // if a page range
             // split the page range into start and end pages
-            list($pagestart, $pageend) = split(' *[-] *', $row['pages']);
+            list($pagestart, $pageend) = preg_split('/\s*[-]\s*/', $row['pages']);
             if ($pagestart < $pageend) { // extents MUST span multiple pages
               $pages->setTagAttribute("unit", "page");
               $pages->setTagContent($pagestart, "extent/start");
@@ -540,7 +550,7 @@
       // name
       //   editor
       if (!empty($row['editor']))
-        $nameArray = separateNames("; ", ", ", " ", $row['editor'], "personal",
+        $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $row['editor'], "personal",
                                    "editor");
 
       $record->addXMLBranch($related);
