@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   26-Feb-05, 17:11
+	// Modified:   27-Feb-05, 13:26
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -505,7 +505,7 @@
 
 			// Get the user permissions for the newly created user
 			// and save all allowed user actions as semicolon-delimited string to the session variable 'user_permissions':
-			getPermissions($userID, "user"); // function 'getPermissions()' is defined in 'include.inc.php'
+			getPermissions($userID, "user", true); // function 'getPermissions()' is defined in 'include.inc.php'
 		}
 	}
 
