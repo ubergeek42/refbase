@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_options.php
 	// Created:    24-Oct-04, 19:31
-	// Modified:   01-Nov-04, 00:46
+	// Modified:   17-Feb-04, 20:19
 
 	// This script provides options which are individual for each user.
 	// 
@@ -135,7 +135,7 @@
 
 
 	// CONSTRUCT SQL QUERY:
-	$query = "SELECT first_name, last_name, email, language FROM users WHERE user_id = " . $userID;
+	$query = "SELECT first_name, last_name, email, language FROM $tableUsers WHERE user_id = " . $userID;
 
 	// (3a) RUN the query on the database through the connection:
 	$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
@@ -146,14 +146,14 @@
 	// If the admin is logged in AND the displayed user data are NOT his own, we overwrite the default header message:
 	// (Since the admin is allowed to view and edit account data from other users, we have to provide a dynamic header message in that case)
 	if (($loginEmail == $adminLoginEmail) && ($userID != getUserID($loginEmail))) // ('$adminLoginEmail' is specified in 'ini.inc.php')
-		$HeaderString = "Edit account options for <b>" . htmlentities($row["first_name"]) . " " . htmlentities($row["last_name"]) . " (" . $row["email"] . ")</b>:";
+		$HeaderString = "Edit account options for <b>" . encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . $row["email"] . ")</b>:";
 
 	// Show the login status:
 	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Options", "noindex,nofollow", "User options offered by the " . htmlentities($officialDatabaseName), "\n\t<meta http-equiv=\"expires\" content=\"0\">", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Options", "noindex,nofollow", "User options offered by the " . encodeHTML($officialDatabaseName), "\n\t<meta http-equiv=\"expires\" content=\"0\">", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// --------------------------------------------------------------------
