@@ -2,58 +2,30 @@ How to install?
 ---------------
 The following is just a (very) quick guide to installation:
 
-- You'll need an existing PHP and MySQL installation. If you require help
-  on installation of these packages please visit <http://www.php.net/>
-  and <http://www.mysql.com/>.
+- You'll need a web server and an existing PHP and MySQL installation.
+  If you require help on installation of these packages please visit
+  <http://httpd.apache.org/>, <http://www.php.net/> and
+  <http://www.mysql.com/>.
 
 - Move all files from within the 'files' directory to your web directory.
-
-- Currently, you'll need to edit your server config file in order to
-  safely setup refbase. If you are using the Apache web server, open
-  its 'httpd.conf' file and add something like the following in order
-  to prevent include files from getting served to remote users:
-
-  <Files ~ "*\.inc">
-      Order allow,deny
-      Deny from all
-  </Files>
-  
-  <Files ~ "*\.inc\.php">
-      Order allow,deny
-      Deny from all
-  </Files>
-
-  if you want to serve your refbase files from a separate directory
-  (lets assume its named 'refs') then you'll need to make this directory
-  available to your web server. Again, for Apache add something like the
-  following to your 'httpd.conf' file:
-  
-  Alias /refs/ "/PATH/TO/YOUR/DIRECTORY/"
-  
-  <Directory "/PATH/TO/YOUR/DIRECTORY">
-      Options Indexes MultiViews IncludesNoExec
-      AllowOverride None
-      Order allow,deny
-      Allow from all
-  </Directory>
-
-  You'll need to restart your server to apply the changes.
 
 - Open the file 'db.inc' in a text editor and edit the values of all
   contained variables to fit your needs. (Note that you'll be able to use
   the refbase package without modifying these variables, but we highly
-  recommend against using the default values!)
+  recommend not to use the default values!)
 
-- Now, open a web browser and access the 'install.php' script by typing
-  something like the following (again, lets assume you've named your
-  refbase root directory 'refs'):
+- Now, open a web browser and access the 'install.php' script by typing:
 
-    http://YOUR_SERVER_ADDRESS/refs/install.php
+    http://YOUR_SERVER_ADDRESS/PATH_ON_SERVER/install.php
 
-  This should bring up the installation form. Edit the contents of the
+   (where the string 'YOUR_SERVER_ADDRESS' is replaced by your server
+    name and 'PATH_ON_SERVER' is the actual path specification to your
+    web directory)
+
+  This should bring up the installation form. Edit the contents of all
   text entry fields to match your server setup and supply the MySQL
   admin password, then click the 'Install' button to install the
-  literature database.
+  database.
 
 
 
@@ -109,7 +81,8 @@ tables:
   (if not specified otherwise within the LOAD DATA statement).
 
 - The order of fields must resemble the field order specified in the
-  MySQL table 'refs'.
+  MySQL table 'refs'. Field information for table 'refs' is given at:
+  <http://sf.net/docman/display_doc.php?docid=13388&group_id=64647>
 
 - DATE format must be YYYY-MM-DD and TIME format must be HH:MM:SS.
 
