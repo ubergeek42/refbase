@@ -22,6 +22,7 @@
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
 	include 'initialize/ini.inc.php'; // include common variables
+  include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
@@ -33,7 +34,7 @@
 
 	// If there's no stored message available:
 	if (!isset($_SESSION['HeaderString']))
-		$HeaderString = "Welcome! This database provides access to " . htmlentities($scientificFieldDescriptor) . " literature."; // Provide the default welcome message
+		$HeaderString = $loc["Welcome"] ." ". $loc["ThisDatabase"] ." ". $loc["provides"] ." ". $loc["access to"] . htmlentities($scientificFieldDescriptor) ." ". $loc["Literature"]. "."; // Provide the default welcome message
 	else
 	{
 		$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
@@ -80,48 +81,49 @@
 
 <table align="center" border="0" cellpadding="2" cellspacing="5" width="90%" summary="This table explains features, goals and usage of the <? echo htmlentities($officialDatabaseName); ?>">
 	<tr>
-		<td colspan="2"><h3>Goals &amp; Features</h3></td>
+		<td colspan="2"><h3><?php echo $loc["Goals"]; ?> &amp; <?php echo $loc["Features"]; ?></h3></td>
 		<td width="163" valign="bottom"><?php
 if (!isset($_SESSION['loginEmail']))
 	{
-?><div class="header"><b>Login:</b></div><?php
+?><div class="header"><b><?php echo $loc["Login"]; ?>:</b></div><?php
 	}
 else
 	{
-?><div class="header"><b>Show My Refs:</b></div><?php
+?><div class="header"><b><?php echo $loc["Show"].$loc["MyRefs"]; ?>:</b></div><?php
 	}
 ?></td>
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
-		<td>This web database is an attempt to provide a comprehensive and platform-independent literature resource for scientists working in the field of <? echo htmlentities($scientificFieldDescriptor); ?> sciences.
+		<td><? echo $loc["ThisDatabaseAttempts"] . htmlentities($scientificFieldDescriptor); ?>.
 			<br>
 			<br>
-			This database offers:
+			<?php echo $loc["ThisDatabase"] ." ". $loc["provides"]; ?>
 			<ul type="circle">
-				<li>a comprehensive dataset on <? echo htmlentities($scientificFieldDescriptor); ?> literature<?php
+				<li>a comprehensive dataset on <? echo htmlentities($scientificFieldDescriptor)." ".$loc["Literature"]; 
 	// report the total number of records:
-	echo ", currently featuring " . $recordCount . " records";
-?></li>
-				<li>a clean &amp; standardized interface</li>
-				<li>a multitude of search options, including both, simple &amp; advanced as well as powerful SQL search options</li>
-				<li>various display, citation &amp; export options</li>
+	echo ", ". $loc["currently featuring"] . $recordCount . $loc["Records"];
+	?>
+	</li>
+	<?php echo $loc["ListOfFeatures"]; ?>
+
+				
 				<li><?php
 
 		// -------------------------------------------------------
 		if (isset($_SESSION['user_permissions']) AND ereg("(allow_import|allow_batch_import)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains either 'allow_import' or 'allow_batch_import'...
 		{
 		// ... include a link to 'import_csa.php':
-			?><a href="import_csa.php">import</a> <?php
+			echo "<a href=\"import_csa.php\">". $loc["Import"] ."</a>";
 		}
 		else
 		{
-			?>import <?php
+			echo $loc["Import"];
 		}
 
 		// -------------------------------------------------------
 
-			?>of full records from Cambridge Scientific Abstracts</li>
+			echo $loc["CSAImportLinkTitle"] . "</li>"; ?>
 			</ul>
 		</td>
 		<td width="163" valign="top">
