@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   02-Oct-04, 18:04
+	// Modified:   03-Oct-04, 22:57
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -232,7 +232,7 @@
 	//		 permissions that are required to access the literature database. This can be done by use of a GRANT statement:
 	//		 GRANT SELECT,INSERT,UPDATE,DELETE ON MYSQL_DATABASE_NAME_GOES_HERE.* TO MYSQL_USER_NAME_GOES_HERE@localhost IDENTIFIED BY 'MYSQL_PASSWORD_GOES_HERE';
 
-	// if the sql query isn't build from scratch but is accepted from user input (which is the case for the forms 'sqlSearch' and 'refineSearch'):
+	// if the SQL query isn't build from scratch but is accepted from user input (which is the case for the forms 'sqlSearch' and 'refineSearch'):
 	if (eregi("(sql|refine)Search", $formType)) // the user used 'sql_search.php' -OR- the "Search within Results" form above the query results list (that was produced by 'search.php')
 	{
 		if ((!isset($loginEmail)) OR ((isset($loginEmail)) AND ($loginEmail != $adminLoginEmail))) // if the user isn't logged in -OR- any normal user is logged in...
@@ -246,15 +246,15 @@
 				// save an appropriate error message:
 				$HeaderString = "<b><span class=\"warning\">You're only permitted to execute SELECT queries!</span></b>";
 			}
-			// ...or the user tries to query anything other than the 'refs' or 'user_data' table:
-			elseif (!preg_match("/FROM refs( LEFT JOIN user_data ON serial ?= ?record_id AND user_id ?= ?\d*)?(?= WHERE| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i", $sqlQuery))
+			// ...or the user tries to hack the SQL query (by providing the string "FROM refs" within the SELECT statement) -OR- if the user attempts to query anything other than the 'refs' or 'user_data' table:
+			elseif ((preg_match("/FROM refs.+ FROM /i", $sqlQuery)) OR (!preg_match("/FROM refs( LEFT JOIN user_data ON serial ?= ?record_id AND user_id ?= ?\d*)?(?= WHERE| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i", $sqlQuery)))
 			{
 				$notPermitted = true;
 				// save an appropriate error message:
 				$HeaderString = "<b><span class=\"warning\">You have no permission to perform this query!</span></b>";
 			}
 
-			if ($notPermitted == true)
+			if ($notPermitted)
 			{
 				// Write back session variable:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -354,7 +354,7 @@
 	// this is to support the '$fileVisibilityException' feature from 'ini.inc.php':
 	if (!preg_match("/SELECT.+$fileVisibilityException[0].+FROM/i", $query))
 	{
-		$query = ereg_replace("(, orig_record)?(, serial)?(, file, url, doi)? FROM refs", ", $fileVisibilityException[0]\\1\\2\\3 FROM refs",$query); // add column that's given in '$fileVisibilityException'
+		$query = eregi_replace("(, orig_record)?(, serial)?(, file, url, doi)? FROM refs", ", $fileVisibilityException[0]\\1\\2\\3 FROM refs",$query); // add column that's given in '$fileVisibilityException'
 		$addCounterMax = 1; // this will ensure that the added column won't get displayed within the 'displayColumns()' function
 	}
 	else
@@ -369,16 +369,16 @@
 	// (4a) DISPLAY header:
 	// First, build the appropriate SQL query in order to embed it into the 'your query' URL:
 	if ($showLinks == "1")
-		$query = str_replace(', file, url, doi FROM refs',' FROM refs',$query); // strip 'file', 'url' & 'doi' columns from SQL query
+		$query = eregi_replace(', file, url, doi FROM refs',' FROM refs',$query); // strip 'file', 'url' & 'doi' columns from SQL query
 
-	$query = str_replace(', serial FROM refs',' FROM refs',$query); // strip 'serial' column from SQL query
+	$query = eregi_replace(', serial FROM refs',' FROM refs',$query); // strip 'serial' column from SQL query
 
-	$query = str_replace(', orig_record FROM refs',' FROM refs',$query); // strip 'orig_record' column from SQL query
+	$query = eregi_replace(', orig_record FROM refs',' FROM refs',$query); // strip 'orig_record' column from SQL query
 
-	$query = str_replace(", $fileVisibilityException[0] FROM refs",' FROM refs',$query); // strip column that's given in '$fileVisibilityException' (defined in 'ini.inc.php')
+	$query = eregi_replace(", $fileVisibilityException[0] FROM refs",' FROM refs',$query); // strip column that's given in '$fileVisibilityException' (defined in 'ini.inc.php')
 
 	if (ereg("(simple|advanced|library|quick)Search", $formType)) // if $formType is "simpleSearch", "advancedSearch", "librarySearch" or "quickSearch" and there is more than one WHERE clause (indicated by '...AND...'):
-		$query = str_replace('WHERE serial RLIKE ".+" AND','WHERE',$query); // strip first WHERE clause (which was added only due to an internal workaround)
+		$query = eregi_replace('WHERE serial RLIKE ".+" AND','WHERE',$query); // strip first WHERE clause (which was added only due to an internal workaround)
 
 	$queryURL = rawurlencode($query); // URL encode SQL query
 
@@ -491,7 +491,7 @@
 				if (isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_rss_feeds', we'll show a link that will generate a dynamic RSS feed for the current query...
 				{
 					// ...extract the 'WHERE' clause from the SQL query to include it within the RSS link:
-					$queryWhereClause = preg_replace("/^.+?WHERE (.+?)(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$).*?$/","\\1",$query);
+					$queryWhereClause = preg_replace("/^.+?WHERE (.+?)(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$).*?$/i","\\1",$query);
 				
 					// ...and display a link that will generate a dynamic RSS feed for the current query:
 					$HeaderString .= "<a href=\"rss.php?where=" . rawurlencode($queryWhereClause) . "&amp;showRows=$showRows\" title=\"track newly added records matching your current query by subscribing to this RSS feed\">track</a>";
@@ -571,9 +571,9 @@
 		global $fileVisibilityException; // defined in 'ini.inc.php'
 
 		if (eregi(".+LIMIT *[0-9]+",$query)) // query does contain the 'LIMIT' parameter
-			$orderBy = ereg_replace(".+ORDER BY (.+) LIMIT.+","\\1",$query); // extract 'ORDER BY'... parameter (without including any 'LIMIT' parameter)
+			$orderBy = eregi_replace(".+ORDER BY (.+) LIMIT.+","\\1",$query); // extract 'ORDER BY'... parameter (without including any 'LIMIT' parameter)
 		else // query does not contain the 'LIMIT' parameter
-			$orderBy = ereg_replace(".+ORDER BY (.+)","\\1",$query); // extract 'ORDER BY'... parameter
+			$orderBy = eregi_replace(".+ORDER BY (.+)","\\1",$query); // extract 'ORDER BY'... parameter
 			
 	if (!ereg("^(Add|Remove)$", $displayType) OR (ereg("^(Add|Remove)$", $displayType) AND ($nothingChecked == false)))
 	{
@@ -1664,7 +1664,7 @@
 			$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
 
 		// Finally, fix the wrong syntax where its says "SELECT, author, title, ..." instead of "SELECT author, title, ..."
-		$query = str_replace("SELECT, ","SELECT ",$query);
+		$query = eregi_replace("SELECT, ","SELECT ",$query);
 
 		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'bibtex_id' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
 		$query .= " FROM refs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
@@ -1973,7 +1973,7 @@
 			$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
 
 		// Finally, fix the wrong syntax where its says "SELECT, author, title, ..." instead of "SELECT author, title, ..."
-		$query = str_replace("SELECT, ","SELECT ",$query);
+		$query = eregi_replace("SELECT, ","SELECT ",$query);
 
 		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'bibtex_id' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
 		$query .= " FROM refs WHERE serial RLIKE \".+\" AND location RLIKE \"IPÖ Library\""; // add FROM & (initial) WHERE clause
@@ -2716,7 +2716,7 @@
 			$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
 
 		// Finally, fix the wrong syntax where its says "SELECT, author, title, ..." instead of "SELECT author, title, ..."
-		$query = str_replace("SELECT, ","SELECT ",$query);
+		$query = eregi_replace("SELECT, ","SELECT ",$query);
 
 		if (isset($_SESSION['loginEmail'])) // if a user is logged in...
 			$query .= " FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = " . $userID . " WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
@@ -4145,11 +4145,11 @@
 
 		// Since the sort popup menus use empty fields as delimiters between groups of fields
 		// we'll have to trap the case that the user hasn't chosen any field names for sorting:
-		if (ereg("ORDER BY $", $query))
+		if (eregi("ORDER BY $", $query))
 			$query .= "author, year DESC, publication"; // use the default ORDER BY clause
 
 		// Finally, fix the wrong syntax where its says "ORDER BY, author, title, ..." instead of "ORDER BY author, title, ...":
-		$query = str_replace("ORDER BY , ","ORDER BY ",$query);
+		$query = eregi_replace("ORDER BY , ","ORDER BY ",$query);
 
 
 		return $query;
@@ -4179,19 +4179,19 @@
 					{
 						// for the fields 'marked=no', 'copy=false' and 'selected=no', force NULL values to be matched:
 						if (($fieldSelector == "marked" AND $refineSearchName == "no") OR ($fieldSelector == "copy" AND $refineSearchName == "false") OR ($fieldSelector == "selected" AND $refineSearchName == "no"))
-							$query = str_replace("WHERE","WHERE ($fieldSelector RLIKE \"$refineSearchName\" OR $fieldSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
+							$query = eregi_replace("WHERE","WHERE ($fieldSelector RLIKE \"$refineSearchName\" OR $fieldSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
 						else // add default 'WHERE' clause:
-							$query = str_replace("WHERE","WHERE $fieldSelector RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
+							$query = eregi_replace("WHERE","WHERE $fieldSelector RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
 					}
 				else // $refineSearchActionCheckbox == "1" // if the user marked the checkbox next to "Exclude matches"
 					{
 						// for the fields 'marked=yes', 'copy!=false' and 'selected=yes', force NULL values to be excluded:
 						if (($fieldSelector == "marked" AND $refineSearchName == "yes") OR ($fieldSelector == "copy" AND $refineSearchName != "false") OR ($fieldSelector == "selected" AND $refineSearchName == "yes"))
-							$query = str_replace("WHERE","WHERE ($fieldSelector NOT RLIKE \"$refineSearchName\" OR $fieldSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
+							$query = eregi_replace("WHERE","WHERE ($fieldSelector NOT RLIKE \"$refineSearchName\" OR $fieldSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
 						else // add default 'WHERE' clause:
-							$query = str_replace("WHERE","WHERE $fieldSelector NOT RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
+							$query = eregi_replace("WHERE","WHERE $fieldSelector NOT RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
 					}
-				$query = str_replace(' AND serial RLIKE ".+"','',$query); // remove any 'AND serial RLIKE ".+"' which isn't required anymore
+				$query = eregi_replace(' AND serial RLIKE ".+"','',$query); // remove any 'AND serial RLIKE ".+"' which isn't required anymore
 			}
 			// else, if the user did NOT type a search string into the text entry field, we simply keep the old WHERE clause...
 		}
@@ -4204,17 +4204,17 @@
 
 			if ($displayType == "Show") // if the user clicked the 'Show' button...
 				{
-					if (!preg_match("/SELECT.*\W$fieldSelector\W.*FROM refs/", $query)) // ...and the field is *not* already displayed...
-						$query = str_replace(" FROM refs",", $fieldSelector FROM refs",$query); // ...then SHOW the field that was used for refining the search results
+					if (!preg_match("/SELECT.*\W$fieldSelector\W.*FROM refs/i", $query)) // ...and the field is *not* already displayed...
+						$query = eregi_replace(" FROM refs",", $fieldSelector FROM refs",$query); // ...then SHOW the field that was used for refining the search results
 				}
 			elseif ($displayType == "Hide") // if the user clicked the 'Hide' button...
 				{
-					if (preg_match("/SELECT.*\W$fieldSelector\W.*FROM refs/", $query)) // ...and the field *is* currently displayed...
+					if (preg_match("/SELECT.*\W$fieldSelector\W.*FROM refs/i", $query)) // ...and the field *is* currently displayed...
 					{
 						// for all columns except the first:
-						$query = preg_replace("/(SELECT.+?), $fieldSelector( .*FROM refs)/","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
+						$query = preg_replace("/(SELECT.+?), $fieldSelector( .*FROM refs)/i","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
 						// for all columns except the last:
-						$query = preg_replace("/(SELECT.*? )$fieldSelector, (.+FROM refs)/","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
+						$query = preg_replace("/(SELECT.*? )$fieldSelector, (.+FROM refs)/i","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
 					}
 				}
 		}
@@ -4224,17 +4224,17 @@
 
 		// if the chosen field is one of the user specific fields from table 'user_data': 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'bibtex_id' or 'related'
 		if (ereg("^(marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)$", $fieldSelector))
-			if (ereg("LEFT JOIN user_data", $query) != true) // ...and if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
-				$query = str_replace(" FROM refs"," FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = $userID",$query); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
+			if (!eregi("LEFT JOIN user_data", $query)) // ...and if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
+				$query = eregi_replace(" FROM refs"," FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = $userID",$query); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
 
-		$query = str_replace(' FROM refs',', orig_record FROM refs',$query); // add 'orig_record' column (although it won't be visible the 'orig_record' column gets included in every search query)
+		$query = eregi_replace(' FROM refs',', orig_record FROM refs',$query); // add 'orig_record' column (although it won't be visible the 'orig_record' column gets included in every search query)
 																				// (which is required in order to present visual feedback on duplicate records)
 
-		$query = str_replace(' FROM refs',', serial FROM refs',$query); // add 'serial' column (although it won't be visible the 'serial' column gets included in every search query)
+		$query = eregi_replace(' FROM refs',', serial FROM refs',$query); // add 'serial' column (although it won't be visible the 'serial' column gets included in every search query)
 																		// (which is required in order to obtain unique checkbox names)
 
 		if ($showLinks == "1")
-			$query = str_replace(' FROM refs',', file, url, doi FROM refs',$query); // add 'file', 'url' & 'doi' columns
+			$query = eregi_replace(' FROM refs',', file, url, doi FROM refs',$query); // add 'file', 'url' & 'doi' columns
 
 
 		return $query;
@@ -4314,11 +4314,11 @@
 
 
 				// re-apply the current sqlQuery:
-				$query = str_replace(' FROM refs',', orig_record FROM refs',$sqlQuery); // add 'orig_record' column (which is required in order to present visual feedback on duplicate records)
-				$query = str_replace(' FROM refs',', serial FROM refs',$query); // add 'serial' column (which is required in order to obtain unique checkbox names)
+				$query = eregi_replace(' FROM refs',', orig_record FROM refs',$sqlQuery); // add 'orig_record' column (which is required in order to present visual feedback on duplicate records)
+				$query = eregi_replace(' FROM refs',', serial FROM refs',$query); // add 'serial' column (which is required in order to obtain unique checkbox names)
 		
 				if ($showLinks == "1")
-					$query = str_replace(' FROM refs',', file, url, doi FROM refs',$query); // add 'file', 'url' & 'doi' columns
+					$query = eregi_replace(' FROM refs',', file, url, doi FROM refs',$query); // add 'file', 'url' & 'doi' columns
 			}
 
 		return $query;
@@ -4397,7 +4397,7 @@
 	function extractFormElementsGroup($sqlQuery, $showLinks, $userID)
 	{
 		if (!empty($sqlQuery)) // if there's a previous SQL query available (as is the case if the group search originated from a search results page - and not from the main page 'index.php')
-			$query = preg_replace("/(SELECT .+?) FROM refs.+/", "\\1", $sqlQuery); // use the custom set of colums chosen by the user
+			$query = preg_replace("/(SELECT .+?) FROM refs.+/i", "\\1", $sqlQuery); // use the custom set of colums chosen by the user
 		else
 			$query = "SELECT author, title, year, publication, volume, pages, user_groups"; // use the default SELECT statement
 
@@ -4592,7 +4592,7 @@
 	{
 		$nothingFoundFeedback = "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the database results for your query\">";
 
-		if ($nothingChecked == true)
+		if ($nothingChecked)
 			// Inform the user that no records were selected:
 			$nothingFoundFeedback .= "\n<tr>\n\t<td valign=\"top\">No records selected! Please select one or more records by clicking the appropriate checkboxes.&nbsp;&nbsp;<a href=\"javascript:history.back()\">Go Back</a></td>\n</tr>";
 		else // $nothingChecked == false (i.e., the user did check some checkboxes) -OR- the query resulted from another script like 'show.php' (which has no checkboxes to mark!)
