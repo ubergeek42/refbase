@@ -21,6 +21,7 @@
 	include 'header.inc'; // include header
 	include 'footer.inc'; // include footer
 	include 'include.inc'; // include common functions
+	include "ini.inc.php"; // include common variables
 
 	// --------------------------------------------------------------------
 
@@ -56,7 +57,7 @@
 
 	// (4a) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
-	displayHTMLhead("IP&Ouml; Literature Database -- Error", "noindex,nofollow", "Feedback page that shows any error that occurred while using the IP&Ouml; Literature Database", "", false, "");
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Error", "noindex,nofollow", "Feedback page that shows any error that occurred while using the " . htmlentities($officialDatabaseName), "", false, "");
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
 
 
@@ -77,7 +78,7 @@
 				. "\n\t\t<a href=\"search.php?" . $oldQueryPartlyEncoded . "\">Display previous search results</a>";
 
 	$links .= "\n\t\t&nbsp;&nbsp;-OR-&nbsp;&nbsp;"
-			. "\n\t\t<a href=\"index.php\">Goto Literature Database Home</a>" // we include the link to the home page here
+			. "\n\t\t<a href=\"index.php\">Goto " . htmlentities($officialDatabaseName) . " Home</a>" // we include the link to the home page here
 			. "\n\t</td>"
 			. "\n</tr>";
 
@@ -89,6 +90,10 @@
 	function showErrorMessage($errorNo, $errorMsg, $links)
 	// includes code from 'footer.inc'
 	{
+		global $officialDatabaseName;
+		global $hostInstitutionAbbrevName;
+		global $hostInstitutionURL;
+
 		die("\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\">\n<tr>\n\t<td valign=\"top\"> Error "
 		. $errorNo . " : <b>" . $errorMsg . "</b>"
 		. "</td>\n</tr>"
@@ -96,7 +101,7 @@
 		. "\n</table>"
 		. "\n<hr align=\"center\" width=\"95%\">"
 		. "\n<p align=\"center\"><a href=\"simple_search.php\">Simple Search</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"advanced_search.php\">Advanced Search</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"sql_search.php\">SQL Search</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"library_search.php\">Library Search</a></p>"
-		. "\n<p align=\"center\"><a href=\"http://www.uni-kiel.de/ipoe/\">IP&Ouml; Home</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"index.php\">Literature Database Home</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"record.php\">Add Record</a></p>"
+		. "\n<p align=\"center\"><a href=\"$hostInstitutionURL\">" . htmlentities($hostInstitutionAbbrevName) . " Home</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"index.php\">" . htmlentities($officialDatabaseName) . " Home</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"record.php\">Add Record</a></p>"
 		. "\n<p align=\"center\">"
 		.  date(r)
 		. "</p>"

@@ -20,6 +20,7 @@
 	include 'header.inc'; // include header
 	include 'footer.inc'; // include footer
 	include 'include.inc'; // include common functions
+	include "ini.inc.php"; // include common variables
 	
 	// --------------------------------------------------------------------
 
@@ -41,7 +42,7 @@
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
-	displayHTMLhead("IP&Ouml; Literature Database -- Extract Cited Literature", "index,follow", "Search the IP&Ouml; Literature Database", "", false, "");
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Extract Cited Literature", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "");
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
 
 	// (2b) Start <form> and <table> holding the form elements:

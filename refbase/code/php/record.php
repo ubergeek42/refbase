@@ -21,6 +21,7 @@
 	include 'header.inc'; // include header
 	include 'footer.inc'; // include footer
 	include 'include.inc'; // include common functions
+	include "ini.inc.php"; // include common variables
 
 	// --------------------------------------------------------------------
 
@@ -198,7 +199,7 @@
 
 	// (4a) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
-	displayHTMLhead("IP&Ouml; Literature Database -- " . $pageTitle, "index,follow", "Add, edit or delete a record in the IP&Ouml; Literature Database", "", false, "confirmDelete.js");
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- " . $pageTitle, "index,follow", "Add, edit or delete a record in the " . htmlentities($officialDatabaseName), "", false, "confirmDelete.js");
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
 
 	// (4b) DISPLAY results:
