@@ -2,9 +2,139 @@ Version history
 ===============
 
 This file presents a summary of the main fixes and enhancements.
-Please see the cvs entries for a more detailed change history:
+Please see the ChangeLog file or the cvs entries on SourceForge
+for a more detailed change history:
 
   <http://cvs.sourceforge.net/viewcvs.py/refbase/refbase/>
+
+
+refbase-0.8
+-----------
+[xx-xxx-2005]
+
+  Feature additions
+-------------------
+
+- User-specific permissions: The admin can now assign access rights
+  individually for each user. Permission settings are provided for
+  basic actions like add/edit/delete records or file upload/download
+  as well as other features like import, export or cite.
+
+- Export to MODS XML: refbase can output records in MODS format, an
+  upcoming bibliographic XML standard developed by the Library of
+  Congress (<http://www.loc.gov/standards/mods/>).
+
+- Export to Endnote/Bibtex/RIS: refbase supports export of records
+  to common bibliographic formats by use of the bibutils utilities
+  (<http://www.scripps.edu/~cdputnam/software/bibutils/>).
+
+- Unicode support: You can now set the default character set to
+  'utf8' (Unicode) when installing refbase on MySQL 4.1.x or greater.
+  This provides support for double-byte languages.
+
+- RSS support: Users can now track queries using RSS, i.e. users are
+  able to convert any query into a dynamic RSS feed and subscribe to
+  it using their favourite news aggregator. The feed will display all
+  newly added records matching the users query.
+
+- User-specific groups: Users can now add records to user-specific
+  groups. A popup menu on the main page (or any search results list)
+  provides quick access to all records belonging to a particular
+  group.
+
+- Saved queries: It is now possible to permanently save any search
+  query together with the current display settings. Saved queries can
+  be easily recalled or edited from the main page.
+
+- User- and criteria-specific file downloads: Download links can be
+  made available to either everyone, logged-in users only or on a
+  user-specific basis. In addition, you can optionally specify a
+  condition where files will be always made visible.
+
+- Print view: Added a print-friendly view which eases printing or
+  copying of records.
+
+- User-specific cite keys: The new user-specific field "Cite Key"
+  allows users to specify a custom identifier for each record.
+  Cite keys will be supported in export formats (MODS XML & Bibtex)
+  and text citations as well as when generating reference lists.
+
+- Link records: A new user-specific field ("Related") enables users
+  to link records to other records in the database. Links can be
+  either static (by explicitly linking to particular record serials)
+  or dynamic (by entering queries like "author:lee; title:ecosystem").
+
+- The admin interface now allows to group particular database users.
+
+- Reference types, citation styles and export formats can be
+  enabled/disabled by the admin for each user individually. The user,
+  in turn, can choose which of the enabled types/styles/formats shall
+  be visible.
+
+- Started localization: Provided core structure to support web
+  interfaces in different languages. Note that the localization
+  feature isn't finished nor functional yet and will be available in
+  a future release.
+
+
+  Changes
+---------
+
+- The MySQL database used by refbase has undergone some significant
+  changes. Please use the 'update.php' script to update any existing
+  refbase MySQL database.
+
+- refbase will now work independent of the 'register_globals' setting
+  in your PHP configuration file 'php.ini'.
+
+- Links to particular pages/features will be only made visible if the
+  user has appropriate access rights.
+
+- Re-designed the "Search within Results" form.
+
+- Users can now choose on every search results page which fields and
+  how many records shall be displayed.
+
+- Logged-in users can now use user-specific cite keys (instead of
+  serial numbers) as record identifiers when generating a reference
+  list using 'extract.php'.
+
+- Citation style and export format definitions now reside in
+  individual files (within the 'cite/' and 'export/' sub-directories,
+  respectively) and are managed via MySQL tables. This enables users
+  to develop custom styles and/or formats.
+
+- Added support for fields 'keywords', 'notes', 'marked' and
+  'language' within the admin interface.
+
+- Custom CSS style sheets can be specified within 'ini.inc.php' to
+  change the visual appearance of the served web pages.
+
+- You can now define (in 'ini.inc.php') what will be searched by
+  script 'library_search.php'.
+
+- Added variables to the database configuration file ('db.inc.php')
+  which allow to use custom names for the refbase MySQL tables.
+
+- Renamed the v0.7 'Export' feature to 'Cite' to better reflect its
+  purpose and to make room for the new export capabilities.
+
+- Include files and configuration files were moved to separate
+  sub-directories.
+
+- refbase now tries harder to prevent a malicious user from hacking
+  the database by use of a custom SQL query.
+
+- A lot of internal code re-structuring...
+
+
+  Bug fixes
+-----------
+
+- When adding records, entered values will be reloaded correctly if
+  an error occurs.
+
+
 
 
 refbase-0.7
@@ -210,7 +340,7 @@ working examples of refbase please visit:
 --
 project:  Web Reference Database (refbase) <http://www.refbase.net/>
 package:  refbase
-release:  0.7
-updated:  11-Jan-2004
+release:  0.8
+updated:  xx-xxx-2005
 contact:  Matthias Steffens <mailto:refbase@extracts.de>
 license:  GNU General Public License (GPL)
