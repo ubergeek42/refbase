@@ -1125,10 +1125,73 @@
 			// --- END DEEP SEA RES -----------------------------
 
 			// --- BEGIN TEXT CITATION --------------------------
-			if (ereg("Text Citation", $exportFormat)) // output records suitable for citation within a text, like: "Ambrose 1991 {3735}", "Ambrose & Renaud 1995 {3243}" or "Ambrose et al. 2001 {4774}"
+			elseif ($exportFormat == "Text Citation") // output records suitable for citation within a text, like: "Ambrose 1991 {3735}", "Ambrose & Renaud 1995 {3243}" or "Ambrose et al. 2001 {4774}"
 				{
+				// currently the following parameters are not available via the GUI but are provided as fixed values here:
+				$authorConnector = " & "; // string that connects first and second author (if author_count = 2)
+				$etalPrintItalic = true; // specifies if "et al" should be either printed in italic (true) or as regular text (false)
+				$etalWithDot = true; // specifies whether "et al" is followed by a dot (true) or not (false)
+				$yearWithBrackets = false; // specifies whether the year is enclosed by a brackets (true) or not (false)
+				$recordIDStartDelimiter = "{"; // specifies the string that prefixes the record id
+				$recordIDEndDelimiter = "}"; // specifies the string that suffixes the record id
+				
+				// Call the 'reArrangeAuthorContents()' function in order to re-order contents of the author field. Required Parameters:
+				//   1. pattern describing delimiter that separates different authors
+				//   2. pattern describing delimiter that separates author name & initials (within one author)
+				//   3. position of the author whose last name shall be extracted (e.g., "1" will return the 1st author's last name)
+				//   4. contents of the author field
+				$record = extractAuthorsLastName(" *; *",
+													" *, *",
+													1,
+													$row[author]);
+
+				if ($row[author_count] == "1") // one author, like: "Ambrose 1991 {3735}"
+					if ($yearWithBrackets)
+						$record .= " (" . $row[year] . ") " . $recordIDStartDelimiter . $row[serial] . $recordIDEndDelimiter;
+					else
+						$record .= " " . $row[year] . " " . $recordIDStartDelimiter . $row[serial] . $recordIDEndDelimiter;
 
 
+				elseif ($row[author_count] == "2") // two authors, like "Ambrose & Renaud 1995 {3243}"
+					{
+						$record .= $authorConnector;
+	
+						// Call the 'reArrangeAuthorContents()' function in order to re-order contents of the author field. Required Parameters:
+						//   1. pattern describing delimiter that separates different authors
+						//   2. pattern describing delimiter that separates author name & initials (within one author)
+						//   3. position of the author whose last name shall be extracted (e.g., "1" will return the 1st author's last name)
+						//   4. contents of the author field
+						$record .= extractAuthorsLastName(" *; *",
+															" *, *",
+															2,
+															$row[author]);
+	
+						if ($yearWithBrackets)
+							$record .= " (" . $row[year] . ") " . $recordIDStartDelimiter . $row[serial] . $recordIDEndDelimiter;
+						else
+							$record .= " " . $row[year] . " " . $recordIDStartDelimiter . $row[serial] . $recordIDEndDelimiter;
+					}
+
+				elseif ($row[author_count] == "3") // three or more authors, like "Ambrose et al. 2001 {4774}"
+					{
+						$record .= " ";
+
+						if ($etalPrintItalic)
+							$record .= "<i>";
+	
+						$record .= "et al";
+	
+						if ($etalWithDot)
+							$record .= ".";
+	
+						if ($etalPrintItalic)
+							$record .= "</i>";
+	
+						if ($yearWithBrackets)
+							$record .= " (" . $row[year] . ") " . $recordIDStartDelimiter . $row[serial] . $recordIDEndDelimiter;
+						else
+							$record .= " " . $row[year] . " " . $recordIDStartDelimiter . $row[serial] . $recordIDEndDelimiter;
+					}
 				}
 			// --- END TEXT CITATION ----------------------------
 
@@ -1228,6 +1291,26 @@
 		$newAuthorContents = preg_replace("/ +([,.;:?!])/", "\\1", $newAuthorContents); // remove spaces before [,.;:?!]
 
 		return $newAuthorContents;
+	}
+
+	// --------------------------------------------------------------------
+
+	// EXTRACT AUTHOR'S LAST NAME
+	// this function takes the contents of the author field and will extract the last name of a particular author (specified by position)
+	// (e.g., setting '$authorPosition' to "1" will return the 1st author's last name)
+	//  Note: this function assumes that:
+	//			1. within one author object, there's only *one* delimiter separating author name & initials!
+	//			2. author objects are stored in the db as "<author_name><author_initials_delimiter><author_initials>", i.e., initials follow *after* the author's name!
+	function extractAuthorsLastName($oldBetweenAuthorsDelim, $oldAuthorsInitialsDelim, $authorPosition, $authorContents)
+	{
+		$authorsArray = split($oldBetweenAuthorsDelim, $authorContents); // get a list of all authors for this record
+
+		$authorPosition = ($authorPosition-1); // php array elements start with "0", so we decrease the authors position by 1
+		$singleAuthor = $authorsArray[$authorPosition]; // for the author in question, extract the full author name (last name & initials)
+		$singleAuthorArray = split($oldAuthorsInitialsDelim, $singleAuthor); // then, extract author name & initials to separate list items
+		$singleAuthorsLastName = $singleAuthorArray[0]; // extract this author's last name into a new variable
+
+		return $singleAuthorsLastName;
 	}
 
 	// --------------------------------------------------------------------
@@ -3685,7 +3768,7 @@
 		// Depending on the chosen output format, construct an appropriate SQL query:
 		if ($displayType == "Export")
 			{
-				$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, first_author, author_count FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY first_author, author_count, author, year, title";
+				$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, serial FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY first_author, author_count, author, year, title";
 			}
 		else // $displayType == "Display" (hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
 			{
@@ -3722,7 +3805,7 @@
 		$recordSerialsString = preg_replace("/\D+$/s", "", $recordSerialsString); // remove any trailing non-digit chars (like \n or "|") at end of line
 
 		// Construct the SQL query:
-		$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY first_author, author_count, author, year, title";
+		$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, serial FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY first_author, author_count, author, year, title";
 
 
 		return $query;
