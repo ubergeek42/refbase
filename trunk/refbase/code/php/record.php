@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./record.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   03-Oct-04, 21:27
+	// Modified:   12-Oct-04, 14:06
 
 	// Form that offers to add
 	// records or edit/delete
@@ -17,11 +17,11 @@
 	*/
 
 	// Incorporate some include files:
-	include 'db.inc.php'; // 'db.inc.php' is included to hide username and password
-	include 'header.inc.php'; // include header
-	include 'footer.inc.php'; // include footer
-	include 'include.inc.php'; // include common functions
-	include "ini.inc.php"; // include common variables
+	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
+	include 'includes/header.inc.php'; // include header
+	include 'includes/footer.inc.php'; // include footer
+	include 'includes/include.inc.php'; // include common functions
+	include 'initialize/ini.inc.php'; // include common variables
 
 	// --------------------------------------------------------------------
 
@@ -146,7 +146,7 @@
 	{
 		$loginEmailArray = split("@", $loginEmail); // split the login email address at '@'
 		$loginEmailUserName = $loginEmailArray[0]; // extract the user name (which is the first element of the array '$loginEmailArray')
-		$callNumberPrefix = $abbrevInstitution . " @ " . $loginEmailUserName; // we make use of the session variable '$abbrevInstitution' to construct a correct call number prefix, like: 'IP… @ msteffens'
+		$callNumberPrefix = $abbrevInstitution . " @ " . $loginEmailUserName; // we make use of the session variable '$abbrevInstitution' to construct a correct call number prefix, like: 'IPÖ @ msteffens'
 	}
 
 	// --------------------------------------------------------------------
@@ -687,7 +687,7 @@
 
 	// (4a) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- " . $pageTitle, "index,follow", "Add, edit or delete a record in the " . htmlentities($officialDatabaseName), "", false, "confirmDelete.js", $viewType);
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- " . $pageTitle, "index,follow", "Add, edit or delete a record in the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
 
 	// (4b) DISPLAY results:
@@ -755,12 +755,12 @@
 			. "\n\t<td width=\"74\" class=\"mainfieldsbg\"><b>Type</b></td>";
 
 	if (!isset($_SESSION['user_types']))
-		$exportTypeDisabled = " disabled"; // disable the type popup if the session variable holding the user's types isn't available
+		$documentTypeDisabled = " disabled"; // disable the type popup if the session variable holding the user's types isn't available
 	else
-		$exportTypeDisabled = "";
+		$documentTypeDisabled = "";
 
 	$recordType = "\n\t<td align=\"right\" class=\"mainfieldsbg\">"
-				. "\n\t\t<select name=\"typeName\" title=\"please specify the type of this publication (e.g. 'Journal Article' for a paper)\"$exportTypeDisabled>";
+				. "\n\t\t<select name=\"typeName\" title=\"please specify the type of this publication (e.g. 'Journal Article' for a paper)\"$documentTypeDisabled>";
 	
 	if (isset($_SESSION['user_types']))
 	{
@@ -1087,7 +1087,7 @@
 					$deleteTitle = "you can't delete this record since it doesn't belong to your personal literature data set";
 
 				// Note that we use '$row['location']' instead of the '$locationName' variable for the following tests since for the latter high ASCII characters were converted into HTML entities.
-				// E.g., the german umlaut 'Ÿ' would be presented as '&uuml;', thus containing a semicolon character *within* the user's name!
+				// E.g., the german umlaut 'ü' would be presented as '&uuml;', thus containing a semicolon character *within* the user's name!
 				elseif (ereg(";", $row['location'])) // if the 'location' field contains more than one user (which is indicated by a semicolon character)
 				{
 					// if we made it here, the current user is listed within the 'location' field of this record
