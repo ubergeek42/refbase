@@ -414,7 +414,8 @@
     }
     //   local--CALL NUMBER
     //   NOTE: This should really be parsed!
-    if (!empty($row['call_number'])) {
+    if ((!empty($row['call_number'])) && (!preg_match("/@\s*$/",
+	                                  $row['call_number']))) {
       $identifierArray = array();
       $identifierArray = preg_split("/\s*;\s*/", $row['call_number']);
       foreach ($identifierArray as $singleIdentifier) {
