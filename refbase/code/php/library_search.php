@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./library_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   30-May-04, 17:42
+	// Modified:   14-Oct-04, 21:59
 
 	// Search form providing the main fields.
 	// Searches will be restricted to records belonging
@@ -214,12 +214,15 @@
 							$additionalOption,
 							$defaultValue)
 	{
+		global $librarySearchPattern; // defined in 'ini.inc.php'
+
 		$defaultWithinResultSet = FALSE;
 	
 		// Query to find distinct values of $columnName
 		// in $tableName
-		// Note: in order to avoid book names we'll restrict the query to records whose location contains 'IP… Library'!
-		$distinctQuery = "SELECT DISTINCT $columnName FROM $tableName WHERE location RLIKE \"IPÖ Library\" ORDER BY $columnName";
+		// Note: we'll restrict the query to records where the pattern given in array element '$librarySearchPattern[1]' (defined in 'ini.inc.php')
+		//       matches the contents of the field given in array element '$librarySearchPattern[0]'
+		$distinctQuery = "SELECT DISTINCT $columnName FROM $tableName WHERE " . $librarySearchPattern[0] . " RLIKE \"" . $librarySearchPattern[1] . "\" ORDER BY $columnName";
 	
 		// Run the distinctQuery on the database through the connection:
 		$resultId = queryMySQLDatabase($distinctQuery, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
