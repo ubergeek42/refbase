@@ -1,33 +1,34 @@
 <?php
-	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
-	//             original author.
-	//
-	//             This code is distributed in the hope that it will be useful,
-	//             but WITHOUT ANY WARRANTY.  Please see the GNU General Public
-	//             License for more details.
-	//
-	// File:       ./contrib/endnote/endnote2mysql.php
-	// Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
-	//
-	// Created:    18-Mar-05, 17:10
-	// Modified:   18-Mar-05, 17:10
+  // Project:    Web Reference Database (refbase) <http://www.refbase.net>
+  // Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+  //             original author.
+  //
+  //             This code is distributed in the hope that it will be useful,
+  //             but WITHOUT ANY WARRANTY.  Please see the GNU General Public
+  //             License for more details.
+  //
+  // File:       ./contrib/endnote/endnote2mysql.php
+  // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
+  //
+  // Created:    18-Mar-05, 17:10
+  // Modified:   19-Mar-05, 13:50
 
   // WARNING
   // This hasn't been tested extensively & can cause weirdness.  Give the data
-  // a once over in a spreadsheet to convfirm it looks OK before import!!!
+  // a once over in a spreadsheet to confirm it looks OK before import!!!
   
-	// This processes the text file produced by using refbase.ens in Endnote:
+  // This processes the text file produced by using refbase.ens in Endnote:
   //  - Fixes linefeeds, which Endnote can't handle well:
-  //    - it replaces newlines with '\n'
-  //    - it trims '<REFBASE>' from the start of each citation
-  //    - it replaces '</REFBASE>' with a newline character
+  //    - trims carriage returns
+  //    - replaces newlines with '\n'
+  //    - trims '<REFBASE>' from the start of each citation
+  //    - replaces '</REFBASE>' with a newline character
   //  - Replaces '<REFBASE J/>' with 'Journal' (a Field Name in Endnote)
-  //  - Replaces '\t\t' with '\t\N\t' (to explicitly NULL empty fields)
+  //  - Inserts '\N' between multiple tabs (to explicitly NULL empty fields)
   //  - Replaces '<Go to ISI>://*\t' with '\N' (bad URLs in Endnote)
 
   // TODO:
-  //  - Intentional tabs aren't replaced!  This can screw things up!
+  //  - Tabs with a fields aren't replaced!  This can screw things up!
   //  - Allow people to change import & export filenames
   //  - More fields (particularly all dates, first author, number of authors)
   //  - Better parsing of current fields (correct use of 'ed' vs 'eds)
@@ -48,15 +49,15 @@
     $fin = preg_replace("/<Go to ISI>:\/\/\S*/","\\N",$fin);
   }
   do {
-    if (!($f = fopen('import.txt', "w"))) {
+    if (!($fout = fopen('import.txt', "w"))) {
       $rc = 1; break;
     }
-    if (!fwrite($f, $fin)) {
+    if (!fwrite($fout, $fin)) {
       $rc = 2; break;
     }
     $rc = true;
   } while (0);
-  if ($f) {
-    fclose($f);
+  if ($fout) {
+    fclose($fout);
   }
 ?>
