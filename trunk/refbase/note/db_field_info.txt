@@ -18,6 +18,7 @@ publication	Journal Book Title Generic [A_15]
 abbrev_journal	Abbrev. Journal Title [46]
 year	Date of Publication [20]
 volume	Volume ID [22]
+volume_numeric	Volume Numeric
 issue	Issue ID [24]
 pages	Pages Generic [A_19]
 first_page	FirstPage [A_34]
@@ -39,12 +40,16 @@ language	Language [35]
 summary_language	Summary Language [A_10]
 area	Research Area [A_05]
 type	Record Type [A_06]
+thesis	(none!)
 expedition	Expedition [A_11]
 doi	DOI [A_26]
 conference	Conference [A_33]
 url	Location|URL [38]
 call_number	Call Number [44] (in "Refs Mat.fp5": IPOE Literature DB Call Number [A_41])
 location	Copy Location [A_35]
+contribution_id	Contribution ID
+online_publication	(none!)
+online_citation	(none!)
 file	File Name [A_27]
 notes	Notes [42]
 serial	Serial Number
@@ -65,19 +70,20 @@ author	TEXT
 address	TEXT
 corporate_author	VARCHAR(255)
 first_author	VARCHAR(100)
-author_count	MEDIUMINT UNSIGNED
+author_count	TINYINT UNSIGNED
 title	TEXT
 orig_title	TEXT
 publication	VARCHAR(255)
 abbrev_journal	VARCHAR(100)
-year	YEAR
-volume	MEDIUMINT UNSIGNED
+year	SMALLINT
+volume	VARCHAR(50)
+volume_numeric	SMALLINT UNSIGNED
 issue	VARCHAR(50)
 pages	VARCHAR(50)
 first_page	MEDIUMINT UNSIGNED
 keywords	TEXT
 abstract	TEXT
-edition	MEDIUMINT UNSIGNED
+edition	TINYINT UNSIGNED
 editor	TEXT
 publisher	VARCHAR(255)
 place	VARCHAR(100)
@@ -85,7 +91,7 @@ medium	VARCHAR(50)
 series_editor	TEXT
 series_title	TEXT
 abbrev_series_title	VARCHAR(100)
-series_volume	MEDIUMINT UNSIGNED
+series_volume	SMALLINT UNSIGNED
 series_issue	VARCHAR(50)
 issn	VARCHAR(100)
 isbn	VARCHAR(100)
@@ -93,16 +99,20 @@ language	VARCHAR(100)
 summary_language	VARCHAR(100)
 area	VARCHAR(255)
 type	VARCHAR(100)
+thesis	ENUM("Bachelor's thesis","Master's thesis","Ph.D. thesis","Diploma thesis","Doctoral thesis","Habilitation thesis")
 expedition	VARCHAR(255)
 doi	VARCHAR(100)
 conference	VARCHAR(255)
 url	VARCHAR(255)
 call_number	TEXT
 location	TEXT
+contribution_id	VARCHAR(100)
+online_publication	ENUM("no","yes") NOT NULL
+online_citation	VARCHAR(255)
 file	VARCHAR(255)
 notes	TEXT
 serial	MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY
-orig_record	MEDIUMINT UNSIGNED
+orig_record	MEDIUMINT
 approved	ENUM("no","yes") NOT NULL
 created_date	DATE
 created_time	TIME
@@ -115,7 +125,7 @@ modified_by	VARCHAR(100)
 table creation code
 -------------------
 
-CREATE TABLE refs (author TEXT, address TEXT, corporate_author VARCHAR(255), first_author VARCHAR(100), author_count MEDIUMINT UNSIGNED, title TEXT, orig_title TEXT, publication VARCHAR(255), abbrev_journal VARCHAR(100), year YEAR, volume MEDIUMINT UNSIGNED, issue VARCHAR(50), pages VARCHAR(50), first_page MEDIUMINT UNSIGNED, keywords TEXT, abstract TEXT, edition MEDIUMINT UNSIGNED, editor TEXT, publisher VARCHAR(255), place VARCHAR(100), medium VARCHAR(50), series_editor TEXT, series_title TEXT, abbrev_series_title VARCHAR(100), series_volume MEDIUMINT UNSIGNED, series_issue VARCHAR(50), issn VARCHAR(100), isbn VARCHAR(100), language VARCHAR(100), summary_language VARCHAR(100), area VARCHAR(255), type VARCHAR(100), expedition VARCHAR(255), doi VARCHAR(100), conference VARCHAR(255), url VARCHAR(255), call_number TEXT, location TEXT, file VARCHAR(255), notes TEXT, serial MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, orig_record MEDIUMINT UNSIGNED, approved ENUM("no","yes") NOT NULL, created_date DATE, created_time TIME, created_by VARCHAR(100), modified_date DATE, modified_time TIME, modified_by VARCHAR(100));
+CREATE TABLE refs (author TEXT, address TEXT, corporate_author VARCHAR(255), first_author VARCHAR(100), author_count TINYINT UNSIGNED, title TEXT, orig_title TEXT, publication VARCHAR(255), abbrev_journal VARCHAR(100), year SMALLINT, volume VARCHAR(50), volume_numeric SMALLINT UNSIGNED, issue VARCHAR(50), pages VARCHAR(50), first_page MEDIUMINT UNSIGNED, keywords TEXT, abstract TEXT, edition TINYINT UNSIGNED, editor TEXT, publisher VARCHAR(255), place VARCHAR(100), medium VARCHAR(50), series_editor TEXT, series_title TEXT, abbrev_series_title VARCHAR(100), series_volume SMALLINT UNSIGNED, series_issue VARCHAR(50), issn VARCHAR(100), isbn VARCHAR(100), language VARCHAR(100), summary_language VARCHAR(100), area VARCHAR(255), type VARCHAR(100), thesis ENUM("Bachelor's thesis","Master's thesis","Ph.D. thesis","Diploma thesis","Doctoral thesis","Habilitation thesis"), expedition VARCHAR(255), doi VARCHAR(100), conference VARCHAR(255), url VARCHAR(255), call_number TEXT, location TEXT, contribution_id VARCHAR(100), online_publication ENUM("no","yes") NOT NULL, online_citation VARCHAR(255), file VARCHAR(255), notes TEXT, serial MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, orig_record MEDIUMINT, approved ENUM("no","yes") NOT NULL, created_date DATE, created_time TIME, created_by VARCHAR(100), modified_date DATE, modified_time TIME, modified_by VARCHAR(100));
 
 
 rules for data import
@@ -126,7 +136,7 @@ rules for data import
 - TIME format must be HH:MM:SS -> Available via Filemaker Calculation Fields 'Created Time [A_38]' & 'Modified Time [A_39]'
 - carriage returns *within* fields (ASCII character 11) must be replaced with a "UNIX return" (ASCII character 10) -> Search for:  (\x0B)  Replace with: \\n
 - empty fields are indicated by \N -> Search for: (?<=\t|^)(?=\t|$)   Replace with: \\N
-- character encoding: higher ASCII chars must be encoded as ISO-8859-1
+- character encoding: higher ASCII chars must be encoded as ISO-8859-1 aka 'Western (ISO Latin 1)'
 - file encoding must be UNIX
 
 
