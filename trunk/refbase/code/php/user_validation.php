@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   17-Feb-05, 20:23
+	// Modified:   26-Feb-05, 17:11
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -440,18 +440,55 @@
 		$stored_password = crypt($formVars["loginPassword"], $salt);
 
 		// Insert a new user into the auth table
-		$query = "INSERT INTO $tableAuth SET "
-				. "user_id = " . $userID . ", "
-				. "email = '" . $formVars["email"] . "', "
-				. "password = '" . $stored_password . "'";
-
-		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+		$queryArray[] = "INSERT INTO $tableAuth SET "
+						. "user_id = " . $userID . ", "
+						. "email = '" . $formVars["email"] . "', "
+						. "password = '" . $stored_password . "'";
 
 		// Insert a row for this new user into the 'user_permissions' table:
 		$defaultUserPermissionsString = implode("\", \"", $defaultUserPermissions); // '$defaultUserPermissions' is defined in 'ini.inc.php'
-		$query2 = "INSERT INTO $tableUserPermissions VALUES (NULL, " . $userID . ", \"" . $defaultUserPermissionsString . "\")";
+		$queryArray[] = "INSERT INTO $tableUserPermissions VALUES (NULL, " . $userID . ", \"" . $defaultUserPermissionsString . "\")";
 
-		$result2 = queryMySQLDatabase($query2, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+
+		// Note: Refbase lets you define default export-formats/styles/types in 'ini.inc.php' by their name (and not by ID numbers) which means that
+		//       the export-format/style/type names within the 'formats/styles/types' table must be unique!
+
+		foreach($defaultUserExportFormats as $defaultUserExportFormat)
+		{
+			// get the 'format_id' for the record entry in table 'formats' whose 'format_name' matches that in '$defaultUserExportFormats' (defined in 'ini.inc.php'):
+			$query = "SELECT format_id FROM $tableFormats WHERE format_name = '$defaultUserExportFormat' AND format_type = 'export'";
+			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+			$row = mysql_fetch_array($result);
+
+			// Insert a row with the found format ID for this new user into the 'user_formats' table:
+			$queryArray[] = "INSERT INTO $tableUserFormats VALUES (NULL, " . $row["format_id"] . ", " . $userID . ", \"true\")";
+		}
+
+		foreach($defaultUserStyles as $defaultUserStyle)
+		{
+			// get the 'style_id' for the record entry in table 'styles' whose 'style_name' matches that in '$defaultUserStyles' (defined in 'ini.inc.php'):
+			$query = "SELECT style_id FROM $tableStyles WHERE style_name = '$defaultUserStyle'";
+			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+			$row = mysql_fetch_array($result);
+
+			// Insert a row with the found style ID for this new user into the 'user_styles' table:
+			$queryArray[] = "INSERT INTO $tableUserStyles VALUES (NULL, " . $row["style_id"] . ", " . $userID . ", \"true\")";
+		}
+
+		foreach($defaultUserTypes as $defaultUserType)
+		{
+			// get the 'type_id' for the record entry in table 'types' whose 'type_name' matches that in '$defaultUserTypes' (defined in 'ini.inc.php'):
+			$query = "SELECT type_id FROM $tableTypes WHERE type_name = '$defaultUserType'";
+			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+			$row = mysql_fetch_array($result);
+
+			// Insert a row with the found type ID for this new user into the 'user_types' table:
+			$queryArray[] = "INSERT INTO $tableUserTypes VALUES (NULL, " . $row["type_id"] . ", " . $userID . ", \"true\")";
+		}
+
+		// RUN the queries on the database through the connection:
+		foreach($queryArray as $query)
+			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		// if EVERYONE who's not logged in is able to add a new user (which is the case if the variable '$addNewUsers' in 'ini.inc.php'
 		// is set to "everyone", see note above!), then we have to make sure that this visitor gets logged into his new
