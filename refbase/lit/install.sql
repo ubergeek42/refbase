@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./install.sql
 # Created:    02-Oct-04, 20:11
-# Modified:   25-Feb-05, 23:50
+# Modified:   27-Feb-05, 20:50
 
 # MySQL database structure & initial data (for use with 'latin1' character set)
 
@@ -466,7 +466,7 @@ CREATE TABLE `user_permissions` (
   `allow_user_queries` enum('yes','no') NOT NULL default 'yes',
   `allow_rss_feeds` enum('yes','no') NOT NULL default 'yes',
   `allow_sql_search` enum('yes','no') NOT NULL default 'yes',
-  `allow_change_personinfo` enum('yes','no') NOT NULL default 'yes',
+  `allow_modify_options` enum('yes','no') NOT NULL default 'yes',
   `allow_edit_call_number` enum('no','yes') NOT NULL default 'no',
   PRIMARY KEY  (`user_permission_id`),
   KEY `user_id` (`user_id`)
