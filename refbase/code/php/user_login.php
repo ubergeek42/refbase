@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   24-Oct-04, 21:05
+	// Modified:   17-Feb-05, 20:19
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -104,15 +104,16 @@
 		global $loginLastName;
 		global $adminLoginEmail;
 		global $abbrevInstitution;
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
 
 		// Get the two character salt from the email address collected from the challenge
 		$salt = substr($loginEmail, 0, 2); 
 
-		// Encrypt the loginPassword collected from the challenge (so that we can compare it to the encrypted passwords that stored in the 'auth' table)
+		// Encrypt the loginPassword collected from the challenge (so that we can compare it to the encrypted passwords that are stored in the 'auth' table)
 		$crypted_password = crypt($loginPassword, $salt);
 
 		// CONSTRUCT SQL QUERY:
-		$query = "SELECT user_id FROM auth WHERE email = '$loginEmail' AND password = '$crypted_password'";
+		$query = "SELECT user_id FROM $tableAuth WHERE email = '$loginEmail' AND password = '$crypted_password'";
 
 		// -------------------
 
@@ -146,7 +147,7 @@
 			$userID = $row["user_id"]; // extract the user's userID from the last query
 
 			// Now we need to get the user's first name and last name (e.g., in order to display them within the login welcome message)
-			$query = "SELECT user_id, first_name, last_name, abbrev_institution, language FROM users WHERE user_id = " . $userID; // CONSTRUCT SQL QUERY
+			$query = "SELECT user_id, first_name, last_name, abbrev_institution, language FROM $tableUsers WHERE user_id = " . $userID; // CONSTRUCT SQL QUERY
 	
 			// RUN the query on the database through the connection:
 			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
@@ -165,12 +166,12 @@
 
 			// Get all user groups specified by the current user
 			// and (if some groups were found) save them as semicolon-delimited string to the session variable 'userGroups':
-			getUserGroups("user_data", $row2["user_id"]); // function 'getUserGroups()' is defined in 'include.inc.php'
+			getUserGroups($tableUserData, $row2["user_id"]); // function 'getUserGroups()' is defined in 'include.inc.php'
 
 			if ($loginEmail == $adminLoginEmail) // ('$adminLoginEmail' is specified in 'ini.inc.php')
 				// Get all user groups specified by the admin
 				// and (if some groups were found) save them as semicolon-delimited string to the session variable 'adminUserGroups':
-				getUserGroups("users", $row2["user_id"]); // function 'getUserGroups()' is defined in 'include.inc.php'
+				getUserGroups($tableUsers, $row2["user_id"]); // function 'getUserGroups()' is defined in 'include.inc.php'
 
 			// Get all user queries that were saved previously by the current user
 			// and (if some queries were found) save them as semicolon-delimited string to the session variable 'userQueries':
@@ -194,7 +195,7 @@
 
 
 			// We also update the user's entry within the 'users' table:
-			$query = "UPDATE users SET "
+			$query = "UPDATE $tableUsers SET "
 					. "last_login = NOW(), " // set 'last_login' field to the current date & time in 'DATETIME' format (which is 'YYYY-MM-DD HH:MM:SS', e.g.: '2003-12-31 23:45:59')
 					. "logins = logins+1 " // increase the number of logins by 1 
 					. "WHERE user_id = $userID";
@@ -256,7 +257,7 @@
 		}
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-		displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Login", "index,follow", "User login page. You must be logged in to the " . htmlentities($officialDatabaseName) . " in order to add, edit or delete records", "", false, "", $viewType);
+		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Login", "index,follow", "User login page. You must be logged in to the " . encodeHTML($officialDatabaseName) . " in order to add, edit or delete records", "", false, "", $viewType);
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 		// Build the login form:
@@ -265,7 +266,7 @@
 ?>
 
 <form method="POST" action="user_login.php?referer=<?php echo rawurlencode($referer); ?>">
-<table align="center" border="0" cellpadding="2" cellspacing="5" width="95%" summary="This table holds a login form for the <? echo htmlentities($officialDatabaseName); ?>">
+<table align="center" border="0" cellpadding="2" cellspacing="5" width="95%" summary="This table holds a login form for the <? echo encodeHTML($officialDatabaseName); ?>">
 	<tr>
 		<td width="174" valign="bottom">
 			<b>Email Address:</b>
