@@ -1,31 +1,31 @@
 Suggestions for improving refbase:
 
-* Data import from MODS XML and other common bibliographic formats, like BibTeX,
+- Data import from MODS XML and other common bibliographic formats, like BibTeX,
   EndNote, ISI Web of Science, RIS, and Pubmed XML.
 
-* Provide additional citation formats, preferably via the use of a plugin
+- Provide additional citation formats, preferably via the use of a plugin
   structure which would make it easy to add your own citation citation styles.
 
-* Simplify manual data input by providing record type specific forms.  These
+- Simplify manual data input by providing record type specific forms.  These
   forms could guide a user by only showing those fields that are required for a
   particular record type (like journal articles, book chapters or whole books).
 
-* Validation of data entered/imported by the user.
+- Validation of data entered/imported by the user.
 
-* Offer the user means for handling duplicate database entries..
+- Offer the user means for handling duplicate database entries..
 
-* Provide administrative interface to deleted records.
+- Provide administrative interface to deleted records.
 
-* User customization: provide a user-specific preferences page where one can
+- User customization: provide a user-specific preferences page where one can
   specify the default columns that are visible in query results or the default
   fields that are visible in particular search forms.
 
-* Enable remembering of marked records across different requests.
+- Enable remembering of marked records across different requests.
 
-* Cross-site searches (both through other copies of refbase and through other
+- Cross-site searches (both through other copies of refbase and through other
   bibliographic databases).
 
-* Improved export through both revisions to the current MODS XML/bibutils system
+- Improved export through both revisions to the current MODS XML/bibutils system
   and through adding more native export options which wouldn't require bibutils.
 
-* More user-specific and record-specific rights management.
+- More user-specific and record-specific rights management.
