@@ -300,15 +300,67 @@
 	}
 	else // no user is logged in (since 'user_details.php' cannot be called w/o a 'userID' by a logged in user, 'user_details.php' must have been submitted by a NEW user!)
 	{
-		// Send the person who wants to be added as new user a notification email:
+		// MAIL feedback to user & send data to admin for approval:
+		// First, we have to query for the proper admin name, so that we can include this name within the emails:
+		$query = "SELECT first_name, last_name FROM users WHERE email = '" . $adminLoginEmail . "'"; // CONSTRUCT SQL QUERY ('$adminLoginEmail' is specified in 'ini.inc.php')
+
+		if (!($connection = @ mysql_connect($hostName, $username, $password))) // (1) OPEN the database connection (variables are set by include file 'db.inc'!)
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to connect to the host:", "");
+
+		if (!(mysql_select_db($databaseName, $connection))) // (2) SELECT the database (variables are set by include file 'db.inc'!)
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to connect to the database:", "");
+
+		if (!($result = @ mysql_query($query, $connection))) // (3a) RUN the query on the database through the connection:
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+
+		$row = mysql_fetch_array($result); // (3b) EXTRACT results: fetch the current row into the array $row
+
+		if (!(mysql_close($connection))) // (5) CLOSE the database connection
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
+
+		// 1) Mail feedback to user, i.e., send the person who wants to be added as new user a notification email:
 		$emailRecipient = $formVars["firstName"] . " " . $formVars["lastName"] . " <" . $formVars["email"] . ">";
-		$emailSubject = "Your request to participate at the" . $officialDatabaseName; // ('$officialDatabaseName' is specified in 'ini.inc.php')
+		$emailSubject = "Your request to participate at the " . $officialDatabaseName; // ('$officialDatabaseName' is specified in 'ini.inc.php')
 		$emailBody = "Dear " . $formVars["firstName"] . " " . $formVars["lastName"] . ","
 					. "\n\nthanks for your interest in the " . $officialDatabaseName . "!"
 					. "\nThe data you provided have been sent to our database admin."
 					. "\nWe'll process your request and mail back to you as soon as we can."
 					. "\n\n--"
-					. "\n" . $databaseURL; // ('$databaseURL' is specified in 'ini.inc.php')
+					. "\n" . $databaseBaseURL . "index.php"; // ('$databaseBaseURL' is specified in 'ini.inc.php')
+
+		sendEmail($emailRecipient, $emailSubject, $emailBody);
+
+		// 2) Send user data to admin for approval:
+		$emailRecipient = $row["first_name"] . " " . $row["last_name"] . " <" . $adminLoginEmail . ">"; // ('$adminLoginEmail' is specified in 'ini.inc.php')
+		$emailSubject = "User request to participate at the " . $officialDatabaseName; // ('$officialDatabaseName' is specified in 'ini.inc.php')
+		$emailBody = "Dear " . $row["first_name"] . " " . $row["last_name"] . ","
+					. "\n\nsomebody wants to join the " . $officialDatabaseName . ":"
+					. "\n\n" . $formVars["firstName"] . " " . $formVars["lastName"] . " (" . $formVars["abbrevInstitution"] . ") submitted the form at"
+					. "\n\n  <" . $databaseBaseURL . "user_details.php>"
+					. "\n\nwith the data below:"
+					. "\n\n  first name:                  " . $formVars["firstName"]
+					. "\n  last name:                   " . $formVars["lastName"]
+					. "\n  institution:                 " . $formVars["institution"]
+					. "\n  institutional abbreviation:  " . $formVars["abbrevInstitution"]
+					. "\n  corporate institution:       " . $formVars["corporateInstitution"]
+					. "\n  address line 1:              " . $formVars["address1"]
+					. "\n  address line 2:              " . $formVars["address2"]
+					. "\n  address line 3:              " . $formVars["address3"]
+					. "\n  zip code:                    " . $formVars["zipCode"]
+					. "\n  city:                        " . $formVars["city"]
+					. "\n  state:                       " . $formVars["state"]
+					. "\n  country:                     " . $formVars["country"]
+					. "\n  phone:                       " . $formVars["phone"]
+					. "\n  url:                         " . $formVars["url"]
+					. "\n  email:                       " . $formVars["email"]
+					. "\n  password:                    " . $formVars["loginPassword"]
+					. "\n\nPlease contact " . $formVars["firstName"] . " " . $formVars["lastName"] . " to approve the request."
+					. "\n\n--"
+					. "\n" . $databaseBaseURL . "index.php"; // ('$databaseBaseURL' is specified in 'ini.inc.php')
 
 		sendEmail($emailRecipient, $emailSubject, $emailBody);
 
