@@ -105,7 +105,7 @@
 		<span class="smallup">
 			<a href="index.php" title="goto main page">Home</a>&nbsp;|&nbsp;
 			<a href="simple_search.php" title="search the main fields of the database">Simple Search</a>&nbsp;|&nbsp;
-			<a href="advanced_search.php" title="search all fields of the database">Advanced Search</a>&nbsp;|&nbsp;<?php
+			<a href="advanced_search.php" title="search all fields of the database">Advanced Search</a><?php
 
 		// -------------------------------------------------------
 		if (isset($_SESSION['user_permissions']) AND ereg("allow_add", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_add'...
@@ -113,7 +113,7 @@
 		// ... include a link to 'record.php?recordAction=add...':
 ?>
 
-			<a href="record.php?recordAction=add&amp;oldQuery=<? echo rawurlencode($oldQuery); ?>" title="add a record to the database">Add Record</a>&nbsp;|&nbsp;<?php
+			&nbsp;|&nbsp;<a href="record.php?recordAction=add&amp;oldQuery=<? echo rawurlencode($oldQuery); ?>" title="add a record to the database">Add Record</a><?php
 		}
 
 		// -------------------------------------------------------
@@ -122,13 +122,13 @@
 		// ... include a link to 'import_csa.php':
 ?>
 
-			<a href="import_csa.php" title="import a record from Cambridge Scientific Abstracts">CSA Import</a>&nbsp;|&nbsp;<?php
+			&nbsp;|&nbsp;<a href="import_csa.php" title="import a record from Cambridge Scientific Abstracts">CSA Import</a><?php
 		}
 
 		// -------------------------------------------------------
 ?>
 
-			<a href="help.php" title="display help">Help</a>
+<!--&nbsp;|&nbsp;<a href="help.php" title="display help">Help</a>-->
 		</span>
 	</td>
 	<td class="small" align="right" valign="middle"><? echo $loginWelcomeMsg; ?><br><? echo $loginStatus; ?></td>
