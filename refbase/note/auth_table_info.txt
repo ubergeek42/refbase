@@ -43,9 +43,9 @@ rules for data import
 load data code
 --------------
 
-LOAD DATA LOCAL INFILE "/Users/matthias/Doktor/05-Intern/IPOE_Literature_Database/auth.txt" INTO TABLE auth;
+LOAD DATA LOCAL INFILE "/PATH/TO/FILE/auth.txt" INTO TABLE auth;
 
-oder alternativ im Terminal-Kommando-Prompt:
+or, alternatively, use something like the following from your shell:
 
-mysqlimport --local -u root -p literature "/Users/matthias/Doktor/05-Intern/IPOE_Literature_Database/auth.txt"
+mysqlimport --local -u root -p YOUR_DB_NAME "/PATH/TO/FILE/auth.txt"
 
