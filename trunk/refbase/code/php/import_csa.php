@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import_csa.php
 	// Created:    21-Nov-03, 22:05
-	// Modified:   29-Sep-04, 19:16
+	// Modified:   16-Feb-05, 20:47
 
 	// Import form that offers to import records from the "Cambridge Scientific Abstracts" (CSA)
 	// Internet Database Service (<http://www.csa1.co.uk/csa/index.html>). This import form requires
@@ -53,7 +53,7 @@
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Import CSA Record", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Import CSA Record", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (2b) Start <form> and <table> holding the form elements:

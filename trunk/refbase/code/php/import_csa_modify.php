@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import_csa_modify.php
 	// Created:    21-Nov-03, 22:46
-	// Modified:   29-Sep-04, 19:17
+	// Modified:   16-Feb-05, 20:47
 
 	// This php script accepts input from 'import_csa.php'. It will process the CSA full record data
 	// and call 'record.php' with all provided fields pre-filled. The user can then verify the data,
@@ -134,7 +134,7 @@
 	
 		// (2a) Display header:
 		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-//		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Add Literature from CSA Record Data", "index,follow", "Extract literature data from Cambridge Scientific Abstracts and add the data to the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+//		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Add Literature from CSA Record Data", "index,follow", "Extract literature data from Cambridge Scientific Abstracts and add the data to the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 //		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// just for DEBUGGING purposes:
