@@ -183,7 +183,7 @@ else
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findUserFile" value="1">&nbsp;<?php echo $loc["file"]; ?>:&nbsp;&nbsp;&nbsp;
 				<input type="text" name="userFileName" size="7">
 				<br>
-				<input type="submit" value="<?php echo $loc["Show"]; ?>">
+				<input type="submit" value="<?php echo $loc["Search"]; ?>">
 			</form><?php
 	}
 ?>

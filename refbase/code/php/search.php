@@ -24,6 +24,7 @@
 	include 'includes/include.inc.php'; // include common functions
 	include 'includes/modsxml.inc.php'; // include functions that deal with MODS XML
 	include 'initialize/ini.inc.php'; // include common variables
+	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
@@ -68,7 +69,7 @@
 		if (isset($_SESSION['user_permissions']) AND !ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain 'allow_details_view'...
 		{
 			// save an appropriate error message:
-			$HeaderString = "<b><span class=\"warning\">You have no permission to display any record details!</span></b>";
+			$HeaderString = "<b><span class=\"warning\">". $loc["You have no permission"]." ".$loc["ForDisplayDetails"]."!</span></b>";
 
 			// Write back session variables:
 			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -83,7 +84,7 @@
 		if (isset($_SESSION['user_permissions']) AND !ereg("allow_cite", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain 'allow_cite'...
 		{
 			// save an appropriate error message:
-			$HeaderString = "<b><span class=\"warning\">You have no permission to use the cite feature!</span></b>";
+			$HeaderString = "<b><span class=\"warning\">". $loc["You have no permission"]." ".$loc["ForCite"]."!</span></b>";
 
 			// Write back session variables:
 			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -101,7 +102,7 @@
 		if (isset($_SESSION['user_permissions']) AND !ereg("(allow_export|allow_batch_export)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain either 'allow_export' or 'allow_batch_export'...
 		{
 			// save an appropriate error message:
-			$HeaderString = "<b><span class=\"warning\">You have no permission to use the export feature!</span></b>";
+			$HeaderString = "<b><span class=\"warning\">". $loc["You have no permission"]." ".$loc["ForExport"]."!</span></b>";
 
 			// Write back session variables:
 			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -124,7 +125,7 @@
 			if ($formType == "sqlSearch" AND !ereg(".+/search.php", $referer)) // if the calling URL contained 'formType=sqlSearch' but wasn't sent by 'search.php' (but, e.g., by 'sql_search.php')
 			{
 				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">You have no permission to perform custom SQL searches!</span></b>";
+				$HeaderString = "<b><span class=\"warning\">". $loc["You have no permission"]." ".$loc["ForSQL"]."!</span></b>";
 	
 				// Write back session variables:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
