@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   07-Sep-03, 15:06
+	// Modified:   16-Nov-03, 21:53
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -32,9 +32,15 @@
 
 	// --------------------------------------------------------------------
 
-	$referer = $_REQUEST['referer']; // get the referring URL (if any)
-	if (empty($referer))
-		$referer = $HTTP_REFERER;
+	if (isset($_REQUEST['referer']))
+		$referer = $_REQUEST['referer']; // get the referring URL (if any)
+	else // if (empty($referer))
+	{
+		if (isset($HTTP_REFERER))
+			$referer = $HTTP_REFERER;
+		else
+			$referer = "index.php";
+	}
 
 	if (isset($HTTP_POST_VARS["loginEmail"]))
 		$loginEmail = $HTTP_POST_VARS["loginEmail"];
@@ -241,6 +247,7 @@
 		global $loginWelcomeMsg;
 		global $loginStatus;
 		global $loginLinks;
+		global $officialDatabaseName;
 
 		// Show login status (should be logged out!)
 		showLogin(); // (function 'showLogin()' is defined in 'include.inc')
@@ -253,7 +260,7 @@
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
 		displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Login", "index,follow", "User login page. You must be logged in to the " . htmlentities($officialDatabaseName) . " in order to add, edit or delete records", "", false, "");
-		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
+		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 		// Build the login form:
 ?>
