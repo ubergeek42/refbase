@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_logout.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   28-Sep-04, 19:54
+	// Modified:   24-Oct-04, 22:02
 
 	// This script logs a user out and redirects 
 	// to the calling page. If the script is called
@@ -53,6 +53,7 @@
 		deleteSessionVariable("loginFirstName"); // clear the user's first name
 		deleteSessionVariable("loginLastName"); // clear the user's last name
 		deleteSessionVariable("abbrevInstitution"); // clear the user's abbreviated institution name
+		deleteSessionVariable("userLanguage"); // clear the user's preferred language
 	
 		if (isset($_SESSION['userGroups']))
 			deleteSessionVariable("userGroups"); // clear the user's user groups (if any)
@@ -84,7 +85,7 @@
 		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 	}
 
-	if (!preg_match("/.*user(_details|_receipt|s)\.php.*|.*(error|install|query_manager)\.php.*/", $referer))
+	if (!preg_match("/.*user(_details|_options|_receipt|s)\.php.*|.*(error|install|query_manager)\.php.*/", $referer))
 		header("Location: $referer"); // redirect the user to the calling page
 	else
 		header("Location: index.php"); // back to main page
