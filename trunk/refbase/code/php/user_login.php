@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   20-Jan-03, 23:29
+	// Modified:   07-Sep-03, 15:06
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -139,11 +139,6 @@
 		else
 			$foundUser = false;
 
-		// (5) CLOSE the database connection:
-		if (!(mysql_close($connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
-
 		// -------------------
 
 		if ($foundUser == true)
@@ -166,23 +161,11 @@
 			// Now we need to get the user's first name and last name (e.g., in order to display them within the login welcome message)
 			$query = "SELECT user_id, first_name, last_name, abbrev_institution FROM users WHERE user_id = " . $userID; // CONSTRUCT SQL QUERY
 	
-			if (!($connection = @ mysql_connect($hostName, $username, $password))) // (1) OPEN the database connection (variables are set by include file 'db.inc'!)
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-					showErrorMsg("The following error occurred while trying to connect to the host:", "");
-
-			if (!(mysql_select_db($databaseName, $connection))) // (2) SELECT the database (variables are set by include file 'db.inc'!)
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-					showErrorMsg("The following error occurred while trying to connect to the database:", "");
-
 			if (!($result = @ mysql_query($query, $connection))) // (3) RUN the query on the database through the connection:
 				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 					showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
 
 			$row2 = mysql_fetch_array($result); // (4) EXTRACT results: fetch the one row into the array $row2
-
-			if (!(mysql_close($connection))) // (5) CLOSE the database connection
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-					showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
 
 			// Save the fetched user details to the session file:
 			$loginUserID = $row2["user_id"];
@@ -194,6 +177,17 @@
 			session_register("loginFirstName");
 			session_register("loginLastName");
 			session_register("abbrevInstitution");
+
+
+			// We also update the user's entry within the 'users' table:
+			$query = "UPDATE users SET "
+					. "last_login = NOW(), " // set 'last_login' field to the current date & time in 'DATETIME' format (which is 'YYYY-MM-DD HH:MM:SS', e.g.: '2003-12-31 23:45:59')
+					. "logins = logins+1 " // increase the number of logins by 1 
+					. "WHERE user_id = $userID";
+
+			if (!($result = @ mysql_query($query, $connection))) // (3) RUN the query on the database through the connection:
+				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+					showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
 
 
 			header("Location: $referer"); // redirect the user to the calling page
@@ -229,6 +223,13 @@
 
 			login_page();
 		}				 
+
+		// -------------------
+
+		// (5) CLOSE the database connection:
+		if (!(mysql_close($connection)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
 	}
 
 	// --------------------------------------------------------------------
