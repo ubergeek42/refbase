@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   29-Sep-04, 18:07
+	// Modified:   17-Feb-05, 19:43
 
 	// This script serves as a routing page which takes any record serial number, date, year or author that was passed as parameter
 	// to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -17,6 +17,7 @@
 	*/
 
 	// Incorporate some include files:
+	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
 	include 'includes/header.inc.php'; // include header
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
@@ -143,7 +144,7 @@
 	
 		// DISPLAY header:
 		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Show Record", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Show Record", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 	
 		// Start <form> and <table> holding the form elements:
@@ -224,7 +225,7 @@
 			// as required. Therefore it's sufficient to provide just the plain SQL query here:
 			$query = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial";
 			//       (the above string MUST end with ", call_number, serial" in order to have the described query completion feature work correctly!
-			$query .= " FROM refs WHERE serial RLIKE \"^(" . $serial . ")$\""; // add FROM & WHERE clause
+			$query .= " FROM $tableRefs WHERE serial RLIKE \"^(" . $serial . ")$\""; // add FROM & WHERE clause
 			$query .= " ORDER BY author, year DESC, publication"; // add the default ORDER BY clause
 	
 			// Build the correct query URL:
@@ -242,9 +243,9 @@
 				$searchOperator = "="; // return all records whose created/modifed date matches exactly '$date'
 	
 			if ($when == "edited")
-				$query .= " FROM refs WHERE modified_date " . $searchOperator . " \"" . $date . "\""; // add FROM & WHERE clause
+				$query .= " FROM $tableRefs WHERE modified_date " . $searchOperator . " \"" . $date . "\""; // add FROM & WHERE clause
 			else
-				$query .= " FROM refs WHERE created_date " . $searchOperator . " \"" . $date . "\""; // add FROM & WHERE clause
+				$query .= " FROM $tableRefs WHERE created_date " . $searchOperator . " \"" . $date . "\""; // add FROM & WHERE clause
 	
 			$query .= " ORDER BY author, year DESC, publication"; // add the default ORDER BY clause
 	
@@ -254,7 +255,7 @@
 		elseif (!empty($year)) // else if 'year' parameter is present:
 		{
 			$query = "SELECT author, title, year, publication, volume, pages";
-			$query .= " FROM refs WHERE year = " . $year; // add FROM & WHERE clause
+			$query .= " FROM $tableRefs WHERE year = " . $year; // add FROM & WHERE clause
 			$query .= " ORDER BY author, year DESC, publication"; // add the default ORDER BY clause
 	
 			// Build the correct query URL:
@@ -265,9 +266,9 @@
 			$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial";
 	
 			if (!empty($userID)) // the 'userID' parameter was specified -> we include user specific fields
-				$query .= " FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = $userID"; // add FROM clause (including the 'LEFT JOIN...' part)
+				$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = $userID"; // add FROM clause (including the 'LEFT JOIN...' part)
 			else
-				$query .= " FROM refs"; // add FROM clause
+				$query .= " FROM $tableRefs"; // add FROM clause
 	
 			$query .= " WHERE author RLIKE \"" . $author . "\""; // add initial WHERE clause
 	
