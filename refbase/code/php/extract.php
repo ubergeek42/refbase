@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./extract.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   20-May-04, 23:05
+	// Modified:   29-Sep-04, 22:15
 
 	// Search form that offers to extract
 	// literature cited within a text and build
@@ -60,42 +60,64 @@
 	echo "\n<form action=\"search.php\" method=\"POST\">";
 
 	echo "\n<input type=\"hidden\" name=\"formType\" value=\"extractSearch\">"
-		. "\n<input type=\"hidden\" name=\"submit\" value=\"Export\">"; // provide a default value for the 'submit' form tag. Otherwise, some browsers may not recognize the correct output format when a user hits <enter> within a form field (instead of clicking the "Export" button)
+		. "\n<input type=\"hidden\" name=\"submit\" value=\"Cite\">"; // provide a default value for the 'submit' form tag. Otherwise, some browsers may not recognize the correct output format when a user hits <enter> within a form field (instead of clicking the "Cite" button)
 
+	if (!isset($_SESSION['user_styles']))
+		$citeStyleDisabled = " disabled"; // disable the style popup (and other form elements) if the session variable holding the user's styles isn't available
+	else
+		$citeStyleDisabled = "";
+		
 	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the search form\">"
 			. "\n<tr>\n\t<td width=\"58\" valign=\"top\"><b>Extract Citations From:</b></td>\n\t<td width=\"10\">&nbsp;</td>"
-			. "\n\t<td><textarea name=\"sourceText\" rows=\"6\" cols=\"60\">Paste your text here...</textarea></td>"
+			. "\n\t<td><textarea name=\"sourceText\" rows=\"6\" cols=\"60\"$citeStyleDisabled>Paste your text here...</textarea></td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td valign=\"top\" rowspan=\"2\"><b>Serial Delimiters:</b></td>\n\t<td>&nbsp;</td>"
 			. "\n\t<td valign=\"top\">Specify the character(s) that enclose record serial numbers:</td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td>&nbsp;</td>"
-			. "\n\t<td valign=\"top\">Start Delimiter:&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"startDelim\" value=\"{\" size=\"4\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;End Delimiter:&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"endDelim\" value=\"}\" size=\"4\"></td>"
+			. "\n\t<td valign=\"top\">Start Delimiter:&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"startDelim\" value=\"{\" size=\"4\"$citeStyleDisabled>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;End Delimiter:&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"endDelim\" value=\"}\" size=\"4\"$citeStyleDisabled></td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td valign=\"top\" rowspan=\"2\"><b>Display Options:</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td valign=\"top\"><input type=\"checkbox\" name=\"showLinks\" value=\"1\" checked>&nbsp;&nbsp;&nbsp;Display Links"
-			. "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Show&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"showRows\" value=\"100\" size=\"4\">&nbsp;&nbsp;&nbsp;records per page</td>"
+			. "\n\t<td valign=\"top\"><input type=\"checkbox\" name=\"showLinks\" value=\"1\"$citeStyleDisabled checked>&nbsp;&nbsp;&nbsp;Display Links"
+			. "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Show&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"showRows\" value=\"100\" size=\"4\"$citeStyleDisabled>&nbsp;&nbsp;&nbsp;records per page</td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td>&nbsp;</td>"
 			. "\n\t<td valign=\"top\">View type:&nbsp;&nbsp;"
-			. "\n\t\t<select name=\"viewType\">"
+			. "\n\t\t<select name=\"viewType\"$citeStyleDisabled>"
 			. "\n\t\t\t<option>Web</option>"
 			. "\n\t\t\t<option>Print</option>"
 			. "\n\t\t</select>"
 			. "\n\t</td>"
 			. "\n</tr>"
-			. "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>\n\t\t<br><input type=\"submit\" name=\"submit\" value=\"Export\">&nbsp;&nbsp;&nbsp;"
-			. "\n\t\treferences using style:&nbsp;&nbsp;"
-			. "\n\t\t<select name=\"exportFormatSelector\">"
-			. "\n\t\t\t<option>Polar Biol</option>"
-			. "\n\t\t\t<option>Mar Biol</option>"
-			. "\n\t\t\t<option>MEPS</option>"
-			. "\n\t\t\t<option>Deep Sea Res</option>"
-			. "\n\t\t\t<option>Text Citation</option>"
-			. "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
+			. "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>";
+
+	if (isset($_SESSION['user_permissions']) AND ereg("allow_cite", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_cite'...
+	// adjust the title string for the show cite button
+	{
+		$citeButtonLock = "";
+		$citeTitle = "build a reference list for all citations contained within the entered text";
+	}
+	else // Note, that disabling the submit button is just a cosmetic thing -- the user can still submit the form by pressing enter or by building the correct URL from scratch! (however, there's some code in 'search.php' that will prevent query execution)
+	{
+		$citeButtonLock = " disabled";
+		$citeTitle = "not available since you have no permission to use the cite feature";
+	}
+
+	echo "\n\t<td>\n\t\t<br><input type=\"submit\" name=\"submit\" value=\"Cite\"$citeButtonLock title=\"$citeTitle\"$citeStyleDisabled>&nbsp;&nbsp;&nbsp;"
+			. "\n\t\tusing style:&nbsp;&nbsp;"
+			. "\n\t\t<select name=\"citeStyleSelector\" title=\"choose the output style for your reference list\"$citeStyleDisabled>";
+
+	if (isset($_SESSION['user_styles']))
+	{
+		$optionTags = buildSelectMenuOptions($_SESSION['user_styles'], " *; *", "\t\t\t"); // build properly formatted <option> tag elements from the items listed in the 'user_styles' session variable
+		echo $optionTags;
+	}
+	else
+		echo "<option>(no styles available)</option>";
+
+	echo "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
 			. "\n\t\tsort by:&nbsp;&nbsp;"
-			. "\n\t\t<select name=\"exportOrder\">"
+			. "\n\t\t<select name=\"citeOrder\" title=\"choose the primary sort order for your reference list\"$citeStyleDisabled>"
 			. "\n\t\t\t<option>author</option>"
 			. "\n\t\t\t<option>year</option>"
 			. "\n\t\t</select>\n\t</td>"
