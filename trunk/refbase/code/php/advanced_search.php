@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./advanced_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   28-Mar-05, 22:39
+	// Modified:   05-Apr-05, 20:32
 
 	// Search form providing access to all fields of the database.
 	// It offers some output options (like how many records to display per page)
@@ -142,16 +142,7 @@
 									"",
 									"modified_date" => $loc["DropDownFieldName_ModifiedDate"],
 									"modified_time" => $loc["DropDownFieldName_ModifiedTime"],
-									"modified_by" => $loc["DropDownFieldName_ModifiedBy"],
-									"",
-									"marked" => $loc["DropDownFieldName_Marked"],
-									"copy" => $loc["DropDownFieldName_Copy"],
-									"selected" => $loc["DropDownFieldName_Selected"],
-									"user_keys" => $loc["DropDownFieldName_UserKeys"],
-									"user_notes" => $loc["DropDownFieldName_UserNotes"],
-									"user_file" => $loc["DropDownFieldName_UserFile"],
-									"user_groups" => $loc["DropDownFieldName_UserGroups"],
-									"cite_key" => $loc["DropDownFieldName_CiteKey"]);
+									"modified_by" => $loc["DropDownFieldName_ModifiedBy"]);
 
 	$dropDownItems3 = buildSelectMenuOptions($dropDownFieldNameArray, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
 
@@ -1719,9 +1710,23 @@
 </tr><?php
 
 	if (isset($_SESSION['loginEmail'])) // if a user is logged in, add user specific fields to the sort menus:
-		$userSpecificSortFields = "\n\t\t\t<option></option>\n\t\t\t<option>marked</option>\n\t\t\t<option>copy</option>\n\t\t\t<option>selected</option>\n\t\t\t<option>user_keys</option>\n\t\t\t<option>user_notes</option>\n\t\t\t<option>user_file</option>\n\t\t\t<option>user_groups</option>\n\t\t\t<option>cite_key</option>";
+	{
+		$userSpecificSortFieldsNameArray = array("",
+												"marked" => $loc["DropDownFieldName_Marked"],
+												"copy" => $loc["DropDownFieldName_Copy"],
+												"selected" => $loc["DropDownFieldName_Selected"],
+												"user_keys" => $loc["DropDownFieldName_UserKeys"],
+												"user_notes" => $loc["DropDownFieldName_UserNotes"],
+												"user_file" => $loc["DropDownFieldName_UserFile"],
+												"user_groups" => $loc["DropDownFieldName_UserGroups"],
+												"cite_key" => $loc["DropDownFieldName_CiteKey"]);
+
+		$dropDownItems4 = buildSelectMenuOptions($userSpecificSortFieldsNameArray, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
+	}
 	else
-		$userSpecificSortFields = "";
+	{
+		$dropDownItems4 = "";
+	}
 ?>
 
 <tr>
@@ -1732,7 +1737,7 @@
 		<select name="sortSelector1"><?php
 
 $sortSelector1DropDownItems = ereg_replace("<option([^>]*)>" . $loc["DropDownFieldName_Author"], "<option\\1 selected>" . $loc["DropDownFieldName_Author"], $dropDownItems3); // select the 'author' menu entry ...
-echo $sortSelector1DropDownItems;
+echo $sortSelector1DropDownItems . $dropDownItems4;
 ?>
 
 		</select>
@@ -1751,7 +1756,7 @@ echo $sortSelector1DropDownItems;
 		<select name="sortSelector2"><?php
 
 $sortSelector2DropDownItems = ereg_replace("<option([^>]*)>" . $loc["DropDownFieldName_Year"], "<option\\1 selected>" . $loc["DropDownFieldName_Year"], $dropDownItems3); // select the 'year' menu entry ...
-echo $sortSelector2DropDownItems;
+echo $sortSelector2DropDownItems . $dropDownItems4;
 ?>
 
 		</select>
@@ -1770,7 +1775,7 @@ echo $sortSelector2DropDownItems;
 		<select name="sortSelector3"><?php
 
 $sortSelector3DropDownItems = ereg_replace("<option([^>]*)>" . $loc["DropDownFieldName_Publication"], "<option\\1 selected>" . $loc["DropDownFieldName_Publication"], $dropDownItems3); // select the 'publication' menu entry ...
-echo $sortSelector3DropDownItems;
+echo $sortSelector3DropDownItems . $dropDownItems4;
 ?>
 
 		</select>
