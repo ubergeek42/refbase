@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./results_header.inc.php
 	// Created:    07-May-04, 14:38
-	// Modified:   07-May-04, 20:51
+	// Modified:   17-Oct-04, 12:57
 
 	// This is the results header include file.
 	// It contains functions that build the results header
@@ -18,19 +18,24 @@
 
 	// --------------------------------------------------------------------
 
-	function displayResultsHeader($formElementsGroup, $formElementsRefine, $formElementsDisplayOptions)
+	function displayResultsHeader($href, $formElementsGroup, $formElementsRefine, $formElementsDisplayOptions)
 	{
+		// adjust column width according to the calling script (which is either 'search.php' or 'users.php')
+		if ($href == "users.php")
+			$tdWidthLeftRight = "295"; // on MacOSX Panther, Mozilla needs at least 295 :-( for the right column, Camino needs 270, while all others browsers need much less
+		else // if ($href == "search.php") // use the default width
+			$tdWidthLeftRight = "255"; // again on OSX, Mozilla needs at least 255 for the right column, all other browsers are fine with 246
 ?>
 
 <table align="center" border="0" cellpadding="0" cellspacing="0" width="94%" summary="This table holds the results header">
 <tr>
-	<td width="246">
+	<td width="<? echo $tdWidthLeftRight; ?>">
 <? echo $formElementsGroup; ?>
 	</td>
-	<td>
+	<td align="center">
 <? echo $formElementsRefine; ?>
 	</td>
-	<td align="right" width="246">
+	<td align="right" width="<? echo $tdWidthLeftRight; ?>">
 <? echo $formElementsDisplayOptions; ?>
 	</td>
 </tr>
