@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./record.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   12-Oct-04, 14:06
+	// Modified:   14-Oct-04, 20:22
 
 	// Form that offers to add
 	// records or edit/delete
@@ -692,7 +692,7 @@
 
 	// (4b) DISPLAY results:
 	// Start <form> and <table> holding the form elements:
-	echo "\n<form onsubmit=\"return(confirmDelete(this.submit))\" enctype=\"multipart/form-data\" action=\"modify.php\" method=\"POST\">";
+	echo "\n<form enctype=\"multipart/form-data\" action=\"modify.php\" method=\"POST\">";
 	echo "\n<input type=\"hidden\" name=\"formType\" value=\"record\">";
 	echo "\n<input type=\"hidden\" name=\"submit\" value=\"" . $pageTitle . "\">"; // provide a default value for the 'submit' form tag (then, hitting <enter> within a text entry field will act as if the user clicked the 'Add/Edit Record' button)
 	echo "\n<input type=\"hidden\" name=\"recordAction\" value=\"" . $recordAction . "\">";
