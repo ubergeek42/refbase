@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 00:25
-	// Modified:   17-Feb-05, 20:30
+	// Modified:   23-Feb-05, 22:23
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -537,7 +537,7 @@
 	// Build the database query from user input provided by the "Show User Group" form above the query results list (that was produced by 'users.php'):
 	function extractFormElementsGroup($sqlQuery)
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableUsers; // defined in 'db.inc.php'
 
 		if (!empty($sqlQuery)) // if there's a previous SQL query available
 		{
@@ -570,6 +570,8 @@
 	// Build the database query from records selected by the user within the query results list (which, in turn, was returned by 'users.php'):
 	function extractFormElementsQueryResults($displayType, $sqlQuery, $recordSerialsArray)
 	{
+		global $tableUsers; // defined in 'db.inc.php'
+
 		$userGroupActionRadio = $_POST['userGroupActionRadio']; // extract user option whether we're supposed to process an existing group name or any custom/new group name that was specified by the user
 
 		// Extract the chosen user group from the request:
