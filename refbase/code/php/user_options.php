@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_options.php
 	// Created:    24-Oct-04, 19:31
-	// Modified:   17-Feb-04, 20:19
+	// Modified:   27-Feb-04, 18:14
 
 	// This script provides options which are individual for each user.
 	// 
@@ -153,7 +153,7 @@
 
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Options", "noindex,nofollow", "User options offered by the " . encodeHTML($officialDatabaseName), "\n\t<meta http-equiv=\"expires\" content=\"0\">", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Options", "noindex,nofollow", "User options offered by the " . encodeHTML($officialDatabaseName), "\n\t<meta http-equiv=\"expires\" content=\"0\">", true, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// --------------------------------------------------------------------
@@ -196,7 +196,7 @@
 	// Start <form> and <table> holding all the form elements:
 ?>
 
-<form method="POST" action="user_options_modify.php">
+<form method="POST" action="user_options_modify.php" name="userOptions">
 <input type="hidden" name="userID" value="<? echo $userID ?>">
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds a form with user options">
 <tr>
@@ -244,7 +244,224 @@
 	<td colspan="2">
 		<input type="submit" value="Submit">
 	</td>
+</tr><?php
+	if ($loginEmail == $adminLoginEmail) // if the admin is logged in, add form elements to set the user's permissions:
+	{
+		// Get the user permissions for the current user:
+		$userPermissionsArray = getPermissions($userID, "user", false); // function 'getPermissions()' is defined in 'include.inc.php'
+
+		// Setup variables to mark the checkboxes according to the user's permissions:
+		if ($userPermissionsArray['allow_add'] == 'yes')
+			$allowAddChecked = " checked";
+		else
+			$allowAddChecked = "";
+
+		if ($userPermissionsArray['allow_edit'] == 'yes')
+			$allowEditChecked = " checked";
+		else
+			$allowEditChecked = "";
+
+		if ($userPermissionsArray['allow_delete'] == 'yes')
+			$allowDeleteChecked = " checked";
+		else
+			$allowDeleteChecked = "";
+
+		if ($userPermissionsArray['allow_download'] == 'yes')
+			$allowDownloadChecked = " checked";
+		else
+			$allowDownloadChecked = "";
+
+		if ($userPermissionsArray['allow_upload'] == 'yes')
+			$allowUploadChecked = " checked";
+		else
+			$allowUploadChecked = "";
+
+		if ($userPermissionsArray['allow_details_view'] == 'yes')
+			$allowDetailsViewChecked = " checked";
+		else
+			$allowDetailsViewChecked = "";
+
+		if ($userPermissionsArray['allow_print_view'] == 'yes')
+			$allowPrintViewChecked = " checked";
+		else
+			$allowPrintViewChecked = "";
+
+		if ($userPermissionsArray['allow_sql_search'] == 'yes')
+			$allowSQLSearchChecked = " checked";
+		else
+			$allowSQLSearchChecked = "";
+
+		if ($userPermissionsArray['allow_user_groups'] == 'yes')
+			$allowUserGroupsChecked = " checked";
+		else
+			$allowUserGroupsChecked = "";
+
+		if ($userPermissionsArray['allow_user_queries'] == 'yes')
+			$allowUserQueriesChecked = " checked";
+		else
+			$allowUserQueriesChecked = "";
+
+		if ($userPermissionsArray['allow_rss_feeds'] == 'yes')
+			$allowRSSFeedsChecked = " checked";
+		else
+			$allowRSSFeedsChecked = "";
+
+		if ($userPermissionsArray['allow_import'] == 'yes')
+			$allowImportChecked = " checked";
+		else
+			$allowImportChecked = "";
+
+		if ($userPermissionsArray['allow_batch_import'] == 'yes')
+			$allowBatchImportChecked = " checked";
+		else
+			$allowBatchImportChecked = "";
+
+		if ($userPermissionsArray['allow_export'] == 'yes')
+			$allowExportChecked = " checked";
+		else
+			$allowExportChecked = "";
+
+		if ($userPermissionsArray['allow_batch_export'] == 'yes')
+			$allowBatchExportChecked = " checked";
+		else
+			$allowBatchExportChecked = "";
+
+		if ($userPermissionsArray['allow_cite'] == 'yes')
+			$allowCiteChecked = " checked";
+		else
+			$allowCiteChecked = "";
+
+		if ($userPermissionsArray['allow_change_personinfo'] == 'yes')
+			$allowChangePersonInfoChecked = " checked";
+		else
+			$allowChangePersonInfoChecked = "";
+?>
+
+<tr>
+	<td align="left" height="15"></td>
+	<td colspan="2"></td>
 </tr>
+<tr>
+	<td align="left"><b>User Permissions:</b></td>
+	<td>
+		<input type="checkbox" name="allow_add" value="yes"<? echo $allowAddChecked; ?>>&nbsp;&nbsp;Add records
+	</td>
+	<td>
+		<input type="checkbox" name="allow_download" value="yes"<? echo $allowDownloadChecked; ?>>&nbsp;&nbsp;File download
+	</td>
+</tr>
+<tr>
+	<td align="left" class="small">
+		<!--<a href="JavaScript:checkall(true,'allow*')" title="select all permission options">Select All</a>&nbsp;&nbsp;&nbsp;-->
+		<!--<a href="JavaScript:checkall(false,'allow*')" title="deselect all permission options">Deselect All</a>-->
+	</td>
+	<td>
+		<input type="checkbox" name="allow_edit" value="yes"<? echo $allowEditChecked; ?>>&nbsp;&nbsp;Edit records
+	</td>
+	<td>
+		<input type="checkbox" name="allow_upload" value="yes"<? echo $allowUploadChecked; ?>>&nbsp;&nbsp;File upload
+	</td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td>
+		<input type="checkbox" name="allow_delete" value="yes"<? echo $allowDeleteChecked; ?>>&nbsp;&nbsp;Delete records
+	</td>
+	<td></td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td colspan="2"></td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td>
+		<input type="checkbox" name="allow_details_view" value="yes"<? echo $allowDetailsViewChecked; ?>>&nbsp;&nbsp;Details view
+	</td>
+	<td>
+		<input type="checkbox" name="allow_sql_search" value="yes"<? echo $allowSQLSearchChecked; ?>>&nbsp;&nbsp;SQL search
+	</td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td>
+		<input type="checkbox" name="allow_print_view" value="yes"<? echo $allowPrintViewChecked; ?>>&nbsp;&nbsp;Print view
+	</td>
+	<td></td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td colspan="2"></td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td>
+		<input type="checkbox" name="allow_user_groups" value="yes"<? echo $allowUserGroupsChecked; ?>>&nbsp;&nbsp;User groups
+	</td>
+	<td>
+		<input type="checkbox" name="allow_rss_feeds" value="yes"<? echo $allowRSSFeedsChecked; ?>>&nbsp;&nbsp;RSS feeds
+	</td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td>
+		<input type="checkbox" name="allow_user_queries" value="yes"<? echo $allowUserQueriesChecked; ?>>&nbsp;&nbsp;User queries
+	</td>
+	<td></td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td colspan="2"></td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td>
+		<input type="checkbox" name="allow_import" value="yes"<? echo $allowImportChecked; ?>>&nbsp;&nbsp;Import
+	</td>
+	<td>
+		<input type="checkbox" name="allow_batch_import" value="yes"<? echo $allowBatchImportChecked; ?>>&nbsp;&nbsp;Batch import
+	</td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td>
+		<input type="checkbox" name="allow_export" value="yes"<? echo $allowExportChecked; ?>>&nbsp;&nbsp;Export
+	</td>
+	<td>
+		<input type="checkbox" name="allow_batch_export" value="yes"<? echo $allowBatchExportChecked; ?>>&nbsp;&nbsp;Batch export
+	</td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td>
+		<input type="checkbox" name="allow_cite" value="yes"<? echo $allowCiteChecked; ?>>&nbsp;&nbsp;Cite
+	</td>
+	<td></td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td colspan="2"></td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td>
+		<input type="checkbox" name="allow_change_personinfo" value="yes"<? echo $allowChangePersonInfoChecked; ?>>&nbsp;&nbsp;Change personal info
+	</td>
+	<td></td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td colspan="2"></td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td colspan="2">
+		<input type="submit" value="Submit">
+	</td>
+</tr><?php
+	}
+?>
+
 </table>
 </form><?php
 
