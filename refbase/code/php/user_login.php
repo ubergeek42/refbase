@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   13-Oct-04, 01:18
+	// Modified:   17-Oct-04, 23:27
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -102,6 +102,7 @@
 		global $loginUserID;
 		global $loginFirstName;
 		global $loginLastName;
+		global $adminLoginEmail;
 		global $abbrevInstitution;
 
 		// Get the two character salt from the email address collected from the challenge
@@ -163,7 +164,12 @@
 
 			// Get all user groups specified by the current user
 			// and (if some groups were found) save them as semicolon-delimited string to the session variable 'userGroups':
-			getUserGroups($row2["user_id"]); // function 'getUserGroups()' is defined in 'include.inc.php'
+			getUserGroups("user_data", $row2["user_id"]); // function 'getUserGroups()' is defined in 'include.inc.php'
+
+			if ($loginEmail == $adminLoginEmail) // ('$adminLoginEmail' is specified in 'ini.inc.php')
+				// Get all user groups specified by the admin
+				// and (if some groups were found) save them as semicolon-delimited string to the session variable 'adminUserGroups':
+				getUserGroups("users", $row2["user_id"]); // function 'getUserGroups()' is defined in 'include.inc.php'
 
 			// Get all user queries that were saved previously by the current user
 			// and (if some queries were found) save them as semicolon-delimited string to the session variable 'userQueries':
