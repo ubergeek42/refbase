@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   03-Oct-04, 22:57
+	// Modified:   14-Oct-04, 22:41
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -15,14 +15,15 @@
 	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
 	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
 	*/
-	
+
 	// Incorporate some include files:
-	include 'db.inc.php'; // 'db.inc.php' is included to hide username and password
-	include 'header.inc.php'; // include header
-	include 'results_header.inc.php'; // include results header
-	include 'footer.inc.php'; // include footer
-	include 'include.inc.php'; // include common functions
-	include "ini.inc.php"; // include common variables
+	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
+	include 'includes/header.inc.php'; // include header
+	include 'includes/results_header.inc.php'; // include results header
+	include 'includes/footer.inc.php'; // include footer
+	include 'includes/include.inc.php'; // include common functions
+	include 'includes/modsxml.inc.php'; // include functions that deal with MODS XML
+	include 'initialize/ini.inc.php'; // include common variables
 
 	// --------------------------------------------------------------------
 
@@ -39,13 +40,13 @@
 
 	// Extract the form used for searching:
 	$formType = $_REQUEST['formType'];
-	
+
 	// Extract the type of display requested by the user. Normally, this will be one of the following:
 	//  - '' => if the 'submit' parameter is empty, this will produce the default columnar output style ('displayColumns()' function)
 	//  - 'Display' => display details for each of the selected records ('displayDetails()' function)
 	//  - 'Cite' => build a proper citation for each of the selected records ('generateCitations()' function)
 	// Note that the 'submit' parameter can be also one of the following:
-  //   - 'Export' => generate and return an exported file ('generateExport()' function)
+	//   - 'Export' => generate and return an exported file ('generateExport()' function)
 	//   - 'RSS' => these value gets included within the 'track' link (in the page header) and will cause 'search.php' to return results as RSS feed
 	//   - 'Search', 'Show' or 'Hide' => these values change/refine the search results or their appearance on screen (how many entries & which columns get displayed)
 	//   - 'Add', 'Remove', 'Remember' or 'Forget' => these values will trigger actions that act on the selected records
@@ -53,6 +54,12 @@
 		$displayType = $_REQUEST['submit'];
 	else
 		$displayType = "";
+
+	// get the referring URL (if any):
+	if (isset($_SERVER['HTTP_REFERER']))
+		$referer = $_SERVER['HTTP_REFERER'];
+	else // as an example, 'HTTP_REFERER' won't be set if a user clicked on a URL of type '.../show.php?record=12345' within an email announcement
+		$referer = ""; // if there's no HTTP referer available we provide the empty string here
 
 
 	// we need to check if the user is allowed to view records with the specified display type:
@@ -62,12 +69,12 @@
 		{
 			// save an appropriate error message:
 			$HeaderString = "<b><span class=\"warning\">You have no permission to display any record details!</span></b>";
-	
+
 			// Write back session variables:
 			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-	
+
 			header("Location: index.php"); // redirect to main page ('index.php')
-	
+
 			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		}
 	}
@@ -77,55 +84,58 @@
 		{
 			// save an appropriate error message:
 			$HeaderString = "<b><span class=\"warning\">You have no permission to use the cite feature!</span></b>";
-	
+
 			// Write back session variables:
 			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-	
-			if (ereg(".+extract.php", $_SERVER['HTTP_REFERER'])) // if the query was submitted by 'extract.php'
-				header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to calling page
+
+			if (ereg(".+extract.php", $referer)) // if the query was submitted by 'extract.php'
+				header("Location: " . $referer); // redirect to calling page
 			else
 				header("Location: index.php"); // redirect to main page ('index.php')
-	
+
 			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		}
 	}
-  elseif ($displayType == "Export") 
+	elseif ($displayType == "Export")
 	{
-		if (isset($_SESSION['user_permissions']) AND !ereg("allow_export", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain 'allow_export'...
+		if (isset($_SESSION['user_permissions']) AND !ereg("(allow_export|allow_batch_export)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain either 'allow_export' or 'allow_batch_export'...
 		{
 			// save an appropriate error message:
 			$HeaderString = "<b><span class=\"warning\">You have no permission to use the export feature!</span></b>";
-	
+
 			// Write back session variables:
 			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-	
-			if (ereg(".+extract.php", $_SERVER['HTTP_REFERER'])) // if the query was submitted by 'extract.php'
-				header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to calling page
+
+			if (ereg(".+extract.php", $referer)) // if the query was submitted by 'extract.php'
+				header("Location: " . $referer); // redirect to calling page
 			else
 				header("Location: index.php"); // redirect to main page ('index.php')
-	
+
 			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		}
 	}
-	elseif (empty($displayType) AND ereg(".+search.php", $_SERVER['HTTP_REFERER']))
+	elseif (empty($displayType) AND ereg(".+search.php", $referer))
 	{
 		// by restricting this if clause to scripts that end with 'search.php', we exclude 'show.php' to allow for SQL queries like : 'show.php?date=...&when=...&range=...' and 'show.php?year=...'
 		// (and if the referer variable is empty this if clause won't apply either)
 
 		if (isset($_SESSION['user_permissions']) AND !ereg("allow_sql_search", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain 'allow_sql_search'...
 		{
-			// save an appropriate error message:
-			$HeaderString = "<b><span class=\"warning\">You have no permission to perform custom SQL searches!</span></b>";
+			if ($formType == "sqlSearch" AND !ereg(".+/search.php", $referer)) // if the calling URL contained 'formType=sqlSearch' but wasn't sent by 'search.php' (but, e.g., by 'sql_search.php')
+			{
+				// save an appropriate error message:
+				$HeaderString = "<b><span class=\"warning\">You have no permission to perform custom SQL searches!</span></b>";
 	
-			// Write back session variables:
-			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+				// Write back session variables:
+				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 	
-			if (ereg(".+sql_search.php", $_SERVER['HTTP_REFERER'])) // if the sql query was entered in the form provided by 'sql_search.php'
-				header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to calling page
-			else
-				header("Location: index.php"); // redirect to main page ('index.php')
+				if (ereg(".+sql_search.php", $referer)) // if the sql query was entered in the form provided by 'sql_search.php'
+					header("Location: " . $referer); // redirect to calling page
+				else
+					header("Location: index.php"); // redirect to main page ('index.php')
 	
-			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+				exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			}
 		}
 	}
 
@@ -197,6 +207,17 @@
 	else
 		$citeOrder = "";
 
+	// get information how exported data shall be returned:
+	// - 'text' => return data with mime type 'text/plain'
+	// - 'html' => return data with mime type 'text/html
+	// - 'xml' => return data with mime type 'text/xml
+	// - 'file' => return data as downloadable file
+	// - 'email' => send data as email (to the user's login email address)
+	if (isset($_REQUEST['exportType']))
+		$exportType = $_REQUEST['exportType'];
+	else
+		$exportType = "";
+
 	if (isset($_REQUEST['orderBy']))
 		$orderBy = $_REQUEST['orderBy']; // extract the current ORDER BY parameter so that it can be re-applied when displaying details (only occurs in query result lists)
 	else
@@ -229,12 +250,6 @@
 	else
 		$selectedRecordsArray = "";
 
-	// get the referring URL (if any):
-	if (isset($_SERVER['HTTP_REFERER']))
-		$referer = $_SERVER['HTTP_REFERER'];
-	else // as an example, 'HTTP_REFERER' won't be set if a user clicked on a URL of type '.../show.php?record=12345' within an email announcement
-		$referer = ""; // if there's no HTTP referer available we provide the empty string here
-
 	// Extract checkbox variable values from the request:
 	if (isset($_REQUEST['marked']))
 		$recordSerialsArray = $_REQUEST['marked']; // extract the values of all checked checkboxes (i.e., the serials of all selected records)
@@ -247,10 +262,10 @@
 	else // some checkboxes were marked -OR- the query resulted from another script like 'show.php' or 'rss.php' (which has no checkboxes to mark!)
 		$nothingChecked = false;
 
-	
+
 
 	// --------------------------------------------------------------------
-	
+
 	// VERIFY SQL QUERY:
 
 	// For a normal user we only allow the use of SELECT queries (the admin is allowed to do everything that is allowed by his GRANT privileges):
@@ -285,7 +300,7 @@
 			{
 				// Write back session variable:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-	
+
 				if (eregi(".+sql_search.php", $referer)) // if the sql query was entered in the form provided by 'sql_search.php'
 					header("Location: $referer"); // relocate back to the calling page
 				else // if the user didn't come from 'sql_search.php' (e.g., if he attempted to hack parameters of a GET query directly)
@@ -379,7 +394,7 @@
 	// --------------------------------------------------------------------
 
 	// this is to support the '$fileVisibilityException' feature from 'ini.inc.php':
-	if (!preg_match("/SELECT.+$fileVisibilityException[0].+FROM/i", $query))
+	if (!empty($fileVisibilityException) AND !preg_match("/SELECT.+$fileVisibilityException[0].+FROM/i", $query))
 	{
 		$query = eregi_replace("(, orig_record)?(, serial)?(, file, url, doi)? FROM refs", ", $fileVisibilityException[0]\\1\\2\\3 FROM refs",$query); // add column that's given in '$fileVisibilityException'
 		$addCounterMax = 1; // this will ensure that the added column won't get displayed within the 'displayColumns()' function
@@ -393,209 +408,213 @@
 	// (3) RUN the query on the database through the connection:
 	$result = queryMySQLDatabase($query, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
-	// (4) If Export, display the exported file.  Else, DISPLAY html
-	if (($displayType == "Export")&&(empty($headerMsg)))  
+
+	// (4) If the display type is 'Export', display the exported file...
+	if (($displayType == "Export") && (empty($headerMsg)))
+	{
+		if (!($nothingChecked)) // some checkboxes were marked
 		{
-			if (ereg(".+search.php", $referer) AND empty($recordSerialsArray)) // no checkboxes were marked
-				//NOTE: This doesn't work as expected.  I get returned no response, but it doesn't tell me that it is because I didn't check anything.  I should figure out how to fix this,
-				$nothingChecked = true;
-			else // some checkboxes were marked -OR- the query resulted from another script like 'show.php' or 'rss.php' (which has no checkboxes to mark!)
-				{
-				 	generateExport($result, $exportFormat);
+			generateExport($result, $exportFormat, $exportType, $viewType); // export records using the export format specified in '$exportFormat'
 
-					// NOTE: I disconnect from the database and exit this php file.  This is Kind of sloppy, but I want to avoid getting the </BODY></HTML>
-					disconnectFromMySQLDatabase($oldQuery); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
-					exit();
-				}
+			// NOTE: I disconnect from the database and exit this php file.  This is kind of sloppy, but I want to avoid getting the </BODY></HTML>
+			disconnectFromMySQLDatabase($oldQuery); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
+			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		}
-		// (4a) DISPLAY header:
-		// First, build the appropriate SQL query in order to embed it into the 'your query' URL:
-			if ($showLinks == "1")
-				$query = eregi_replace(', file, url, doi FROM refs',' FROM refs',$query); // strip 'file', 'url' & 'doi' columns from SQL query
+		// elseif ($nothingChecked) // no checkboxes were marked => proceed & return "No records selected..." feedback (thru the 'displayColumns()' function)
+	}
 
-			$query = eregi_replace(', serial FROM refs',' FROM refs',$query); // strip 'serial' column from SQL query
 
-			$query = eregi_replace(', orig_record FROM refs',' FROM refs',$query); // strip 'orig_record' column from SQL query
+	// ...else, display HTML:
 
-			$query = eregi_replace(", $fileVisibilityException[0] FROM refs",' FROM refs',$query); // strip column that's given in '$fileVisibilityException' (defined in 'ini.inc.php')
+	// (4a) DISPLAY header:
+	// First, build the appropriate SQL query in order to embed it into the 'your query' URL:
+	if ($showLinks == "1")
+		$query = eregi_replace(', file, url, doi FROM refs',' FROM refs',$query); // strip 'file', 'url' & 'doi' columns from SQL query
 
-			if (ereg("(simple|advanced|library|quick)Search", $formType)) // if $formType is "simpleSearch", "advancedSearch", "librarySearch" or "quickSearch" and there is more than one WHERE clause (indicated by '...AND...'):
-				$query = eregi_replace('WHERE serial RLIKE ".+" AND','WHERE',$query); // strip first WHERE clause (which was added only due to an internal workaround)
+	$query = eregi_replace(', serial FROM refs',' FROM refs',$query); // strip 'serial' column from SQL query
 
-			$queryURL = rawurlencode($query); // URL encode SQL query
+	$query = eregi_replace(', orig_record FROM refs',' FROM refs',$query); // strip 'orig_record' column from SQL query
 
-			if (!eregi("^SELECT", $query)) // for queries other than SELECT queries (e.g. UPDATE, DELETE or INSERT queries that were executed by the admin via use of 'sql_search.php')
-				$affectedRows = ($result ? mysql_affected_rows ($connection) : 0); // get the number of rows that were modified (or return 0 if an error occurred)
+	if (!empty($fileVisibilityException))
+		$query = eregi_replace(", $fileVisibilityException[0] FROM refs",' FROM refs',$query); // strip column that's given in '$fileVisibilityException' (defined in 'ini.inc.php')
 
-			// Second, find out how many rows are available:
-			$rowsFound = @ mysql_num_rows($result);
-			if ($rowsFound > 0) // If there were rows found ...
-				{
-					// ... setup variables in order to facilitate "previous" & "next" browsing:
-					// a) Set '$rowOffset' to zero if not previously defined, or if a wrong number (<=0) was given
-					if (empty($rowOffset) || ($rowOffset <= 0) || ($showRows >= $rowsFound)) // the third condition is only necessary if '$rowOffset' gets embedded within the 'displayOptions' form (see function 'buildDisplayOptionsElements()' in 'include.inc.php')
-						$rowOffset = 0;
+	if (ereg("(simple|advanced|library|quick)Search", $formType)) // if $formType is "simpleSearch", "advancedSearch", "librarySearch" or "quickSearch" and there is more than one WHERE clause (indicated by '...AND...'):
+		$query = eregi_replace('WHERE serial RLIKE "\.\+" AND','WHERE',$query); // strip first WHERE clause (which was added only due to an internal workaround)
 
-					// Adjust the '$showRows' value if not previously defined, or if a wrong number (<=0 or float) was given
-					if (empty($showRows) || ($showRows <= 0) || !ereg("^[0-9]+$", $showRows))
-						$showRows = 5;
+	$queryURL = rawurlencode($query); // URL encode SQL query
 
-					// NOTE: The current value of '$rowOffset' is embedded as hidden tag within the 'displayOptions' form. By this, the current row offset can be re-applied
-					//       after the user pressed the 'Show'/'Hide' button within the 'displayOptions' form. But then, to avoid that browse links don't behave as expected,
-					//       we need to adjust the actual value of '$rowOffset' to an exact multiple of '$showRows':
-					$offsetRatio = ($rowOffset / $showRows);
-					if (!is_integer($offsetRatio)) // check whether the value of the '$offsetRatio' variable is not an integer
-					{ // if '$offsetRatio' is a float:
-						$offsetCorrectionFactor = floor($offsetRatio); // get it's next lower integer
-						if ($offsetCorrectionFactor != 0)
-							$rowOffset = ($offsetCorrectionFactor * $showRows); // correct the current row offset to the closest multiple of '$showRows' *below* the current row offset
-						else
-							$rowOffset = 0;
-					}
-			
-					// b) The "Previous" page begins at the current offset LESS the number of rows per page
-					$previousOffset = $rowOffset - $showRows;
-				
-					// c) The "Next" page begins at the current offset PLUS the number of rows per page
-					$nextOffset = $rowOffset + $showRows;
-				
-					// d) Seek to the current offset
-					mysql_data_seek($result, $rowOffset);
-				}
-			else // set variables to zero in order to prevent 'Undefined variable...' messages when nothing was found ('$rowsFound = 0'):
-				{
+	if (!eregi("^SELECT", $query)) // for queries other than SELECT queries (e.g. UPDATE, DELETE or INSERT queries that were executed by the admin via use of 'sql_search.php')
+		$affectedRows = ($result ? mysql_affected_rows ($connection) : 0); // get the number of rows that were modified (or return 0 if an error occurred)
+
+	// Second, find out how many rows are available:
+	$rowsFound = @ mysql_num_rows($result);
+	if ($rowsFound > 0) // If there were rows found ...
+		{
+			// ... setup variables in order to facilitate "previous" & "next" browsing:
+			// a) Set '$rowOffset' to zero if not previously defined, or if a wrong number (<=0) was given
+			if (empty($rowOffset) || ($rowOffset <= 0) || ($showRows >= $rowsFound)) // the third condition is only necessary if '$rowOffset' gets embedded within the 'displayOptions' form (see function 'buildDisplayOptionsElements()' in 'include.inc.php')
+				$rowOffset = 0;
+
+			// Adjust the '$showRows' value if not previously defined, or if a wrong number (<=0 or float) was given
+			if (empty($showRows) || ($showRows <= 0) || !ereg("^[0-9]+$", $showRows))
+				$showRows = 5;
+
+			// NOTE: The current value of '$rowOffset' is embedded as hidden tag within the 'displayOptions' form. By this, the current row offset can be re-applied
+			//       after the user pressed the 'Show'/'Hide' button within the 'displayOptions' form. But then, to avoid that browse links don't behave as expected,
+			//       we need to adjust the actual value of '$rowOffset' to an exact multiple of '$showRows':
+			$offsetRatio = ($rowOffset / $showRows);
+			if (!is_integer($offsetRatio)) // check whether the value of the '$offsetRatio' variable is not an integer
+			{ // if '$offsetRatio' is a float:
+				$offsetCorrectionFactor = floor($offsetRatio); // get it's next lower integer
+				if ($offsetCorrectionFactor != 0)
+					$rowOffset = ($offsetCorrectionFactor * $showRows); // correct the current row offset to the closest multiple of '$showRows' *below* the current row offset
+				else
 					$rowOffset = 0;
-					$previousOffset = 0;
-					$nextOffset = 0;
-				}
-
-			// Third, calculate the maximum result number on each page ('$showMaxRow' is required as parameter to the 'displayDetails()' function)
-			if (($rowOffset + $showRows) < $rowsFound)
-				$showMaxRow = ($rowOffset + $showRows); // maximum result number on each page
-			else
-				$showMaxRow = $rowsFound; // for the last results page, correct the maximum result number if necessary
-
-			// Fourth, check if there's some query URL available pointing to a previous search results page
-			if ($oldQuery == "")
-				{
-					// If there's no query URL available, we build the *full* query URL for the page currently displayed. The variable '$oldQuery' will get included into every 'browse'/'field title'/'display details'/'edit record'/'add record' link. Plus it will get written into a hidden form tag so that it's available on 'display details' (batch display)
-					// The variable '$oldQuery' gets routed thru the 'display details' and 'record.php' forms to facilitate a link to the current results page on the subsequent receipt page that follows any add/edit/delete action!
-					$oldQuery = "sqlQuery=" . $query . "&amp;showQuery=" . $showQuery . "&amp;showLinks=" . $showLinks . "&amp;formType=sqlSearch&amp;showRows=" . $showRows . "&amp;rowOffset=" . $rowOffset . "&amp;submit=" . $displayType . "&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=" . $citeOrder;
-				}
-			else // there's already a query URL available
-				// Note: If there's an existing 'oldQuery', a new 'oldQuery' will be generated only, if the output is routed thru the 'displayColumns()' function!
-				//       This will only happen if $displayType == '' (i.e., not 'Display', 'Cite' or 'RSS').
-				{
-					if (ereg('sqlQuery%3D', $oldQuery)) // if '$oldQuery' still contains URL encoded data... ('%3D' is the URL encoded form of '=', see note below!)
-						$oldQuery = rawurldecode($oldQuery); // ...URL decode old query URL (it was URL encoded before incorporation into a hidden tag of the 'queryResults' form to avoid any HTML syntax errors)
-														// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
-														//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
-					$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
-					$oldQuery = ereg_replace('(\\\\)+','\\\\',$oldQuery);
-				}
-
-			// Finally, build the appropriate header string (which is required as parameter to the 'showPageHeader()' function):
-			if (!isset($_SESSION['HeaderString'])) // if there's no stored message available
-			{
-				if (!empty($headerMsg)) // if there's a custom header message available, e.g. one that describes who's literature is being displayed...
-				{
-					$HeaderString = $headerMsg; // ...we use that string as header message ('$headerMsg' could contain something like: "Literature of Matthias Steffens:")
-				}
-				else // provide the default message:
-				{
-					if (eregi("^SELECT", $query)) // for SELECT queries:
-					{
-						if ($rowsFound == 1)
-							$HeaderStringPart = " record ";
-						else
-							$HeaderStringPart = " records ";
-	
-						$HeaderStringPart .= "found matching ";
-	
-						if (isset($_SESSION['user_permissions']) AND ereg("allow_sql_search", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_sql_search'...
-							// ...generate a link to 'sql_search.php' with a custom SQL query that matches the current result set & display options:
-							$HeaderString = $HeaderStringPart . "<a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;submit=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;oldQuery=" . rawurlencode($oldQuery) . "\" title=\"modify your current query\">your query</a>";
-						else // use of 'sql_search.php' isn't allowed for this user
-							$HeaderString = $HeaderStringPart . "your query"; // so we ommit the link
-
-						if (isset($_SESSION['user_permissions']) AND ((isset($_SESSION['loginEmail']) AND ereg("(allow_user_queries|allow_rss_feeds)", $_SESSION['user_permissions'])) OR (!isset($_SESSION['loginEmail']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])))) // if the 'user_permissions' session variable contains 'allow_rss_feeds' -OR- if logged in, aditionally: 'allow_user_queries':
-							$HeaderString .= " (";
-	
-						if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_queries", $_SESSION['user_permissions']))) // if a user is logged in AND the 'user_permissions' session variable contains 'allow_user_queries'...
-						{
-							// ...we'll show a link to save the current query:
-							$HeaderString .= "<a href=\"query_manager.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;displayType=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;viewType=$viewType&amp;oldQuery=" . rawurlencode($oldQuery) . "\" title=\"save your current query\">save</a>";
-
-							if (isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_rss_feeds', we'll insert a pipe between the 'save' and 'track' links...
-								$HeaderString .= " | ";
-						}
-
-						if (isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_rss_feeds', we'll show a link that will generate a dynamic RSS feed for the current query...
-						{
-							// ...extract the 'WHERE' clause from the SQL query to include it within the RSS link:
-							$queryWhereClause = preg_replace("/^.+?WHERE (.+?)(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$).*?$/i","\\1",$query);
-				
-							// ...and display a link that will generate a dynamic RSS feed for the current query:
-							$HeaderString .= "<a href=\"rss.php?where=" . rawurlencode($queryWhereClause) . "&amp;showRows=$showRows\" title=\"track newly added records matching your current query by subscribing to this RSS feed\">track</a>";
-						}
-	
-						if (isset($_SESSION['user_permissions']) AND ((isset($_SESSION['loginEmail']) AND ereg("(allow_user_queries|allow_rss_feeds)", $_SESSION['user_permissions'])) OR (!isset($_SESSION['loginEmail']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])))) // if the 'user_permissions' session variable contains 'allow_rss_feeds' -OR- if logged in, aditionally: 'allow_user_queries':
-							$HeaderString .= ")";
-
-						if ($showQuery == "1")
-							$HeaderString .= ":\n<br>\n<br>\n<code>$query</code>";
-						else // $showQuery == "0" or wasn't specified
-							$HeaderString .= ":";
-				
-						if ($rowsFound > 0)
-							$HeaderString = ($rowOffset + 1) . "&#8211;" . $showMaxRow . " of " . $rowsFound . $HeaderString;
-						elseif ($rowsFound == 0)
-							$HeaderString = $rowsFound . $HeaderString;
-						else
-							$HeaderString = $HeaderString; // well, this is actually bad coding but I do it for clearity reasons...
-					}
-					else // for queries other than SELECT queries (e.g. UPDATE, DELETE or INSERT queries that were executed by the admin via use of 'sql_search.php') display the number of rows that were modified:
-					{
-						if ($affectedRows == 1)
-							$HeaderStringPart = " record was ";
-						else
-							$HeaderStringPart = " records were ";
-
-						if ($showQuery == "1")
-							$HeaderString = $affectedRows . $HeaderStringPart . "affected by <a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;submit=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;oldQuery=" . rawurlencode($oldQuery) . "\">your query</a>:\n<br>\n<br>\n<code>$query</code>";
-						else // $showQuery == "0" or wasn't specified
-							$HeaderString = $affectedRows . $HeaderStringPart . "affected by <a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;submit=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;oldQuery=" . rawurlencode($oldQuery) . "\">your query</a>:";
-					}
-				}
-			}
-			else
-			{
-				$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
-
-				// Note: though we clear the session variable, the current message is still available to this script via '$HeaderString':
-				deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
 			}
 
+			// b) The "Previous" page begins at the current offset LESS the number of rows per page
+			$previousOffset = $rowOffset - $showRows;
 
-			// Now, show the login status:
-			showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
+			// c) The "Next" page begins at the current offset PLUS the number of rows per page
+			$nextOffset = $rowOffset + $showRows;
 
-			// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-			displayHTMLhead(htmlentities($officialDatabaseName) . " -- Query Results", "index,follow", "Results from the " . htmlentities($officialDatabaseName), "", true, "", $viewType);
-			if ($viewType != "Print") // Note: we ommit the visible header in print view! ('viewType=Print')
-				showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
+			// d) Seek to the current offset
+			mysql_data_seek($result, $rowOffset);
+		}
+	else // set variables to zero in order to prevent 'Undefined variable...' messages when nothing was found ('$rowsFound = 0'):
+		{
+			$rowOffset = 0;
+			$previousOffset = 0;
+			$nextOffset = 0;
+		}
+
+	// Third, calculate the maximum result number on each page ('$showMaxRow' is required as parameter to the 'displayDetails()' function)
+	if (($rowOffset + $showRows) < $rowsFound)
+		$showMaxRow = ($rowOffset + $showRows); // maximum result number on each page
+	else
+		$showMaxRow = $rowsFound; // for the last results page, correct the maximum result number if necessary
+
+	// Fourth, check if there's some query URL available pointing to a previous search results page
+	if ($oldQuery == "")
+		{
+			// If there's no query URL available, we build the *full* query URL for the page currently displayed. The variable '$oldQuery' will get included into every 'browse'/'field title'/'display details'/'edit record'/'add record' link. Plus it will get written into a hidden form tag so that it's available on 'display details' (batch display)
+			// The variable '$oldQuery' gets routed thru the 'display details' and 'record.php' forms to facilitate a link to the current results page on the subsequent receipt page that follows any add/edit/delete action!
+			$oldQuery = "sqlQuery=" . $query . "&amp;showQuery=" . $showQuery . "&amp;showLinks=" . $showLinks . "&amp;formType=sqlSearch&amp;showRows=" . $showRows . "&amp;rowOffset=" . $rowOffset . "&amp;submit=" . $displayType . "&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=" . $citeOrder;
+		}
+	else // there's already a query URL available
+		// Note: If there's an existing 'oldQuery', a new 'oldQuery' will be generated only, if the output is routed thru the 'displayColumns()' function!
+		//       This will only happen if $displayType == '' (i.e., not 'Display', 'Cite' or 'RSS').
+		{
+			if (ereg('sqlQuery%3D', $oldQuery)) // if '$oldQuery' still contains URL encoded data... ('%3D' is the URL encoded form of '=', see note below!)
+				$oldQuery = rawurldecode($oldQuery); // ...URL decode old query URL (it was URL encoded before incorporation into a hidden tag of the 'queryResults' form to avoid any HTML syntax errors)
+												// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
+												//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
+			$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
+			$oldQuery = ereg_replace('(\\\\)+','\\\\',$oldQuery);
+		}
+
+	// Finally, build the appropriate header string (which is required as parameter to the 'showPageHeader()' function):
+	if (!isset($_SESSION['HeaderString'])) // if there's no stored message available
+	{
+		if (!empty($headerMsg)) // if there's a custom header message available, e.g. one that describes who's literature is being displayed...
+		{
+			$HeaderString = $headerMsg; // ...we use that string as header message ('$headerMsg' could contain something like: "Literature of Matthias Steffens:")
+		}
+		else // provide the default message:
+		{
+			if (eregi("^SELECT", $query)) // for SELECT queries:
+			{
+				if ($rowsFound == 1)
+					$HeaderStringPart = " record ";
+				else
+					$HeaderStringPart = " records ";
+
+				$HeaderStringPart .= "found matching ";
+
+				if (isset($_SESSION['user_permissions']) AND ereg("allow_sql_search", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_sql_search'...
+					// ...generate a link to 'sql_search.php' with a custom SQL query that matches the current result set & display options:
+					$HeaderString = $HeaderStringPart . "<a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;submit=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;oldQuery=" . rawurlencode($oldQuery) . "\" title=\"modify your current query\">your query</a>";
+				else // use of 'sql_search.php' isn't allowed for this user
+					$HeaderString = $HeaderStringPart . "your query"; // so we ommit the link
+
+				if (isset($_SESSION['user_permissions']) AND ((isset($_SESSION['loginEmail']) AND ereg("(allow_user_queries|allow_rss_feeds)", $_SESSION['user_permissions'])) OR (!isset($_SESSION['loginEmail']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])))) // if the 'user_permissions' session variable contains 'allow_rss_feeds' -OR- if logged in, aditionally: 'allow_user_queries':
+					$HeaderString .= " (";
+
+				if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_queries", $_SESSION['user_permissions']))) // if a user is logged in AND the 'user_permissions' session variable contains 'allow_user_queries'...
+				{
+					// ...we'll show a link to save the current query:
+					$HeaderString .= "<a href=\"query_manager.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;displayType=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;viewType=$viewType&amp;oldQuery=" . rawurlencode($oldQuery) . "\" title=\"save your current query\">save</a>";
+
+					if (isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_rss_feeds', we'll insert a pipe between the 'save' and 'track' links...
+						$HeaderString .= " | ";
+				}
+
+				if (isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_rss_feeds', we'll show a link that will generate a dynamic RSS feed for the current query...
+				{
+					// ...extract the 'WHERE' clause from the SQL query to include it within the RSS link:
+					$queryWhereClause = preg_replace("/^.+?WHERE (.+?)(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$).*?$/i","\\1",$query);
+
+					// ...and display a link that will generate a dynamic RSS feed for the current query:
+					$HeaderString .= "<a href=\"rss.php?where=" . rawurlencode($queryWhereClause) . "&amp;showRows=$showRows\" title=\"track newly added records matching your current query by subscribing to this RSS feed\">track</a>";
+				}
+
+				if (isset($_SESSION['user_permissions']) AND ((isset($_SESSION['loginEmail']) AND ereg("(allow_user_queries|allow_rss_feeds)", $_SESSION['user_permissions'])) OR (!isset($_SESSION['loginEmail']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])))) // if the 'user_permissions' session variable contains 'allow_rss_feeds' -OR- if logged in, aditionally: 'allow_user_queries':
+					$HeaderString .= ")";
+
+				if ($showQuery == "1")
+					$HeaderString .= ":\n<br>\n<br>\n<code>$query</code>";
+				else // $showQuery == "0" or wasn't specified
+					$HeaderString .= ":";
+
+				if ($rowsFound > 0)
+					$HeaderString = ($rowOffset + 1) . "&#8211;" . $showMaxRow . " of " . $rowsFound . $HeaderString;
+				elseif ($rowsFound == 0)
+					$HeaderString = $rowsFound . $HeaderString;
+				else
+					$HeaderString = $HeaderString; // well, this is actually bad coding but I do it for clearity reasons...
+			}
+			else // for queries other than SELECT queries (e.g. UPDATE, DELETE or INSERT queries that were executed by the admin via use of 'sql_search.php') display the number of rows that were modified:
+			{
+				if ($affectedRows == 1)
+					$HeaderStringPart = " record was ";
+				else
+					$HeaderStringPart = " records were ";
+
+				if ($showQuery == "1")
+					$HeaderString = $affectedRows . $HeaderStringPart . "affected by <a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;submit=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;oldQuery=" . rawurlencode($oldQuery) . "\">your query</a>:\n<br>\n<br>\n<code>$query</code>";
+				else // $showQuery == "0" or wasn't specified
+					$HeaderString = $affectedRows . $HeaderStringPart . "affected by <a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;submit=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;oldQuery=" . rawurlencode($oldQuery) . "\">your query</a>:";
+			}
+		}
+	}
+	else
+	{
+		$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
+
+		// Note: though we clear the session variable, the current message is still available to this script via '$HeaderString':
+		deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+	}
 
 
-			// (4b) DISPLAY results:
-			if ($displayType == "Display") // display details for each of the selected records
-				displayDetails($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $showMaxRow, $headerMsg, $userID, $viewType, $selectedRecordsArray);
-	
-			elseif ($displayType == "Cite") // build a proper citation for each of the selected records
-				generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $headerMsg, $userID, $viewType, $selectedRecordsArray);
+	// Now, show the login status:
+	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
-	 		else // show all records in columnar style
-				displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $addCounterMax);
-		 
+	// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Query Results", "index,follow", "Results from the " . htmlentities($officialDatabaseName), "", true, "", $viewType);
+	if ($viewType != "Print") // Note: we ommit the visible header in print view! ('viewType=Print')
+		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
+
+
+	// (4b) DISPLAY results:
+	if ($displayType == "Display") // display details for each of the selected records
+		displayDetails($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $showMaxRow, $headerMsg, $userID, $viewType, $selectedRecordsArray);
+
+	elseif ($displayType == "Cite") // build a proper citation for each of the selected records
+		generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $headerMsg, $userID, $viewType, $selectedRecordsArray);
+
+	else // show all records in columnar style
+		displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $addCounterMax);
+
 	// --------------------------------------------------------------------
 
 	// (5) CLOSE CONNECTION
@@ -616,8 +635,8 @@
 			$orderBy = eregi_replace(".+ORDER BY (.+) LIMIT.+","\\1",$query); // extract 'ORDER BY'... parameter (without including any 'LIMIT' parameter)
 		else // query does not contain the 'LIMIT' parameter
 			$orderBy = eregi_replace(".+ORDER BY (.+)","\\1",$query); // extract 'ORDER BY'... parameter
-			
-	if (!ereg("^(Add|Remove)$", $displayType) OR (ereg("^(Add|Remove)$", $displayType) AND ($nothingChecked == false)))
+
+	if (!ereg("^(Add|Remove|Export)$", $displayType) OR (ereg("^(Add|Remove|Export)$", $displayType) AND ($nothingChecked == false))) // we include 'Export' here since this routine will be used for feedback in case the user clicked the 'Export' button but didn't select any records
 	{
 		// If the query has results ...
 		if ($rowsFound > 0)
@@ -634,26 +653,26 @@
 			// hide those last columns that were added by the script and not by the user
 			$fieldsToDisplay = $fieldsFound-(2+$CounterMax+$addCounterMax); // (2+$CounterMax) -> $CounterMax is increased by 2 in order to hide the 'orig_record' & 'serial' columns (which were added to make checkboxes & dup warning work)
 																			// $addCounterMax is set to 1 when the field given in '$fileVisibilityException[0]' (defined in 'ini.inc.php') was added to the query, otherwise '$addCounterMax = 0'
-	
+
 			// Calculate the number of all visible columns (which is needed as colspan value inside some TD tags)
 			if ($showLinks == "1")
 				$NoColumns = (1+$fieldsToDisplay+1); // add checkbox & Links column
 			else
 				$NoColumns = (1+$fieldsToDisplay); // add checkbox column
-	
+
 			// Although there might be an (older) query URL available, we build a new query URL for the page currently displayed. The variable '$oldQuery' will get included into every 'browse'/'field title'/'display details'/'edit record'/'add record' link. Plus it will get written into a hidden form tag so that it's available on 'display details' (batch display)
 			// The variable '$oldQuery' gets routed thru the 'display details' and 'record.php' forms to facilitate a link to the current results page on the subsequent receipt page that follows any add/edit/delete action!
 			$oldQuery = "sqlQuery=" . $query . "&amp;showQuery=" . $showQuery . "&amp;showLinks=" . $showLinks . "&amp;formType=sqlSearch&amp;showRows=" . $showRows . "&amp;rowOffset=" . $rowOffset . "&amp;submit=" . $displayType . "&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=" . $citeOrder;
-	
-	
+
+
 			// Note: we ommit the 'Search Within Results' form in print view! ('viewType=Print')
 			if ($viewType != "Print")
 			{
 				// 2) Build a TABLE with forms containing options to show the user's groups, refine the search results or change the displayed columns:
-	
+
 				//    2a) Build a FORM with a popup containing the user's groups:
 				$formElementsGroup = buildGroupSearchElements("search.php", $queryURL, $query, $showQuery, $showLinks, $showRows); // function 'buildGroupSearchElements()' is defined in 'include.inc.php'
-	
+
 				//    2b) Build a FORM containing options to refine the search results:
 				//        First, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
 				$refineSearchSelectorElements1 = "author, title, year, keywords, abstract, type, publication, abbrev_journal, volume, issue, pages, thesis, publisher, place, editor, series_title, area, notes, location, call_number"; // these columns will be always visible (no matter whether the user is logged in or not)
@@ -661,7 +680,7 @@
 				$refineSearchSelectorElementSelected = "author"; // this column will be selected by default
 				//        Call the 'buildRefineSearchElements()' function (defined in 'include.inc.php') which does the actual work:
 				$formElementsRefine = buildRefineSearchElements("search.php", $queryURL, $showQuery, $showLinks, $showRows, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected);
-	
+
 				//    2c) Build a FORM containing display options (show/hide columns or change the number of records displayed per page):
 				//        Again, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
 				$displayOptionsSelectorElements1 = "author, title, year, keywords, abstract, type, publication, abbrev_journal, volume, issue, pages, thesis, publisher, place, editor, series_title, area, notes, location, call_number"; // these columns will be always visible (no matter whether the user is logged in or not)
@@ -669,21 +688,21 @@
 				$displayOptionsSelectorElementSelected = "author"; // this column will be selected by default
 				//        Call the 'buildDisplayOptionsElements()' function (defined in 'include.inc.php') which does the actual work:
 				$formElementsDisplayOptions = buildDisplayOptionsElements("search.php", $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $displayOptionsSelectorElements1, $displayOptionsSelectorElements2, $displayOptionsSelectorElementSelected, $fieldsToDisplay);
-	
+
 				echo displayResultsHeader($formElementsGroup, $formElementsRefine, $formElementsDisplayOptions); // function 'displayResultsHeader()' is defined in 'results_header.inc.php'
 			}
-	
-	
+
+
 			//    and insert a divider line (which separates the 'Search Within Results' form from the browse links & results data below):
 			if ($viewType != "Print") // Note: we ommit the divider line in print view! ('viewType=Print')
 				echo "\n<hr align=\"center\" width=\"93%\">";
-	
+
 			// 3) Build a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages
 			//    call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
 			$BrowseLinks = buildBrowseLinks("search.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "", $citeStyle, $citeOrder, $orderBy, $headerMsg, $viewType);
 			echo $BrowseLinks;
-	
-	
+
+
 			// 4) Start a FORM
 			echo "\n<form action=\"search.php\" method=\"POST\" name=\"queryResults\">"
 					. "\n<input type=\"hidden\" name=\"formType\" value=\"queryResults\">"
@@ -696,18 +715,18 @@
 					//       However, '$rowOffset' MUST NOT be set if the user clicked the 'Display' or 'Cite' button! Therefore we'll trap for this case at the top of the script.
 					. "\n<input type=\"hidden\" name=\"sqlQuery\" value=\"$queryURL\">" // embed the current sqlQuery so that it can be re-applied after the user pressed either of the 'Add', 'Remove', 'Remember' or 'Forget' buttons within the 'queryResults' form
 					. "\n<input type=\"hidden\" name=\"oldQuery\" value=\"" . rawurlencode($oldQuery) . "\">"; // embed the current value of '$oldQuery' so that it's available on 'display details' (batch display)
-	
-	
+
+
 			// 5) And start a TABLE, with column headers
 			echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the database results for your query\">";
-			
+
 			//    for the column headers, start a TABLE ROW ...
 			echo "\n<tr>";
-	
+
 			// ... print a marker ('x') column (which will hold the checkboxes within the results part)
 			if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
 				echo "\n\t<th align=\"left\" valign=\"top\">&nbsp;</th>";
-	
+
 			// for each of the attributes in the result set...
 			for ($i=0; $i<$fieldsToDisplay; $i++)
 			{
@@ -720,11 +739,11 @@
 				$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "", "", "", $viewType);
 				echo $tableHeaderLink; // print the attribute name as link
 			 }
-	
+
 			if ($showLinks == "1")
 				{
 					$newORDER = ("ORDER BY url DESC, doi DESC"); // Build the appropriate ORDER BY clause to facilitate sorting by Links column
-	
+
 					$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
 					$HTMLafterLink = "</th>"; // close the table header tag
 					// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
@@ -732,11 +751,11 @@
 					$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "", "Links", "url", $viewType);
 					echo $tableHeaderLink; // print the attribute name as link
 				}
-	
+
 			// Finish the row
 			echo "\n</tr>";
 			// END RESULTS HEADER ----------------------
-			
+
 			// BEGIN RESULTS DATA COLUMNS --------------
 			// Fetch one page of results (or less if on the last page)
 			// (i.e., upto the limit specified in $showRows) fetch a row into the $row array and ...
@@ -744,12 +763,12 @@
 			{
 				// ... start a TABLE ROW ...
 				echo "\n<tr>";
-	
+
 				// ... print a column with a checkbox
 				if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
 				{
 					echo "\n\t<td align=\"center\" valign=\"top\" width=\"10\">\n\t\t<input type=\"checkbox\" name=\"marked[]\" value=\"" . $row["serial"] . "\" title=\"select this record\">";
-		
+
 					if (!empty($row["orig_record"]))
 					{
 						echo "\n\t\t<br>";
@@ -758,17 +777,17 @@
 						else // $row["orig_record"] > 0
 							echo "<img src=\"img/caution.gif\" alt=\"(duplicate)\" title=\"duplicate record\" width=\"5\" height=\"16\" hspace=\"0\" border=\"0\">";
 					}
-		
+
 					echo "\n\t</td>";
 				}
-	
+
 				// ... and print out each of the attributes
 				// in that row as a separate TD (Table Data)
 				// (Note: 'htmlentities($row[$i])' for HTML encoding higher ASCII will only work correctly if character encoding of data is ISO-8859-1!)
 				for ($i=0; $i<$fieldsToDisplay; $i++)
 				{
 					$row[$i] = htmlentities($row[$i]); // HTML encode higher ASCII characters
-	
+
 					// the following two lines will fetch the current attribute name:
 					$info = mysql_fetch_field ($result, $i); // get the meta-data for the attribute
 					$orig_fieldname = $info->name; // get the attribute name
@@ -777,15 +796,15 @@
 					// (the array '$markupSearchReplacePatterns' in 'ini.inc.php' defines which search & replace actions will be employed)
 					if (ereg("^(title|keywords|abstract)$", $orig_fieldname)) // apply the defined search & replace actions to the 'title', 'keywords' and 'abstract' fields:
 						$row[$i] = searchReplaceText($markupSearchReplacePatterns, $row[$i]); // function 'searchReplaceText()' is defined in 'include.inc.php'
-	
+
 					echo "\n\t<td valign=\"top\">" . $row[$i] . "</td>";
 				}
-	
+
 				// embed appropriate links (if available):
 				if ($showLinks == "1")
 				{
 					echo "\n\t<td valign=\"top\">";
-	
+
 					if (isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_details_view'...
 					{
 						// ... display a link that opens the 'details view' for this record:
@@ -806,22 +825,22 @@
 							. "&amp;oldQuery=" . rawurlencode($oldQuery)
 							. "\"><img src=\"img/details.gif\" alt=\"details\" title=\"show details\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
 					}
-	
+
 					if (isset($_SESSION['user_permissions']) AND ereg("allow_edit", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_edit'...
 						// ... display a link that opens the edit form for this record:
 						echo "\n\t\t<a href=\"record.php?serialNo=" . $row["serial"] . "&amp;recordAction=edit"
 							. "&amp;oldQuery=" . rawurlencode($oldQuery)
 							. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit record\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
-	
+
 					if ((!empty($row["file"])) OR (!empty($row["doi"])) OR (!empty($row["url"])))
 						echo "\n\t\t<br>";
-	
+
 					// show a link to any corresponding file if one of the following conditions is met:
 					// - the variable '$fileVisibility' (defined in 'ini.inc.php') is set to 'everyone'
 					// - the variable '$fileVisibility' is set to 'login' AND the user is logged in
 					// - the variable '$fileVisibility' is set to 'user-specific' AND the 'user_permissions' session variable contains 'allow_download'
 					// - the array variable '$fileVisibilityException' (defined in 'ini.inc.php') contains a pattern (in array element 1) that matches the contents of the field given (in array element 0)
-					if ($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND ereg("allow_download", $_SESSION['user_permissions']))) OR (preg_match($fileVisibilityException[1], $row[$fileVisibilityException[0]])))
+					if ($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND ereg("allow_download", $_SESSION['user_permissions']))) OR (!empty($fileVisibilityException) AND preg_match($fileVisibilityException[1], $row[$fileVisibilityException[0]])))
 					{
 						if (!empty($row["file"]))// if the 'file' field is NOT empty
 						{
@@ -829,21 +848,21 @@
 								$URLprefix = ""; // we don't alter the URL given in the 'file' field
 							else // if the 'file' field contains only a partial path (like 'polarbiol/10240001.pdf') or just a file name (like '10240001.pdf')
 								$URLprefix = $filesBaseURL; // use the base URL of the standard files directory as prefix ('$filesBaseURL' is defined in 'ini.inc.php')
-	
+
 							if (ereg("\.pdf$", $row["file"])) // if the 'file' field contains a link to a PDF file
 								echo "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file_PDF.gif\" alt=\"pdf\" title=\"download PDF file\" width=\"17\" height=\"17\" hspace=\"0\" border=\"0\"></a>"; // display a PDF file icon as download link
 							else
-								echo "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file.gif\" alt=\"file\" title=\"download file\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link						
+								echo "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file.gif\" alt=\"file\" title=\"download file\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link
 						}
 					}
-	
+
 					// if a DOI number exists for this record, we'll prefer it as link, otherwise we use the URL (if available):
 					// (note, that in column view, we'll use the same icon, no matter if the DOI or the URL is used for the link)
 					if (!empty($row["doi"]))
 						echo "\n\t\t<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/link.gif\" alt=\"doi\" title=\"goto web page (via DOI)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
 					elseif (!empty($row["url"])) // 'htmlentities()' is used to convert any '&' into '&amp;'
 						echo "\n\t\t<a href=\"" . htmlentities($row["url"]) . "\"><img src=\"img/link.gif\" alt=\"url\" title=\"goto web page\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
-	
+
 	// 				// as an alternative, print out DOI and URL links individually:
 	//
 	//				if ((!empty($row["file"])) AND ((!empty($row["doi"])) OR (!empty($row["url"]))))
@@ -857,7 +876,7 @@
 	//
 	//				if (!empty($row["url"]))
 	//					echo "\n\t\t<a href=\"" . $row["url"] . "\"><img src=\"img/link.gif\" alt=\"url\" title=\"goto web page\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
-	
+
 					echo "\n\t</td>";
 				}
 				// Finish the row
@@ -866,7 +885,7 @@
 			// Finish the table
 			echo "\n</table>";
 			// END RESULTS DATA COLUMNS ----------------
-	
+
 			// BEGIN RESULTS FOOTER --------------------
 			// Note: we ommit the results footer in print view! ('viewType=Print')
 			if ($viewType != "Print")
@@ -874,18 +893,18 @@
 				// Again, insert the (already constructed) BROWSE LINKS
 				// (i.e., a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages)
 				echo $BrowseLinks;
-	
+
 				if (isset($_SESSION['user_permissions']) AND ((isset($_SESSION['loginEmail']) AND ereg("(allow_details_view|allow_cite|allow_user_groups|allow_export|allow_batch_export)", $_SESSION['user_permissions'])) OR (!isset($_SESSION['loginEmail']) AND ereg("(allow_details_view|allow_cite)", $_SESSION['user_permissions'])))) // if the 'user_permissions' session variable does contain any of the following: 'allow_details_view', 'allow_cite' -AND- if logged in, aditionally: 'allow_user_groups', 'allow_export', 'allow_batch_export'...
 					// ...Insert a divider line (which separates the results data from the forms in the footer):
 					echo "\n<hr align=\"center\" width=\"93%\">";
-	
+
 				// Build a TABLE containing rows with buttons for displaying/citing selected records
 				// Call the 'buildResultsFooter()' function (which does the actual work):
 				$ResultsFooter = buildResultsFooter($NoColumns, $showRows, $citeStyle, $selectedRecordsArray);
 				echo $ResultsFooter;
 			}
 			// END RESULTS FOOTER ----------------------
-	
+
 			// Finally, finish the form
 			echo "\n</form>";
 		}
@@ -916,7 +935,7 @@
 		global $fileVisibilityException; // defined in 'ini.inc.php'
 
 	// If the query has results ...
-	if ($rowsFound > 0) 
+	if ($rowsFound > 0)
 	{
 		// BEGIN RESULTS HEADER --------------------
 		// 1) First, initialize some variables that we'll need later on
@@ -962,7 +981,7 @@
 
 		// 5) And start a TABLE, with column headers
 		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" width=\"95%\" summary=\"This table holds the database results for your query\">";
-		
+
 		//    for the column headers, start a TABLE ROW ...
 		echo "\n<tr>";
 
@@ -992,7 +1011,7 @@
 		// Finish the row
 		echo "\n</tr>";
 		// END RESULTS HEADER ----------------------
-		
+
 		// BEGIN RESULTS DATA COLUMNS --------------
 		// Fetch one page of results (or less if on the last page)
 		// (i.e., upto the limit specified in $showRows) fetch a row into the $row array and ...
@@ -1066,7 +1085,7 @@
 							$recordData .= "\n\t<td valign=\"top\" class=\"userfieldsbg\">"; // ...without colspan attribute
 						else // no colored background (by default)
 							$recordData .= "\n\t<td valign=\"top\" class=\"otherfieldsbg\">"; // ...without colspan attribute
-		
+
 					if (ereg("^(author|title|year)$", $orig_fieldname)) // print author, title & year fields in bold
 						$recordData .= "<b>";
 
@@ -1084,7 +1103,7 @@
 					$recordData .= $row[$i]; // print the attribute data
 
 					if (ereg("^(author|title|year)$", $orig_fieldname))
-						$recordData .= "</b>";							
+						$recordData .= "</b>";
 
 					$recordData .= "</td>"; // finish the TD tag
 
@@ -1130,7 +1149,7 @@
 										// - the variable '$fileVisibility' is set to 'login' AND the user is logged in
 										// - the variable '$fileVisibility' is set to 'user-specific' AND the 'user_permissions' session variable contains 'allow_download'
 										// - the array variable '$fileVisibilityException' (defined in 'ini.inc.php') contains a pattern (in array element 1) that matches the contents of the field given (in array element 0)
-										if ($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND ereg("allow_download", $_SESSION['user_permissions']))) OR (preg_match($fileVisibilityException[1], $row[$fileVisibilityException[0]])))
+										if ($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND ereg("allow_download", $_SESSION['user_permissions']))) OR (!empty($fileVisibilityException) AND preg_match($fileVisibilityException[1], $row[$fileVisibilityException[0]])))
 										{
 											if (!empty($row["file"]))// if the 'file' field is NOT empty
 											{
@@ -1138,11 +1157,11 @@
 													$URLprefix = ""; // we don't alter the URL given in the 'file' field
 												else // if the 'file' field contains only a partial path (like 'polarbiol/10240001.pdf') or just a file name (like '10240001.pdf')
 													$URLprefix = $filesBaseURL; // use the base URL of the standard files directory as prefix ('$filesBaseURL' is defined in 'ini.inc.php')
-						
+
 												if (ereg("\.pdf$", $row["file"])) // if the 'file' field contains a link to a PDF file
 													$recordData .= "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file_PDF.gif\" alt=\"pdf\" title=\"download PDF file\" width=\"17\" height=\"17\" hspace=\"0\" border=\"0\"></a>"; // display a PDF file icon as download link
 												else
-													$recordData .= "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file.gif\" alt=\"file\" title=\"download file\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link						
+													$recordData .= "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file.gif\" alt=\"file\" title=\"download file\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link
 											}
 										}
 
@@ -1151,7 +1170,7 @@
 
 										if (!empty($row["url"])) // 'htmlentities()' is used to convert any '&' into '&amp;'
 											$recordData .= "\n\t\t<a href=\"" . htmlentities($row["url"]) . "\"><img src=\"img/www.gif\" alt=\"url\" title=\"goto web page\" width=\"17\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
-							
+
 										if ((($linkElementCounterLoggedOut > 2) OR (isset($_SESSION['loginEmail']) AND $linkElementCounterLoggedIn > 2)) AND !empty($row["url"]))
 											$recordData .= "&nbsp;";
 
@@ -1198,7 +1217,7 @@
 						. "\n<tr>"
 						. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>"
 						. "\n</tr>";
-				
+
 			echo $recordData;
 		}
 		// Finish the table
@@ -1207,12 +1226,12 @@
 
 		// BEGIN RESULTS FOOTER --------------------
 		// Note: we ommit the results footer in print view! ('viewType=Print')
-	  if ($viewType != "Print")
+		if ($viewType != "Print")
 		{
 			// Again, insert the (already constructed) BROWSE LINKS
 			// (i.e., a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages)
 			echo $BrowseLinks;
-	
+
 			// Build a TABLE containing rows with buttons for displaying/citing selected records
 			// Call the 'buildResultsFooter()' function (which does the actual work):
 			$ResultsFooter = buildResultsFooter($NoColumns, $showRows, $citeStyle, $selectedRecordsArray);
@@ -1232,22 +1251,136 @@
 
 	// --------------------------------------------------------------------
 
-	function generateExport($result, $exportFormat)
+	// EXPORT RECORDS using the specified export format
+	function generateExport($result, $exportFormat, $exportType, $viewType)
+	{
+		global $officialDatabaseName; // these variables are defined in 'ini.inc.php'
+		global $markupSearchReplacePatterns;
+		global $contentTypeCharset;
+
+		$exportFormatFile = getFormatFile($exportFormat, "export"); // fetch the path/name of the export format file that's associated with the export format given in '$exportFormat'
+
+		// include the found export format file *once*:
+		include_once "export/" . $exportFormatFile; // instead of 'include_once' we could also use: 'if ($rowCounter == 0) { include "export/" . $exportFormatFile; }'
+
+		// export found records using the specified export format:
+		$exportText = exportRecords($result, $exportFormat); // function 'exportRecords()' is defined in the export format file given in '$exportFormatFile' (which, in turn, must reside in the 'export' directory of the refbase root directory)
+
+		// adjust the mime type and return exported data based on the key given in '$exportType':
+		if ($exportType == "text")
+			$exportContentType = "text/plain";
+
+		elseif (eregi("^(html|email)$", $exportType))
+			$exportContentType = "text/html";
+
+		elseif ($exportType == "xml")
+			$exportContentType = "text/xml";
+
+		elseif ($exportType == "file") // attempt to set mime type & download file name according to the chosen export format:
+		{
+			$exportContentType = "text/plain"; // set the default mime type
+
+			// Note that we do some "quick'n dirty" guessing for some export formats here (e.g., we assume/require that an XML export format name
+			// contains 'XML' within its name!). This is in NO way fool proof and should be handled in a better way!
+			if (eregi("XML", $exportFormat)) // if the export format name contains 'XML'
+			{
+				$exportContentType = "text/xml";
+				$exportFileName = "mods_export.xml";
+			}
+
+			elseif (eregi("Endnote|RIS|Bibtex", $exportFormat)) // if the export format name contains either 'Endnote', 'Bibtex' or 'RIS'
+			{
+				if (eregi("Endnote", $exportFormat))
+					$exportFileName = "endnote_export.enw";
+
+				elseif (eregi("Bibtex", $exportFormat))
+					$exportFileName = "bibtex_export.bib";
+
+				elseif (eregi("RIS", $exportFormat))
+					$exportFileName = "ris_export.ris";
+
+			}
+			else
+				$exportFileName = "exported_records.txt"; // set the default download file name
+		}
+
+		// set the appropriate mimetype & set the character encoding to the one given in '$contentTypeCharset' (which is defined in 'ini.inc.php'):
+		header('Content-type: ' . $exportContentType . '; charset=' . $contentTypeCharset);
+
+		if ($exportType == "file") // instruct the browser to download the resulting XML file:
+			header('Content-Disposition: attachment; filename="' . $exportFileName . '"'); // Note that this doesn't seem to work with all browsers (notably not with Safari & OmniWeb on MacOSX Panther, but it does work with Mozilla & Camino)
+
+
+		elseif (eregi("^(html|email)$", $exportType)) // output data as HTML, wrapped into <pre>...</pre> tags:
+		{
+			if ($exportType == "email") // send exported data to the user's login email address:
+			{
+				$emailRecipient = $_SESSION['loginEmail'];
+				$emailSubject = "Your records from the " . $officialDatabaseName . " (exported to " . $exportFormat . " format)";
+				$emailBody = $exportText;
+	
+				sendEmail($emailRecipient, $emailSubject, $emailBody); // function 'sendEmail()' is defined in 'include.inc.php'
+			}
+
+			// call the 'displayHTMLhead()' function (defined in 'header.inc.php'):
+			displayHTMLhead(htmlentities($officialDatabaseName) . " -- Exported Data", "index,follow", "Data exported from the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+
+			$exportText = "\n\t<pre>\n" . htmlentities($exportText) . "\n\t</pre>\n</body>\n</html>\n";
+
+			if ($exportType == "email")
+				$exportText = "\n\t<p>"
+							. "\n\t\t<a href=\"javascript:history.back()\" title=\"go back to results\">Go Back</a>"
+							. "\n\t</p>"
+							. "\n\t<p>"
+							. "\n\t\t<b>The data below have been sent to <a href=\"mailto:" . $_SESSION['loginEmail'] . "\">" . $_SESSION['loginEmail'] . "</a>:</b>"
+							. "\n\t</p>"
+							. $exportText;
+		}
+
+		// we'll present the output within the _same_ browser window:
+		// (note that we don't use a popup window here, since this may be blocked by particular browsers, and I think it's safe to assume that the users knows how to use the back button of his browser...)
+		echo $exportText;
+	}
+
+	// --------------------------------------------------------------------
+
+	// SHOW THE RESULTS IN AN HTML <TABLE> (citation layout)
+	function generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $headerMsg, $userID, $viewType, $selectedRecordsArray)
 	{
 		global $markupSearchReplacePatterns; // defined in 'ini.inc.php'
-		$exportFormatFile = getFormatFile($exportFormat); // fetch the name of the citation style file that's associated with the style given in '$citeStyle'
 
-		// include the found citation style file *once*:
-    // NOTE: It currently looks in styles/ rather than exports/
-		include_once "styles/" . $exportFormatFile; // instead of 'include_once' we could also use: 'if ($rowCounter == 0) { include "styles/" . $citeStyleFile; }'
+		// If the query has results ...
+		if ($rowsFound > 0)
+		{
+			// BEGIN RESULTS HEADER --------------------
+			// 1) First, initialize some variables that we'll need later on
+			// Calculate the number of all visible columns (which is needed as colspan value inside some TD tags)
+			if ($showLinks == "1" && $citeOrder == "year") // in citation layout, we simply set it to a fixed value (either '1' or '2', depending on the values of '$showLinks' and '$citeOrder')
+				$NoColumns = 2; // first column: literature citation, second column: 'display details' link
+			else
+				$NoColumns = 1;
 
-		$exportArray = Array(); // Initialize array for individually exported records
-		
-		// Generate the export for each individual record and push them onto an array
-		while ($row = @ mysql_fetch_array($result)) // for all rows found
-		  {
+
+			// 2) Note: we ommit the 'Search Within Results' form in citation layout! (compare with 'displayColumns()' function)
+
+
+			// 3) Build a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages
+			//    call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
+			$BrowseLinks = buildBrowseLinks("search.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "Cite", $citeStyle, $citeOrder, $orderBy, $headerMsg, $viewType);
+			echo $BrowseLinks;
+
+			// 4) Start a TABLE
+			echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the database results for your query\">";
+			// END RESULTS HEADER ----------------------
+
+			// BEGIN RESULTS DATA COLUMNS --------------
+			$yearsArray = array(""); // initialize array variable
+
+			// Fetch one page of results (or less if on the last page)
+			// (i.e., upto the limit specified in $showRows) fetch a row into the $row array and ...
+			for ($rowCounter=0; (($rowCounter < $showRows) && ($row = @ mysql_fetch_array($result))); $rowCounter++)
+			{
 				foreach ($row as $rowFieldName => $rowFieldValue)
-				
 					if (!ereg($rowFieldName, "^(author|editor)$")) // we HTML encode higher ASCII chars for all but the author & editor fields. The author & editor fields are excluded here
 						// since these fields must be passed *without* HTML entities to the 'reArrangeAuthorContents()' function (which will then handle the HTML encoding by itself)
 						// (Note: 'htmlentities($row[$i])' for HTML encoding higher ASCII will only work correctly if character encoding of data is ISO-8859-1!)
@@ -1257,143 +1390,82 @@
 				// (the array '$markupSearchReplacePatterns' in 'ini.inc.php' defines which search & replace actions will be employed)
 				$row['title'] = searchReplaceText($markupSearchReplacePatterns, $row['title']); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
-				$record = exportRecord($row, $exportFormat); // function 'exportRecord()' is defined in the citation style file given in '$exportStyleFile' (which, in turn, must reside in the 'styles' directory of the refbase root directory)
 
-				// Add the current record to an array of exports.
+				$citeStyleFile = getStyleFile($citeStyle); // fetch the name of the citation style file that's associated with the style given in '$citeStyle'
+
+				// include the found citation style file *once*:
+				include_once "cite/" . $citeStyleFile; // instead of 'include_once' we could also use: 'if ($rowCounter == 0) { include "cite/" . $citeStyleFile; }'
+
+				// Order attributes according to the chosen output style & record type:
+				$record = citeRecord($row, $citeStyle); // function 'citeRecord()' is defined in the citation style file given in '$citeStyleFile' (which, in turn, must reside in the 'cite' directory of the refbase root directory)
+
+
+				// Print out the current record:
 				if (!empty($record)) // unless the record buffer is empty...
-					{
-						array_push($exportArray,$record);
-					}
-			}
-
-		// Generate and serve a file of ALL records.
-		// NOTE: we are just echoing the export as a string.  We should probably be intelligent about setting mimetype, etc
-		$exportText = exportCollection($exportArray, $exportFormat); // function 'exportRecord()' is defined in the citation style file given in '$exportFormatFile' (which, in turn, ust reside in the 'styles' directory of the refbase root directory
-		echo $exportText;
-	}
-	
-	// SHOW THE RESULTS IN AN HTML <TABLE> (citation layout)
-	function generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $headerMsg, $userID, $viewType, $selectedRecordsArray)
-	{
-		global $markupSearchReplacePatterns; // defined in 'ini.inc.php'
-
-	// If the query has results ...
-	if ($rowsFound > 0) 
-	{
-		// BEGIN RESULTS HEADER --------------------
-		// 1) First, initialize some variables that we'll need later on
-		// Calculate the number of all visible columns (which is needed as colspan value inside some TD tags)
-		if ($showLinks == "1" && $citeOrder == "year") // in citation layout, we simply set it to a fixed value (either '1' or '2', depending on the values of '$showLinks' and '$citeOrder')
-			$NoColumns = 2; // first column: literature citation, second column: 'display details' link
-		else
-			$NoColumns = 1;
-
-
-		// 2) Note: we ommit the 'Search Within Results' form in citation layout! (compare with 'displayColumns()' function)
-
-
-		// 3) Build a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages
-		//    call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
-		$BrowseLinks = buildBrowseLinks("search.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "Cite", $citeStyle, $citeOrder, $orderBy, $headerMsg, $viewType);
-		echo $BrowseLinks;
-
-		// 4) Start a TABLE
-		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the database results for your query\">";
-		// END RESULTS HEADER ----------------------
-		
-		// BEGIN RESULTS DATA COLUMNS --------------
-		$yearsArray = array(""); // initialize array variable
-
-		// Fetch one page of results (or less if on the last page)
-		// (i.e., upto the limit specified in $showRows) fetch a row into the $row array and ...
-		for ($rowCounter=0; (($rowCounter < $showRows) && ($row = @ mysql_fetch_array($result))); $rowCounter++)
-		{
-			foreach ($row as $rowFieldName => $rowFieldValue)
-				if (!ereg($rowFieldName, "^(author|editor)$")) // we HTML encode higher ASCII chars for all but the author & editor fields. The author & editor fields are excluded here
-					// since these fields must be passed *without* HTML entities to the 'reArrangeAuthorContents()' function (which will then handle the HTML encoding by itself)
-					// (Note: 'htmlentities($row[$i])' for HTML encoding higher ASCII will only work correctly if character encoding of data is ISO-8859-1!)
-					$row[$rowFieldName] = htmlentities($row[$rowFieldName]); // HTML encode higher ASCII characters within each of the fields
-
-			// Perform search & replace actions on the text of the 'title' field:
-			// (the array '$markupSearchReplacePatterns' in 'ini.inc.php' defines which search & replace actions will be employed)
-			$row['title'] = searchReplaceText($markupSearchReplacePatterns, $row['title']); // function 'searchReplaceText()' is defined in 'include.inc.php'
-
-
-			$citeStyleFile = getStyleFile($citeStyle); // fetch the name of the citation style file that's associated with the style given in '$citeStyle'
-
-			// include the found citation style file *once*:
-			include_once "styles/" . $citeStyleFile; // instead of 'include_once' we could also use: 'if ($rowCounter == 0) { include "styles/" . $citeStyleFile; }'
-
-			// Order attributes according to the chosen output style & record type:
-			$record = citeRecord($row, $citeStyle); // function 'citeRecord()' is defined in the citation style file given in '$citeStyleFile' (which, in turn, must reside in the 'styles' directory of the refbase root directory)
-
-
-			// Print out the current record:
-			if (!empty($record)) // unless the record buffer is empty...
-			{
-				if ($citeOrder == "year") // list records in blocks sorted by year:
-					if (!in_array ($row['year'], $yearsArray)) // if this record's year hasn't occurred already
-					{
-						$yearsArray[] = $row['year']; // add it to the array of years
-						echo "\n<tr>";
-						echo "\n\t<td valign=\"top\" colspan=\"$NoColumns\"><h4>" . $row['year'] . "</h4></td>"; // print out a heading with the current year
-						echo "\n</tr>";
-
-					}
-
-				echo "\n<tr>";
-				echo "\n\t<td valign=\"top\">" . $record . "</td>"; // print out the record
-
-				if ($showLinks == "1") // display a 'display details' link:
 				{
-					echo "\n\t<td valign=\"top\">";
+					if ($citeOrder == "year") // list records in blocks sorted by year:
+						if (!in_array ($row['year'], $yearsArray)) // if this record's year hasn't occurred already
+						{
+							$yearsArray[] = $row['year']; // add it to the array of years
+							echo "\n<tr>";
+							echo "\n\t<td valign=\"top\" colspan=\"$NoColumns\"><h4>" . $row['year'] . "</h4></td>"; // print out a heading with the current year
+							echo "\n</tr>";
 
-					if (isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_details_view'...
+						}
+
+					echo "\n<tr>";
+					echo "\n\t<td valign=\"top\">" . $record . "</td>"; // print out the record
+
+					if ($showLinks == "1") // display a 'display details' link:
 					{
-						// ... display a link that opens the 'details view' for this record:
-						if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
-							echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20bibtex_id%2C%20related%20"
-								. "FROM%20refs%20LEFT%20JOIN%20user_data%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
-						else // if NO user logged in, don't display any user specific fields:
-							echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%20"
-								. "FROM%20refs%20";
-		
-						echo "WHERE%20serial%20RLIKE%20%22%5E%28" . $row['serial']
-							. "%29%24%22%20ORDER%20BY%20" . rawurlencode($orderBy)
-							. "&amp;showQuery=" . $showQuery
-							. "&amp;showLinks=" . $showLinks
-							. "&amp;formType=sqlSearch"
-							. "&amp;viewType=" . $viewType
-							. "&amp;submit=Display"
-							. "&amp;oldQuery=" . rawurlencode($oldQuery)
-							. "\"><img src=\"img/details.gif\" alt=\"details\" title=\"show details\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
+						echo "\n\t<td valign=\"top\">";
+
+						if (isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_details_view'...
+						{
+							// ... display a link that opens the 'details view' for this record:
+							if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
+								echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20bibtex_id%2C%20related%20"
+									. "FROM%20refs%20LEFT%20JOIN%20user_data%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
+							else // if NO user logged in, don't display any user specific fields:
+								echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%20"
+									. "FROM%20refs%20";
+
+							echo "WHERE%20serial%20RLIKE%20%22%5E%28" . $row['serial']
+								. "%29%24%22%20ORDER%20BY%20" . rawurlencode($orderBy)
+								. "&amp;showQuery=" . $showQuery
+								. "&amp;showLinks=" . $showLinks
+								. "&amp;formType=sqlSearch"
+								. "&amp;viewType=" . $viewType
+								. "&amp;submit=Display"
+								. "&amp;oldQuery=" . rawurlencode($oldQuery)
+								. "\"><img src=\"img/details.gif\" alt=\"details\" title=\"show details\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
+						}
+
+						echo "\n\t</td>";
 					}
 
-					echo "\n\t</td>";
+					echo "\n</tr>";
 				}
-
-				echo "\n</tr>";
 			}
-		}
-		// Finish the table
-		echo "\n</table>";
-		// END RESULTS DATA COLUMNS ----------------
+			// Finish the table
+			echo "\n</table>";
+			// END RESULTS DATA COLUMNS ----------------
 
-		// BEGIN RESULTS FOOTER --------------------
-		// Note: we ommit the results footer in print view! ('viewType=Print')
-		if ($viewType != "Print")
-		{
-			// Again, insert the (already constructed) BROWSE LINKS
-			// (i.e., a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages)
-			echo $BrowseLinks;
+			// BEGIN RESULTS FOOTER --------------------
+			// Note: we ommit the results footer in print view! ('viewType=Print')
+			if ($viewType != "Print")
+			{
+				// Again, insert the (already constructed) BROWSE LINKS
+				// (i.e., a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages)
+				echo $BrowseLinks;
+			}
+			// END RESULTS FOOTER ----------------------
 		}
-		// END RESULTS FOOTER ----------------------
-	}
-	else
-	{
-		$nothingFoundFeedback = nothingFound($nothingChecked);
-		echo $nothingFoundFeedback;
-	}// end if $rowsFound body
+		else
+		{
+			$nothingFoundFeedback = nothingFound($nothingChecked);
+			echo $nothingFoundFeedback;
+		}// end if $rowsFound body
 	}
 
 	// --------------------------------------------------------------------
@@ -1464,7 +1536,7 @@
 
 				// for the current record & user ID, update the matching entry within the 'user_data' table:
 				$queryUserData = "UPDATE user_data SET user_groups = \"" . $recordUserGroups . "\" WHERE record_id = " . $recordID . " AND user_id = " . $userID;
-		
+
 				$resultUserData = queryMySQLDatabase($queryUserData, $oldQuery); // RUN the query on the database through the connection (function 'queryMySQLDatabase()' is defined in 'include.inc.php')
 			}
 		}
@@ -1495,26 +1567,26 @@
 	{
 		if (isset($_SESSION['user_permissions']) AND ((isset($_SESSION['loginEmail']) AND ereg("(allow_details_view|allow_cite|allow_user_groups|allow_export|allow_batch_export)", $_SESSION['user_permissions'])) OR (!isset($_SESSION['loginEmail']) AND ereg("(allow_details_view|allow_cite)", $_SESSION['user_permissions'])))) // only build a table if the 'user_permissions' session variable does contain any of the following: 'allow_details_view', 'allow_cite' -AND- if logged in, aditionally: 'allow_user_groups', 'allow_export', 'allow_batch_export'...
 		{
-	
+
 			// Note: the feature which remembers selected records across multiple results pages hasn't been implemented yet!!
 			//		$selectedRecordsCount = count($selectedRecordsArray); // count the number of records that have been selected previously
-	
+
 			// Start a TABLE
 			$ResultsFooterRow = "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"90%\" summary=\"This table holds the results footer which offers forms to display/cite selected records\">";
-	
+
 			$ResultsFooterRow .= "\n<tr>"
-	
+
 								. "\n\t<td align=\"left\" valign=\"top\">Selected Records";
-	
+
 			// Note: the feature which remembers selected records across multiple results pages hasn't been implemented yet!!
 			//		if (isset($_SESSION['loginEmail'])) // if a user is logged in, show the number of records that have been selected already:
 			//			if ($selectedRecordsCount > 0)
 			//				$ResultsFooterRow .= " ($selectedRecordsCount)";
 			//			else
 			//				$ResultsFooterRow .= "";
-	
+
 			$ResultsFooterRow .= ":</td>";
-	
+
 			$ResultsFooterRow .= "\n\t<td align=\"left\" valign=\"top\" colspan=\"" . ($NoColumns - 1) . "\">";
 
 			if (isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])) // if a user is logged in AND the 'user_permissions' session variable contains 'allow_details_view', show form elements to display record details for all selected records:
@@ -1524,38 +1596,38 @@
 									. "\n\t\t<input type=\"text\" name=\"showRows\" value=\"$showRows\" size=\"4\" title=\"specify how many records shall be displayed per page (this option also applies to the 'Cite' functionality!)\">&nbsp;&nbsp;records per page";
 			}
 			else
-				$ResultsFooterRow .= "\n\t\t&nbsp;";			
+				$ResultsFooterRow .= "\n\t\t&nbsp;";
 
 			$ResultsFooterRow .= "\n\t</td>"
 								. "\n</tr>";
-	
+
 			if (isset($_SESSION['user_permissions']) AND ereg("allow_cite", $_SESSION['user_permissions'])) // if a user is logged in AND the 'user_permissions' session variable contains 'allow_cite', show form elements to build a reference list for the selected records:
 			{
 				// Cite functionality:
 				$ResultsFooterRow .= "\n<tr>"
-		
+
 									. "\n\t<td align=\"left\" valign=\"top\">";
-		
+
 				// Note: the feature which remembers selected records across multiple results pages hasn't been implemented yet!!
 				//		if (isset($_SESSION['loginEmail'])) // if a user is logged in, provide additional features...
 				//			$ResultsFooterRow .= "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Remember\" title=\"remember all records that you've selected on this page (until logout)\">&nbsp;"
 				//								. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Forget\" title=\"forget all selected records (including those that you've selected previously)\">";
 				//		else
 				$ResultsFooterRow .= "\n\t\t&nbsp;";
-		
+
 				$ResultsFooterRow .= "\n\t</td>"
-		
+
 									. "\n\t<td align=\"left\" valign=\"top\" colspan=\"" . ($NoColumns - 1) . "\">";
-		
+
 				if (!isset($_SESSION['user_styles']))
 					$citeStyleDisabled = " disabled"; // disable the style popup (and other form elements) if the session variable holding the user's styles isn't available
 				else
 					$citeStyleDisabled = "";
-		
+
 				$ResultsFooterRow .= "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Cite\" title=\"build a list of references for all selected records\"$citeStyleDisabled>&nbsp;&nbsp;&nbsp;"
 									. "\n\t\tusing style:&nbsp;&nbsp;"
 									. "\n\t\t<select name=\"citeStyleSelector\" title=\"choose the output style for your reference list\"$citeStyleDisabled>";
-		
+
 				if (isset($_SESSION['user_styles']))
 				{
 					$optionTags = buildSelectMenuOptions($_SESSION['user_styles'], " *; *", "\t\t\t"); // build properly formatted <option> tag elements from the items listed in the 'user_styles' session variable
@@ -1563,7 +1635,7 @@
 				}
 				else
 					$ResultsFooterRow .= "<option>(no styles available)</option>";
-		
+
 				$ResultsFooterRow .= "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
 									. "\n\t\tsort by:&nbsp;&nbsp;"
 									. "\n\t\t<select name=\"citeOrder\" title=\"choose the primary sort order for your reference list\"$citeStyleDisabled>"
@@ -1571,10 +1643,10 @@
 									. "\n\t\t\t<option>year</option>"
 									. "\n\t\t</select>"
 									. "\n\t</td>"
-		
+
 									. "\n</tr>";
 			}
-	
+
 			// if a user is logged in, provide additional features...
 			if (isset($_SESSION['loginEmail']))
 			{
@@ -1597,17 +1669,17 @@
 						$groupSearchSelectorTitle = "choose the group to which the selected records shall belong (or from which they shall be removed)";
 						$groupSearchTextInputTitle = "to setup a new group with the selected records, click the radio button to the left &amp; specify the name of the group here, then click the 'Add' button";
 					}
-		
+
 					$ResultsFooterRow .= "\n<tr>"
-			
+
 										. "\n\t<td align=\"left\" valign=\"top\">&nbsp;</td>"
-			
+
 										. "\n\t<td align=\"left\" valign=\"top\" colspan=\"" . ($NoColumns - 1) . "\">"
 										. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Add\" title=\"add all selected records to the specified group\">&nbsp;"
 										. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Remove\" title=\"remove all selected records from the specified group\"$groupSearchDisabled>&nbsp;&nbsp;&nbsp;group:&nbsp;&nbsp;"
 										. "\n\t\t<input type=\"radio\" name=\"userGroupActionRadio\" value=\"1\" title=\"click here if you want to add (remove) the selected records to (from) an existing group; then, choose the group name from the popup menu to the right\"$groupSearchDisabled$groupSearchPopupMenuChecked>"
 										. "\n\t\t<select name=\"userGroupSelector\" title=\"$groupSearchSelectorTitle\"$groupSearchDisabled>";
-		
+
 					if (isset($_SESSION['userGroups']))
 					{
 						$optionTags = buildSelectMenuOptions($_SESSION['userGroups'], " *; *", "\t\t\t"); // build properly formatted <option> tag elements from the items listed in the 'userGroups' session variable
@@ -1617,33 +1689,33 @@
 					{
 						$ResultsFooterRow .= "\n\t\t\t<option>(no groups available)</option>";
 					}
-		
+
 					$ResultsFooterRow .= "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
 										. "\n\t\t<input type=\"radio\" name=\"userGroupActionRadio\" value=\"0\" title=\"click here if you want to setup a new group or specify a custom string describing your group(s); then, enter the group name in the text box to the right\"$groupSearchTextInputChecked>"
 										. "\n\t\t<input type=\"text\" name=\"userGroupName\" value=\"\" size=\"8\" title=\"$groupSearchTextInputTitle\">"
 										. "\n\t</td>"
-			
+
 										. "\n</tr>";
 				}
-		
+
 				if (isset($_SESSION['user_permissions']) AND ereg("(allow_export|allow_batch_export)", $_SESSION['user_permissions'])) // if a user is logged in AND the 'user_permissions' session variable contains either 'allow_export' or 'allow_batch_export', show form elements to export the selected records:
 				{
 					// Export functionality:
 					$ResultsFooterRow .= "\n<tr>"
-			
+
 										. "\n\t<td align=\"left\" valign=\"top\">&nbsp;</td>"
-			
+
 										. "\n\t<td align=\"left\" valign=\"top\" colspan=\"" . ($NoColumns - 1) . "\">";
-		
+
 					if (!isset($_SESSION['user_formats']))
 						$exportFormatDisabled = " disabled"; // disable the format popup if the session variable holding the user's formats isn't available
 					else
 						$exportFormatDisabled = "";
-			
+
 					$ResultsFooterRow .= "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Export\" title=\"export selected records\"$exportFormatDisabled>&nbsp;&nbsp;&nbsp;"
 										. "\n\t\tusing format:&nbsp;&nbsp;"
 										. "\n\t\t<select name=\"exportFormatSelector\" title=\"choose the export format for your references\"$exportFormatDisabled>";
-		
+
 					if (isset($_SESSION['user_formats']))
 					{
 						$optionTags = buildSelectMenuOptions($_SESSION['user_formats'], " *; *", "\t\t\t"); // build properly formatted <option> tag elements from the items listed in the 'user_formats' session variable
@@ -1651,20 +1723,28 @@
 					}
 					else
 						$ResultsFooterRow .= "<option>(no formats available)</option>";
-		
-					$ResultsFooterRow .= "\n\t\t</select>"
+
+					$ResultsFooterRow .= "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
+										. "\n\t\treturn as:&nbsp;&nbsp;"
+										. "\n\t\t<select name=\"exportType\" title=\"choose how data shall be returned\"$exportFormatDisabled>"
+										. "\n\t\t\t<option>html</option>"
+										. "\n\t\t\t<option>text</option>"
+//										. "\n\t\t\t<option>xml</option>"
+										. "\n\t\t\t<option>file</option>"
+										. "\n\t\t\t<option>email</option>"
+										. "\n\t\t</select>"
 										. "\n\t</td>"
-		
+
 										. "\n</tr>";
 				}
 			}
-			
+
 			// Apply some search & replace in order to assign the 'selected' param to the option previously chosen by the user:
 			// Note: currently, this only works when the correct 'citeStyle' name gets incorporated into an URL *manually*
 			//       it doesn't work with previous & next browsing since these links actually don't submit the form (i.e., the current state of form variables won't get send)
 			if (!empty($citeStyle))
 				$ResultsFooterRow = ereg_replace("<option>$citeStyle", "<option selected>$citeStyle", $ResultsFooterRow);
-	
+
 			// Finish the table:
 			$ResultsFooterRow .= "\n</table>";
 		}
@@ -1750,7 +1830,7 @@
 
 		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'bibtex_id' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
 		$query .= " FROM refs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
-		
+
 		// ---------------------------------------
 
 		// ... if the user has specified an author, add the value of '$authorName' as an AND clause:
@@ -1790,7 +1870,7 @@
 				elseif ($titleSelector == "ends with")
 					$query .= " AND title RLIKE \"$titleName$\"";
 			}
-	
+
 		// ... if the user has specified a year, add the value of '$yearNo' as an AND clause:
 		$yearNo = $_POST['yearNo'];
 		if ($yearNo != "")
@@ -1813,7 +1893,7 @@
 				elseif ($yearSelector == "is less than")
 					$query .= " AND year < \"$yearNo\"";
 			}
-	
+
 		// ... if the user has specified a publication, add the value of '$publicationName' as an AND clause:
 		$publicationRadio = $_POST['publicationRadio'];
 		if ($publicationRadio == "1")
@@ -1856,7 +1936,7 @@
 						$query .= " AND publication RLIKE \"$publicationName2$\"";
 				}
 		}
-	
+
 		// ... if the user has specified a volume, add the value of '$volumeNo' as an AND clause:
 		$volumeNo = $_POST['volumeNo'];
 		if ($volumeNo != "")
@@ -1879,7 +1959,7 @@
 				elseif ($volumeSelector == "is less than")
 					$query .= " AND volume < \"$volumeNo\"";
 			}
-	
+
 		// ... if the user has specified some pages, add the value of '$pagesNo' as an AND clause:
 		$pagesNo = $_POST['pagesNo'];
 		if ($pagesNo != "")
@@ -1943,6 +2023,8 @@
 	// Build the database query from user input provided by the 'library_search.php' form:
 	function extractFormElementsLibrary($showLinks)
 	{
+		global $librarySearchPattern; // defined in 'ini.inc.php'
+
 		$query = "SELECT"; // (Note: we care about the wrong "SELECT, author" etc. syntax later on...)
 
 		// ... if the user has checked the checkbox next to 'Author', we'll add that column to the SELECT query:
@@ -2058,8 +2140,10 @@
 		$query = eregi_replace("SELECT, ","SELECT ",$query);
 
 		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'bibtex_id' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
-		$query .= " FROM refs WHERE serial RLIKE \".+\" AND location RLIKE \"IPÖ Library\""; // add FROM & (initial) WHERE clause
-		
+		$query .= " FROM refs WHERE serial RLIKE \".+\" AND " . $librarySearchPattern[0] . " RLIKE \"" . $librarySearchPattern[1] . "\""; // add FROM & (initial) WHERE clause
+		// Note: we'll restrict the query to records where the pattern given in array element '$librarySearchPattern[1]' (defined in 'ini.inc.php')
+		//       matches the contents of the field given in array element '$librarySearchPattern[0]'
+
 		// ---------------------------------------
 
 		// ... if the user has specified an author, add the value of '$authorName' as an AND clause:
@@ -2099,7 +2183,7 @@
 				elseif ($titleSelector == "ends with")
 					$query .= " AND title RLIKE \"$titleName$\"";
 			}
-	
+
 		// ... if the user has specified a year, add the value of '$yearNo' as an AND clause:
 		$yearNo = $_POST['yearNo'];
 		if ($yearNo != "")
@@ -2122,7 +2206,7 @@
 				elseif ($yearSelector == "is less than")
 					$query .= " AND year < \"$yearNo\"";
 			}
-	
+
 		// ... if the user has specified an editor, add the value of '$editorName' as an AND clause:
 		$editorName = $_POST['editorName'];
 		if ($editorName != "")
@@ -2184,7 +2268,7 @@
 						$query .= " AND series_title RLIKE \"$seriesTitleName2$\"";
 				}
 		}
-	
+
 		// ... if the user has specified a series volume, add the value of '$volumeNo' as an AND clause:
 		$volumeNo = $_POST['volumeNo'];
 		if ($volumeNo != "")
@@ -2207,7 +2291,7 @@
 				elseif ($volumeSelector == "is less than")
 					$query .= " AND series_volume < \"$volumeNo\"";
 			}
-	
+
 		// ... if the user has specified some pages, add the value of '$pagesNo' as an AND clause:
 		$pagesNo = $_POST['pagesNo'];
 		if ($pagesNo != "")
@@ -2226,7 +2310,7 @@
 				elseif ($pagesSelector == "ends with")
 					$query .= " AND pages RLIKE \"$pagesNo$\"";
 			}
-	
+
 		// ... if the user has specified a publisher, add the value of '$publisherName' as an AND clause:
 		$publisherName = $_POST['publisherName'];
 		if ($publisherName != "")
@@ -2804,7 +2888,7 @@
 			$query .= " FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = " . $userID . " WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
 		else // NO user logged in
 			$query .= " FROM refs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
-		
+
 		// ---------------------------------------
 
 		// ... if the user has specified an author, add the value of '$authorName' as an AND clause:
@@ -3785,16 +3869,19 @@
 			}
 
 
-		// ... if the user has specified a copy status, add the value of '$copyName' as an AND clause:
-		$copyName = $_POST['copyName'];
-		if ($copyName != "All" && $copyName != "")
-			{
-				$copySelector = $_POST['copySelector'];
-				if ($copySelector == "is equal to")
-					$query .= " AND copy = \"$copyName\"";
-				elseif ($copySelector == "is not equal to")
-					$query .= " AND copy != \"$copyName\"";
-			}
+		if (isset($loginEmail)) // if a user is logged in and...
+		{
+			// ... if the user has specified a copy status, add the value of '$copyName' as an AND clause:
+			$copyName = $_POST['copyName'];
+			if ($copyName != "All" && $copyName != "")
+				{
+					$copySelector = $_POST['copySelector'];
+					if ($copySelector == "is equal to")
+						$query .= " AND copy = \"$copyName\"";
+					elseif ($copySelector == "is not equal to")
+						$query .= " AND copy != \"$copyName\"";
+				}
+		}
 
 		// ... if the user has specified some notes, add the value of '$notesName' as an AND clause:
 		$notesName = $_POST['notesName'];
@@ -3815,87 +3902,89 @@
 					$query .= " AND notes RLIKE \"$notesName$\"";
 			}
 
-
-		// ... if the user has specified some user keys, add the value of '$userKeysName' as an AND clause:
-		$userKeysRadio = $_POST['userKeysRadio'];
-		if ($userKeysRadio == "1")
+		if (isset($loginEmail)) // if a user is logged in and...
 		{
-			$userKeysName = $_POST['userKeysName'];
-			if ($userKeysName != "All" && $userKeysName != "")
-				{
-					$userKeysSelector = $_POST['userKeysSelector'];
-					if ($userKeysSelector == "contains")
-						$query .= " AND user_keys RLIKE \"$userKeysName\"";
-					elseif ($userKeysSelector == "does not contain")
-						$query .= " AND user_keys NOT RLIKE \"$userKeysName\"";
-					elseif ($userKeysSelector == "is equal to")
-						$query .= " AND user_keys = \"$userKeysName\"";
-					elseif ($userKeysSelector == "is not equal to")
-						$query .= " AND user_keys != \"$userKeysName\"";
-					elseif ($userKeysSelector == "starts with")
-						$query .= " AND user_keys RLIKE \"^$userKeysName\"";
-					elseif ($userKeysSelector == "ends with")
-						$query .= " AND user_keys RLIKE \"$userKeysName$\"";
-				}
-		}
-		elseif ($userKeysRadio == "0")
-		{
-			$userKeysName2 = $_POST['userKeysName2'];
-			if ($userKeysName2 != "")
-				{
-					$userKeysSelector2 = $_POST['userKeysSelector2'];
-					if ($userKeysSelector2 == "contains")
-						$query .= " AND user_keys RLIKE \"$userKeysName2\"";
-					elseif ($userKeysSelector2 == "does not contain")
-						$query .= " AND user_keys NOT RLIKE \"$userKeysName2\"";
-					elseif ($userKeysSelector2 == "is equal to")
-						$query .= " AND user_keys = \"$userKeysName2\"";
-					elseif ($userKeysSelector2 == "is not equal to")
-						$query .= " AND user_keys != \"$userKeysName2\"";
-					elseif ($userKeysSelector2 == "starts with")
-						$query .= " AND user_keys RLIKE \"^$userKeysName2\"";
-					elseif ($userKeysSelector2 == "ends with")
-						$query .= " AND user_keys RLIKE \"$userKeysName2$\"";
-				}
-		}
-
-		// ... if the user has specified some user notes, add the value of '$userNotesName' as an AND clause:
-		$userNotesName = $_POST['userNotesName'];
-		if ($userNotesName != "")
+			// ... if the user has specified some user keys, add the value of '$userKeysName' as an AND clause:
+			$userKeysRadio = $_POST['userKeysRadio'];
+			if ($userKeysRadio == "1")
 			{
-				$userNotesSelector = $_POST['userNotesSelector'];
-				if ($userNotesSelector == "contains")
-					$query .= " AND user_notes RLIKE \"$userNotesName\"";
-				elseif ($userNotesSelector == "does not contain")
-					$query .= " AND user_notes NOT RLIKE \"$userNotesName\"";
-				elseif ($userNotesSelector == "is equal to")
-					$query .= " AND user_notes = \"$userNotesName\"";
-				elseif ($userNotesSelector == "is not equal to")
-					$query .= " AND user_notes != \"$userNotesName\"";
-				elseif ($userNotesSelector == "starts with")
-					$query .= " AND user_notes RLIKE \"^$userNotesName\"";
-				elseif ($userNotesSelector == "ends with")
-					$query .= " AND user_notes RLIKE \"$userNotesName$\"";
+				$userKeysName = $_POST['userKeysName'];
+				if ($userKeysName != "All" && $userKeysName != "")
+					{
+						$userKeysSelector = $_POST['userKeysSelector'];
+						if ($userKeysSelector == "contains")
+							$query .= " AND user_keys RLIKE \"$userKeysName\"";
+						elseif ($userKeysSelector == "does not contain")
+							$query .= " AND user_keys NOT RLIKE \"$userKeysName\"";
+						elseif ($userKeysSelector == "is equal to")
+							$query .= " AND user_keys = \"$userKeysName\"";
+						elseif ($userKeysSelector == "is not equal to")
+							$query .= " AND user_keys != \"$userKeysName\"";
+						elseif ($userKeysSelector == "starts with")
+							$query .= " AND user_keys RLIKE \"^$userKeysName\"";
+						elseif ($userKeysSelector == "ends with")
+							$query .= " AND user_keys RLIKE \"$userKeysName$\"";
+					}
+			}
+			elseif ($userKeysRadio == "0")
+			{
+				$userKeysName2 = $_POST['userKeysName2'];
+				if ($userKeysName2 != "")
+					{
+						$userKeysSelector2 = $_POST['userKeysSelector2'];
+						if ($userKeysSelector2 == "contains")
+							$query .= " AND user_keys RLIKE \"$userKeysName2\"";
+						elseif ($userKeysSelector2 == "does not contain")
+							$query .= " AND user_keys NOT RLIKE \"$userKeysName2\"";
+						elseif ($userKeysSelector2 == "is equal to")
+							$query .= " AND user_keys = \"$userKeysName2\"";
+						elseif ($userKeysSelector2 == "is not equal to")
+							$query .= " AND user_keys != \"$userKeysName2\"";
+						elseif ($userKeysSelector2 == "starts with")
+							$query .= " AND user_keys RLIKE \"^$userKeysName2\"";
+						elseif ($userKeysSelector2 == "ends with")
+							$query .= " AND user_keys RLIKE \"$userKeysName2$\"";
+					}
 			}
 
-		// ... if the user has specified a user file, add the value of '$userFileName' as an AND clause:
-		$userFileName = $_POST['userFileName'];
-		if ($userFileName != "")
-			{
-				$userFileSelector = $_POST['userFileSelector'];
-				if ($userFileSelector == "contains")
-					$query .= " AND user_file RLIKE \"$userFileName\"";
-				elseif ($userFileSelector == "does not contain")
-					$query .= " AND user_file NOT RLIKE \"$userFileName\"";
-				elseif ($userFileSelector == "is equal to")
-					$query .= " AND user_file = \"$userFileName\"";
-				elseif ($userFileSelector == "is not equal to")
-					$query .= " AND user_file != \"$userFileName\"";
-				elseif ($userFileSelector == "starts with")
-					$query .= " AND user_file RLIKE \"^$userFileName\"";
-				elseif ($userFileSelector == "ends with")
-					$query .= " AND user_file RLIKE \"$userFileName$\"";
-			}
+			// ... if the user has specified some user notes, add the value of '$userNotesName' as an AND clause:
+			$userNotesName = $_POST['userNotesName'];
+			if ($userNotesName != "")
+				{
+					$userNotesSelector = $_POST['userNotesSelector'];
+					if ($userNotesSelector == "contains")
+						$query .= " AND user_notes RLIKE \"$userNotesName\"";
+					elseif ($userNotesSelector == "does not contain")
+						$query .= " AND user_notes NOT RLIKE \"$userNotesName\"";
+					elseif ($userNotesSelector == "is equal to")
+						$query .= " AND user_notes = \"$userNotesName\"";
+					elseif ($userNotesSelector == "is not equal to")
+						$query .= " AND user_notes != \"$userNotesName\"";
+					elseif ($userNotesSelector == "starts with")
+						$query .= " AND user_notes RLIKE \"^$userNotesName\"";
+					elseif ($userNotesSelector == "ends with")
+						$query .= " AND user_notes RLIKE \"$userNotesName$\"";
+				}
+	
+			// ... if the user has specified a user file, add the value of '$userFileName' as an AND clause:
+			$userFileName = $_POST['userFileName'];
+			if ($userFileName != "")
+				{
+					$userFileSelector = $_POST['userFileSelector'];
+					if ($userFileSelector == "contains")
+						$query .= " AND user_file RLIKE \"$userFileName\"";
+					elseif ($userFileSelector == "does not contain")
+						$query .= " AND user_file NOT RLIKE \"$userFileName\"";
+					elseif ($userFileSelector == "is equal to")
+						$query .= " AND user_file = \"$userFileName\"";
+					elseif ($userFileSelector == "is not equal to")
+						$query .= " AND user_file != \"$userFileName\"";
+					elseif ($userFileSelector == "starts with")
+						$query .= " AND user_file RLIKE \"^$userFileName\"";
+					elseif ($userFileSelector == "ends with")
+						$query .= " AND user_file RLIKE \"$userFileName$\"";
+				}
+		}
 
 		// ... if the user has specified a serial, add the value of '$serialNo' as an AND clause:
 		$serialNo = $_POST['serialNo'];
@@ -3971,24 +4060,27 @@
 				}
 		}
 
-		// ... if the user has selected a radio button for 'Marked', add the corresponding value for 'marked' as an AND clause:
-		if (isset($_POST['markedRadio']))
+		if (isset($loginEmail)) // if a user is logged in and...
 		{
-			$markedRadio = $_POST['markedRadio'];
-			if ($markedRadio == "1")
-				$query .= " AND marked = \"yes\"";		
-			elseif ($markedRadio == "0")
-				$query .= " AND marked = \"no\"";
-		}
-
-		// ... if the user has selected a radio button for 'Selected', add the corresponding value for 'selected' as an AND clause:
-		if (isset($_POST['selectedRadio']))
-		{
-			$selectedRadio = $_POST['selectedRadio'];
-			if ($selectedRadio == "1")
-				$query .= " AND selected = \"yes\"";		
-			elseif ($selectedRadio == "0")
-				$query .= " AND selected = \"no\"";
+			// ... if the user has selected a radio button for 'Marked', add the corresponding value for 'marked' as an AND clause:
+			if (isset($_POST['markedRadio']))
+			{
+				$markedRadio = $_POST['markedRadio'];
+				if ($markedRadio == "1")
+					$query .= " AND marked = \"yes\"";
+				elseif ($markedRadio == "0")
+					$query .= " AND marked = \"no\"";
+			}
+	
+			// ... if the user has selected a radio button for 'Selected', add the corresponding value for 'selected' as an AND clause:
+			if (isset($_POST['selectedRadio']))
+			{
+				$selectedRadio = $_POST['selectedRadio'];
+				if ($selectedRadio == "1")
+					$query .= " AND selected = \"yes\"";
+				elseif ($selectedRadio == "0")
+					$query .= " AND selected = \"no\"";
+			}
 		}
 
 		// ... if the user has selected a radio button for 'Approved', add the corresponding value for 'approved' as an AND clause:
@@ -3996,7 +4088,7 @@
 		{
 			$approvedRadio = $_POST['approvedRadio'];
 			if ($approvedRadio == "1")
-				$query .= " AND approved = \"yes\"";		
+				$query .= " AND approved = \"yes\"";
 			elseif ($approvedRadio == "0")
 				$query .= " AND approved = \"no\"";
 		}
@@ -4189,7 +4281,7 @@
 			{
 				// when field name = 'pages' then sort by 'first_page' instead:
 				$sortSelector1 = str_replace("pages", "first_page", $sortSelector1);
-		
+
 				$sortRadio1 = $_POST['sortRadio1'];
 				if ($sortRadio1 == "0") // sort ascending
 					$query .= "$sortSelector1";
@@ -4203,7 +4295,7 @@
 			{
 				// when field name = 'pages' then sort by 'first_page' instead:
 				$sortSelector2 = str_replace("pages", "first_page", $sortSelector2);
-		
+
 				$sortRadio2 = $_POST['sortRadio2'];
 				if ($sortRadio2 == "0") // sort ascending
 					$query .= ", $sortSelector2";
@@ -4217,7 +4309,7 @@
 			{
 				// when field name = 'pages' then sort by 'first_page' instead:
 				$sortSelector3 = str_replace("pages", "first_page", $sortSelector3);
-		
+
 				$sortRadio3 = $_POST['sortRadio3'];
 				if ($sortRadio3 == "0") // sort ascending
 					$query .= ", $sortSelector3";
@@ -4350,7 +4442,7 @@
 			}
 		}
 
-			
+
 		// join array elements:
 		if (!empty($recordSerialsArray)) // the user did check some checkboxes
 			$recordSerialsString = implode("|", $recordSerialsArray); // separate record serials by "|" in order to facilitate regex querying...
@@ -4367,26 +4459,22 @@
 			else // if any other or no '$citeOrder' parameter is specified, we supply the default ORDER BY pattern (which is suitable for citation in a journal etc.):
 				$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY first_author, author_count, author, year, title";
 			}
-		if ($displayType == "Export") 
-			{
-      // NOTE: Not all fields are currently added to MODS export, but we will
-      //       want to add more & will need all fields for user-specified
-      //       exports.
-			// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'bibtex_id' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause.
-      // NOTE: No method to sort the export.  We probably don't need one.
-				$query = "SELECT * FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY year DESC, first_author, author_count, author, title";
-			}
 
-		elseif ($displayType == "Display") // (hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
+		elseif (ereg("^(Display|Export)$", $displayType)) // (hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
 			{
-				// for the selected records, select *all* available fields:
-				// (note: we also add the 'serial' column at the end in order to provide standardized input [compare processing of form 'sql_search.php'])
+				// for the selected records, select all fields that are visible in details view:
+				$query = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial";
+
+				if ($displayType == "Export") // for export, we add some additional fields:
+					$query .= ", online_publication, online_citation";
+
 				if (isset($_SESSION['loginEmail'])) // if a user is logged in...
-					$query = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial, marked, copy, selected, user_keys, user_notes, user_file, user_groups, bibtex_id, related, orig_record, serial";
-				else // NO user logged in
-					$query = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial, orig_record, serial";
+					$query .= ", marked, copy, selected, user_keys, user_notes, user_file, user_groups, bibtex_id, related"; // add user-specific fields
 
-				if ($showLinks == "1")
+				// (note: we also add the 'orig_record' and 'serial' columns at the end in order to provide standardized input [compare function 'verifySQLQuery()' in 'include.inc.php'])
+				$query .= ", orig_record, serial"; // add 'orig_record' and 'serial' columns
+
+				if ($showLinks == "1" OR $displayType == "Export")
 					$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
 
 				if (isset($_SESSION['loginEmail'])) // if a user is logged in...
@@ -4394,6 +4482,7 @@
 				else // NO user logged in
 					$query .= " FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY $orderBy";
 			}
+
 		elseif (isset($_SESSION['loginEmail']) AND ereg("^(Remember|Add|Remove)$", $displayType)) // if a user (who's logged in) clicked the 'Remember', 'Add' or 'Remove' button...
 			{
 				if ($displayType == "Remember") // the user clicked the 'Remember' button
@@ -4408,7 +4497,7 @@
 				// re-apply the current sqlQuery:
 				$query = eregi_replace(' FROM refs',', orig_record FROM refs',$sqlQuery); // add 'orig_record' column (which is required in order to present visual feedback on duplicate records)
 				$query = eregi_replace(' FROM refs',', serial FROM refs',$query); // add 'serial' column (which is required in order to obtain unique checkbox names)
-		
+
 				if ($showLinks == "1")
 					$query = eregi_replace(' FROM refs',', file, url, doi FROM refs',$query); // add 'file', 'url' & 'doi' columns
 			}
@@ -4425,7 +4514,7 @@
 		$sourceText = $_POST['sourceText']; // get the source text that contains the record serial numbers
 		$startDelim = $_POST['startDelim']; // get the start delimiter that precedes record serial numbers
 		$endDelim = $_POST['endDelim']; // get the end delimiter that follows record serial numbers
-		
+
 		$startDelim = preg_quote($startDelim); // escape any potential meta-characters
 		$endDelim = preg_quote($endDelim); // escape any potential meta-characters
 
@@ -4473,7 +4562,7 @@
 
 		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'bibtex_id' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
 		$query .= " FROM refs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
-		
+
 		if ($quickSearchName != "") // if the user typed a search string into the text entry field...
 			$query .= " AND $quickSearchSelector RLIKE \"$quickSearchName\""; // ...add search field name & value to the sql query
 
@@ -4489,9 +4578,15 @@
 	function extractFormElementsGroup($sqlQuery, $showLinks, $userID)
 	{
 		if (!empty($sqlQuery)) // if there's a previous SQL query available (as is the case if the group search originated from a search results page - and not from the main page 'index.php')
+		{
 			$query = preg_replace("/(SELECT .+?) FROM refs.+/i", "\\1", $sqlQuery); // use the custom set of colums chosen by the user
+			$queryOrderBy = preg_replace("/.+( ORDER BY .+?)(?=LIMIT.*|GROUP BY.*|HAVING.*|PROCEDURE.*|FOR UPDATE.*|LOCK IN.*|$)/i", "\\1", $sqlQuery); // user the custom ORDER BY clause chosen by the user
+		}
 		else
+		{
 			$query = "SELECT author, title, year, publication, volume, pages, user_groups"; // use the default SELECT statement
+			$queryOrderBy = " ORDER BY author, year DESC, publication"; // add the default ORDER BY clause
+		}
 
 		$groupSearchSelector = $_POST['groupSearchSelector']; // extract the user group chosen by the user
 
@@ -4508,7 +4603,7 @@
 
 		$query .= " WHERE user_groups RLIKE \"(^|.*;) *$groupSearchSelector *(;.*|$)\""; // add WHERE clause
 
-		$query .= " ORDER BY author, year DESC, publication"; // add the default ORDER BY clause
+		$query .= $queryOrderBy; // add ORDER BY clause
 
 
 		return $query;
@@ -4597,16 +4692,16 @@
 			{
 				if ($findMarked == "1") // if the user wants to search the 'marked' field...
 					$query .= ", marked"; // ...add 'marked' field to SELECT query
-		
+
 				if ($findSelected == "1") // if the user wants to search the 'selected' field...
 					$query .= ", selected"; // ...add 'selected' field to SELECT query
-		
+
 				if ($findCopy == "1") // if the user wants to search the 'copy' field...
 					$query .= ", copy"; // ...add 'copy' field to SELECT query
-		
+
 				if ($findUserKeys == "1") // if the user wants to search the 'user_keys' field...
 					$query .= ", user_keys"; // ...add 'user_keys' to SELECT query
-		
+
 				if ($findUserNotes == "1") // if the user wants to search the 'user_notes' field...
 					$query .= ", user_notes"; // ...add 'user_notes' to SELECT query
 
@@ -4624,7 +4719,7 @@
 			$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
 
 		$query .= " FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = " . $userID . " WHERE location RLIKE \"$loginEmail\""; // add FROM & (initial) WHERE clause
-		
+
 
 		if ($myRefsRadio == "0") // if the user only wants to display a subset of his records:
 			{
@@ -4659,7 +4754,7 @@
 				if ($findUserKeys == "1") // if the user wants to search the 'user_keys' field...
 					if ($userKeysName != "") // if the user typed a search string into the text entry field...
 						$query .= " AND user_keys RLIKE \"$userKeysName\""; // ...add 'user_keys' field name & value to the sql query
-		
+
 				if ($findUserNotes == "1") // if the user wants to search the 'user_notes' field...
 					if ($userNotesName != "") // if the user typed a search string into the text entry field...
 						$query .= " AND user_notes RLIKE \"$userNotesName\""; // ...add 'user_notes' field name & value to the sql query
@@ -4692,7 +4787,7 @@
 			$nothingFoundFeedback .= "\n<tr>\n\t<td valign=\"top\">Sorry, but your query didn't produce any results!&nbsp;&nbsp;<a href=\"javascript:history.back()\">Go Back</a></td>\n</tr>";
 
 		$nothingFoundFeedback .= "\n</table>";
-		
+
 
 		return $nothingFoundFeedback;
 	}
@@ -4702,11 +4797,10 @@
 	// DISPLAY THE HTML FOOTER:
 	// call the 'displayfooter()' function from 'footer.inc.php')
 	if ($viewType != "Print") // Note: we ommit the footer in print view!
-  
 		displayfooter($oldQuery);
 
 	// --------------------------------------------------------------------
 ?>
 
 </body>
-</html>	 
+</html>
