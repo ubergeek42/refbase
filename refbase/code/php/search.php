@@ -55,6 +55,8 @@
 	// In order to generalize routines we have to query further variables here:
 	$exportFormat = $_REQUEST['exportFormatSelector']; // get the export format chosen by the user (only occurs in 'extract.php' form  and in query result lists)
 	$oldQuery = $_REQUEST['oldQuery']; // get the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
+	if (isset($HTTP_POST_VARS["loginEmail"]))
+		$loginEmail = $HTTP_POST_VARS["loginEmail"]; // extract the email address of the currently logged in user
 
 	// --- Form 'sql_search.php': ------------------
 	if ("$formType" == "sqlSearch") // the user used the 'sql_search.php' form for searching...
@@ -110,8 +112,14 @@
 			$query = extractFormElementsExtract();
 		}
 
-	// --- Form 'index.php': ---------------------
-	elseif ("$formType" == "quickSearch") // the user used the quick search form on the main page ('index.php') for searching...
+	// --- My Refs Search Form within 'index.php': -------------------
+	elseif ("$formType" == "myRefsSearch") // the user used the 'Show My Refs' search form on the main page ('index.php') for searching...
+		{
+			$query = extractFormElementsMyRefs($showLinks, $loginEmail);
+		}
+
+	// --- Quick Search Form within 'index.php': ---------------------
+	elseif ("$formType" == "quickSearch") // the user used the 'Quick Search' form on the main page ('index.php') for searching...
 		{
 			$query = extractFormElementsQuick($showLinks);
 		}
@@ -170,8 +178,8 @@
 	if ($rowsFound > 0) // If there were rows found ...
 		{
 			// ... setup variables in order to facilitate "previous" & "next" browsing:
-			// a) Set $rowOffset to zero if not previously defined
-			if (empty($rowOffset))
+			// a) Set $rowOffset to zero if not previously defined, or if a wrong number (<=0) was given
+			if (empty($rowOffset) || ($rowOffset <= 0))
 				$rowOffset = 0;
 
 			// Adjust the $showRows value, if a wrong number (<=0) was given
@@ -216,7 +224,7 @@
 	showLogin(); // (function 'showLogin()' is defined in 'include.inc')
 
 	// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
-	displayHTMLhead("IP&Ouml; Literature Database -- Query Results", "noindex,nofollow", "Results from the IP&Ouml; Literature Database", "", true, "");
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Query Results", "noindex,nofollow", "Results from the " . htmlentities($officialDatabaseName), "", true, "");
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
 
 	// (4b) DISPLAY results:
@@ -294,8 +302,8 @@
 		
 
 		// 4) Build a TABLE ROW with links for "previous" & "next" browsing, as well as links to intermediate pages
-		//    call the 'buildBrowseLinks()' function:
-		$BrowseLinks = buildBrowseLinks($query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "", $exportFormat);
+		//    call the 'buildBrowseLinks()' function (defined in 'include.inc'):
+		$BrowseLinks = buildBrowseLinks("search.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "", $exportFormat);
 		echo $BrowseLinks;
 
 		//    and insert a spacer TABLE ROW:
@@ -311,16 +319,16 @@
 		// ... print a marker ('x') column (which will hold the checkboxes within the results part)
 		echo "\n\t<th align=\"left\" valign=\"top\">&nbsp;</th>";
 
-		// for each of the attributes in the result set
+		// for each of the attributes in the result set...
 		for ($i=0; $i<$fieldsToDisplay; $i++)
 		{
 			// ... and print out each of the attribute names
 			// in that row as a separate TH (Table Header)...
 			$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
 			$HTMLafterLink = "</th>"; // close the table header tag
-			// call the 'buildFieldNameLinks()' function (which will return a properly formatted table header tag holding the current field's name
-			// as well as the URL encoded query with the appropriate ORDER clause):
-			$tableHeaderLink = buildFieldNameLinks($query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "", "", "");
+			// call the 'buildFieldNameLinks()' function (defined in 'include.inc'), which will return a properly formatted table header tag holding the current field's name
+			// as well as the URL encoded query with the appropriate ORDER clause:
+			$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "", "", "");
 			echo $tableHeaderLink; // print the attribute name as link
 		 }
 
@@ -330,9 +338,9 @@
 
 				$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
 				$HTMLafterLink = "</th>"; // close the table header tag
-				// call the 'buildFieldNameLinks()' function (which will return a properly formatted table header tag holding the current field's name
-				// as well as the URL encoded query with the appropriate ORDER clause):
-				$tableHeaderLink = buildFieldNameLinks($query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "", "Links", "url");
+				// call the 'buildFieldNameLinks()' function (defined in 'include.inc'), which will return a properly formatted table header tag holding the current field's name
+				// as well as the URL encoded query with the appropriate ORDER clause:
+				$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "", "Links", "url");
 				echo $tableHeaderLink; // print the attribute name as link
 			}
 
@@ -464,8 +472,8 @@
 			$NoColumns = 7; // 7 columns: checkbox, field name, field contents
 
 		// 2) Build a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages
-		//    call the 'buildBrowseLinks()' function:
-		$BrowseLinks = buildBrowseLinks($query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "Display", $exportFormat);
+		//    call the 'buildBrowseLinks()' function (defined in 'include.inc'):
+		$BrowseLinks = buildBrowseLinks("search.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "Display", $exportFormat);
 		echo $BrowseLinks;
 
 		// 3) For the column headers, start another TABLE row ...
@@ -487,9 +495,9 @@
 
 				$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
 				$HTMLafterLink = "</th>"; // close the table header tag
-				// call the 'buildFieldNameLinks()' function (which will return a properly formatted table header tag holding the current field's name
-				// as well as the URL encoded query with the appropriate ORDER clause):
-				$tableHeaderLink = buildFieldNameLinks($query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "Display", "Links", "url");
+				// call the 'buildFieldNameLinks()' function (defined in 'include.inc'), which will return a properly formatted table header tag holding the current field's name
+				// as well as the URL encoded query with the appropriate ORDER clause:
+				$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "Display", "Links", "url");
 				echo $tableHeaderLink; // print the attribute name as link
 			}
 
@@ -535,9 +543,9 @@
 							$HTMLbeforeLink = "\n\t<td valign=\"top\" width=\"75\"><b>"; // start the (bold) TD tag
 							$HTMLafterLink = "</b></td>"; // close the (bold) TD tag
 						}
-					// call the 'buildFieldNameLinks()' function (which will return a properly formatted table data tag holding the current field's name
-					// as well as the URL encoded query with the appropriate ORDER clause):
-					$recordData .= buildFieldNameLinks($query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "Display", "", "");
+					// call the 'buildFieldNameLinks()' function (defined in 'include.inc'), which will return a properly formatted table data tag holding the current field's name
+					// as well as the URL encoded query with the appropriate ORDER clause:
+					$recordData .= buildFieldNameLinks("search.php", $query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "Display", "", "");
 
 					// print the ATTRIBUTE DATA:
 					// first, calculate the correct cosplan value for all the fields specified:
@@ -650,65 +658,6 @@
 
 	// --------------------------------------------------------------------
 
-	function buildFieldNameLinks($query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, $submitType, $linkName, $orig_fieldname)
-	{
-		if ("$orig_fieldname" == "") // if there's no fixed original fieldname specified (as is the case for the 'Links' column)
-			{
-				// Get the meta-data for the attribute
-				$info = mysql_fetch_field ($result, $i);
-				// Get the attribute name:
-				$orig_fieldname = $info->name;
-			}
-		// Replace substrings with spaces:
-		$fieldname = str_replace("_"," ",$orig_fieldname);
-		// Form words (i.e., make the first char of a word uppercase):
-		$fieldname = ucwords($fieldname);
-
-		if ($linkName == "") // if there's no fixed link name specified (as is the case for the 'Links' column)...
-			$linkName = $fieldname; // ...use the attribute's name as link name
-
-		// Setup some variables (in order to enable sorting by clicking on column titles)
-		// NOTE: Column sorting with any queries that include the 'LIMIT'... parameter
-		//       will (technically) work. However, every new query will limit the selection to a *different* list of records!! ?:-/
-		if ("$newORDER" == "") // if there's no fixed ORDER BY string specified (as is the case for the 'Links' column)
-			{
-				if ($info->numeric == "1") // Check if the field's data type is numeric (if so we'll append " DESC" to the ORDER clause)
-					$newORDER = ("ORDER BY " . $orig_fieldname . " DESC"); // Build the appropriate ORDER BY clause (sort numeric fields in DESCENDING order)
-				else
-					$newORDER = ("ORDER BY " . $orig_fieldname); // Build the appropriate ORDER BY clause
-			}
-
-		if ("$orig_fieldname" == "pages") // when original field name = 'pages' then...
-			{
-				$newORDER = str_replace("ORDER BY pages", "ORDER BY first_page DESC", $newORDER); // ...sort by 'first_page' instead
-				$orig_fieldname = "first_page"; // adjust '$orig_fieldname' variable accordingly
-			}
-
-		// call the 'newORDERclause()' function to replace the ORDER clause:
-		$queryURLNewOrder = newORDERclause($newORDER, $query);
-		
-		// toggle sort oder for the 1st-level sort attribute:
-		if (preg_match("/ORDER BY $orig_fieldname(?! DESC)/", $query)) // if 1st-level sort is by this attribute (in ASCending order)...
-			$queryURLNewOrder = preg_replace("/(ORDER%20BY%20$orig_fieldname)(?!%20DESC)/", "\\1%20DESC", $queryURLNewOrder); // ...change sort order to DESCending
-		elseif (preg_match("/ORDER BY $orig_fieldname DESC/", $query)) // if 1st-level sort is by this attribute (in ASCending order)...
-			$queryURLNewOrder = preg_replace("/(ORDER%20BY%20$orig_fieldname)%20DESC/", "\\1", $queryURLNewOrder); // ...change sort order to ASCending
-
-		// start the table header tag & print the attribute name as link:
-		$tableHeaderLink = "$HTMLbeforeLink<a href=\"search.php?sqlQuery=$queryURLNewOrder&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;formType=sqlSearch&amp;showRows=$showRows&amp;rowOffset=$rowOffset&amp;submit=$submitType&amp;oldQuery=" . rawurlencode($oldQuery) . "\">$linkName</a>";
-
-		// append sort indicator after the 1st-level sort attribute:
-		if (preg_match("/ORDER BY $orig_fieldname(?! DESC)(?=,|$)/", $query)) // if 1st-level sort is by this attribute (in ASCending order)...
-			$tableHeaderLink .= "&nbsp;<img src=\"img/sort_asc.gif\" alt=\"(up)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append an upward arrow image
-		elseif (preg_match("/ORDER BY $orig_fieldname DESC/", $query)) // if 1st-level sort is by this attribute (in DESCending order)...
-			$tableHeaderLink .= "&nbsp;<img src=\"img/sort_desc.gif\" alt=\"(down)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append a downward arrow image
-
-		$tableHeaderLink .=  $HTMLafterLink; // append any necessary HTML
-
-		return $tableHeaderLink;
-	}
-
-	// --------------------------------------------------------------------
-
 	// SHOW THE RESULTS IN AN HTML <TABLE> (export layout)
 	function exportRows($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $exportFormat)
 	{
@@ -724,8 +673,8 @@
 		$NoColumns = 1; // in export layout, we simply set it to a fixed value
 
 		// 2) Build a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages
-		//    call the 'buildBrowseLinks()' function:
-		$BrowseLinks = buildBrowseLinks($query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "Export", $exportFormat);
+		//    call the 'buildBrowseLinks()' function (defined in 'include.inc'):
+		$BrowseLinks = buildBrowseLinks("search.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "Export", $exportFormat);
 		echo $BrowseLinks;
 		// END RESULTS HEADER ----------------------
 		
@@ -1445,141 +1394,6 @@
 
 	// --------------------------------------------------------------------
 
-	//	BUILD BROWSE LINKS
-	// (i.e., build a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages)
-	function buildBrowseLinks($query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, $maxPageNo, $formType, $displayType, $exportFormat)
-	{
-		// First, calculate the offset page number:
-		$pageOffset = ($rowOffset / $showRows);
-		// workaround for always rounding upward (since I don't know better! :-/):
-		if (ereg("[0-9]+\.[0-9+]",$pageOffset)) // if the result number is not an integer..
-			$pageOffset = (int) $pageOffset + 1; // we convert the number into an integer and add 1
-		// set the offset page number to a multiple of $maxPageNo:
-		$pageOffset = $maxPageNo * (int) ($pageOffset / $maxPageNo);
-
-		// Plus, calculate the maximum number of pages needed:
-		$lastPage = ($rowsFound / $showRows);
-		// workaround for always rounding upward (since I don't know better! :-/):
-		if (ereg("[0-9]+\.[0-9+]",$lastPage)) // if the result number is not an integer..
-			$lastPage = (int) $lastPage + 1; // we convert the number into an integer and add 1
-
-		// Start a <TABLE> row:
-		$BrowseLinks = "\n<tr>";
-		$BrowseLinks .= "\n\t<td align=\"center\" valign=\"top\" colspan=\"$NoColumns\">";
-
-		// a) If there's a page range below the one currently shown,
-		// create a "[xx-xx]" link (linking directly to the previous range of pages):
-		if ($pageOffset > "0")
-			{
-				$previousRangeFirstPage = ($pageOffset - $maxPageNo + 1); // calculate the first page of the next page range
-
-				$previousRangeLastPage = ($previousRangeFirstPage + $maxPageNo - 1); // calculate the last page of the next page range
-
-				$BrowseLinks .= "\n\t\t<a href=\"search.php"
-					. "?sqlQuery=" . rawurlencode($query)
-					. "&amp;submit=$displayType"
-					. "&amp;exportFormatSelector=" . rawurlencode($exportFormat)
-					. "&amp;showQuery=$showQuery"
-					. "&amp;showLinks=$showLinks"
-					. "&amp;formType=$formType"
-					. "&amp;showRows=$showRows"
-					. "&amp;rowOffset=" . (($pageOffset - $maxPageNo) * $showRows)
-					. "&amp;oldQuery=" . rawurlencode($oldQuery)
-					. "\">[" . $previousRangeFirstPage . "&#8211;" . $previousRangeLastPage . "] </a>";
-			}
-
-		// b) Are there any previous pages?
-		if ($rowOffset > 0)
-			// Yes, so create a previous link
-			$BrowseLinks .= "\n\t\t<a href=\"search.php"
-				. "?sqlQuery=" . rawurlencode($query)
-				. "&amp;submit=$displayType"
-				. "&amp;exportFormatSelector=" . rawurlencode($exportFormat)
-				. "&amp;showQuery=$showQuery"
-				. "&amp;showLinks=$showLinks"
-				. "&amp;formType=$formType"
-				. "&amp;showRows=$showRows"
-				. "&amp;rowOffset=$previousOffset"
-				. "&amp;oldQuery=" . rawurlencode($oldQuery)
-				. "\">&lt;&lt;</a>";
-		else
-			// No, there is no previous page so don't print a link
-			$BrowseLinks .= "\n\t\t&lt;&lt;";
-	
-		// c) Output the page numbers as links:
-		// Count through the number of pages in the results:
-		for($x=($pageOffset * $showRows), $page=($pageOffset + 1);
-			$x<$rowsFound && $page <= ($pageOffset + $maxPageNo);
-			$x+=$showRows, $page++)
-			// Is this the current page?
-				if ($x < $rowOffset || 
-					$x > ($rowOffset + $showRows - 1))
-						// No, so print out a link
-						$BrowseLinks .= " \n\t\t<a href=\"search.php"
-							. "?sqlQuery=" . rawurlencode($query)
-							. "&amp;submit=$displayType"
-							. "&amp;exportFormatSelector=" . rawurlencode($exportFormat)
-							. "&amp;showQuery=$showQuery"
-							. "&amp;showLinks=$showLinks"
-							. "&amp;formType=$formType"
-							. "&amp;showRows=$showRows"
-							. "&amp;rowOffset=$x"
-							. "&amp;oldQuery=" . rawurlencode($oldQuery)
-							. "\">$page</a>";
-				else
-					// Yes, so don't print a link
-					$BrowseLinks .= " \n\t\t<b>$page</b>"; // current page is set in <b>BOLD</b>
-
-		$BrowseLinks .= " ";
-	
-		// d) Are there any Next pages?
-		if ($rowsFound > $nextOffset)
-			// Yes, so create a next link
-			$BrowseLinks .= "\n\t\t<a href=\"search.php"
-				. "?sqlQuery=" . rawurlencode($query)
-				. "&amp;submit=$displayType"
-				. "&amp;exportFormatSelector=" . rawurlencode($exportFormat)
-				. "&amp;showQuery=$showQuery"
-				. "&amp;showLinks=$showLinks"
-				. "&amp;formType=$formType"
-				. "&amp;showRows=$showRows"
-				. "&amp;rowOffset=$nextOffset"
-				. "&amp;oldQuery=" . rawurlencode($oldQuery)
-				. "\">&gt;&gt;</a>";
-		else
-			// No,	there is no next page so don't print a link
-			$BrowseLinks .= "\n\t\t&gt;&gt;";
-
-		// e) If there's a page range above the one currently shown,
-		// create a "[xx-xx]" link (linking directly to the next range of pages):
-		if ($pageOffset < ($lastPage - $maxPageNo))
-			{
-				$nextRangeFirstPage = ($pageOffset + $maxPageNo + 1); // calculate the first page of the next page range
-
-				$nextRangeLastPage = ($nextRangeFirstPage + $maxPageNo - 1); // calculate the last page of the next page range
-				if ($nextRangeLastPage > $lastPage)
-					$nextRangeLastPage = $lastPage; // adjust if this is the last range of pages and if it doesn't go up to the max allowed no of pages
-
-				$BrowseLinks .= "\n\t\t<a href=\"search.php"
-					. "?sqlQuery=" . rawurlencode($query)
-					. "&amp;submit=$displayType"
-					. "&amp;exportFormatSelector=" . rawurlencode($exportFormat)
-					. "&amp;showQuery=$showQuery"
-					. "&amp;showLinks=$showLinks"
-					. "&amp;formType=$formType"
-					. "&amp;showRows=$showRows"
-					. "&amp;rowOffset=" . (($pageOffset + $maxPageNo) * $showRows)
-					. "&amp;oldQuery=" . rawurlencode($oldQuery)
-					. "\"> [" . $nextRangeFirstPage . "&#8211;" . $nextRangeLastPage . "]</a>";
-			}
-
-		$BrowseLinks .= "\n\t</td>";
-		$BrowseLinks .= "\n</tr>";
-		return $BrowseLinks;
-	}
-
-	// --------------------------------------------------------------------
-
 	//	BUILD RESULTS FOOTER
 	// (i.e., build two rows with links for managing the checkboxes, as well as buttons for displaying/exporting selected records)
 	function buildResultsFooter($NoColumns, $showRows, $exportFormat)
@@ -1618,18 +1432,6 @@
 			$ResultsFooterRow = ereg_replace("<option>$exportFormat", "<option selected>$exportFormat", $ResultsFooterRow);
 
 		return $ResultsFooterRow;
-	}
-
-	// --------------------------------------------------------------------
-
-	//	REPLACE ORDER CLAUSE IN SQL QUERY:
-	function newORDERclause($newORDER, $query)
-	{
-		$queryNewOrder = str_replace('LIMIT','¥LIMIT',$query); // put a unique delimiter in front of the 'LIMIT'... parameter (in order to keep any 'LIMIT' parameter)
-		$queryNewOrder = ereg_replace('ORDER BY [^¥]+',$newORDER,$queryNewOrder); // replace old 'ORDER BY'... parameter by new one
-		$queryNewOrder = str_replace('¥',' ',$queryNewOrder); // remove the unique delimiter again
-		$queryURLNewOrder = rawurlencode($queryNewOrder); // URL encode query
-		return $queryURLNewOrder;
 	}
 
 	// --------------------------------------------------------------------
@@ -4011,6 +3813,66 @@
 		
 		if ("$quickSearchName" != "") // if the user typed a search string into the text entry field...
 			$query .= " AND $quickSearchSelector RLIKE \"$quickSearchName\""; // ...add search field name & value to the sql query
+
+		$query .= " ORDER BY author, year DESC, publication"; // add the default ORDER BY clause
+
+
+		return $query;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Build the database query from user input provided by the "Show My Refs" form on the main page ('index.php'):
+	function extractFormElementsMyRefs($showLinks, $loginEmail)
+	{
+		$query = "SELECT author, title, year, publication, volume, pages";
+
+		$myRefsRadio = $_POST['myRefsRadio']; // will be "1" if the user wants to display ALL of his records, otherwise it will be "0"
+		$findMarked = $_POST['findMarked']; // will be "1" if the user wants to search the 'marked' field
+		$markedSelector = $_POST['markedSelector']; // extract marked field value chosen by the user
+		$findUserKeys = $_POST['findUserKeys']; // will be "1" if the user wants to search the 'user_keys' field
+		$UserKeysName = $_POST['UserKeysName']; // extract user keys entered by the user
+		$findUserNotes = $_POST['findUserNotes']; // will be "1" if the user wants to search the 'user_notes' field
+		$UserNotesName = $_POST['UserNotesName']; // extract user notes entered by the user
+
+		if ("$myRefsRadio" == "0") // if the user only wants to display a subset of his records:
+			{
+				if ("$findMarked" == "1") // if the user wants to search the 'marked' field...
+					$query .= ", marked"; // ...add 'marked' field to SELECT query
+		
+				if ("$findUserKeys" == "1") // if the user wants to search the 'user_keys' field...
+					$query .= ", user_keys"; // ...add 'user_keys' to SELECT query
+		
+				if ("$findUserNotes" == "1") // if the user wants to search the 'user_notes' field...
+					$query .= ", user_notes"; // ...add 'user_notes' to SELECT query
+			}
+
+		$query .= ", serial"; // add 'serial' column (although it won't be visible the 'serial' column gets included in every search query)
+							//  (which is required in order to obtain unique checkbox names)
+
+		if ("$showLinks" == "1")
+			$query .= ", url, doi"; // add 'url' & 'doi' columns
+
+		$query .= " FROM refs WHERE location RLIKE \"$loginEmail\""; // add FROM & (initial) WHERE clause
+		
+
+		if ("$myRefsRadio" == "0") // if the user only wants to display a subset of his records:
+			{
+				if ("$findMarked" == "1") // if the user wants to search the 'marked' field...
+					{
+						if ("$markedSelector" == "marked")
+							$query .= " AND marked = 'Y'"; // ...add 'marked' field name & value to the sql query
+						else // $markedSelector == "not marked"
+							$query .= " AND marked = 'N'"; // ...add 'marked' field name & value to the sql query
+					}
+
+				if ("$findUserKeys" == "1") // if the user wants to search the 'user_keys' field...
+					$query .= " AND user_keys RLIKE \"$UserKeysName\""; // ...add 'user_keys' field name & value to the sql query
+		
+				if ("$findUserNotes" == "1") // if the user wants to search the 'user_notes' field...
+					$query .= " AND user_notes RLIKE \"$UserNotesName\""; // ...add 'user_notes' field name & value to the sql query
+			}
+
 
 		$query .= " ORDER BY author, year DESC, publication"; // add the default ORDER BY clause
 
