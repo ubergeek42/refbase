@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_receipt.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   31-Oct-04, 23:37
+	// Modified:   17-Feb-05, 20:21
 
 	// This script shows the user a receipt for their user UPDATE or INSERT.
 	// It carries out no database actions and can be bookmarked.
@@ -166,13 +166,13 @@
 		}
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-		displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Receipt", "noindex,nofollow", "Receipt page confirming correct submission of new user details to the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Receipt", "noindex,nofollow", "Receipt page confirming correct submission of new user details to the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
-		$confirmationText = "Thanks for your interest in the " . htmlentities($officialDatabaseName) . "!"
+		$confirmationText = "Thanks for your interest in the " . encodeHTML($officialDatabaseName) . "!"
 					. "<br><br>The data you provided have been sent to our database admin."
 					. "<br>We'll process your request and mail back to you as soon as we can!"
-					. "<br><br>[Back to <a href=\"index.php\">" . htmlentities($officialDatabaseName) . " Home</a>]";
+					. "<br><br>[Back to <a href=\"index.php\">" . encodeHTML($officialDatabaseName) . " Home</a>]";
 
 		// Start a table:
 		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays user submission feedback\">";
@@ -197,9 +197,10 @@
 		global $loginEmail;
 		global $adminLoginEmail;
 		global $officialDatabaseName;
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
 
 		// CONSTRUCT SQL QUERY:
-		$query = "SELECT * FROM users WHERE user_id = $userID";
+		$query = "SELECT * FROM $tableUsers WHERE user_id = $userID";
 
 		// (3) RUN the query on the database through the connection:
 		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
@@ -210,9 +211,9 @@
 		// Build the correct header message:
 		if (!isset($_SESSION['HeaderString'])) // if there's no saved message
 			if ($userAction == "Delete") // provide an appropriate header message:
-				$HeaderString = "<b><span class=\"warning\">Delete user</span> " . htmlentities($row["first_name"]) . " " . htmlentities($row["last_name"]) . " (" . $row["email"] . ")</b>:";
+				$HeaderString = "<b><span class=\"warning\">Delete user</span> " . encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . $row["email"] . ")</b>:";
 			else // provide the default message:
-				$HeaderString = "Account details and options for <b>" . htmlentities($row["first_name"]) . " " . htmlentities($row["last_name"]) . " (" . $row["email"] . ")</b>:";
+				$HeaderString = "Account details and options for <b>" . encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . $row["email"] . ")</b>:";
 		else
 		{
 			$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
@@ -222,7 +223,7 @@
 		}
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-		displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Receipt", "noindex,nofollow", "Receipt page confirming correct entry of user details and options for the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Receipt", "noindex,nofollow", "Receipt page confirming correct entry of user details and options for the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 		// Start main table:
@@ -247,15 +248,15 @@
 			echo "\n\t\t<tr>\n\t\t\t<td>\n\t\t\t\t";
 			if (!empty($row["title"]))
 				echo $row["title"] . ". ";
-			echo htmlentities($row["first_name"]) . " " . htmlentities($row["last_name"]) . " (" . htmlentities($row["abbrev_institution"]) . ")"; // Since the first name, last name and abbrev. institution fields are mandatory, we don't need to check if they're empty
+			echo encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . encodeHTML($row["abbrev_institution"]) . ")"; // Since the first name, last name and abbrev. institution fields are mandatory, we don't need to check if they're empty
 	
 			// Print institution name:
 			if (!empty($row["institution"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["institution"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["institution"]);
 	
 			// Print corporate institution name:
 			if (!empty($row["corporate_institution"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["corporate_institution"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["corporate_institution"]);
 	
 			// If any of the address lines contain data, add a spacer row:
 			if (!empty($row["address_line_1"]) || !empty($row["address_line_2"]) || !empty($row["address_line_3"]) || !empty($row["zip_code"]) || !empty($row["city"]) || !empty($row["state"]) || !empty($row["country"]))
@@ -263,31 +264,31 @@
 	
 			// Print first address line:
 			if (!empty($row["address_line_1"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["address_line_1"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["address_line_1"]);
 	
 			// Print second address line:
 			if (!empty($row["address_line_2"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["address_line_2"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["address_line_2"]);
 	
 			// Print third address line:
 			if (!empty($row["address_line_3"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["address_line_3"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["address_line_3"]);
 	
 			// Print zip code and city:
 			if (!empty($row["zip_code"]) && !empty($row["city"])) // both fields are available
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["zip_code"]) . " " . htmlentities($row["city"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["zip_code"]) . " " . encodeHTML($row["city"]);
 			elseif (!empty($row["zip_code"]) && empty($row["city"])) // only 'zip_code' available
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["zip_code"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["zip_code"]);
 			elseif (empty($row["zip_code"]) && !empty($row["city"])) // only 'city' field available
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["city"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["city"]);
 	
 			// Print state:
 			if (!empty($row["state"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["state"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["state"]);
 	
 			// Print country:
 			if (!empty($row["country"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["country"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . encodeHTML($row["country"]);
 	
 			// If any of the phone/url/email fields contain data, add a spacer row:
 			if (!empty($row["phone"]) || !empty($row["url"]) || !empty($row["email"]))
@@ -295,7 +296,7 @@
 	
 			// Print phone number:
 			if (!empty($row["phone"]))
-				echo "\n\t\t\t\t<br>\n\t\t\t\t" . "Phone: " . htmlentities($row["phone"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . "Phone: " . encodeHTML($row["phone"]);
 	
 			// Print URL:
 			if (!empty($row["url"]))
