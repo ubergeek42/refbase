@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_details.php
 	// Created:    16-Apr-02, 10:55
-	// Modified:   10-Jan-04, 12:45
+	// Modified:   31-May-04, 10:56
 
 	// This script shows the user a user <form>. It can be used both for INSERTing a new user and for UPDATE-ing an existing user.
 	// If the user is logged in, then it is an UPDATE; otherwise, an INSERT. The script also shows error messages above widgets that
@@ -25,21 +25,32 @@
 
 	// --------------------------------------------------------------------
 
-	// Connect to a session
-	session_start();
-	
-	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session();
 
-//	// Read session variables (only necessary if register globals is OFF!)
-//	$errors = $HTTP_SESSION_VARS['errors'];
-//	$formVars = $HTTP_SESSION_VARS['formVars'];
+	// Extract session variables (only necessary if register globals is OFF!):
+	if (isset($_SESSION['errors']))
+		$errors = $_SESSION['errors'];
+	else
+		$errors = array(); // initialize variable (in order to prevent 'Undefined index/variable...' messages)
+
+	if (isset($_SESSION['formVars']))
+		$formVars = $_SESSION['formVars'];
+	else
+		$formVars = array(); // initialize variable (in order to prevent 'Undefined index/variable...' messages)
 
 	// The current values of the session variables 'errors' and 'formVars' get stored in '$errors' or '$formVars', respectively. (either automatically if
 	// register globals is ON, or explicitly if register globals is OFF [by uncommenting the code above]).
 	// We need to clear these session variables here, since they would otherwise be there even if 'user_details.php' gets called with a different userID!
 	// Note: though we clear the session variables, the current error message (or form variables) is still available to this script via '$errors' (or '$formVars', respectively).
-	session_unregister("errors");
-	session_unregister("formVars");
+	deleteSessionVariable("errors"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+	deleteSessionVariable("formVars");
+
+	// --------------------------------------------------------------------
+
+	// (1) OPEN CONNECTION, (2) SELECT DATABASE
+	connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 
@@ -49,26 +60,33 @@
 	else
 		$userID = NULL; // '$userID = ""' wouldn't be correct here, since then any later 'isset($userID)' statement would resolve to true!
 
-	if (session_is_registered("loginEmail") && ($loginEmail != $adminLoginEmail)) // a normal user IS logged in ('$adminLoginEmail' is specified in 'ini.inc.php')
+	if (isset($_SESSION['loginEmail']) && ($loginEmail != $adminLoginEmail)) // a normal user IS logged in ('$adminLoginEmail' is specified in 'ini.inc.php')
 		// Check this user matches the userID (viewing and modifying user account details is only allowed to the admin)
-		if ($userID != getUserID($loginEmail, NULL)) // (function 'getUserID()' is defined in 'include.inc.php')
+		if ($userID != getUserID($loginEmail)) // (function 'getUserID()' is defined in 'include.inc.php')
 		{
-			session_register("HeaderString"); // save an error message
+			// save an error message:
 			$HeaderString = "<b><span class=\"warning\">You can only edit your own user data!</span></b>";
+
+			// Write back session variables:
+			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 	
-			$userID = getUserID($loginEmail, NULL); // re-establish the user's correct user_id
+			$userID = getUserID($loginEmail); // re-establish the user's correct user_id
 		}
 
 	// --------------------------------------------------------------------
 
 	// A user must be logged in in order to call 'user_details.php' WITH the 'userID' parameter:
-	if (!session_is_registered("loginEmail") && ($userID != 0))
+	if (!isset($_SESSION['loginEmail']) && ($userID != 0))
 	{
-		session_register("HeaderString"); // save an error message
+		// save an error message:
 		$HeaderString = "<b><span class=\"warning\">You must login to view your user account details!</span></b>";
 
-		session_register("referer"); // save the URL of the currently displayed page
-		$referer = $HTTP_REFERER;
+		// save the URL of the currently displayed page:
+		$referer = $_SERVER['HTTP_REFERER'];
+
+		// Write back session variables:
+		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+		saveSessionVariable("referer", $referer);
 
 		header("Location: user_login.php");
 		exit;
@@ -77,59 +95,60 @@
 	// --------------------------------------------------------------------
 
 	// Prepare meaningful instructions for UPDATE or INSERT:
-	if (!session_is_registered("HeaderString")) // if there's no stored message available
-//		if (empty($HeaderString)) // and if there wasn't any message generated by the code above
-			if (empty($errors)) // provide one of the default messages:
-				if (session_is_registered("loginEmail") && isset($userID) && !empty($userID)) // -> the user is logged in and views a user entry
-					$HeaderString = "Please amend your details below as required. Fields shown in <b>bold</b> are mandatory.";
-				else // -> the user is NOT logged in (OR: the admin is logged in and wants to add a new user, by calling 'user_details.php' w/o any 'userID')
-					if ((!session_is_registered("loginEmail") && ($addNewUsers == "everyone") && ($userID == "")) | (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && ($userID == "")))
-						$HeaderString = "Add a new user. Fields shown in <b>bold</b> are mandatory.";
-					else // ask a user to submit its user details for approval by the database admin:
-						$HeaderString = "Please fill in the details below to join. Fields shown in <b>bold</b> are mandatory.";
-			else // -> there were errors validating the user's details
-				$HeaderString = "<b><span class=\"warning\">There were validation errors regarding the details you entered. Please check the comments above the respective fields:</span></b>";
+	if (!isset($_SESSION['HeaderString'])) // if there's no stored message available
+	{
+		if (empty($errors)) // provide one of the default messages:
+		{
+			if (isset($_SESSION['loginEmail']) && isset($userID) && !empty($userID)) // -> the user is logged in and views a user entry
+				$HeaderString = "Please amend your details below as required. Fields shown in <b>bold</b> are mandatory.";
+			else // -> the user is NOT logged in (OR: the admin is logged in and wants to add a new user, by calling 'user_details.php' w/o any 'userID')
+			{
+				if ((!isset($_SESSION['loginEmail']) && ($addNewUsers == "everyone") && ($userID == "")) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($userID == "")))
+					$HeaderString = "Add a new user. Fields shown in <b>bold</b> are mandatory.";
+				else // ask a user to submit its user details for approval by the database admin:
+					$HeaderString = "Please fill in the details below to join. Fields shown in <b>bold</b> are mandatory.";
+			}
+		}
+		else // -> there were errors validating the user's details
+			$HeaderString = "<b><span class=\"warning\">There were validation errors regarding the details you entered. Please check the comments above the respective fields:</span></b>";
+	}
 	else
-		session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
+	{
+		$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
 
-//	if (session_is_registered("errors"))
+		// Note: though we clear the session variable, the current message is still available to this script via '$HeaderString':
+		deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+	}
+
+	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// ('' will produce the default 'Web' output style)
+	if (isset($_REQUEST['viewType']))
+		$viewType = $_REQUEST['viewType'];
+	else
+		$viewType = "";
+
+//	if (isset($_SESSION['errors']))
 //		// Read session variable (only necessary if register globals is OFF!)
-//		$errors = $HTTP_SESSION_VARS['errors'];
+//		$errors = $_SESSION['errors'];
 
 	// Is the user logged in and were there no errors from a previous validation? If so, look up the user for editing:
-	if (session_is_registered("loginEmail") && empty($errors) && isset($userID) && !empty($userID))
+	if (isset($_SESSION['loginEmail']) && empty($errors) && isset($userID) && !empty($userID))
 	{
 		// CONSTRUCT SQL QUERY:
 		$query = "SELECT * FROM users WHERE user_id = " . $userID;
 
 		// --------------------------------------------------------------------
-	
-		// (1) OPEN CONNECTION, (2) SELECT DATABASE, (3) RUN QUERY, (4) DISPLAY HEADER & RESULTS, (5) CLOSE CONNECTION
-	
-		// (1) OPEN the database connection:
-		//      (variables are set by include file 'db.inc.php'!)
-		if (!($connection = @ mysql_connect($hostName, $username, $password)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("The following error occurred while trying to connect to the host:", "");
-	
-		// (2) SELECT the database:
-		//      (variables are set by include file 'db.inc.php'!)
-		if (!(mysql_select_db($databaseName, $connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("The following error occurred while trying to connect to the database:", "");
-	
+
 		// (3a) RUN the query on the database through the connection:
-		if (!($result = @ mysql_query($query, $connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
-	
+		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+
 		// (3b) EXTRACT results:
 		$row = mysql_fetch_array($result); //fetch the current row into the array $row
 
 		// If the admin is logged in AND the displayed user data are NOT his own, we overwrite the default header message:
 		// (Since the admin is allowed to view and edit account data from other users, we have to provide a dynamic header message in that case)
-		if (($loginEmail == $adminLoginEmail) && ($userID != getUserID($loginEmail, $connection))) // ('$adminLoginEmail' is specified in 'ini.inc.php')
-			if (!session_is_registered("HeaderString"))
+		if (($loginEmail == $adminLoginEmail) && ($userID != getUserID($loginEmail))) // ('$adminLoginEmail' is specified in 'ini.inc.php')
+			if (!isset($_SESSION['HeaderString']))
 				$HeaderString = "Edit account details for <b>" . htmlentities($row["first_name"]) . " " . htmlentities($row["last_name"]) . " (" . $row["email"] . ")</b>:";
 	}
 
@@ -138,18 +157,16 @@
 
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Details", "noindex,nofollow", "User details required for use of the " . htmlentities($officialDatabaseName), "\n\t<meta http-equiv=\"expires\" content=\"0\">", false, "");
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Details", "noindex,nofollow", "User details required for use of the " . htmlentities($officialDatabaseName), "\n\t<meta http-equiv=\"expires\" content=\"0\">", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
-	if (session_is_registered("loginEmail") && empty($errors) && isset($userID) && !empty($userID))
-	{
-		// (5) CLOSE the database connection:
-		if (!(mysql_close($connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
-	
-		// --------------------------------------------------------------------
+	// (5) CLOSE the database connection:
+	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
+	// --------------------------------------------------------------------
+
+	if (isset($_SESSION['loginEmail']) && empty($errors) && isset($userID) && !empty($userID))
+	{
 		// Reset the '$formVars' variable (since we're loading from the user table):
 		$formVars = array();
 
@@ -342,7 +359,7 @@
 </tr>
 <?php
 // Only show the username/email and password widgets to new users (or the admin, since he's allowed to call 'user_details.php' w/o any 'userID' when logged in):
-	if (!session_is_registered("loginEmail") | (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && ($userID == "")))
+	if (!isset($_SESSION['loginEmail']) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($userID == "")))
 	{
 ?>
 <tr>
@@ -370,7 +387,7 @@
 	}
 // if a user is logged in, we also show the password field (but with a different label text) so that the user is able to change his password later on:
 // (just keep the password field empty, if you don't want to change your password)
-	elseif (session_is_registered("loginEmail") && isset($userID))
+	elseif (isset($_SESSION['loginEmail']) && isset($userID))
 	{
 ?>
 <tr>
@@ -401,7 +418,7 @@
 	//            (Note that this feature is actually only meant to add the very first user to the users table.
 	//             After you've done so, it is highly recommended to change the value of '$addNewUsers' to 'admin'!)
 	//   -or-  2. the ADMIN only (if variable '$addNewUsers' in 'ini.inc.php' is set to "admin")
-	if ((!session_is_registered("loginEmail") && ($addNewUsers == "everyone") && ($userID == "")) | (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && ($userID == "")))
+	if ((!isset($_SESSION['loginEmail']) && ($addNewUsers == "everyone") && ($userID == "")) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($userID == "")))
 	{
 ?>
 		<input type="submit" value="Add User">
@@ -436,5 +453,6 @@
 
 	// --------------------------------------------------------------------
 ?>
+
 </body>
 </html>
