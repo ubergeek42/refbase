@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./index.php
 	// Created:    29-Jul-02, 16:45
-	// Modified:   25-Nov-03, 21:56
+	// Modified:   28-Sep-04, 21:43
 
 	// This script builds the main page.
 	// It provides login and quick search forms
@@ -25,42 +25,40 @@
 
 	// --------------------------------------------------------------------
 
-	// Connect to a session
-	session_start();
-	
-	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session();
 
 	// --------------------------------------------------------------------
 
 	// If there's no stored message available:
-	if (!session_is_registered("HeaderString"))
+	if (!isset($_SESSION['HeaderString']))
 		$HeaderString = "Welcome! This database provides access to " . htmlentities($scientificFieldDescriptor) . " literature."; // Provide the default welcome message
 	else
-		session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
+	{
+		$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
+
+		// Note: though we clear the session variable, the current message is still available to this script via '$HeaderString':
+		deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+	}
+
+	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// ('' will produce the default 'Web' output style)
+	if (isset($_REQUEST['viewType']))
+		$viewType = $_REQUEST['viewType'];
+	else
+		$viewType = "";
 
 	// CONSTRUCT SQL QUERY:
 	$query = "SELECT COUNT(serial) FROM refs"; // query the total number of records
 
 	// --------------------------------------------------------------------
 
-	// (1) OPEN CONNECTION, (2) SELECT DATABASE, (3) RUN QUERY, (4) DISPLAY HEADER, (5) CLOSE CONNECTION
-
-	// (1) OPEN the database connection:
-	//      (variables are set by include file 'db.inc.php'!)
-	if (!($connection = @ mysql_connect($hostName, $username, $password)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to connect to the host:", "");
-
-	// (2) SELECT the database:
-	//      (variables are set by include file 'db.inc.php'!)
-	if (!(mysql_select_db($databaseName, $connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to connect to the database:", "");
+	// (1) OPEN CONNECTION, (2) SELECT DATABASE
+	connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 	// (3a) RUN the query on the database through the connection:
-	if (!($result = @ mysql_query ($query, $connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to query the database:", "");
+	$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 	// (3b) EXTRACT results:
 	$row = mysql_fetch_row($result); //fetch the current row into the array $row (it'll be always *one* row, but anyhow)
@@ -71,21 +69,20 @@
 
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Home", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "");
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Home", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (5) CLOSE the database connection:
-	if (!(mysql_close($connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
+	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 ?>
+
 <table align="center" border="0" cellpadding="2" cellspacing="5" width="90%" summary="This table explains features, goals and usage of the <? echo htmlentities($officialDatabaseName); ?>">
 	<tr>
 		<td colspan="2"><h3>Goals &amp; Features</h3></td>
 		<td width="163" valign="bottom"><?php
-if (!session_is_registered("loginEmail"))
+if (!isset($_SESSION['loginEmail']))
 	{
 ?><div class="header"><b>Login:</b></div><?php
 	}
@@ -108,13 +105,28 @@ else
 ?></li>
 				<li>a clean &amp; standardized interface</li>
 				<li>a multitude of search options, including both, simple &amp; advanced as well as powerful SQL search options</li>
-				<li>various display &amp; export options</li>
-				<li><a href="import_csa.php">import</a> of full records from Cambridge Scientific Abstracts</li>
+				<li>various display, citation &amp; export options</li>
+				<li><?php
+
+		// -------------------------------------------------------
+		if (isset($_SESSION['user_permissions']) AND ereg("(allow_import|allow_batch_import)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains either 'allow_import' or 'allow_batch_import'...
+		{
+		// ... include a link to 'import_csa.php':
+			?><a href="import_csa.php">import</a> <?php
+		}
+		else
+		{
+			?>import <?php
+		}
+
+		// -------------------------------------------------------
+
+			?>of full records from Cambridge Scientific Abstracts</li>
 			</ul>
 		</td>
 		<td width="163" valign="top">
 <?php
-if (!session_is_registered("loginEmail"))
+if (!isset($_SESSION['loginEmail']))
 	{
 ?>
 			<form action="user_login.php" method="POST">
@@ -173,6 +185,7 @@ else
 			</form><?php
 	}
 ?>
+
 		</td>
 	</tr>
 	<tr>
@@ -184,36 +197,22 @@ else
 		<td>Search the literature database:
 			<ul type="circle">
 				<li><a href="simple_search.php">Simple Search</a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;search the main fields of the database</li>
-				<li><a href="advanced_search.php">Advanced Search</a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;search all fields of the database</li>
-				<li><a href="sql_search.php">SQL Search</a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;search the database by use of a SQL query</li>
+				<li><a href="advanced_search.php">Advanced Search</a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;search all fields of the database</li><?php
+
+		// -------------------------------------------------------
+		if (isset($_SESSION['user_permissions']) AND ereg("allow_sql_search", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_sql_search'...
+		{
+		// ... include a link to 'sql_search.php':
+?>
+
+				<li><a href="sql_search.php">SQL Search</a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;search the database by use of a SQL query</li><?php
+		}
+
+		// -------------------------------------------------------
+?>
+
 				<li><a href="library_search.php">Library Search</a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;search the library of the <? echo htmlentities($hostInstitutionName); ?></li>
 			</ul>
-			<br>
-			Or, alternatively:
-<?php
-	// Get the current year & date in order to include them into query URLs:
-	$CurrentYear = date('Y');
-	$CurrentDate = date('Y-m-d');
-	// We'll also need yesterday's date for inclusion into query URLs:
-	$TimeStampYesterday = mktime(0, 0, 0, date('m'), (date('d') - 1), date('Y'));
-	$DateYesterday = date('Y-m-d', $TimeStampYesterday);
-	// Plus, we'll calculate the date that's a week ago (again, for inclusion into query URLs):
-	$TimeStampYesterday = mktime(0, 0, 0, date('m'), (date('d') - 7), date('Y'));
-	$DateLastWeek = date('Y-m-d', $TimeStampYesterday);
-
-	echo "\t\t\t<ul type=\"circle\">";
-	echo "\n\t\t\t\t<li>view all database entries that were:";
-	echo "\n\t\t\t\t\t<ul type=\"circle\">";
-	echo "\n\t\t\t\t\t\t<li>added: <a href=\"show.php?date=" . $CurrentDate . "\">today</a> | <a href=\"show.php?date=" . $DateYesterday . "\">yesterday</a> | <a href=\"show.php?date=" . $DateLastWeek . "&amp;range=after\">last 7 days</a></li>";
-	echo "\n\t\t\t\t\t\t<li>edited: <a href=\"show.php?date=" . $CurrentDate . "&amp;when=edited\">today</a> | <a href=\"show.php?date=" . $DateYesterday . "&amp;when=edited\">yesterday</a> | <a href=\"show.php?date=" . $DateLastWeek . "&amp;when=edited&amp;range=after\">last 7 days</a></li>";
-	echo "\n\t\t\t\t\t\t<li>published in: <a href=\"show.php?year=" . $CurrentYear . "\">" . $CurrentYear . "</a> | <a href=\"show.php?year=" . ($CurrentYear - 1) . "\">" . ($CurrentYear - 1) . "</a> | <a href=\"show.php?year=" . ($CurrentYear - 2) . "\">" . ($CurrentYear - 2) . "</a> | <a href=\"show.php?year=" . ($CurrentYear - 3) . "\">" . ($CurrentYear - 3) . "</a></li>";
-	echo "\n\t\t\t\t\t</ul>";
-	echo "\n\t\t\t\t\t<br>";
-	echo "\n\t\t\t\t</li>";
-	echo "\n\t\t\t\t<li><a href=\"extract.php\">extract literature</a> cited within a text and build an appropriate reference list</li>";
-	echo "\n\t\t\t\t<li><a href=\"show.php\">display details</a> for a particular record by entering its database serial number</li>";
-	echo "\n\t\t\t</ul>\n";
-?>
 		</td>
 		<td width="163" valign="top">
 			<form action="search.php" method="POST">
@@ -235,6 +234,187 @@ else
 		</td>
 	</tr>
 	<tr>
+		<td width="15">&nbsp;</td>
+		<td>Or, alternatively:</td>
+		<td width="163" valign="top">
+<?php
+if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_groups", $_SESSION['user_permissions'])))
+	{
+?>
+			<div class="header"><b>Show My Group:</b></div><?php
+	}
+else
+	{
+?>
+			&nbsp;<?php
+	}
+?>
+
+		</td>
+	</tr>
+	<tr>
+		<td width="15">&nbsp;</td>
+		<td>
+<?php
+	// Get the current year & date in order to include them into query URLs:
+	$CurrentYear = date('Y');
+	$CurrentDate = date('Y-m-d');
+	// We'll also need yesterday's date for inclusion into query URLs:
+	$TimeStampYesterday = mktime(0, 0, 0, date('m'), (date('d') - 1), date('Y'));
+	$DateYesterday = date('Y-m-d', $TimeStampYesterday);
+	// Plus, we'll calculate the date that's a week ago (again, for inclusion into query URLs):
+	$TimeStampLastWeek = mktime(0, 0, 0, date('m'), (date('d') - 7), date('Y'));
+	$DateLastWeek = date('Y-m-d', $TimeStampLastWeek);
+?>
+			<ul type="circle" class="moveup">
+				<li>view all database entries that were:
+					<ul type="circle">
+						<li>added: <a href="show.php?date=<? echo $CurrentDate; ?>">today</a> | <a href="show.php?date=<? echo $DateYesterday; ?>">yesterday</a> | <a href="show.php?date=<? echo $DateLastWeek; ?>&amp;range=after">last 7 days</a></li>
+						<li>edited: <a href="show.php?date=<? echo $CurrentDate; ?>&amp;when=edited">today</a> | <a href="show.php?date=<? echo $DateYesterday; ?>&amp;when=edited">yesterday</a> | <a href="show.php?date=<? echo $DateLastWeek; ?>&amp;when=edited&amp;range=after">last 7 days</a></li>
+						<li>published in: <a href="show.php?year=<? echo $CurrentYear; ?>"><? echo $CurrentYear; ?></a> | <a href="show.php?year=<? echo ($CurrentYear - 1); ?>"><? echo ($CurrentYear - 1); ?></a> | <a href="show.php?year=<? echo ($CurrentYear - 2); ?>"><? echo ($CurrentYear - 2); ?></a> | <a href="show.php?year=<? echo ($CurrentYear - 3); ?>"><? echo ($CurrentYear - 3); ?></a></li>
+					</ul>
+				</li>
+			</ul>
+		</td>
+		<td width="163" valign="top">
+<?php
+if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_groups", $_SESSION['user_permissions']))) // if a user is logged in AND the 'user_permissions' session variable contains 'allow_user_groups', show the 'Show My Groups' form:
+	{
+		if (!isset($_SESSION['userGroups']))
+			$groupSearchDisabled = " disabled"; // disable the 'Show My Groups' form if the session variable holding the user's groups isnt't available
+		else
+			$groupSearchDisabled = "";
+?>
+			<form action="search.php" method="POST">
+				<input type="hidden" name="formType" value="groupSearch">
+				<input type="hidden" name="showQuery" value="0">
+				<input type="hidden" name="showLinks" value="1">
+				<select name="groupSearchSelector"<? echo $groupSearchDisabled; ?>><?php
+
+				if (isset($_SESSION['userGroups']))
+				{
+					$optionTags = buildSelectMenuOptions($_SESSION['userGroups'], " *; *", "\t\t\t\t\t"); // build properly formatted <option> tag elements from the items listed in the 'userGroups' session variable
+					echo $optionTags;
+				}
+				else
+				{
+?>
+
+					<option>(no groups available)</option><?php
+				}
+?>
+
+				</select>
+				<br>
+				<input type="submit" value="Show"<? echo $groupSearchDisabled; ?>>
+			</form><?php
+	}
+else
+	{
+?>
+			&nbsp;<?php
+	}
+?>
+
+		</td>
+	</tr>
+	<tr>
+		<td width="15">&nbsp;</td>
+		<td>
+<?php
+if (isset($_SESSION['user_permissions']) AND ereg("(allow_details_view|allow_cite)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable either contains 'allow_details_view' or 'allow_cite'...
+	{
+?>
+			Tools that work with record serial numbers:<?php
+	}
+else
+	{
+?>
+			&nbsp;<?php
+	}
+?>
+
+		</td>
+		<td width="163" valign="top">
+<?php
+if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_queries", $_SESSION['user_permissions'])))
+	{
+?>
+			<div class="header"><b>Recall My Query:</b></div><?php
+	}
+else
+	{
+?>
+			&nbsp;<?php
+	}
+?>
+
+		</td>
+	</tr>
+	<tr>
+		<td width="15">&nbsp;</td>
+		<td>
+			<ul type="circle" class="moveup"><?php
+if (isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_details_view'...
+	{
+?>
+
+				<li><a href="show.php">display details</a> for a particular record by entering its database serial number</li><?php
+	}
+
+if (isset($_SESSION['user_permissions']) AND ereg("allow_cite", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_cite'...
+	{
+?>
+
+				<li><a href="extract.php">extract citations</a> from a text and build an appropriate reference list</li><?php
+	}
+?>
+
+			</ul>
+		</td>
+		<td width="163" valign="top">
+<?php
+if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_queries", $_SESSION['user_permissions']))) // if a user is logged in AND the 'user_permissions' session variable contains 'allow_user_queries', show the 'Recall My Query' form:
+	{
+		if (!isset($_SESSION['userQueries']))
+			$querySearchDisabled = " disabled"; // disable the 'Recall My Query' form if the session variable holding the user's queries isn't available
+		else
+			$querySearchDisabled = "";
+?>
+			<form action="queries.php" method="POST">
+				<input type="hidden" name="formType" value="querySearch">
+				<input type="hidden" name="showQuery" value="0">
+				<input type="hidden" name="showLinks" value="1">
+				<select name="querySearchSelector"<? echo $querySearchDisabled; ?>><?php
+
+				if (isset($_SESSION['userQueries']))
+				{
+					$optionTags = buildSelectMenuOptions($_SESSION['userQueries'], " *; *", "\t\t\t\t\t"); // build properly formatted <option> tag elements from the items listed in the 'userQueries' session variable
+					echo $optionTags;
+				}
+				else
+				{
+?>
+
+					<option>(no queries available)</option><?php
+				}
+?>
+
+				</select>
+				<br>
+				<input type="submit" name="submit" value="Go"<? echo $querySearchDisabled; ?>>&nbsp;<input type="submit" name="submit" value="Edit"<? echo $querySearchDisabled; ?>>
+			</form><?php
+	}
+else
+	{
+?>
+			&nbsp;<?php
+	}
+?>
+
+		</td>
+	</tr>
+	<tr>
 		<td colspan="3"><h3>About</h3></td>
 	</tr>
 	<tr>
@@ -243,6 +423,7 @@ else
 		<td width="163" valign="top"><a href="http://www.refbase.net/"><img src="img/refbase_credit.gif" alt="powered by refbase" width="80" height="44" hspace="0" border="0"></a></td>
 	</tr>
 </table><?php
+
 	// --------------------------------------------------------------------
 
 	//	DISPLAY THE HTML FOOTER:
@@ -251,5 +432,6 @@ else
 
 	// --------------------------------------------------------------------
 ?>
+
 </body>
 </html> 
