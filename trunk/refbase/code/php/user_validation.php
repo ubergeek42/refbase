@@ -170,8 +170,10 @@
 		$errors["url"] = "The URL can be no longer than 255 characters:";
 
 
-	// Only validate email if this is an INSERT
-	if (!session_is_registered("loginEmail"))
+	// Only validate email if this is an INSERT:
+	// Validation is triggered for NEW USERS (visitors who aren't logged in) as well as the ADMIN
+	// (the email field isn't shown to logged in non-admin-users anyhow)
+	if (!session_is_registered("loginEmail") | (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == "")))
 	{
 		// Check syntax
 		$validEmailExpr = "^[0-9a-z~!#$%&_-]([.]?[0-9a-z~!#$%&_-])*@[0-9a-z~!#$%&_-]([.]?[0-9a-z~!#$%&_-])*$";
@@ -192,7 +194,7 @@
 //			// There must be a Domain Name Server (DNS) record for the domain name
 //			$errors["email"] = "The domain does not exist:";
 
-		else // Check if the email address is already in use in the winestore:
+		else // Check if the email address is already in use in the database:
 		{
 			$query = "SELECT * FROM auth WHERE email = '" . $formVars["email"] . "'"; // CONSTRUCT SQL QUERY
 	
@@ -217,17 +219,18 @@
 		}
 	}
 
-
-	// Only validate password if this is an INSERT
-	if (!session_is_registered("loginEmail"))
-	{
+	// If this was an INSERT, we do not allow the password field to be blank:
+	// Validation is triggered for NEW USERS (visitors who aren't logged in) as well as the ADMIN
+	if (!session_is_registered("loginEmail") | (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == "")))
 		if (empty($formVars["loginPassword"]))
 			// Password cannot be a null string
 			$errors["loginPassword"] = "The password field cannot be blank:";
 
-		elseif (strlen($formVars["loginPassword"]) > 15)
-			$errors["loginPassword"] = "The password can be no longer than 15 characters:";
-	}
+	if ($formVars["loginPassword"] != $formVars["loginPasswordRetyped"])
+		$errors["loginPassword"] = "You typed <em>two</em> different passwords! Please make sure\n\t\t<br>\n\t\tthat you type your password correctly:";
+
+	elseif (strlen($formVars["loginPassword"]) > 15)
+		$errors["loginPassword"] = "The password can be no longer than 15 characters:";
 
 	// alternatively, only validate password if it's length is between 6 and 8 characters
 //	elseif (!session_is_registered("loginEmail") && (strlen($formVars["loginPassword"]) < 6 || strlen($formVars["loginPassword"] > 8)))
@@ -283,8 +286,13 @@
 				. "url = \"" . $formVars["url"] . "\" "
 				. "WHERE user_id = $userID";
 	}
-	// If the admin is logged in and he used 'user_details.php' to add a new user (-> 'userID' is empty!):
-	elseif (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == "")) // -> perform an insert:
+	// If an authorized user uses 'user_details.php' to add a new user (-> 'userID' is empty!):
+	// INSERTs are allowed to:
+	//         1. EVERYONE who's not logged in (but ONLY if variable '$addNewUsers' in 'ini.inc.php' is set to "everyone"!)
+	//            (Note that this feature is actually only meant to add the very first user to the users table.
+	//             After you've done so, it is highly recommended to change the value of '$addNewUsers' to 'admin'!)
+	//   -or-  2. the ADMIN only (if variable '$addNewUsers' in 'ini.inc.php' is set to "admin")
+	elseif ((!session_is_registered("loginEmail") && ($addNewUsers == "everyone") && ($_REQUEST['userID'] == "")) | (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == ""))) // -> perform an insert:
 	{
 		// INSERT - construct a query to add data as new record
 		$query = "INSERT INTO users SET "
@@ -306,9 +314,11 @@
 				. "email = \"" . $formVars["email"] . "\"";
 	
 	}
-	else // no user is logged in (since 'user_details.php' cannot be called w/o a 'userID' by a logged in user, 'user_details.php' must have been submitted by a NEW user!)
+	// if '$addNewUsers' is set to 'admin': MAIL feedback to new user & send data to admin for approval:
+	// no user is logged in (since 'user_details.php' cannot be called w/o a 'userID' by a logged in user,
+	// 'user_details.php' must have been submitted by a NEW user!)
+	elseif ($addNewUsers == "admin" && ($_REQUEST['userID'] == ""))
 	{
-		// MAIL feedback to user & send data to admin for approval:
 		// First, we have to query for the proper admin name, so that we can include this name within the emails:
 		$query = "SELECT first_name, last_name FROM users WHERE email = '" . $adminLoginEmail . "'"; // CONSTRUCT SQL QUERY ('$adminLoginEmail' is specified in 'ini.inc.php')
 
@@ -402,16 +412,43 @@
 	// If this was an UPDATE - we save possible name changes to the session file (so that this new user name can be displayed by the 'showLogin()' function):
 	if (session_is_registered("loginEmail") && ($_REQUEST['userID'] != ""))
 	{
-		// We only save any changes if a normal user is logged in -OR- the admin is logged in AND the updated user data are his own!
+		// We only save name changes if a normal user is logged in -OR- the admin is logged in AND the updated user data are his own!
 		// (We have to account for that the admin is allowed to view and edit account data from other users)
 		if (($loginEmail != $adminLoginEmail) | (($loginEmail == $adminLoginEmail) && ($userID == getUserID($loginEmail, $connection))))
 		{
 			$loginFirstName = $formVars["firstName"];
 			$loginLastName = $formVars["lastName"];
 		}
+
+		// If the user provided a new password, we need to UPDATE also the 'auth' table (which contains the login credentials for each user):
+		if ($formVars["loginPassword"] != "") // a new password was provided by the user...
+		{
+			// Use the first two characters of the email as a salt for the password
+			// Note: The user's email is NOT included as a regular form field for UPDATEs. To make it available as 'salt'
+			//       the user's email gets included as a hidden form tag by 'user_details.php'!
+			$salt = substr($formVars["email"], 0, 2);
+	
+			// Create the encrypted password
+			$stored_password = crypt($formVars["loginPassword"], $salt);
+	
+			// Update the user's password within the auth table
+			$query = "UPDATE auth SET "
+					. "password = '" . $stored_password . "' "
+					. "WHERE user_id = $userID";
+	
+			if (!($result = @ mysql_query($query, $connection)))
+				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+					showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+		}
 	}
+
 	// If this was an INSERT, we need to INSERT also into the 'auth' table (which contains the login credentials for each user):
-	elseif (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == ""))
+	// INSERTs are allowed to:
+	//         1. EVERYONE who's not logged in (but ONLY if variable '$addNewUsers' in 'ini.inc.php' is set to "everyone"!)
+	//            (Note that this feature is actually only meant to add the very first user to the users table.
+	//             After you've done so, it is highly recommended to change the value of '$addNewUsers' to 'admin'!)
+	//   -or-  2. the ADMIN only (if variable '$addNewUsers' in 'ini.inc.php' is set to "admin")
+	elseif ((!session_is_registered("loginEmail") && ($addNewUsers == "everyone") && ($_REQUEST['userID'] == "")) | (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == ""))) // -> perform an insert:
 	{
 		// Get the user id that was created
 		$userID = @ mysql_insert_id($connection);
@@ -422,7 +459,7 @@
 		// Create the encrypted password
 		$stored_password = crypt($formVars["loginPassword"], $salt);
 
-		// Insert a new user into the user table
+		// Insert a new user into the auth table
 		$query = "INSERT INTO auth SET "
 				. "user_id = " . $userID . ", "
 				. "email = '" . $formVars["email"] . "', "
@@ -432,16 +469,22 @@
 			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 				showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
 
-//		// Log the user into their new account:
-//		session_register("loginEmail");
-//		session_register("loginFirstName");
-//		session_register("loginLastName");
-//		session_register("loginUserID");
-//
-//		$loginEmail = $formVars["email"];
-//		$loginUserID = $userID;
-//		$loginFirstName = $formVars["firstName"];
-//		$loginLastName = $formVars["lastName"];
+		// if EVERYONE who's not logged in is able to add a new user (which is the case if the variable '$addNewUsers' in 'ini.inc.php'
+		// is set to "everyone", see note above!), then we have to make sure that this visitor gets logged into his new
+		// account - otherwise the following receipt page ('users_receipt.php') will generate an error:
+		if ($addNewUsers == "everyone")
+		{
+			// Log the user into his new account:
+			session_register("loginEmail");
+			session_register("loginUserID");
+			session_register("loginFirstName");
+			session_register("loginLastName");
+	
+			$loginEmail = $formVars["email"];
+			$loginUserID = $userID;
+			$loginFirstName = $formVars["firstName"];
+			$loginLastName = $formVars["lastName"];
+		}
 	}
 
 //	// Write back session variables (only necessary if register globals is OFF!)
