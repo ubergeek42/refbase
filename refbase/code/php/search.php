@@ -280,7 +280,7 @@
 			$NoColumns = (1+$fieldsToDisplay); // add checkbox column
 
 
-		// 2) Build a FORM & TABLE containing a field popup, a text entry field and two buttons ('Refine' & 'Exclude') for searching within results
+		// 2) Build a FORM & TABLE containing options to refine the search results as well as the diplayed columns
 		// Call the 'buildRefineSearchElements()' function (which does the actual work):
 		$RefineSearch = buildRefineSearchElements($queryURL, $showQuery, $showLinks, $showRows, $NoColumns);
 		echo $RefineSearch;
@@ -305,8 +305,8 @@
 
 		//    and insert a spacer TABLE ROW:
 		echo "\n<tr align=\"center\">"
-//			. "\n\t<td colspan=\"$NoColumns\"><hr align=\"center\" width=\"100%\"></td>" // uncomment this line and comment the next one if you prefer a divider line (instead of white space)
-			. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>"
+			. "\n\t<td colspan=\"$NoColumns\"><hr align=\"center\" width=\"100%\"></td>" // uncomment this line and comment the next one if you prefer a divider line (instead of white space)
+//			. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>"
 			. "\n</tr>";
 
 
@@ -401,8 +401,8 @@
 		// BEGIN RESULTS FOOTER --------------------
 		// Insert a spacer TABLE ROW:
 		echo "\n<tr align=\"center\">"
-//			. "\n\t<td colspan=\"$NoColumns\"><hr align=\"center\" width=\"100%\"></td>" // uncomment this line and comment the next one if you prefer a divider line (instead of white space)
-			. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>"
+			. "\n\t<td colspan=\"$NoColumns\"><hr align=\"center\" width=\"100%\"></td>" // uncomment this line and comment the next one if you prefer a divider line (instead of white space)
+//			. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>"
 			. "\n</tr>";
 
 		// Again, insert the (already constructed) BROWSE LINKS
@@ -1384,13 +1384,12 @@
 	// --------------------------------------------------------------------
 
 	//	BUILD REFINE SEARCH ELEMENTS
-	// (i.e., build a row with a field popup, a text entry field and two buttons ('Refine' & 'Exclude') for searching within results)
+	// (i.e., provide options to refine the search results as well as the diplayed columns)
 	function buildRefineSearchElements($queryURL, $showQuery, $showLinks, $showRows, $NoColumns)
 	{
 		// Start a FORM:
 		$RefineSearchRow .= "\n<form action=\"search.php\" method=\"POST\" name=\"refineSearch\">"
 				. "\n\t<input type=\"hidden\" name=\"formType\" value=\"refineSearch\">"
-				. "\n\t<input type=\"hidden\" name=\"submit\" value=\"Restrict\">" // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'refineSearchName' text entry field will act as if the user clicked the 'Restrict' button)
 				. "\n\t<input type=\"hidden\" name=\"sqlQuery\" value=\"$queryURL\">" // embed the current sqlQuery so that it can be re-applied when displaying refined results
 				. "\n\t<input type=\"hidden\" name=\"showQuery\" value=\"$showQuery\">" // embed the current value of '$showQuery' so that it's available when displaying refined results
 				. "\n\t<input type=\"hidden\" name=\"showLinks\" value=\"$showLinks\">" // embed the current value of '$showLinks' so that it's available when displaying refined results
@@ -1399,12 +1398,11 @@
 		// Start a TABLE:
 		$RefineSearchRow .= "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"80%\" summary=\"This table holds a search form that enables you to refine the previous search result\">";
 
-		// Append a TABLE ROW with POPUP, TEXT ENTRY FIELD and BUTTONS for searching within found records
-		$RefineSearchRow .= "\n<tr>";
-		$RefineSearchRow .= "\n\t<td align=\"center\" valign=\"top\" colspan=\"$NoColumns\">";
-		// Build the visible form elements:
+		// Append a TABLE ROW with a field POPUP, a search TEXT ENTRY FIELD and a submit BUTTON for searching within found records
+		$RefineSearchRow .= "\n<tr>"
+							. "\n\t<td align=\"center\" valign=\"top\" colspan=\"$NoColumns\">";
+		// Build the form elements:
 		$RefineSearchRow .= "\n\t\tSearch within Results:&nbsp;&nbsp;&nbsp;&nbsp;"
-							. "\n\t\t<input type=\"checkbox\" name=\"showRefineSearchField\" value=\"1\">&nbsp;"
 							. "\n\t\t<select name=\"refineSearchSelector\">"
 							. "\n\t\t\t<option selected>author</option>"
 							. "\n\t\t\t<option>title</option>"
@@ -1412,6 +1410,8 @@
 							. "\n\t\t\t<option>keywords</option>"
 							. "\n\t\t\t<option>abstract</option>"
 							. "\n\t\t\t<option>publication</option>"
+							. "\n\t\t\t<option>volume</option>"
+							. "\n\t\t\t<option>pages</option>"
 							. "\n\t\t\t<option>editor</option>"
 							. "\n\t\t\t<option>publisher</option>"
 							. "\n\t\t\t<option>area</option>"
@@ -1422,12 +1422,20 @@
 							. "\n\t\t\t<option>user_keys</option>"
 							. "\n\t\t\t<option>user_notes</option>"
 							. "\n\t\t</select>&nbsp;&nbsp;"
-							. "\n\t\tcontains:&nbsp;&nbsp;"
 							. "\n\t\t<input type=\"text\" name=\"refineSearchName\" size=\"12\">&nbsp;&nbsp;"
-							. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Restrict\">&nbsp;&nbsp;"
-							. "\n\t\tto&nbsp;&nbsp;or&nbsp;&nbsp;"
-							. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Exclude\">&nbsp;&nbsp;"
-							. "\n\t\tmatched records";
+							. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Refine\">";
+		// Finish the data and row tags:
+		$RefineSearchRow .= "\n\t</td>"
+							. "\n</tr>";
+
+		// Append another TABLE ROW with two pairs of RADIO buttons that control 1) the diplay of columns 2) whether to include or exclude matched records
+		$RefineSearchRow .= "\n<tr>"
+							. "\n\t<td align=\"center\" valign=\"top\" colspan=\"$NoColumns\">";
+		// Build the form elements:
+		$RefineSearchRow .= "\n\t\t<input type=\"radio\" name=\"showRefineSearchFieldRadio\" value=\"1\">&nbsp;Show&nbsp;&nbsp;"
+							. "\n\t\t<input type=\"radio\" name=\"showRefineSearchFieldRadio\" value=\"0\">&nbsp;Hide column&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;"
+							. "\n\t\t<input type=\"radio\" name=\"refineSearchActionRadio\" value=\"1\" checked>&nbsp;Restrict to&nbsp;&nbsp;"
+							. "\n\t\t<input type=\"radio\" name=\"refineSearchActionRadio\" value=\"0\">&nbsp;Exclude matched records";
 		// Finish the data and row tags:
 		$RefineSearchRow .= "\n\t</td>"
 							. "\n</tr>";
@@ -3866,15 +3874,27 @@
 	// Build the database query from user input provided by the "Search within Results" form above the query results list (which, in turn, was returned by 'search.php'):
 	function extractFormElementsRefine($displayType, $sqlQuery, $showLinks)
 	{
-		$showRefineSearchField = $_POST['showRefineSearchField']; // extract user option whether searched field should be displayed
 		$refineSearchSelector = $_POST['refineSearchSelector']; // extract field name chosen by the user
 		$refineSearchName = $_POST['refineSearchName']; // extract search text entered by the user
+		$showRefineSearchFieldRadio = $_POST['showRefineSearchFieldRadio']; // extract user option whether searched field should be displayed
+		$refineSearchActionRadio = $_POST['refineSearchActionRadio']; // extract user option whether matched records should be included or excluded
 
 		$query = rawurldecode($sqlQuery); // URL decode SQL query (it was URL encoded before incorporation into a hidden tag of the 'refineSearch' form to avoid any HTML syntax errors)
 
-		if ("$showRefineSearchField" == "1") // if the user checked the checkbox next to the field popup...
-			if (ereg("SELECT.+$refineSearchSelector.+FROM refs", $query) != true) // ...and the field isn't already displayed...
-				$query = str_replace(" FROM refs",", $refineSearchSelector FROM refs",$query); // ...then show the field that was used for refining the search results
+		if ("$showRefineSearchFieldRadio" == "1") // if the user checked the radio button next to 'Show column'...
+			{
+				if (ereg("SELECT.+$refineSearchSelector.+FROM refs", $query) != true) // ...and the field is *not* already displayed...
+					$query = str_replace(" FROM refs",", $refineSearchSelector FROM refs",$query); // ...then SHOW the field that was used for refining the search results
+			}
+		elseif ("$showRefineSearchFieldRadio" == "0") // if the user checked the radio button next to 'Hide column'...
+			{
+				if (ereg("SELECT.+$refineSearchSelector.+FROM refs", $query) == true) // ...and the field *is* currently displayed...
+					// for all columns except the first:
+					$query = preg_replace("/(SELECT.+?), $refineSearchSelector(.+FROM refs)/","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
+					// for all columns except the last:
+					$query = preg_replace("/(SELECT.+?)$refineSearchSelector, (.+FROM refs)/","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
+			}
+		// else if $showRefineSearchFieldRadio == '' (which is the form's default) we don't change the display of any columns
 
 		$query = str_replace(' FROM refs',', serial FROM refs',$query); // add 'serial' column (although it won't be visible the 'serial' column gets included in every search query)
 																		// (which is required in order to obtain unique checkbox names)
@@ -3883,14 +3903,14 @@
 			$query = str_replace(' FROM refs',', url, doi FROM refs',$query); // add 'url' & 'doi' columns
 
 		if ("$refineSearchName" != "") // if the user typed a search string into the text entry field...
-			// Depending on the chosen output format, construct an appropriate SQL query:
-			if ($displayType == "Exclude")
-					$query = str_replace("WHERE","WHERE $refineSearchSelector NOT RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
-
-			else // $displayType == "Restrict" (hitting <enter> within the 'refineSearchName' text entry field will act as if the user clicked the 'Restrict' button)
+			// Depending on the chosen output action, construct an appropriate SQL query:
+			if ($refineSearchActionRadio == "1") // if the user checked the radio button next to "Restrict to matched records"
 					$query = str_replace("WHERE","WHERE $refineSearchSelector RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
 
-		// else, if the user did NOT type a search string into the text entry field, we simply reproduce the old query...
+			else // $refineSearchActionRadio == "0" // if the user checked the radio button next to "Exclude matched records"
+					$query = str_replace("WHERE","WHERE $refineSearchSelector NOT RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
+
+		// else, if the user did NOT type a search string into the text entry field, we simply keep the old WHERE clause...
 
 
 		return $query;
