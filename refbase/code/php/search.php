@@ -25,11 +25,10 @@
 </head>
 <body>
 <?php
-	// VERSION 1.3
-	// -- implements display of details (displayType = 'Display') as well as
-	// -- exporting to various citation formats (displayType = 'Export') for selected records
-	// -- NOTE: implementation of display of details isn't finished yet!
-	// --       similarly, not all listed export styles are implemented yet!
+	// VERSION 1.4
+	// -- implements "search within results" functionality (implementation was actually finished in cvs revision 1.12)
+	// -- generates the query URL of the currently displayed results page and routes it thru 'Display Details' and 'Add/Edit Record'
+	//    so that its's available on the subsequent receipt page that follows any add/edit/delete action!
 
 	// This is included to hide the username and password:
 	include 'db.inc';
@@ -65,6 +64,7 @@
 
 	// In order to generalize routines we have to query further variables here:
 	$exportFormat = $_REQUEST['exportFormatSelector']; // get the export format chosen by the user (only occurs in 'extract.php' form  and in query result lists)
+	$oldQuery = $_REQUEST['oldQuery']; // get the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
 
 	// --- Form 'sql_search.php': ------------------
 	if ("$formType" == "sqlSearch") // the user used the 'sql_search.php' form for searching...
@@ -75,6 +75,7 @@
 				$sqlQuery = str_replace(' FROM refs',', url, doi FROM refs',$sqlQuery); // add 'url' & 'doi' columns
 		
 			$query = str_replace('\"','"',$sqlQuery); // replace any \" with "
+			$query = str_replace('\\\\','\\',$query);
 		}
 
 	// --- Form 'simple_search.php': ---------------
@@ -164,7 +165,23 @@
 
 	$queryURL = rawurlencode($query); // URL encode SQL query
 
-	// Find out how many rows are available:
+	// Second, check if there's some query URL available pointing to a previous search results page
+	if ($oldQuery == "")
+		{
+			// If there's no query URL available, we build the *full* query URL for the page currently displayed. The variable '$oldQuery' will get included into every 'browse'/'field title'/'show details'/'edit record'/'add record' link. Plus it will get written into a hidden form tag so that it's available on 'display details' (batch display)
+			// The variable '$oldQuery' gets routed thru the 'display details' and 'record.php' forms to facilitate a link to the current results page on the subsequent receipt page that follows any add/edit/delete action!
+			$oldQuery = "sqlQuery=" . $query . "&amp;showQuery=" . $showQuery . "&amp;showLinks=" . $showLinks . "&amp;formType=sqlSearch&amp;showRows=" . $showRows . "&amp;rowOffset=" . $rowOffset;
+		}
+	else // there's already a query URL available
+		{
+			if (ereg('sqlQuery%3D', $oldQuery)) // if '$oldQuery' still contains URL encoded data... ('%3D' is the URL encoded form of '=', see note below!)
+				$oldQuery = rawurldecode($oldQuery); // ...URL decode old query URL (it was URL encoded before incorporation into a hidden tag of the 'queryResults' form to avoid any HTML syntax errors)
+												// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
+												//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
+			$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
+		}
+
+	// Third, find out how many rows are available:
 	$rowsFound = @ mysql_num_rows($result);
 	if ($rowsFound > 0) // If there were rows found ...
 		{
@@ -199,10 +216,10 @@
 	
 	// (4b) DISPLAY results:
 	if ($displayType == "Display") // display details for each of the selected records
-		displayRows($result, $rowsFound, $query, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $exportFormat);
+		displayRows($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $exportFormat);
 
 	elseif ($displayType == "Export") // export each of the selected records
-		exportRows($result, $rowsFound, $query, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $exportFormat);
+		exportRows($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $exportFormat);
 
 	else // show all records in columnar style
 		displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $exportFormat);
@@ -247,7 +264,7 @@
 			. "\n\t<td>$FullHeaderString</td>"
 			. "\n</tr>"
 			. "\n</table>"
-			. "\n<hr align=\"center\" width=\"80%\">";
+			. "\n<hr align=\"center\" width=\"95%\">";
 	}
 
 	// --------------------------------------------------------------------
@@ -279,6 +296,11 @@
 		else
 			$NoColumns = (1+$fieldsToDisplay); // add checkbox column
 
+		// Although there might be an (older) query URL available, we build a new query URL for the page currently displayed. The variable '$oldQuery' will get included into every 'browse'/'field title'/'show details'/'edit record'/'add record' link. Plus it will get written into a hidden form tag so that it's available on 'display details' (batch display)
+		// (NOTE: Since the 'add record' link gets constructed outside this function, it will still contain the older query URL!)
+		// The variable '$oldQuery' gets routed thru the 'display details' and 'record.php' forms to facilitate a link to the current results page on the subsequent receipt page that follows any add/edit/delete action!
+		$oldQuery = "sqlQuery=" . $query . "&amp;showQuery=" . $showQuery . "&amp;showLinks=" . $showLinks . "&amp;formType=sqlSearch&amp;showRows=" . $showRows . "&amp;rowOffset=" . $rowOffset;
+
 
 		// 2) Build a FORM & TABLE containing options to refine the search results as well as the diplayed columns
 		// Call the 'buildRefineSearchElements()' function (which does the actual work):
@@ -292,15 +314,16 @@
 				. "\n<input type=\"hidden\" name=\"submit\" value=\"Display\">" // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
 				. "\n<input type=\"hidden\" name=\"orderBy\" value=\"$orderBy\">" // embed the current ORDER BY parameter so that it can be re-applied when displaying details
 				. "\n<input type=\"hidden\" name=\"showQuery\" value=\"$showQuery\">" // embed the current value of '$showQuery' so that it's available on 'display details' (batch display)
-				. "\n<input type=\"hidden\" name=\"showLinks\" value=\"$showLinks\">"; // embed the current value of '$showLinks' so that it's available on 'display details' (batch display)
+				. "\n<input type=\"hidden\" name=\"showLinks\" value=\"$showLinks\">" // embed the current value of '$showLinks' so that it's available on 'display details' (batch display)
+				. "\n<input type=\"hidden\" name=\"oldQuery\" value=\"" . rawurlencode($oldQuery) . "\">"; // embed the current value of '$oldQuery' so that it's available on 'display details' (batch display)
 
 		//    and start a TABLE, with column headers
-		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"80%\" summary=\"This table holds the database results for your query\">";
+		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the database results for your query\">";
 		
 
 		// 4) Build a TABLE ROW with links for "previous" & "next" browsing, as well as links to intermediate pages
 		//    call the 'buildBrowseLinks()' function:
-		$BrowseLinks = buildBrowseLinks($query, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "", $exportFormat);
+		$BrowseLinks = buildBrowseLinks($query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "", $exportFormat);
 		echo $BrowseLinks;
 
 		//    and insert a spacer TABLE ROW:
@@ -314,7 +337,7 @@
 		echo "\n<tr>";
 
 		// ... print a marker ('x') column (which will hold the checkboxes within the results part)
-		echo "\n\t<th align=\"left\" valign=\"top\">x</th>";
+		echo "\n\t<th align=\"left\" valign=\"top\">&nbsp;</th>";
 
 		// for each of the attributes in the result set
 		for ($i=0; $i<$fieldsToDisplay; $i++)
@@ -325,7 +348,7 @@
 			$HTMLafterLink = "</th>"; // close the table header tag
 			// call the 'buildFieldNameLinks()' function (which will return a properly formatted table header tag holding the current field's name
 			// as well as the URL encoded query with the appropriate ORDER clause):
-			$tableHeaderLink = buildFieldNameLinks($query, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "", "", "");
+			$tableHeaderLink = buildFieldNameLinks($query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "", "", "");
 			echo $tableHeaderLink; // print the attribute name as link
 		 }
 
@@ -337,7 +360,7 @@
 				$HTMLafterLink = "</th>"; // close the table header tag
 				// call the 'buildFieldNameLinks()' function (which will return a properly formatted table header tag holding the current field's name
 				// as well as the URL encoded query with the appropriate ORDER clause):
-				$tableHeaderLink = buildFieldNameLinks($query, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "", "Links", "url");
+				$tableHeaderLink = buildFieldNameLinks($query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "", "Links", "url");
 				echo $tableHeaderLink; // print the attribute name as link
 			}
 
@@ -374,9 +397,11 @@
 					. "&amp;showLinks=" . $showLinks
 					. "&amp;formType=sqlSearch"
 					. "&amp;submit=Display"
+					. "&amp;oldQuery=" . rawurlencode($oldQuery)
 					. "\"><img src=\"img/details.gif\" alt=\"details\" title=\"show details\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
 
 				echo "\n\t\t<a href=\"record.php?recordAction=edit&amp;serialNo=" . $row["serial"]
+					. "&amp;oldQuery=" . rawurlencode($oldQuery)
 					. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit record\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
 
 				if (!empty($row["url"]) OR (!empty($row["doi"])))
@@ -424,7 +449,7 @@
 	else
 	{
 		// Report that nothing was found:
-		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"80%\" summary=\"This table holds the database results for your query\">"
+		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the database results for your query\">"
 				. "\n<tr>"
 				. "\n\t<td valign=\"top\">Sorry, but your query didn't produce any results!&nbsp;&nbsp;<a href=\"javascript:history.back()\">Go Back</a></td>"
 				. "\n</tr>"
@@ -435,14 +460,15 @@
 	// --------------------------------------------------------------------
 
 	// SHOW THE RESULTS IN AN HTML <TABLE> (horizontal layout)
-	function displayRows($result, $rowsFound, $query, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $exportFormat)
+	function displayRows($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $exportFormat)
 	{
 		// Start a form
 		echo "\n<form action=\"search.php\" method=\"POST\" name=\"queryResults\">"
 				. "\n<input type=\"hidden\" name=\"formType\" value=\"queryResults\">"
-				. "\n<input type=\"hidden\" name=\"submit\" value=\"Display\">"; // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
+				. "\n<input type=\"hidden\" name=\"submit\" value=\"Display\">" // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
+				. "\n<input type=\"hidden\" name=\"oldQuery\" value=\"" . rawurlencode($oldQuery) . "\">"; // embed the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
 		// Start a table, with column headers
-		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" width=\"80%\" summary=\"This table holds the database results for your query\">";
+		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" width=\"95%\" summary=\"This table holds the database results for your query\">";
 		
 	// If the query has results ...
 	if ($rowsFound > 0) 
@@ -475,14 +501,14 @@
 
 		// 2) Build a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages
 		//    call the 'buildBrowseLinks()' function:
-		$BrowseLinks = buildBrowseLinks($query, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "Display", $exportFormat);
+		$BrowseLinks = buildBrowseLinks($query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "Display", $exportFormat);
 		echo $BrowseLinks;
 
 		// 3) For the column headers, start another TABLE row ...
 		echo "\n<tr>";
 
 		// ... print a marker ('x') column (which will hold the checkboxes within the results part)
-		echo "\n\t<th align=\"left\" valign=\"top\">x</th>";
+		echo "\n\t<th align=\"left\" valign=\"top\">&nbsp;</th>";
 
 		// ... print a record header
 		if (($showMaxRow-$rowOffset) == "1") // '$showMaxRow-$rowOffset' gives the number of displayed records for a particular page) // '($rowsFound == "1" || $showRows == "1")' wouldn't trap the case of a single record on the last of multiple results pages!
@@ -499,7 +525,7 @@
 				$HTMLafterLink = "</th>"; // close the table header tag
 				// call the 'buildFieldNameLinks()' function (which will return a properly formatted table header tag holding the current field's name
 				// as well as the URL encoded query with the appropriate ORDER clause):
-				$tableHeaderLink = buildFieldNameLinks($query, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "Display", "Links", "url");
+				$tableHeaderLink = buildFieldNameLinks($query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "Display", "Links", "url");
 				echo $tableHeaderLink; // print the attribute name as link
 			}
 
@@ -547,7 +573,7 @@
 						}
 					// call the 'buildFieldNameLinks()' function (which will return a properly formatted table data tag holding the current field's name
 					// as well as the URL encoded query with the appropriate ORDER clause):
-					$recordData .= buildFieldNameLinks($query, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "Display", "", "");
+					$recordData .= buildFieldNameLinks($query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "Display", "", "");
 
 					// print the ATTRIBUTE DATA:
 					// first, calculate the correct cosplan value for all the fields specified:
@@ -589,6 +615,7 @@
 									{
 										$recordData .= "\n\t<td valign=\"top\">";
 										$recordData .= "\n\t\t<a href=\"record.php?recordAction=edit&amp;serialNo=" . $row["serial"]
+													. "&amp;oldQuery=" . rawurlencode($oldQuery)
 													. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit record\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
 
 										if (!empty($row["url"]) OR (!empty($row["doi"])))
@@ -659,7 +686,7 @@
 
 	// --------------------------------------------------------------------
 
-	function buildFieldNameLinks($query, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, $submitType, $linkName, $orig_fieldname)
+	function buildFieldNameLinks($query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, $submitType, $linkName, $orig_fieldname)
 	{
 		if ("$orig_fieldname" == "") // if there's no fixed original fieldname specified (as is the case for the 'Links' column)
 			{
@@ -703,7 +730,7 @@
 			$queryURLNewOrder = preg_replace("/(ORDER%20BY%20$orig_fieldname)%20DESC/", "\\1", $queryURLNewOrder); // ...change sort order to ASCending
 
 		// start the table header tag & print the attribute name as link:
-		$tableHeaderLink = "$HTMLbeforeLink<a href=\"search.php?sqlQuery=$queryURLNewOrder&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;formType=sqlSearch&amp;showRows=$showRows&amp;rowOffset=$rowOffset&amp;submit=$submitType\">$linkName</a>";
+		$tableHeaderLink = "$HTMLbeforeLink<a href=\"search.php?sqlQuery=$queryURLNewOrder&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;formType=sqlSearch&amp;showRows=$showRows&amp;rowOffset=$rowOffset&amp;submit=$submitType&amp;oldQuery=" . rawurlencode($oldQuery) . "\">$linkName</a>";
 
 		// append sort indicator after the 1st-level sort attribute:
 		if (preg_match("/ORDER BY $orig_fieldname(?! DESC)(?=,|$)/", $query)) // if 1st-level sort is by this attribute (in ASCending order)...
@@ -719,10 +746,10 @@
 	// --------------------------------------------------------------------
 
 	// SHOW THE RESULTS IN AN HTML <TABLE> (export layout)
-	function exportRows($result, $rowsFound, $query, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $exportFormat)
+	function exportRows($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $exportFormat)
 	{
 		// Start a table
-		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"80%\" summary=\"This table holds the database results for your query\">";
+		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the database results for your query\">";
 		
 	// If the query has results ...
 	if ($rowsFound > 0) 
@@ -734,7 +761,7 @@
 
 		// 2) Build a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages
 		//    call the 'buildBrowseLinks()' function:
-		$BrowseLinks = buildBrowseLinks($query, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "Export", $exportFormat);
+		$BrowseLinks = buildBrowseLinks($query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "Export", $exportFormat);
 		echo $BrowseLinks;
 		// END RESULTS HEADER ----------------------
 		
@@ -1396,7 +1423,7 @@
 				. "\n\t<input type=\"hidden\" name=\"showRows\" value=\"$showRows\">"; // embed the current value of '$showRows' so that it's available when displaying refined results
 
 		// Start a TABLE:
-		$RefineSearchRow .= "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"80%\" summary=\"This table holds a search form that enables you to refine the previous search result\">";
+		$RefineSearchRow .= "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds a search form that enables you to refine the previous search result\">";
 
 		// Append a TABLE ROW with a field POPUP, a search TEXT ENTRY FIELD and a submit BUTTON for searching within found records
 		$RefineSearchRow .= "\n<tr>"
@@ -1410,7 +1437,9 @@
 							. "\n\t\t\t<option>keywords</option>"
 							. "\n\t\t\t<option>abstract</option>"
 							. "\n\t\t\t<option>publication</option>"
+							. "\n\t\t\t<option>abbrev_journal</option>"
 							. "\n\t\t\t<option>volume</option>"
+							. "\n\t\t\t<option>issue</option>"
 							. "\n\t\t\t<option>pages</option>"
 							. "\n\t\t\t<option>editor</option>"
 							. "\n\t\t\t<option>publisher</option>"
@@ -1453,7 +1482,7 @@
 
 	//	BUILD BROWSE LINKS
 	// (i.e., build a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages)
-	function buildBrowseLinks($query, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, $maxPageNo, $formType, $displayType, $exportFormat)
+	function buildBrowseLinks($query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, $maxPageNo, $formType, $displayType, $exportFormat)
 	{
 		// First, calculate the offset page number:
 		$pageOffset = ($rowOffset / $showRows);
@@ -1490,6 +1519,7 @@
 					. "&amp;formType=$formType"
 					. "&amp;showRows=$showRows"
 					. "&amp;rowOffset=" . (($pageOffset - $maxPageNo) * $showRows)
+					. "&amp;oldQuery=" . rawurlencode($oldQuery)
 					. "\">[" . $previousRangeFirstPage . "&#8211;" . $previousRangeLastPage . "] </a>";
 			}
 
@@ -1505,6 +1535,7 @@
 				. "&amp;formType=$formType"
 				. "&amp;showRows=$showRows"
 				. "&amp;rowOffset=$previousOffset"
+				. "&amp;oldQuery=" . rawurlencode($oldQuery)
 				. "\">&lt;&lt;</a>";
 		else
 			// No, there is no previous page so don't print a link
@@ -1528,6 +1559,7 @@
 							. "&amp;formType=$formType"
 							. "&amp;showRows=$showRows"
 							. "&amp;rowOffset=$x"
+							. "&amp;oldQuery=" . rawurlencode($oldQuery)
 							. "\">$page</a>";
 				else
 					// Yes, so don't print a link
@@ -1547,6 +1579,7 @@
 				. "&amp;formType=$formType"
 				. "&amp;showRows=$showRows"
 				. "&amp;rowOffset=$nextOffset"
+				. "&amp;oldQuery=" . rawurlencode($oldQuery)
 				. "\">&gt;&gt;</a>";
 		else
 			// No,	there is no next page so don't print a link
@@ -1571,6 +1604,7 @@
 					. "&amp;formType=$formType"
 					. "&amp;showRows=$showRows"
 					. "&amp;rowOffset=" . (($pageOffset + $maxPageNo) * $showRows)
+					. "&amp;oldQuery=" . rawurlencode($oldQuery)
 					. "\"> [" . $nextRangeFirstPage . "&#8211;" . $nextRangeLastPage . "]</a>";
 			}
 
@@ -3880,6 +3914,8 @@
 		$refineSearchActionRadio = $_POST['refineSearchActionRadio']; // extract user option whether matched records should be included or excluded
 
 		$query = rawurldecode($sqlQuery); // URL decode SQL query (it was URL encoded before incorporation into a hidden tag of the 'refineSearch' form to avoid any HTML syntax errors)
+											// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
+											//       But, opposed to that, URL encoded data that are included within a form by means of a hidden form tag will *NOT* get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
 
 		if ("$showRefineSearchFieldRadio" == "1") // if the user checked the radio button next to 'Show column'...
 			{
@@ -4019,9 +4055,9 @@
 
 	// --------------------------------------------------------------------
 
-	//	DISPLAY THE HTML FOOTER:
+	// DISPLAY THE HTML FOOTER:
 	// call the 'displayfooter()' function from 'footer.inc')
-	displayfooter();
+	displayfooter($oldQuery);
 
 	// --------------------------------------------------------------------
 ?>
