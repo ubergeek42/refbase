@@ -17,10 +17,10 @@
 	*/
 
 	// Incorporate some include files:
-	include 'db.inc'; // 'db.inc' is included to hide username and password
-	include 'header.inc'; // include header
-	include 'footer.inc'; // include footer
-	include 'include.inc'; // include common functions
+	include 'db.inc.php'; // 'db.inc.php' is included to hide username and password
+	include 'header.inc.php'; // include header
+	include 'footer.inc.php'; // include footer
+	include 'include.inc.php'; // include common functions
 	include "ini.inc.php"; // include common variables
 
 	// --------------------------------------------------------------------
@@ -51,7 +51,7 @@
 
 	if (session_is_registered("loginEmail") && ($loginEmail != $adminLoginEmail)) // a normal user IS logged in ('$adminLoginEmail' is specified in 'ini.inc.php')
 		// Check this user matches the userID (viewing and modifying user account details is only allowed to the admin)
-		if ($userID != getUserID($loginEmail, NULL)) // (function 'getUserID()' is defined in 'include.inc')
+		if ($userID != getUserID($loginEmail, NULL)) // (function 'getUserID()' is defined in 'include.inc.php')
 		{
 			session_register("HeaderString"); // save an error message
 			$HeaderString = "<b><span class=\"warning\">You can only edit your own user data!</span></b>";
@@ -107,13 +107,13 @@
 		// (1) OPEN CONNECTION, (2) SELECT DATABASE, (3) RUN QUERY, (4) DISPLAY HEADER & RESULTS, (5) CLOSE CONNECTION
 	
 		// (1) OPEN the database connection:
-		//      (variables are set by include file 'db.inc'!)
+		//      (variables are set by include file 'db.inc.php'!)
 		if (!($connection = @ mysql_connect($hostName, $username, $password)))
 			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 				showErrorMsg("The following error occurred while trying to connect to the host:", "");
 	
 		// (2) SELECT the database:
-		//      (variables are set by include file 'db.inc'!)
+		//      (variables are set by include file 'db.inc.php'!)
 		if (!(mysql_select_db($databaseName, $connection)))
 			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 				showErrorMsg("The following error occurred while trying to connect to the database:", "");
@@ -134,10 +134,10 @@
 	}
 
 	// Show the login status:
-	showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 	// (4) DISPLAY header:
-	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Details", "noindex,nofollow", "User details required for use of the " . htmlentities($officialDatabaseName), "\n\t<meta http-equiv=\"expires\" content=\"0\">", false, "");
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
@@ -431,7 +431,7 @@
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
-	// call the 'displayfooter()' function from 'footer.inc')
+	// call the 'displayfooter()' function from 'footer.inc.php')
 	displayfooter("");
 
 	// --------------------------------------------------------------------

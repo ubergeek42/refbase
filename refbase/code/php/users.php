@@ -17,10 +17,10 @@
 	*/
 
 	// Incorporate some include files:
-	include 'db.inc'; // 'db.inc' is included to hide username and password
-	include 'header.inc'; // include header
-	include 'footer.inc'; // include footer
-	include 'include.inc'; // include common functions
+	include 'db.inc.php'; // 'db.inc.php' is included to hide username and password
+	include 'header.inc.php'; // include header
+	include 'footer.inc.php'; // include footer
+	include 'include.inc.php'; // include common functions
 	include "ini.inc.php"; // include common variables
 
 	// --------------------------------------------------------------------
@@ -126,13 +126,13 @@
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE, (3) RUN QUERY, (4) DISPLAY USERS, (5) CLOSE CONNECTION
 
 	// (1) OPEN the database connection:
-	//      (variables are set by include file 'db.inc'!)
+	//      (variables are set by include file 'db.inc.php'!)
 	if (!($connection = @ mysql_connect($hostName, $username, $password)))
 		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 			showErrorMsg("The following error occurred while trying to connect to the host:", "");
 
 	// (2) SELECT the database:
-	//      (variables are set by include file 'db.inc'!)
+	//      (variables are set by include file 'db.inc.php'!)
 	if (!(mysql_select_db($databaseName, $connection)))
 		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 			showErrorMsg("The following error occurred while trying to connect to the database:", "");
@@ -197,9 +197,9 @@
 		session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 
 	// Now, show the login status:
-	showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
-	// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+	// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Manage Users", "noindex,nofollow", "Administration page that lists users of the " . htmlentities($officialDatabaseName) . ", with links for adding, editing or deleting any users", "", false, "");
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
@@ -251,7 +251,7 @@
 			$refineSearchSelectorElements1 = "first_name, last_name, title, institution, abbrev_institution, corporate_institution, address, address_line_1, address_line_2, address_line_3, zip_code, city, state, country, phone, email, url, keywords, notes, last_login, logins, user_id, marked, created_date, created_time, created_by, modified_date, modified_time, modified_by";
 			$refineSearchSelectorElements2 = ""; // ... and keep the second one blank (compare with 'search.php')
 			$refineSearchSelectorElementSelected = "last_name"; // this column will be selected by default
-			// Call the 'buildRefineSearchElements()' function (defined in 'include.inc') which does the actual work:
+			// Call the 'buildRefineSearchElements()' function (defined in 'include.inc.php') which does the actual work:
 			$RefineSearch = buildRefineSearchElements("users.php", $queryURL, $showQuery, $showLinks, $showRows, $NoColumns, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected);
 			echo $RefineSearch;
 
@@ -259,7 +259,7 @@
 			echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays all users of this database\">";
 		
 			// Build a TABLE ROW with links for "previous" & "next" browsing, as well as links to intermediate pages
-			// call the 'buildBrowseLinks()' function (defined in 'include.inc'):
+			// call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
 			$BrowseLinks = buildBrowseLinks("users.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "", "", "", "", ""); // Note: we set the last 3 fields ('$exportOrder', '$orderBy' & $headerMsg') to "" since they aren't (yet) required here
 			echo $BrowseLinks;
 
@@ -282,7 +282,7 @@
 				// in that row as a separate TH (Table Header)...
 				$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
 				$HTMLafterLink = "</th>"; // close the table header tag
-				// call the 'buildFieldNameLinks()' function (defined in 'include.inc'), which will return a properly formatted table header tag holding the current field's name
+				// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
 				// as well as the URL encoded query with the appropriate ORDER clause:
 				$tableHeaderLink = buildFieldNameLinks("users.php", $query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "", "", "");
 				echo $tableHeaderLink; // print the attribute name as link
@@ -294,7 +294,7 @@
 	
 					$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
 					$HTMLafterLink = "</th>"; // close the table header tag
-					// call the 'buildFieldNameLinks()' function (defined in 'include.inc'), which will return a properly formatted table header tag holding the current field's name
+					// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
 					// as well as the URL encoded query with the appropriate ORDER clause:
 					$tableHeaderLink = buildFieldNameLinks("users.php", $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "", "Links", "user_id");
 					echo $tableHeaderLink; // print the attribute name as link
@@ -339,7 +339,7 @@
 					echo "\n\t\t<a href=\"user_details.php?userID=" . $row["user_id"]
 						. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit user\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
 	
-					$adminUserID = getUserID($adminLoginEmail, $connection); // ...get the admin's 'user_id' using his/her 'adminLoginEmail' (function 'getUserID()' is defined in 'include.inc')
+					$adminUserID = getUserID($adminLoginEmail, $connection); // ...get the admin's 'user_id' using his/her 'adminLoginEmail' (function 'getUserID()' is defined in 'include.inc.php')
 					if ($row["user_id"] != $adminUserID) // we only provide a delete link if this user isn't the admin:
 						echo "\n\t\t<a href=\"user_receipt.php?userID=" . $row["user_id"] . "&amp;userAction=Delete"
 							. "\"><img src=\"img/delete.gif\" alt=\"delete\" title=\"delete user\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
@@ -448,7 +448,7 @@
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
-	// call the 'displayfooter()' function from 'footer.inc')
+	// call the 'displayfooter()' function from 'footer.inc.php')
 	displayfooter("");
 
 	// --------------------------------------------------------------------

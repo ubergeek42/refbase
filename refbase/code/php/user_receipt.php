@@ -17,10 +17,10 @@
 	*/
 
 	// Incorporate some include files:
-	include 'db.inc'; // 'db.inc' is included to hide username and password
-	include 'header.inc'; // include header
-	include 'footer.inc'; // include footer
-	include 'include.inc'; // include common functions
+	include 'db.inc.php'; // 'db.inc.php' is included to hide username and password
+	include 'header.inc.php'; // include header
+	include 'footer.inc.php'; // include footer
+	include 'include.inc.php'; // include common functions
 	include "ini.inc.php"; // include common variables
 
 	// --------------------------------------------------------------------
@@ -99,13 +99,13 @@
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE, (3) RUN QUERY, (4) DISPLAY RECEIPT, (5) CLOSE CONNECTION
 
 	// (1) OPEN the database connection:
-	//      (variables are set by include file 'db.inc'!)
+	//      (variables are set by include file 'db.inc.php'!)
 	if (!($connection = @ mysql_connect($hostName, $username, $password)))
 		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 			showErrorMsg("The following error occurred while trying to connect to the host:", "");
 
 	// (2) SELECT the database:
-	//      (variables are set by include file 'db.inc'!)
+	//      (variables are set by include file 'db.inc.php'!)
 	if (!(mysql_select_db($databaseName, $connection)))
 		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 			showErrorMsg("The following error occurred while trying to connect to the database:", "");
@@ -113,7 +113,7 @@
 	// ----------------------------------------------
 
 	// Show the login status:
-	showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 	// Show the user confirmation:
 	if ($userID == 0) // 'userID=0' is sent by 'user_validation.php' to indicate a NEW user who has successfully submitted 'user_details.php'
@@ -147,7 +147,7 @@
 		else
 			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 
-		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Receipt", "noindex,nofollow", "Receipt page confirming correct submission of new user details to the " . htmlentities($officialDatabaseName), "", false, "");
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
@@ -199,7 +199,7 @@
 		else
 			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 
-		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Receipt", "noindex,nofollow", "Receipt page confirming correct entry of user details for the " . htmlentities($officialDatabaseName), "", false, "");
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
@@ -304,7 +304,7 @@
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
-	// call the 'displayfooter()' function from 'footer.inc')
+	// call the 'displayfooter()' function from 'footer.inc.php')
 	displayfooter("");
 
 	// --------------------------------------------------------------------

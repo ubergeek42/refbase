@@ -17,8 +17,8 @@
 	*/
 
 	// Incorporate some include files:
-	include 'db.inc'; // 'db.inc' is included to hide username and password
-	include 'include.inc'; // include common functions
+	include 'db.inc.php'; // 'db.inc.php' is included to hide username and password
+	include 'include.inc.php'; // include common functions
 	include "ini.inc.php"; // include common variables
 
 	// --------------------------------------------------------------------
@@ -179,7 +179,7 @@
 	//     tmp_name:      ""                         ""                      [tmp_name]
 	//     error:         4                          1                           0
 	//     size:          0                          0                         [size]
-	$uploadFile = getUploadInfo("uploadFile"); // function 'getUploadInfo()' is defined in 'include.inc'
+	$uploadFile = getUploadInfo("uploadFile"); // function 'getUploadInfo()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 
@@ -294,13 +294,13 @@
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE
 
 	// (1) OPEN the database connection:
-	//      (variables are set by include file 'db.inc'!)
+	//      (variables are set by include file 'db.inc.php'!)
 	if (!($connection = @ mysql_connect($hostName, $username, $password)))
 		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 			showErrorMsg("The following error occurred while trying to connect to the host:", $oldQuery);
 
 	// (2) SELECT the database:
-	//      (variables are set by include file 'db.inc'!)
+	//      (variables are set by include file 'db.inc.php'!)
 	if (!(mysql_select_db($databaseName, $connection)))
 		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 			showErrorMsg("The following error occurred while trying to connect to the database:", $oldQuery);
@@ -810,7 +810,7 @@
 		if ($sendEmailAnnouncements == "yes") // ('$sendEmailAnnouncements' is specified in 'ini.inc.php')
 		{
 			// first, build an appropriate author string:
-			// Call the 'extractAuthorsLastName()' function (defined in 'include.inc') to extract the last name of a particular author (specified by position). Required Parameters:
+			// Call the 'extractAuthorsLastName()' function (defined in 'include.inc.php') to extract the last name of a particular author (specified by position). Required Parameters:
 			//   1. pattern describing delimiter that separates different authors
 			//   2. pattern describing delimiter that separates author name & initials (within one author)
 			//   3. position of the author whose last name shall be extracted (e.g., "1" will return the 1st author's last name)

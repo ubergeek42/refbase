@@ -17,7 +17,7 @@
 	*/
 
 	// Incorporate some include files:
-	include 'include.inc'; // include common functions
+	include 'include.inc.php'; // include common functions
 
 	// --------------------------------------------------------------------
 
