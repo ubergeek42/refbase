@@ -60,7 +60,7 @@
 	echo "\n<form action=\"search.php\" method=\"POST\" name=\"queryForm\">";
 	echo "\n<input type=\"hidden\" name=\"formType\" value=\"advancedSearch\">"
 			. "\n<input type=\"hidden\" name=\"showQuery\" value=\"0\">";
-	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"80%\" summary=\"This table holds the search form\">"
+	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the search form\">"
 			. "\n<tr>"
 			. "\n\t<th align=\"left\">Show</th>\n\t<th align=\"left\">Field</th>\n\t<th align=\"left\">&nbsp;</th>\n\t<th align=\"left\">That...</th>\n\t<th align=\"left\">Search String</th>"
 			. "\n</tr>"
@@ -1031,14 +1031,14 @@
 			. "\n\t<td>$HeaderString</td>"
 			. "\n</tr>"
 			. "\n</table>"
-			. "\n<hr align=\"center\" width=\"80%\">";
+			. "\n<hr align=\"center\" width=\"95%\">";
 	}
 
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
 	// call the 'displayfooter()' function from 'footer.inc')
-	displayfooter();
+	displayfooter("");
 
 	// --------------------------------------------------------------------
 
