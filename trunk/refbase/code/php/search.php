@@ -3905,10 +3905,15 @@
 		if ("$refineSearchName" != "") // if the user typed a search string into the text entry field...
 			// Depending on the chosen output action, construct an appropriate SQL query:
 			if ($refineSearchActionRadio == "1") // if the user checked the radio button next to "Restrict to matched records"
+				{
 					$query = str_replace("WHERE","WHERE $refineSearchSelector RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
-
+					$query = str_replace(' AND serial RLIKE ".+"','',$query); // remove any 'AND serial RLIKE ".+"' which isn't required anymore
+				}
 			else // $refineSearchActionRadio == "0" // if the user checked the radio button next to "Exclude matched records"
+				{
 					$query = str_replace("WHERE","WHERE $refineSearchSelector NOT RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
+					$query = str_replace(' AND serial RLIKE ".+"','',$query); // remove any 'AND serial RLIKE ".+"' which isn't required anymore
+				}
 
 		// else, if the user did NOT type a search string into the text entry field, we simply keep the old WHERE clause...
 
