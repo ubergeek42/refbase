@@ -88,13 +88,13 @@
 			. "\n\t<td>$HeaderString</td>"
 			. "\n</tr>"
 			. "\n</table>"
-			. "\n<hr align=\"center\" width=\"80%\">";
+			. "\n<hr align=\"center\" width=\"95%\">";
 	}
 
 	// --------------------------------------------------------------------
 ?>
 
-<table align="center" border="0" cellpadding="2" cellspacing="5" width="75%" summary="This table explains features, goals and usage of the IP&Ouml; literature database">
+<table align="center" border="0" cellpadding="2" cellspacing="5" width="90%" summary="This table explains features, goals and usage of the IP&Ouml; literature database">
 	<tr>
 		<td colspan="2"><h3>Goals &amp; Features</h3></td>
 		<td width="80" valign="bottom"><div class="header"><b>Login:</b></div></td>
@@ -117,7 +117,7 @@
 		</td>
 		<td width="80" valign="top">
 			<form action="index.php" method="POST">
-				User Name:
+				Email Address:
 				<br>
 				<input type="text" name="loginName" size="12">
 				<br>
@@ -186,7 +186,7 @@
 
 	//	DISPLAY THE HTML FOOTER:
 	// call the 'displayfooter()' function from 'footer.inc')
-	displayfooter();
+	displayfooter("");
 
 	// --------------------------------------------------------------------
 ?>
