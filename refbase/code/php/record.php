@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./record.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   20-Jan-03, 23:29
+	// Modified:   05-Sep-03, 23:04
 
 	// Form that offers to add
 	// records or edit/delete
@@ -67,10 +67,13 @@
 		{
 			// for the selected record, select *all* available fields:
 			// (note: we also add the 'serial' column at the end in order to provide standardized input [compare processing of form 'sql_search.php' in 'search.php'])
-			$query = "SELECT author, title, year, publication, abbrev_journal, volume, issue, pages, address, corporate_author, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, location, call_number, reprint_status, marked, approved, file, serial, type, notes, user_keys, user_notes, serial, url, doi";
-	
-			$query .= " FROM refs WHERE serial RLIKE \"^(" . $serialNo . ")$\""; // since we'll only fetch one record, the ORDER BY clause is obsolete here
-		}
+			if (session_is_registered("loginEmail")) // if a user is logged in, show user specific fields:
+				$query = "SELECT author, title, year, publication, abbrev_journal, volume, issue, pages, address, corporate_author, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, approved, notes, file, serial, location, type, call_number, marked, copy, user_file, user_keys, user_notes, serial, url, doi"
+						. " FROM refs LEFT JOIN user_data ON serial = record_id AND user_id =" . $loginUserID . " WHERE serial RLIKE \"^(" . $serialNo . ")$\""; // since we'll only fetch one record, the ORDER BY clause is obsolete here
+			else // if NO user logged in, don't display any user specific fields:
+				$query = "SELECT author, title, year, publication, abbrev_journal, volume, issue, pages, address, corporate_author, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, approved, notes, file, serial, location, type, call_number, serial, url, doi"
+						. " FROM refs WHERE serial RLIKE \"^(" . $serialNo . ")$\""; // since we'll only fetch one record, the ORDER BY clause is obsolete here
+	}
 
 	// --------------------------------------------------------------------
 
@@ -133,13 +136,14 @@
 				$conferenceName = htmlentities($row[conference]);
 				$locationName = htmlentities($row[location]);
 				$callNumberName = htmlentities($row[call_number]);
-				$reprintStatusName = htmlentities($row[reprint_status]);
+				$copyName = htmlentities($row[copy]);
 				$markedRadio = htmlentities($row[marked]);
 				$approvedRadio = htmlentities($row[approved]);
 				$fileName = htmlentities($row[file]);
 				$serialNo = htmlentities($row[serial]);
 				$typeName = htmlentities($row[type]);
 				$notesName = htmlentities($row[notes]);
+				$userFileName = htmlentities($row[user_file]);
 				$userKeysName = htmlentities($row[user_keys]);
 				$userNotesName = htmlentities($row[user_notes]);
 			}
@@ -183,13 +187,14 @@
 			$conferenceName = "";
 			$locationName = "";
 			$callNumberName = "";
-			$reprintStatusName = "";
+			$copyName = "";
 			$markedRadio = "";
 			$approvedRadio = "";
 			$fileName = "";
 			$serialNo = $serialNo; // supply some generic info: "(not assigned yet)" [as defined at the top]
 			$typeName = "";
 			$notesName = "";
+			$userFileName = "";
 			$userKeysName = "";
 			$userNotesName = "";
 		}
@@ -212,11 +217,25 @@
 	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" width=\"600\" summary=\"This table holds a form that offers to add records or edit existing ones\">"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" bgcolor=\"#DEDEDE\"><b>Author</b></td>"
-			. "\n\t<td colspan=\"5\" bgcolor=\"#DEDEDE\">" . fieldError("authorName", $errors) . "<input type=\"text\" name=\"authorName\" value=\"$authorName\" size=\"85\" title=\"please separate multiple authors with a semicolon &amp; a space ('; ')\"></td>"
+			. "\n\t<td colspan=\"5\" bgcolor=\"#DEDEDE\">" . fieldError("authorName", $errors) . "<input type=\"text\" name=\"authorName\" value=\"$authorName\" size=\"70\" title=\"please separate multiple authors with a semicolon &amp; a space ('; ')\">";
+
+	if (ereg(" *\(eds?\)$", $authorName)) // if 'author' field ends with either " (ed)" or " (eds)"
+		$isEditorCheckBoxIsChecked = " checked"; // mark the 'is Editor' checkbox
+	else
+		$isEditorCheckBoxIsChecked = ""; // don't mark the 'is Editor' checkbox
+
+	echo "\n\t&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"checkbox\" name=\"isEditorCheckBox\" value=\"1\"$isEditorCheckBoxIsChecked title=\"mark this checkbox if the author is actually the editor (info will be also copied to the editor field)\">&nbsp;&nbsp;<b>is Editor</b></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" bgcolor=\"#DEDEDE\"><b>Title</b></td>"
-			. "\n\t<td colspan=\"5\" bgcolor=\"#DEDEDE\">" . fieldError("titleName", $errors) . "<input type=\"text\" name=\"titleName\" value=\"$titleName\" size=\"85\" title=\"please don't append any dot to the title!\"></td>"
+			. "\n\t<td colspan=\"3\" bgcolor=\"#DEDEDE\">" . fieldError("titleName", $errors) . "<input type=\"text\" name=\"titleName\" value=\"$titleName\" size=\"48\" title=\"please don't append any dot to the title!\"></td>"
+			. "\n\t<td width=\"74\" bgcolor=\"#DEDEDE\"><b>Type</b></td>";
+
+	$recordType = "\n\t<td align=\"right\" bgcolor=\"#DEDEDE\">\n\t\t<select name=\"typeName\" title=\"please specify the type of this publication (e.g. 'Journal Article' for a paper)\">\n\t\t\t<option>Journal Article</option>\n\t\t\t<option>Book Chapter</option>\n\t\t\t<option>Book Whole</option>\n\t\t\t<option>Journal</option>\n\t\t\t<option>Manuscript</option>\n\t\t\t<option>Map</option>\n\t\t</select>\n\t</td>";
+	if ("$recordAction" == "edit")
+		$recordType = ereg_replace("<option>$typeName", "<option selected>$typeName", $recordType);
+	
+	echo "$recordType"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" bgcolor=\"#DEDEDE\"><b>Year</b></td>"
@@ -236,7 +255,7 @@
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\"><b>Address</b></td>"
-			. "\n\t<td colspan=\"3\"><input type=\"text\" name=\"addressName\" value=\"$addressName\" size=\"49\" title=\"any contact information\"></td>"
+			. "\n\t<td colspan=\"3\"><input type=\"text\" name=\"addressName\" value=\"$addressName\" size=\"48\" title=\"any contact information\"></td>"
 			. "\n\t<td width=\"74\"><b>Corporate Author</b></td>"
 			. "\n\t<td align=\"right\"><input type=\"text\" name=\"corporateAuthorName\" value=\"$corporateAuthorName\" size=\"14\" title=\"author affiliation\"></td>"
 			. "\n</tr>"
@@ -297,64 +316,67 @@
 			. "\n\t<td align=\"right\"><input type=\"text\" name=\"conferenceName\" value=\"$conferenceName\" size=\"14\" title=\"any conference this publication was initially presented at\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
-			. "\n\t<td width=\"74\"><b>Location</b></td>"
-			. "\n\t<td><input type=\"text\" name=\"locationName\" value=\"$locationName\" size=\"14\" title=\"the physical location of this publication, if it's at your place, give your full name &amp; email address\"></td>"
-			. "\n\t<td width=\"74\"><b>Call Number</b></td>"
-			. "\n\t<td><input type=\"text\" name=\"callNumberName\" value=\"$callNumberName\" size=\"14\" title=\"your_institutional_abbreviation @ your_user_id @ your_own_reference_id\"></td>"
-			. "\n\t<td width=\"74\"><b>Reprint Status</b></td>";
-	
-	$reprintStatus = "\n\t<td align=\"right\">\n\t\t<select name=\"reprintStatusName\" title=\"set to 'true' if you own a copy of this publication, adjust otherwise if not\">\n\t\t\t<option>true</option>\n\t\t\t<option>false</option>\n\t\t\t<option>requested</option>\n\t\t\t<option>fetch</option>\n\t\t</select>\n\t</td>";
-	if ("$recordAction" == "edit")
-		$reprintStatus = ereg_replace("<option>$reprintStatusName", "<option selected>$reprintStatusName", $reprintStatus);
-	
-	echo "$reprintStatus"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td width=\"74\"><b>Marked</b></td>";
-
-	$marked = "\n\t<td><input type=\"radio\" name=\"markedRadio\" value=\"1\" title=\"mark this record if you'd like to easily retrieve it afterwards\">&nbsp;&nbsp;yes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"markedRadio\" value=\"0\" title=\"mark this record if you'd like to easily retrieve it afterwards\">&nbsp;&nbsp;no</td>";
-	if ("$recordAction" == "edit")
-		if ($markedRadio == "Y")
-			$marked = ereg_replace("name=\"markedRadio\" value=\"1\"", "name=\"markedRadio\" value=\"1\" checked", $marked);
-		else // ($markedRadio == "N")
-			$marked = ereg_replace("name=\"markedRadio\" value=\"0\"", "name=\"markedRadio\" value=\"0\" checked", $marked);
-
-	echo "$marked"
-			. "\n\t<td width=\"74\"><b>Approved</b></td>";
-
-	$approved = "\n\t<td><input type=\"radio\" name=\"approvedRadio\" value=\"1\" title=\"choose 'yes' if you've verified this record for correctness, otherwise set to 'no'\">&nbsp;&nbsp;yes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"approvedRadio\" value=\"0\" title=\"choose 'yes' if you've verified this record for correctness, otherwise set to 'no'\">&nbsp;&nbsp;no</td>";
-	if ("$recordAction" == "edit")
-		if ($approvedRadio == "Y")
-			$approved = ereg_replace("name=\"approvedRadio\" value=\"1\"", "name=\"approvedRadio\" value=\"1\" checked", $approved);
-		else // ($approvedRadio == "N")
-			$approved = ereg_replace("name=\"approvedRadio\" value=\"0\"", "name=\"approvedRadio\" value=\"0\" checked", $approved);
-
-	echo "$approved"
+			. "\n\t<td width=\"74\"><b>Notes</b></td>"
+			. "\n\t<td colspan=\"3\"><input type=\"text\" name=\"notesName\" value=\"$notesName\" size=\"48\" title=\"enter any generic notes here\"></td>"
 			. "\n\t<td width=\"74\"><b>File</b></td>"
 			. "\n\t<td align=\"right\"><input type=\"text\" name=\"fileName\" value=\"$fileName\" size=\"14\" title=\"if this record corresponds to a particular file on disk, please enter the file name\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
-			. "\n\t<td width=\"74\"><b>Serial</b></td>"
-			. "\n\t<td><input type=\"text\" name=\"serialNo\" value=\"$serialNo\" size=\"14\" title=\"this is the unique serial number for this record\" readonly></td>"
-			. "\n\t<td width=\"74\"><b>Record Type</b></td>";
+			. "\n\t<td width=\"74\"><b>Location</b></td>"
+			. "\n\t<td colspan=\"3\"><input type=\"text\" name=\"locationName\" value=\"$locationName\" size=\"48\" title=\"the physical location of this publication, if it's at your place, give your full name &amp; email address\"></td>"
+			. "\n\t<td width=\"74\"><b>Approved</b></td>";
 
-	$recordType = "\n\t<td>\n\t\t<select name=\"typeName\" title=\"please specify the type of this publication (e.g. 'Journal Article' for a paper)\">\n\t\t\t<option>Book Chapter</option>\n\t\t\t<option>Book Whole</option>\n\t\t\t<option>Journal Article</option>\n\t\t\t<option>Journal</option>\n\t\t\t<option>Manuscript</option>\n\t\t\t<option>Map</option>\n\t\t</select>\n\t</td>";
+	$approved = "\n\t<td align=\"right\"><input type=\"radio\" name=\"approvedRadio\" value=\"yes\" title=\"choose 'yes' if you've verified this record for correctness, otherwise set to 'no'\">&nbsp;&nbsp;yes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"approvedRadio\" value=\"no\" title=\"choose 'yes' if you've verified this record for correctness, otherwise set to 'no'\">&nbsp;&nbsp;no</td>";
 	if ("$recordAction" == "edit")
-		$recordType = ereg_replace("<option>$typeName", "<option selected>$typeName", $recordType);
-	
-	echo "$recordType"
-			. "\n\t<td width=\"74\"><b>Notes</b></td>"
-			. "\n\t<td align=\"right\"><input type=\"text\" name=\"notesName\" value=\"$notesName\" size=\"14\" title=\"enter any generic notes here\"></td>"
+		if ($approvedRadio == "yes")
+			$approved = ereg_replace("name=\"approvedRadio\" value=\"yes\"", "name=\"approvedRadio\" value=\"yes\" checked", $approved);
+		else // ($approvedRadio == "no")
+			$approved = ereg_replace("name=\"approvedRadio\" value=\"no\"", "name=\"approvedRadio\" value=\"no\" checked", $approved);
+	elseif ("$recordAction" == "add") // set $approvedRadio to "no"
+		$approved = ereg_replace("name=\"approvedRadio\" value=\"no\"", "name=\"approvedRadio\" value=\"no\" checked", $approved);
+
+	echo "$approved"
 			. "\n</tr>"
 			. "\n<tr>"
-			. "\n\t<td width=\"74\"><b>User Keys</b></td>"
-			. "\n\t<td colspan=\"3\"><input type=\"text\" name=\"userKeysName\" value=\"$userKeysName\" size=\"49\" title=\"enter your personal keywords here\"></td>"
-			. "\n\t<td width=\"74\"><b>User Notes</b></td>"
-			. "\n\t<td align=\"right\"><input type=\"text\" name=\"userNotesName\" value=\"$userNotesName\" size=\"14\" title=\"enter your personal notes here\"></td>"
+			. "\n\t<td width=\"74\" bgcolor=\"#DEDEDE\"><b>Call Number</b></td>"
+			. "\n\t<td colspan=\"3\" bgcolor=\"#DEDEDE\"><input type=\"text\" name=\"callNumberName\" value=\"$callNumberName\" size=\"48\" title=\"your_institutional_abbreviation @ your_user_id @ your_own_reference_id\"></td>"
+			. "\n\t<td width=\"74\" bgcolor=\"#DEDEDE\"><b>Serial</b></td>"
+			. "\n\t<td align=\"right\" bgcolor=\"#DEDEDE\"><input type=\"text\" name=\"serialNo\" value=\"$serialNo\" size=\"14\" title=\"this is the unique serial number for this record\" readonly></td>"
+			. "\n</tr>"
+			. "\n<tr>"
+			. "\n\t<td width=\"74\" bgcolor=\"#FFFFCC\"><b>Marked</b></td>";
+
+	$marked = "\n\t<td bgcolor=\"#FFFFCC\"><input type=\"radio\" name=\"markedRadio\" value=\"yes\" title=\"mark this record if you'd like to easily retrieve it afterwards\">&nbsp;&nbsp;yes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"markedRadio\" value=\"no\" title=\"mark this record if you'd like to easily retrieve it afterwards\">&nbsp;&nbsp;no</td>";
+	if ("$recordAction" == "edit")
+		if ($markedRadio == "yes")
+			$marked = ereg_replace("name=\"markedRadio\" value=\"yes\"", "name=\"markedRadio\" value=\"yes\" checked", $marked);
+		else // ($markedRadio == "no")
+			$marked = ereg_replace("name=\"markedRadio\" value=\"no\"", "name=\"markedRadio\" value=\"no\" checked", $marked);
+	elseif ("$recordAction" == "add") // set $markedRadio to "no"
+		$marked = ereg_replace("name=\"markedRadio\" value=\"no\"", "name=\"markedRadio\" value=\"no\" checked", $marked);
+
+	echo "$marked"
+			. "\n\t<td width=\"74\" bgcolor=\"#FFFFCC\"><b>Copy</b></td>";
+	
+	$copy = "\n\t<td bgcolor=\"#FFFFCC\">\n\t\t<select name=\"copyName\" title=\"set to 'true' if you own a copy of this publication, adjust otherwise if not\">\n\t\t\t<option>true</option>\n\t\t\t<option>fetch</option>\n\t\t\t<option>ordered</option>\n\t\t\t<option>false</option>\n\t\t</select>\n\t</td>";
+	if ("$recordAction" == "edit")
+		$copy = ereg_replace("<option>$copyName", "<option selected>$copyName", $copy);
+	
+	echo "$copy"
+			. "\n\t<td width=\"74\" bgcolor=\"#FFFFCC\"><b>User File</b></td>"
+			. "\n\t<td align=\"right\" bgcolor=\"#FFFFCC\"><input type=\"text\" name=\"userFileName\" value=\"$userFileName\" size=\"14\" title=\"if this record corresponds to a personal file on disk, please enter the file name\"></td>"
+			. "\n</tr>"
+			. "\n<tr>"
+			. "\n\t<td width=\"74\" bgcolor=\"#FFFFCC\"><b>User Keys</b></td>"
+			. "\n\t<td colspan=\"5\" bgcolor=\"#FFFFCC\"><input type=\"text\" name=\"userKeysName\" value=\"$userKeysName\" size=\"85\" title=\"enter your personal keywords here\"></td>"
+			. "\n</tr>"
+			. "\n<tr>"
+			. "\n\t<td width=\"74\" bgcolor=\"#FFFFCC\"><b>User Notes</b></td>"
+			. "\n\t<td colspan=\"5\" bgcolor=\"#FFFFCC\"><input type=\"text\" name=\"userNotesName\" value=\"$userNotesName\" size=\"85\" title=\"enter your personal notes here\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\"><b>URL</b></td>"
-			. "\n\t<td colspan=\"3\"><input type=\"text\" name=\"urlName\" value=\"$urlName\" size=\"49\" title=\"the web address providing more information for this publication (if any)\"></td>"
+			. "\n\t<td colspan=\"3\"><input type=\"text\" name=\"urlName\" value=\"$urlName\" size=\"48\" title=\"the web address providing more information for this publication (if any)\"></td>"
 			. "\n\t<td width=\"74\"><b>DOI</b></td>"
 			. "\n\t<td align=\"right\"><input type=\"text\" name=\"doiName\" value=\"$doiName\" size=\"14\" title=\"the unique 'document object identifier' of this publication (if available)\"></td>"
 			. "\n</tr>"
@@ -363,8 +385,17 @@
 			. "\n\t<td colspan=\"5\">&nbsp;</td>"
 			. "\n</tr>"
 			. "\n<tr>"
-			. "\n\t<td width=\"74\">&nbsp;</td>"
-			. "\n\t<td align=\"right\" colspan=\"5\">"
+			. "\n\t<td width=\"74\">Location Field:</td>";
+
+	$locationSelector = "\n\t<td colspan=\"3\">\n\t\t<select name=\"locationSelector\" title=\"choose 'Add' if this record belongs to your personal literature data set\">\n\t\t\t<option>Don't touch</option>\n\t\t\t<option>Add</option>\n\t\t\t<option>Remove</option>\n\t\t</select>&nbsp;&nbsp;\n\t\tmy name &amp; email address\n\t</td>";
+	if (ereg("^Add", $pageTitle)) // if '$recordAction' == "add"
+	{
+		$locationSelector = ereg_replace("<option>Add", "<option selected>Add", $locationSelector); // select the appropriate menu entry...
+		$locationSelector = ereg_replace("<select", "<select disabled", $locationSelector); // ... and disable the popup menu. This is, since the current user & email address will be always written to the location field when adding new records. An orphaned record would be produced if the user could chose anything other than 'Add'!
+	}
+
+	echo "$locationSelector"
+			. "\n\t<td align=\"right\" colspan=\"2\">"
 			. "<input type=\"submit\" name=\"submit\" value=\"$pageTitle\">";
 			
 	if ("$recordAction" == "edit") // add a DELETE button (CAUTION: the delete button must be displayed *AFTER* the edit button, otherwise DELETE will be the default action if the user hits return!!)
