@@ -421,15 +421,16 @@
     }
     //   local--CALL NUMBER
     //   NOTE: This should really be parsed!
-    if ((!empty($row['call_number'])) && (!preg_match("/@\s*$/",
-                                          $row['call_number']))) {
+    if (!empty($row['call_number'])) {
       $identifierArray = array();
       $identifierArray = preg_split("/\s*;\s*/", $row['call_number']);
       foreach ($identifierArray as $singleIdentifier) {
-        $identifierBranch = new XMLBranch("identifier");
-        $identifierBranch->setTagContent($singleIdentifier);
-        $identifierBranch->setTagAttribute("type","local");
-        $record->addXMLBranch($identifierBranch);
+        if (!preg_match("/@\s*$/", $singleIdentifier)) {
+          $identifierBranch = new XMLBranch("identifier");
+          $identifierBranch->setTagContent($singleIdentifier);
+          $identifierBranch->setTagAttribute("type","local");
+          $record->addXMLBranch($identifierBranch);
+        }
       }
     }
 
