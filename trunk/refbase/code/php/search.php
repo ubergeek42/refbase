@@ -5,13 +5,11 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   05-Sep-03, 23:34
+	// Modified:   07-Sep-03, 20:14
 
-	// This is the main script that handles the search query and displays the query results
-
-	// VERSION 1.4
-	// -- generates the query URL of the currently displayed results page and routes it thru 'Display Details' and 'Add/Edit Record'
-	//    so that its's available on the subsequent receipt page that follows any add/edit/delete action!
+	// This is the main script that handles the search query and displays the query results.
+	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
+	// 2) Details view, shows all fields -> displayRows() function; 3) Export view, citation style -> exportRows() function
 
 	/*
 	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
@@ -76,6 +74,31 @@
 						//       literature can include the appropriate owner information (it will show up as header message)
 
 	$oldQuery = $_REQUEST['oldQuery']; // get the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
+
+	// --------------------------------------------------------------------
+	
+	// VERIFY SQL QUERY:
+
+	// For a normal user we only allow the use of SELECT queries (the admin is allowed to do everything that is allowed by his GRANT privileges):
+	// NOTE: This does only provide for minimal security!
+	//		 To avoid further security risks you should grant the mysql user (who's specified in 'db.inc') only those
+	//		 permissions that are required to access the literature database. This can be done by use of a GRANT statement:
+	//		 GRANT SELECT,INSERT,UPDATE,DELETE ON MYSQL_DATABASE_NAME_GOES_HERE.* TO MYSQL_USER_NAME_GOES_HERE@localhost IDENTIFIED BY 'MYSQL_PASSWORD_GOES_HERE';
+
+	// if the sql query isn't build from scratch but is accepted from user input (which is the case for the forms 'sqlSearch' and 'refineSearch'):
+	if (ereg("(sql|refine)Search", $formType)) // the user used 'sql_search.php' -OR- the "Search within Results" form above the query results list (that was produced by 'search.php')
+	{
+		if (($loginEmail != $adminLoginEmail) AND (!ereg("^SELECT", $sqlQuery))) // if any normal user is logged in -AND- did use anything other than a SELECT query
+		{
+			session_register("HeaderString"); // save an appropriate error message
+			$HeaderString = "<b><span class=\"warning\">You're only permitted to execute SELECT queries!</span></b>";
+			if (ereg(".+sql_search.php", $HTTP_REFERER)) // if the sql query was entered in the form provided by 'sql_search.php'
+				header("Location: $HTTP_REFERER"); // relocate back to the calling page
+			else // if the user didn't come from 'sql_search.php' (e.g., if he attempted to hack parameters of a GET query directly)
+				header("Location: index.php"); // relocate back to the main page		
+			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		}
+	}
 
 	// --------------------------------------------------------------------
 
@@ -367,8 +390,12 @@
 
 
 		// 2) Build a FORM & TABLE containing options to refine the search results as well as the diplayed columns
-		// Call the 'buildRefineSearchElements()' function (which does the actual work):
-		$RefineSearch = buildRefineSearchElements($queryURL, $showQuery, $showLinks, $showRows, $NoColumns);
+		//    First, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
+		$refineSearchSelectorElements1 = "author, title, year, keywords, abstract, publication, abbrev_journal, volume, issue, pages, editor, publisher, area, type, location, call_number, notes"; // these columns will be always visible (no matter whether the user is logged in or not)
+		$refineSearchSelectorElements2 = "marked, copy, user_keys, user_notes, user_file"; // these columns will be only visible to logged in users (in this case: the user specific fields from table 'user_data')
+		$refineSearchSelectorElementSelected = "author"; // this column will be selected by default
+		// Call the 'buildRefineSearchElements()' function (defined in 'include.inc') which does the actual work:
+		$RefineSearch = buildRefineSearchElements("search.php", $queryURL, $showQuery, $showLinks, $showRows, $NoColumns, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected);
 		echo $RefineSearch;
 
 
@@ -392,8 +419,8 @@
 
 		//    and insert a spacer TABLE ROW:
 		echo "\n<tr align=\"center\">"
-			. "\n\t<td colspan=\"$NoColumns\"><hr align=\"center\" width=\"100%\"></td>" // uncomment this line and comment the next one if you prefer a divider line (instead of white space)
-//			. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>"
+//			. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>" // uncomment this line and comment the next one if you prefer white space (instead of a divider line)
+			. "\n\t<td colspan=\"$NoColumns\"><hr align=\"center\" width=\"100%\"></td>"
 			. "\n</tr>";
 
 
@@ -496,8 +523,8 @@
 		// BEGIN RESULTS FOOTER --------------------
 		// Insert a spacer TABLE ROW:
 		echo "\n<tr align=\"center\">"
-			. "\n\t<td colspan=\"$NoColumns\"><hr align=\"center\" width=\"100%\"></td>" // uncomment this line and comment the next one if you prefer a divider line (instead of white space)
-//			. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>"
+//			. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>" // uncomment this line and comment the next one if you prefer white space (instead of a divider line)
+			. "\n\t<td colspan=\"$NoColumns\"><hr align=\"center\" width=\"100%\"></td>"
 			. "\n</tr>";
 
 		// Again, insert the (already constructed) BROWSE LINKS
@@ -1448,99 +1475,6 @@
 		$singleAuthorsLastName = $singleAuthorArray[0]; // extract this author's last name into a new variable
 
 		return $singleAuthorsLastName;
-	}
-
-	// --------------------------------------------------------------------
-
-	// SPLIT AND MERGE AGAIN
-	// (this function takes a string and splits it on $splitDelim into an array, then re-joins the pieces inserting $joinDelim as separator)
-	// Note: this function isn't used by anything right now!
-	function splitAndMerge($splitDelim, $joinDelim, $sourceString)
-	{
-		// split the string on the specified delimiter (which is interpreted as regular expression!):
-		$piecesArray = split($splitDelim, $sourceString);
-
-		// re-join the array with the specified separator:
-		$newString = implode($joinDelim, $piecesArray);
-
-		return $newString;
-	}
-
-	// --------------------------------------------------------------------
-
-	//	BUILD REFINE SEARCH ELEMENTS
-	// (i.e., provide options to refine the search results as well as the diplayed columns)
-	function buildRefineSearchElements($queryURL, $showQuery, $showLinks, $showRows, $NoColumns)
-	{
-		// Start a FORM:
-		$RefineSearchRow .= "\n<form action=\"search.php\" method=\"POST\" name=\"refineSearch\">"
-				. "\n\t<input type=\"hidden\" name=\"formType\" value=\"refineSearch\">"
-				. "\n\t<input type=\"hidden\" name=\"sqlQuery\" value=\"$queryURL\">" // embed the current sqlQuery so that it can be re-applied when displaying refined results
-				. "\n\t<input type=\"hidden\" name=\"showQuery\" value=\"$showQuery\">" // embed the current value of '$showQuery' so that it's available when displaying refined results
-				. "\n\t<input type=\"hidden\" name=\"showLinks\" value=\"$showLinks\">" // embed the current value of '$showLinks' so that it's available when displaying refined results
-				. "\n\t<input type=\"hidden\" name=\"showRows\" value=\"$showRows\">"; // embed the current value of '$showRows' so that it's available when displaying refined results
-
-		// Start a TABLE:
-		$RefineSearchRow .= "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds a search form that enables you to refine the previous search result\">";
-
-		// Append a TABLE ROW with a field POPUP, a search TEXT ENTRY FIELD and a submit BUTTON for searching within found records
-		$RefineSearchRow .= "\n<tr>"
-							. "\n\t<td align=\"center\" valign=\"top\" colspan=\"$NoColumns\">";
-		// Build the form elements:
-		$RefineSearchRow .= "\n\t\tSearch within Results:&nbsp;&nbsp;&nbsp;&nbsp;"
-							. "\n\t\t<select name=\"refineSearchSelector\">"
-							. "\n\t\t\t<option selected>author</option>"
-							. "\n\t\t\t<option>title</option>"
-							. "\n\t\t\t<option>year</option>"
-							. "\n\t\t\t<option>keywords</option>"
-							. "\n\t\t\t<option>abstract</option>"
-							. "\n\t\t\t<option>publication</option>"
-							. "\n\t\t\t<option>abbrev_journal</option>"
-							. "\n\t\t\t<option>volume</option>"
-							. "\n\t\t\t<option>issue</option>"
-							. "\n\t\t\t<option>pages</option>"
-							. "\n\t\t\t<option>editor</option>"
-							. "\n\t\t\t<option>publisher</option>"
-							. "\n\t\t\t<option>area</option>"
-							. "\n\t\t\t<option>type</option>"
-							. "\n\t\t\t<option>location</option>"
-							. "\n\t\t\t<option>call_number</option>"
-							. "\n\t\t\t<option>notes</option>";
-
-		if (session_is_registered("loginEmail")) // if a user is logged in...
-			// ...we'll add the user specific fields (from table 'user_data') to the popup menu:
-			$RefineSearchRow .= "\n\t\t\t<option>marked</option>"
-								. "\n\t\t\t<option>copy</option>"
-								. "\n\t\t\t<option>user_keys</option>"
-								. "\n\t\t\t<option>user_notes</option>"
-								. "\n\t\t\t<option>user_file</option>";
-
-		$RefineSearchRow .= "\n\t\t</select>&nbsp;&nbsp;"
-							. "\n\t\t<input type=\"text\" name=\"refineSearchName\" size=\"12\">&nbsp;&nbsp;"
-							. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Refine\">";
-		// Finish the data and row tags:
-		$RefineSearchRow .= "\n\t</td>"
-							. "\n</tr>";
-
-		// Append another TABLE ROW with two pairs of RADIO buttons that control 1) the diplay of columns 2) whether to include or exclude matched records
-		$RefineSearchRow .= "\n<tr>"
-							. "\n\t<td align=\"center\" valign=\"top\" colspan=\"$NoColumns\">";
-		// Build the form elements:
-		$RefineSearchRow .= "\n\t\t<input type=\"radio\" name=\"showRefineSearchFieldRadio\" value=\"1\">&nbsp;Show&nbsp;&nbsp;"
-							. "\n\t\t<input type=\"radio\" name=\"showRefineSearchFieldRadio\" value=\"0\">&nbsp;Hide column&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;"
-							. "\n\t\t<input type=\"radio\" name=\"refineSearchActionRadio\" value=\"1\" checked>&nbsp;Restrict to&nbsp;&nbsp;"
-							. "\n\t\t<input type=\"radio\" name=\"refineSearchActionRadio\" value=\"0\">&nbsp;Exclude matched records";
-		// Finish the data and row tags:
-		$RefineSearchRow .= "\n\t</td>"
-							. "\n</tr>";
-
-		// Finish the table:
-		$RefineSearchRow .= "\n</table>";
-
-		// Finish the form:
-		$RefineSearchRow .= "\n</form>";
-
-		return $RefineSearchRow;
 	}
 
 	// --------------------------------------------------------------------
@@ -3885,16 +3819,16 @@
 
 		if ("$showRefineSearchFieldRadio" == "1") // if the user checked the radio button next to 'Show column'...
 			{
-				if (ereg("SELECT.+$refineSearchSelector.+FROM refs", $query) != true) // ...and the field is *not* already displayed...
+				if (!preg_match("/SELECT.*\W$refineSearchSelector\W.*FROM refs/", $query)) // ...and the field is *not* already displayed...
 					$query = str_replace(" FROM refs",", $refineSearchSelector FROM refs",$query); // ...then SHOW the field that was used for refining the search results
 			}
 		elseif ("$showRefineSearchFieldRadio" == "0") // if the user checked the radio button next to 'Hide column'...
 			{
-				if (ereg("SELECT.+$refineSearchSelector.+FROM refs", $query) == true) // ...and the field *is* currently displayed...
+				if (preg_match("/SELECT.*\W$refineSearchSelector\W.*FROM refs/", $query)) // ...and the field *is* currently displayed...
 					// for all columns except the first:
-					$query = preg_replace("/(SELECT.+?), $refineSearchSelector(.+FROM refs)/","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
+					$query = preg_replace("/(SELECT.+?), $refineSearchSelector( .*FROM refs)/","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
 					// for all columns except the last:
-					$query = preg_replace("/(SELECT.+?)$refineSearchSelector, (.+FROM refs)/","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
+					$query = preg_replace("/(SELECT.*? )$refineSearchSelector, (.+FROM refs)/","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
 			}
 		// else if $showRefineSearchFieldRadio == '' (which is the form's default) we don't change the display of any columns
 
@@ -3905,6 +3839,7 @@
 			$query = str_replace(' FROM refs',', url, doi FROM refs',$query); // add 'url' & 'doi' columns
 
 		if ("$refineSearchName" != "") // if the user typed a search string into the text entry field...
+		{
 			// Depending on the chosen output action, construct an appropriate SQL query:
 			if ($refineSearchActionRadio == "1") // if the user checked the radio button next to "Restrict to matched records"
 				{
@@ -3913,7 +3848,6 @@
 						$query = str_replace("WHERE","WHERE ($refineSearchSelector RLIKE \"$refineSearchName\" OR $refineSearchSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
 					else // add default 'WHERE' clause:
 						$query = str_replace("WHERE","WHERE $refineSearchSelector RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
-					$query = str_replace(' AND serial RLIKE ".+"','',$query); // remove any 'AND serial RLIKE ".+"' which isn't required anymore
 				}
 			else // $refineSearchActionRadio == "0" // if the user checked the radio button next to "Exclude matched records"
 				{
@@ -3922,8 +3856,9 @@
 						$query = str_replace("WHERE","WHERE ($refineSearchSelector NOT RLIKE \"$refineSearchName\" OR $refineSearchSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
 					else // add default 'WHERE' clause:
 						$query = str_replace("WHERE","WHERE $refineSearchSelector NOT RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
-					$query = str_replace(' AND serial RLIKE ".+"','',$query); // remove any 'AND serial RLIKE ".+"' which isn't required anymore
 				}
+			$query = str_replace(' AND serial RLIKE ".+"','',$query); // remove any 'AND serial RLIKE ".+"' which isn't required anymore
+		}
 
 		// else, if the user did NOT type a search string into the text entry field, we simply keep the old WHERE clause...
 
