@@ -1,0 +1,108 @@
+<?php
+	// This php script will display an error page
+	// showing any error that did occur. It will display
+	// a link to the previous search results page (if any)
+
+	/*
+	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
+	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
+	*/
+
+	// Incorporate some include files:
+	include 'db.inc'; // 'db.inc' is included to hide username and password
+	include 'header.inc'; // include header
+	include 'footer.inc'; // include footer
+	include 'include.inc'; // include common functions
+
+	// --------------------------------------------------------------------
+
+	// Connect to a session
+	session_start();
+	
+	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+
+	// --------------------------------------------------------------------
+
+	// [ Extract form variables sent through POST/GET by use of the '$_REQUEST' variable ]
+	// [ !! NOTE !!: for details see <http://www.php.net/release_4_2_1.php> & <http://www.php.net/manual/en/language.variables.predefined.php> ]
+
+	// Check if any error occurred while processing the database UPDATE/INSERT/DELETE
+	$errorNo = $_REQUEST['errorNo'];
+	$errorMsg = $_REQUEST['errorMsg'];
+	$errorMsg = ereg_replace("\\\\(['\"])","\\1",$errorMsg); // replace any \" or \' with " or ', respectively
+
+	// Extract the header message that was returned by originating script:
+	$HeaderString = $_REQUEST['headerMsg'];
+
+	// Extract generic variables from the request:
+	$oldQuery = $_REQUEST['oldQuery']; // fetch the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
+	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
+
+	// --------------------------------------------------------------------
+
+	// (4) DISPLAY HEADER & RESULTS
+	//     (NOTE: Since there's no need to query the database here, we won't perform any of the following: (1) OPEN CONNECTION, (2) SELECT DATABASE, (3) RUN QUERY, (5) CLOSE CONNECTION)
+
+	// Show the login status:
+	showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+
+	// (4a) DISPLAY header:
+	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+	displayHTMLhead("IP&Ouml; Literature Database -- Error", "noindex,nofollow", "Feedback page that shows any error that occurred while using the IP&Ouml; Literature Database", "", false, "");
+	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
+
+
+	// URL encode the sqlQuery part within '$oldQuery' while maintaining the rest unencoded(!):
+	$oldQuerySQLPart = preg_replace("/sqlQuery=(.+?)&amp;.+/", "\\1", $oldQuery); // extract the sqlQuery part within '$oldQuery'
+	$oldQueryOtherPart = preg_replace("/sqlQuery=.+?(&amp;.+)/", "\\1", $oldQuery); // extract the remaining part after the sqlQuery
+	$oldQuerySQLPart = rawurlencode($oldQuerySQLPart); // URL encode sqlQuery part within '$oldQuery'
+	$oldQueryPartlyEncoded = "sqlQuery=" . $oldQuerySQLPart . $oldQueryOtherPart; // Finally, we merge everything again
+
+	// Build appropriate links:
+	$links = "\n<tr>"
+			. "\n\t<td>"
+			. "\n\t\tChoose how to proceed:&nbsp;&nbsp;"
+			. "\n\t\t<a href=\"" . str_replace('&','&amp;',$HTTP_REFERER) . "\">Go Back</a>"; // provide a 'go back' link (the following would only work with javascript: <a href=\"javascript:history.back()\">Go Back</a>")
+
+	if ($oldQuery != "") // only provide a link to any previous search results if '$oldQuery' isn't empty
+		$links .= "\n\t\t&nbsp;&nbsp;-OR-&nbsp;&nbsp;"
+				. "\n\t\t<a href=\"search.php?" . $oldQueryPartlyEncoded . "\">Display previous search results</a>";
+
+	$links .= "\n\t\t&nbsp;&nbsp;-OR-&nbsp;&nbsp;"
+			. "\n\t\t<a href=\"index.php\">Goto Literature Database Home</a>" // we include the link to the home page here
+			. "\n\t</td>"
+			. "\n</tr>";
+
+	showErrorMessage($errorNo, $errorMsg, $links);
+
+	// --------------------------------------------------------------------
+
+	// SHOW ERROR MESSAGE:
+	function showErrorMessage($errorNo, $errorMsg, $links)
+	// includes code from 'footer.inc'
+	{
+		die("\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\">\n<tr>\n\t<td valign=\"top\"> Error "
+		. $errorNo . " : <b>" . $errorMsg . "</b>"
+		. "</td>\n</tr>"
+		. $links		
+		. "\n</table>"
+		. "\n<hr align=\"center\" width=\"95%\">"
+		. "\n<p align=\"center\"><a href=\"simple_search.php\">Simple Search</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"advanced_search.php\">Advanced Search</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"sql_search.php\">SQL Search</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"library_search.php\">Library Search</a></p>"
+		. "\n<p align=\"center\"><a href=\"http://www.uni-kiel.de/ipoe/\">IP&Ouml; Home</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"index.php\">Literature Database Home</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"record.php\">Add Record</a></p>"
+		. "\n<p align=\"center\">"
+		.  date(r)
+		. "</p>"
+		. "\n</body>"
+		. "\n</html>");
+	}
+
+	// --------------------------------------------------------------------
+
+	// DISPLAY THE HTML FOOTER:
+	// call the 'displayfooter()' function from 'footer.inc') // CAUTION: due to the use of die in 'showErrorMessage()' the 'displayfooter()' function is currently not used!
+	displayfooter($oldQuery);
+
+	// --------------------------------------------------------------------
+?>
+</body>
+</html> 
