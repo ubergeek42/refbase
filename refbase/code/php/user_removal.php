@@ -9,7 +9,7 @@
 
 	// This script deletes a user from the 'users' and 'auth' tables.
 	// The script can be only called by the admin. If the removal succeeds, it redirects to 'users.php'.
-	// Note that there's no further verification! If you clicked 'Delete User' on 'receipt.php' the user will be killed immediately.
+	// Note that there's no further verification! If you clicked 'Delete User' on 'user_receipt.php' the user will be killed immediately.
 
 	/*
 	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
