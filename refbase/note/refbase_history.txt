@@ -9,10 +9,17 @@ Please see the cvs entries for a more detailed change history:
 
 refbase-0.7
 -----------
-[06-Jan-2004]
+[11-Jan-2004]
 
   Feature additions
 -------------------
+
+Installation:
+
+- Provided a web interface ('install.php') as well as a MySQL dump
+  file for installation. This should make it a lot easier to setup
+  the database. Besides the database structure, the MySQL dump file
+  includes a temporary admin user as well as twelve sample records.
 
 User customization:
 
@@ -118,7 +125,7 @@ Adding/editing/deleting of records:
   Changes
 ---------
 
-- The format of the mySQL tables has changed (added & renamed some
+- The format of the MySQL tables has changed (added & renamed some
   fields and changed some field types). You'll need to update your
   table definitions in order to use this version! See the online
   documentation for further help:
@@ -204,6 +211,6 @@ working examples of refbase please visit:
 project:  Web Reference Database (refbase) <http://www.refbase.net/>
 package:  refbase
 release:  0.7
-updated:  06-Jan-2004
+updated:  11-Jan-2004
 contact:  Matthias Steffens <mailto:refbase@extracts.de>
 license:  GNU General Public License (GPL)
