@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./install.php
 	// Created:    07-Jan-04, 22:00
-	// Modified:   25-Feb-05, 22:17
+	// Modified:   25-Feb-05, 22:36
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -209,7 +209,7 @@
 
 			<input type="text" name="pathToBibutils" value="<?php echo $formVars["pathToBibutils"]; ?>" size="30">
 		</td>
-		<td valign="top">If you'd like to use the export functionality you need to install <a href="http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html" title="bibutils home page">bibutils</a> and enter the full path to the bibutils utilities here. The given path just serves as an example and your path spec may be different.</td>
+		<td valign="top">If you'd like to use the export functionality you need to install <a href="http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html" title="bibutils home page">bibutils</a> and enter the full path to the bibutils utilities here. The given path just serves as an example and your path spec may be different. The path must end with a slash!</td>
 	</tr>
 	<tr>
 		<td valign="top"><b>Default character set:</b></td>
