@@ -19,13 +19,13 @@ td,div      { font-family:garamond,times,serif; }
 
 p           { font-family:garamond,times,serif; margin-left:2em; }
 
-A:link      { color:#0033CC; background:#FFFFFF; text-decoration:none; }
+A:link      { color:#0033CC; text-decoration:none; }
 
-A:visited   { color:#666666; background:#FFFFFF; text-decoration:none; }
+A:visited   { color:#666666; text-decoration:none; }
 
-A:active    { color:#990000; background:#FFFFFF; text-decoration:none; }
+A:active    { color:#990000; text-decoration:none; }
 
-h1,h2,h3,h4 { font-family:helvetica,arial,sans-serif; color:#990000; background:#FFFFFF; }
+h1,h2,h3,h4 { font-family:helvetica,arial,sans-serif; color:#990000; }
 
 h5,h6       { font-family:helvetica,arial,sans-serif; }
 
