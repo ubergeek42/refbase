@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   18-Oct-04, 00:28
+	// Modified:   02-Nov-04, 01:06
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -353,7 +353,7 @@
 	// --- Form 'advanced_search.php': -------------
 	elseif ($formType == "advancedSearch") // the user used the 'advanced_search.php' form for searching...
 		{
-			$query = extractFormElementsAdvanced($showLinks, $userID);
+			$query = extractFormElementsAdvanced($showLinks, $loginEmail, $userID);
 		}
 
 	// --- Form within 'search.php': ---------------
@@ -677,7 +677,7 @@
 				//    2b) Build a FORM containing options to refine the search results:
 				//        First, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
 				$refineSearchSelectorElements1 = "author, title, year, keywords, abstract, type, publication, abbrev_journal, volume, issue, pages, thesis, publisher, place, editor, series_title, area, notes, location, call_number"; // these columns will be always visible (no matter whether the user is logged in or not)
-				$refineSearchSelectorElements2 = "marked, copy, selected, user_keys, user_notes, user_file, user_groups, bibtex_id"; // these columns will be only visible to logged in users (in this case: the user specific fields from table 'user_data')
+				$refineSearchSelectorElements2 = "marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key"; // these columns will be only visible to logged in users (in this case: the user specific fields from table 'user_data')
 				$refineSearchSelectorElementSelected = "author"; // this column will be selected by default
 				//        Call the 'buildRefineSearchElements()' function (defined in 'include.inc.php') which does the actual work:
 				$formElementsRefine = buildRefineSearchElements("search.php", $queryURL, $showQuery, $showLinks, $showRows, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected);
@@ -685,7 +685,7 @@
 				//    2c) Build a FORM containing display options (show/hide columns or change the number of records displayed per page):
 				//        Again, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
 				$displayOptionsSelectorElements1 = "author, title, year, keywords, abstract, type, publication, abbrev_journal, volume, issue, pages, thesis, publisher, place, editor, series_title, area, notes, location, call_number"; // these columns will be always visible (no matter whether the user is logged in or not)
-				$displayOptionsSelectorElements2 = "marked, copy, selected, user_keys, user_notes, user_file, user_groups, bibtex_id"; // these columns will be only visible to logged in users (in this case: the user specific fields from table 'user_data')
+				$displayOptionsSelectorElements2 = "marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key"; // these columns will be only visible to logged in users (in this case: the user specific fields from table 'user_data')
 				$displayOptionsSelectorElementSelected = "author"; // this column will be selected by default
 				//        Call the 'buildDisplayOptionsElements()' function (defined in 'include.inc.php') which does the actual work:
 				$formElementsDisplayOptions = buildDisplayOptionsElements("search.php", $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $displayOptionsSelectorElements1, $displayOptionsSelectorElements2, $displayOptionsSelectorElementSelected, $fieldsToDisplay);
@@ -810,7 +810,7 @@
 					{
 						// ... display a link that opens the 'details view' for this record:
 						if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
-							echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20bibtex_id%2C%20related%20"
+							echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20cite_key%2C%20related%20"
 								. "FROM%20refs%20LEFT%20JOIN%20user_data%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
 						else // if NO user logged in, don't display any user specific fields:
 							echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%20"
@@ -1049,7 +1049,7 @@
 							$HTMLbeforeLink = "\n\t<td valign=\"top\" width=\"75\" class=\"mainfieldsbg\"><b>"; // start the (bold) TD tag
 							$HTMLafterLink = "</b></td>"; // close the (bold) TD tag
 						}
-					elseif (ereg("^(marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id)$", $orig_fieldname)) // print a colored background (light orange, by default) for all the user specific fields
+					elseif (ereg("^(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key)$", $orig_fieldname)) // print a colored background (light orange, by default) for all the user specific fields
 						{
 							$HTMLbeforeLink = "\n\t<td valign=\"top\" width=\"75\" class=\"userfieldsbg\"><b>"; // start the (bold) TD tag
 							$HTMLafterLink = "</b></td>"; // close the (bold) TD tag
@@ -1082,7 +1082,7 @@
 					else // for all other fields WITHOUT colspan attribute:
 						if (ereg("^(type|year|publication|abbrev_journal|volume|issue|pages|serial)$", $orig_fieldname)) // print a colored background (grey, by default)
 							$recordData .= "\n\t<td valign=\"top\" class=\"mainfieldsbg\">"; // ...without colspan attribute
-						elseif (ereg("^(marked|copy|selected|user_file|bibtex_id)$", $orig_fieldname)) // print a colored background (light orange, by default) for all the user specific fields
+						elseif (ereg("^(marked|copy|selected|user_file|cite_key)$", $orig_fieldname)) // print a colored background (light orange, by default) for all the user specific fields
 							$recordData .= "\n\t<td valign=\"top\" class=\"userfieldsbg\">"; // ...without colspan attribute
 						else // no colored background (by default)
 							$recordData .= "\n\t<td valign=\"top\" class=\"otherfieldsbg\">"; // ...without colspan attribute
@@ -1109,7 +1109,7 @@
 					$recordData .= "</td>"; // finish the TD tag
 
 					// for all the fields specified (-> all fields to the right):
-					if (ereg("^(author|type|abbrev_journal|pages|thesis|address|keywords|abstract|editor|orig_title|abbrev_series_title|edition|medium|conference|approved|location|serial|selected|user_keys|user_file|bibtex_id|created_by|modified_by)$", $orig_fieldname))
+					if (ereg("^(author|type|abbrev_journal|pages|thesis|address|keywords|abstract|editor|orig_title|abbrev_series_title|edition|medium|conference|approved|location|serial|selected|user_keys|user_file|cite_key|created_by|modified_by)$", $orig_fieldname))
 						{
 							if ($showLinks == "1")
 								{
@@ -1425,7 +1425,7 @@
 						{
 							// ... display a link that opens the 'details view' for this record:
 							if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
-								echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20bibtex_id%2C%20related%20"
+								echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20cite_key%2C%20related%20"
 									. "FROM%20refs%20LEFT%20JOIN%20user_data%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
 							else // if NO user logged in, don't display any user specific fields:
 								echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%20"
@@ -1544,7 +1544,7 @@
 				}
 				else
 				{
-					$optionTags = buildSelectMenuOptions($_SESSION['user_styles'], " *; *", "\t\t\t"); // build properly formatted <option> tag elements from the items listed in the 'user_styles' session variable
+					$optionTags = buildSelectMenuOptions($_SESSION['user_styles'], " *; *", "\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'user_styles' session variable
 					$ResultsFooterRow .= $optionTags;
 				}
 
@@ -1594,7 +1594,7 @@
 
 					if (isset($_SESSION['userGroups']))
 					{
-						$optionTags = buildSelectMenuOptions($_SESSION['userGroups'], " *; *", "\t\t\t"); // build properly formatted <option> tag elements from the items listed in the 'userGroups' session variable
+						$optionTags = buildSelectMenuOptions($_SESSION['userGroups'], " *; *", "\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'userGroups' session variable
 						$ResultsFooterRow .= $optionTags;
 					}
 					else
@@ -1630,7 +1630,7 @@
 
 					if (isset($_SESSION['user_formats']))
 					{
-						$optionTags = buildSelectMenuOptions($_SESSION['user_formats'], " *; *", "\t\t\t"); // build properly formatted <option> tag elements from the items listed in the 'user_formats' session variable
+						$optionTags = buildSelectMenuOptions($_SESSION['user_formats'], " *; *", "\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'user_formats' session variable
 						$ResultsFooterRow .= $optionTags;
 					}
 					else
@@ -1740,7 +1740,7 @@
 		// Finally, fix the wrong syntax where its says "SELECT, author, title, ..." instead of "SELECT author, title, ..."
 		$query = eregi_replace("SELECT, ","SELECT ",$query);
 
-		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'bibtex_id' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
+		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
 		$query .= " FROM refs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
 
 		// ---------------------------------------
@@ -2051,7 +2051,7 @@
 		// Finally, fix the wrong syntax where its says "SELECT, author, title, ..." instead of "SELECT author, title, ..."
 		$query = eregi_replace("SELECT, ","SELECT ",$query);
 
-		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'bibtex_id' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
+		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
 		$query .= " FROM refs WHERE serial RLIKE \".+\" AND " . $librarySearchPattern[0] . " RLIKE \"" . $librarySearchPattern[1] . "\""; // add FROM & (initial) WHERE clause
 		// Note: we'll restrict the query to records where the pattern given in array element '$librarySearchPattern[1]' (defined in 'ini.inc.php')
 		//       matches the contents of the field given in array element '$librarySearchPattern[0]'
@@ -2360,7 +2360,7 @@
 	// --------------------------------------------------------------------
 
 	// Build the database query from user input provided by the 'advanced_search.php' form:
-	function extractFormElementsAdvanced($showLinks, $userID)
+	function extractFormElementsAdvanced($showLinks, $loginEmail, $userID)
 	{
 		$query = "SELECT"; // (Note: we care about the wrong "SELECT, author" etc. syntax later on...)
 
@@ -2690,6 +2690,22 @@
 			$showUserFile = $_POST['showUserFile'];
 			if ($showUserFile == "1")
 				$query .= ", user_file"; // add 'user_file' column
+		}
+
+		// ... if the user has checked the checkbox next to 'User Groups', we'll add that column to the SELECT query:
+		if (isset($_POST['showUserGroups']))
+		{
+			$showUserGroups = $_POST['showUserGroups'];
+			if ($showUserGroups == "1")
+				$query .= ", user_groups"; // add 'user_groups' column
+		}
+
+		// ... if the user has checked the checkbox next to 'Cite Key', we'll add that column to the SELECT query:
+		if (isset($_POST['showCiteKey']))
+		{
+			$showCiteKey = $_POST['showCiteKey'];
+			if ($showCiteKey == "1")
+				$query .= ", cite_key"; // add 'cite_key' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Serial', we'll add that column to the SELECT query:
@@ -3896,6 +3912,68 @@
 					elseif ($userFileSelector == "ends with")
 						$query .= " AND user_file RLIKE \"$userFileName$\"";
 				}
+
+			// ... if the user has specified some user groups, add the value of '$userGroupsName' as an AND clause:
+			$userGroupsRadio = $_POST['userGroupsRadio'];
+			if ($userGroupsRadio == "1")
+			{
+				$userGroupsName = $_POST['userGroupsName'];
+				if ($userGroupsName != "All" && $userGroupsName != "")
+					{
+						$userGroupsSelector = $_POST['userGroupsSelector'];
+						if ($userGroupsSelector == "contains")
+							$query .= " AND user_groups RLIKE \"$userGroupsName\"";
+						elseif ($userGroupsSelector == "does not contain")
+							$query .= " AND user_groups NOT RLIKE \"$userGroupsName\"";
+						elseif ($userGroupsSelector == "is equal to")
+							$query .= " AND user_groups = \"$userGroupsName\"";
+						elseif ($userGroupsSelector == "is not equal to")
+							$query .= " AND user_groups != \"$userGroupsName\"";
+						elseif ($userGroupsSelector == "starts with")
+							$query .= " AND user_groups RLIKE \"^$userGroupsName\"";
+						elseif ($userGroupsSelector == "ends with")
+							$query .= " AND user_groups RLIKE \"$userGroupsName$\"";
+					}
+			}
+			elseif ($userGroupsRadio == "0")
+			{
+				$userGroupsName2 = $_POST['userGroupsName2'];
+				if ($userGroupsName2 != "")
+					{
+						$userGroupsSelector2 = $_POST['userGroupsSelector2'];
+						if ($userGroupsSelector2 == "contains")
+							$query .= " AND user_groups RLIKE \"$userGroupsName2\"";
+						elseif ($userGroupsSelector2 == "does not contain")
+							$query .= " AND user_groups NOT RLIKE \"$userGroupsName2\"";
+						elseif ($userGroupsSelector2 == "is equal to")
+							$query .= " AND user_groups = \"$userGroupsName2\"";
+						elseif ($userGroupsSelector2 == "is not equal to")
+							$query .= " AND user_groups != \"$userGroupsName2\"";
+						elseif ($userGroupsSelector2 == "starts with")
+							$query .= " AND user_groups RLIKE \"^$userGroupsName2\"";
+						elseif ($userGroupsSelector2 == "ends with")
+							$query .= " AND user_groups RLIKE \"$userGroupsName2$\"";
+					}
+			}
+	
+			// ... if the user has specified a cite key, add the value of '$citeKeyName' as an AND clause:
+			$citeKeyName = $_POST['citeKeyName'];
+			if ($citeKeyName != "")
+				{
+					$citeKeySelector = $_POST['citeKeySelector'];
+					if ($citeKeySelector == "contains")
+						$query .= " AND cite_key RLIKE \"$citeKeyName\"";
+					elseif ($citeKeySelector == "does not contain")
+						$query .= " AND cite_key NOT RLIKE \"$citeKeyName\"";
+					elseif ($citeKeySelector == "is equal to")
+						$query .= " AND cite_key = \"$citeKeyName\"";
+					elseif ($citeKeySelector == "is not equal to")
+						$query .= " AND cite_key != \"$citeKeyName\"";
+					elseif ($citeKeySelector == "starts with")
+						$query .= " AND cite_key RLIKE \"^$citeKeyName\"";
+					elseif ($citeKeySelector == "ends with")
+						$query .= " AND cite_key RLIKE \"$citeKeyName$\"";
+				}
 		}
 
 		// ... if the user has specified a serial, add the value of '$serialNo' as an AND clause:
@@ -4284,7 +4362,7 @@
 		// Depending on the chosen output format, construct an appropriate SQL query:
 		if ($displayType == "Cite")
 			{
-			// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'bibtex_id' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
+			// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
 			if ($citeOrder == "year") // sort records first by year (descending), then in the usual way:
 				$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY year DESC, first_author, author_count, author, title";
 			else // if any other or no '$citeOrder' parameter is specified, we supply the default ORDER BY pattern (which is suitable for citation in a journal etc.):
@@ -4300,7 +4378,7 @@
 					$query .= ", online_publication, online_citation";
 
 				if (isset($_SESSION['loginEmail'])) // if a user is logged in...
-					$query .= ", marked, copy, selected, user_keys, user_notes, user_file, user_groups, bibtex_id, related"; // add user-specific fields
+					$query .= ", marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key, related"; // add user-specific fields
 
 				// (note: we also add the 'orig_record' and 'serial' columns at the end in order to provide standardized input [compare function 'verifySQLQuery()' in 'include.inc.php'])
 				$query .= ", orig_record, serial"; // add 'orig_record' and 'serial' columns
@@ -4355,7 +4433,7 @@
 		$recordSerialsString = preg_replace("/\D+$/s", "", $recordSerialsString); // remove any trailing non-digit chars (like \n or "|") at end of line
 
 		// Construct the SQL query:
-		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'bibtex_id' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
+		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
 		if ($citeOrder == "year") // sort records first by year (descending), then in the usual way:
 			$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY year DESC, first_author, author_count, author, title";
 		else // if any other or no '$citeOrder' parameter is specified, we supply the default ORDER BY pattern (which is suitable for citation in a journal etc.):
@@ -4391,7 +4469,7 @@
 		if ($showLinks == "1")
 			$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
 
-		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'bibtex_id' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
+		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
 		$query .= " FROM refs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
 
 		if ($quickSearchName != "") // if the user typed a search string into the text entry field...
