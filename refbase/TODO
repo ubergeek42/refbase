@@ -1,29 +1,31 @@
 Suggestions for improving refbase:
 
-* Data import from MODS XML and other common bibliographic formats, like
-  BibTeX, EndNote, ISI Web of Science, RIS, and Pubmed XML.
+* Data import from MODS XML and other common bibliographic formats, like BibTeX,
+  EndNote, ISI Web of Science, RIS, and Pubmed XML.
 
-* Enhanced export using bibutils to BibTex, EndNote, and RIS.
+* Provide additional citation formats, preferably via the use of a plugin
+  structure which would make it easy to add your own citation citation styles.
 
-* Simplify manual data input by providing record type specific forms.
-  These forms will guide a user by only showing those fields that are
-  required for a particular record type (like journal articles, book
-  chapters or whole books).
+* Simplify manual data input by providing record type specific forms.  These
+  forms could guide a user by only showing those fields that are required for a
+  particular record type (like journal articles, book chapters or whole books).
 
-* Provide additional citation formats on export - preferably via the use
-  of a plugin structure which would make it easy to add your own citation
-  citation styles.
+* Validation of data entered/imported by the user.
 
-* User customization: provide a user specific preferences page where one
-  can specify the default columns that are visible in query results or
-  the default fields that are visible in particular search forms.
+* Offer the user means for handling duplicate database entries..
 
-* Offer the user means for handling duplicate database entries.
+* Provide administrative interface to deleted records.
 
-* Validation of data entered by the user.
-
-* Provide administrative interface to deleted records and user data.
+* User customization: provide a user-specific preferences page where one can
+  specify the default columns that are visible in query results or the default
+  fields that are visible in particular search forms.
 
 * Enable remembering of marked records across different requests.
+
+* Cross-site searches (both through other copies of refbase and through other
+  bibliographic databases).
+
+* Improved export through both revisions to the current MODS XML/bibutils system
+  and through adding more native export options which wouldn't require bibutils.
 
 * More user-specific and record-specific rights management.
