@@ -246,12 +246,8 @@
 //			. "\n\t<td>&nbsp;</td>" // img in 'header.inc' now spans this row (by rowspan="2")
 			. "\n\t<td>$FullHeaderString</td>"
 			. "\n</tr>"
-			. "\n<tr align=\"center\">"
-			. "\n\t<td colspan=\"2\">&nbsp;</td>"
-			. "\n</tr>"
 			. "\n</table>"
-			. "\n<hr align=\"center\" width=\"80%\">"
-			. "\n<p align=\"center\">&nbsp;</p>";
+			. "\n<hr align=\"center\" width=\"80%\">";
 	}
 
 	// --------------------------------------------------------------------
@@ -309,6 +305,7 @@
 
 		//    and insert a spacer TABLE ROW:
 		echo "\n<tr align=\"center\">"
+//			. "\n\t<td colspan=\"$NoColumns\"><hr align=\"center\" width=\"100%\"></td>" // uncomment this line and comment the next one if you prefer a divider line (instead of white space)
 			. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>"
 			. "\n</tr>";
 
@@ -404,6 +401,7 @@
 		// BEGIN RESULTS FOOTER --------------------
 		// Insert a spacer TABLE ROW:
 		echo "\n<tr align=\"center\">"
+//			. "\n\t<td colspan=\"$NoColumns\"><hr align=\"center\" width=\"100%\"></td>" // uncomment this line and comment the next one if you prefer a divider line (instead of white space)
 			. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>"
 			. "\n</tr>";
 
