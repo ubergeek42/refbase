@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   14-Jan-04, 01:09
+	// Modified:   29-Sep-04, 18:07
 
 	// This script serves as a routing page which takes any record serial number, date, year or author that was passed as parameter
 	// to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -24,10 +24,9 @@
 
 	// --------------------------------------------------------------------
 
-	// Restore the session
-	session_start();
-
-	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session();
 
 	// --------------------------------------------------------------------
 
@@ -104,11 +103,15 @@
 	if (empty($serial) AND empty($year) AND empty($date) AND empty($author))
 	{
 		// if 'show.php' was called without any valid parameters:
-//		session_register("HeaderString"); // save an error message
+
+		// save an error message:
 //		$HeaderString = "<b><span class=\"warning\">Incorrect or missing parameters to script 'show.php'!</span></b>";
 
+		// Write back session variables:
+//		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+
 		// Redirect the browser back to the main page:
-//		header("Location: index.php"); // Note: if 'header("Location: $HTTP_REFERER")' is used, the error message won't get displayed! ?:-/
+//		header("Location: index.php"); // Note: if 'header("Location: " . $_SERVER['HTTP_REFERER'])' is used, the error message won't get displayed! ?:-/
 //		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		// OR ALTERNATIVELY:
@@ -118,17 +121,29 @@
 		// since this would just double search functionality from other search forms.
 
 		// If there's no stored message available:
-		if (!session_is_registered("HeaderString"))
+		if (!isset($_SESSION['HeaderString']))
 			$HeaderString = "Display details for a particular record by entering its database serial number:"; // Provide the default message
 		else
-			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
+		{
+			$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
+
+			// Note: though we clear the session variable, the current message is still available to this script via '$HeaderString':
+			deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+		}
 	
+		// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+		// ('' will produce the default 'Web' output style)
+		if (isset($_REQUEST['viewType']))
+			$viewType = $_REQUEST['viewType'];
+		else
+			$viewType = "";
+
 		// Show the login status:
 		showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 	
 		// DISPLAY header:
 		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Show Record", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "");
+		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Show Record", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 	
 		// Start <form> and <table> holding the form elements:
@@ -140,8 +155,21 @@
 				. "\n<tr>\n\t<td width=\"58\" valign=\"top\"><b>Record Serial:</b></td>\n\t<td width=\"10\">&nbsp;</td>"
 				. "\n\t<td><input type=\"text\" name=\"record\" value=\"\" size=\"40\"></td>"
 				. "\n</tr>"
-				. "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
-				. "\n\t<td><input type=\"submit\" name=\"submit\" value=\"Show Record\"></td>"
+				. "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>";
+
+		if (isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_details_view'...
+		// adjust the title string for the show record button
+		{
+			$showRecordButtonLock = "";
+			$showRecordTitle = "display record details for the entered serial number";
+		}
+		else // Note, that disabling the submit button is just a cosmetic thing -- the user can still submit the form by pressing enter or by building the correct URL from scratch!
+		{
+			$showRecordButtonLock = " disabled";
+			$showRecordTitle = "not available since you have no permission to display any record details";
+		}
+
+		echo "\n\t<td><input type=\"submit\" name=\"submit\" value=\"Show Record\"$showRecordButtonLock title=\"$showRecordTitle\"></td>"
 				. "\n</tr>"
 				. "\n<tr>\n\t<td align=\"center\" colspan=\"3\">&nbsp;</td>"
 				. "\n</tr>"
@@ -177,8 +205,22 @@
 		// 'record' parameter is present:
 		if (!empty($serial))
 		{
-			// Note: the code in 'search.php' that processes data with "$formType = sqlSearch" will add the user specific fields to the 'SELECT' clause and
-			// the 'LEFT JOIN...' part to the 'FROM' clause of the SQL query if a user is logged in. It will also add 'serial', 'file', 'url' & 'doi' columns
+			// first, check if the user is allowed to display any record details:
+			if (isset($_SESSION['user_permissions']) AND !ereg("allow_details_view", $_SESSION['user_permissions'])) // no, the 'user_permissions' session variable does NOT contain 'allow_details_view'...
+			{
+				// save an appropriate error message:
+				$HeaderString = "<b><span class=\"warning\">You have no permission to display any record details!</span></b>";
+	
+				// Write back session variables:
+				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+		
+				header("Location: show.php"); // redirect back to 'show.php'
+	
+				exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			}
+
+			// Note: the 'verifySQLQuery()' function that gets called by 'search.php' to process query data with "$formType = sqlSearch" will add the user specific fields to the 'SELECT' clause
+			// and the 'LEFT JOIN...' part to the 'FROM' clause of the SQL query if a user is logged in. It will also add 'serial', 'file', 'url' & 'doi' columns
 			// as required. Therefore it's sufficient to provide just the plain SQL query here:
 			$query = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial";
 			//       (the above string MUST end with ", call_number, serial" in order to have the described query completion feature work correctly!
@@ -238,7 +280,8 @@
 			$query .= " ORDER BY year DESC, first_author, author_count, author, title"; // sort records first by year (descending), then in the usual way
 	
 			// Build the correct query URL:
-			$queryURL = "sqlQuery=" . rawurlencode($query) . "&formType=sqlSearch&submit=Export&showLinks=1&showRows=100&exportOrder=year&exportFormatSelector=Polar%20Biol&headerMsg=" . rawurlencode($headerMsg); // we skip unnecessary parameters ('search.php' will use it's default values for them)
+			$queryURL = "sqlQuery=" . rawurlencode($query) . "&formType=sqlSearch&submit=Cite&showLinks=1&showRows=100&citeOrder=year&citeStyleSelector=" . rawurlencode($defaultCiteStyle) . "&headerMsg=" . rawurlencode($headerMsg); // we skip unnecessary parameters ('search.php' will use it's default values for them)
+			// the variable '$defaultCiteStyle' is defined in 'ini.inc.php'
 		}
 	
 		// call 'search.php' with the correct query URL in order to display record details:
