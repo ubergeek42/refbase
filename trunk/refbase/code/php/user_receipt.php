@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_receipt.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   30-May-04, 19:35
+	// Modified:   31-Oct-04, 23:37
 
 	// This script shows the user a receipt for their user UPDATE or INSERT.
 	// It carries out no database actions and can be bookmarked.
@@ -39,7 +39,7 @@
 	if (!isset($_SESSION['loginEmail']) && ($userID != 0))
 	{
 		// save an error message:
-		$HeaderString = "<b><span class=\"warning\">You must login to view your user account details!</span></b>";
+		$HeaderString = "<b><span class=\"warning\">You must login to view your user account details and options!</span></b>";
 
 		// save the URL of the currently displayed page:
 		$referer = $_SERVER['HTTP_REFERER'];
@@ -212,7 +212,7 @@
 			if ($userAction == "Delete") // provide an appropriate header message:
 				$HeaderString = "<b><span class=\"warning\">Delete user</span> " . htmlentities($row["first_name"]) . " " . htmlentities($row["last_name"]) . " (" . $row["email"] . ")</b>:";
 			else // provide the default message:
-				$HeaderString = "Account details for <b>" . htmlentities($row["first_name"]) . " " . htmlentities($row["last_name"]) . " (" . $row["email"] . ")</b>:";
+				$HeaderString = "Account details and options for <b>" . htmlentities($row["first_name"]) . " " . htmlentities($row["last_name"]) . " (" . $row["email"] . ")</b>:";
 		else
 		{
 			$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
@@ -222,104 +222,202 @@
 		}
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-		displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Receipt", "noindex,nofollow", "Receipt page confirming correct entry of user details for the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
+		displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Receipt", "noindex,nofollow", "Receipt page confirming correct entry of user details and options for the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
-		// Start a table:
-		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays user account details\">";
+		// Start main table:
+		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays user account details and options\">";
 
 		if (mysql_num_rows($result) == 1) // If there's a user associated with this user ID
 		{
+			echo "\n<tr>"
+				. "\n\t<td valign=\"top\">";
+
+			// Start left sub-table:
+			echo "\n\t\t<table border=\"0\" cellpadding=\"0\" cellspacing=\"10\" summary=\"User account details\">";
+
+			echo "\n\t\t<tr>\n\t\t\t<th align=\"left\" class=\"smaller\">Account Details:</th>\n\t\t</tr>";
+
 			// Display a password reminder:
 			// (but only if a normal user is logged in -OR- the admin is logged in AND the updated user data are his own!)
 			if (($loginEmail != $adminLoginEmail) | (($loginEmail == $adminLoginEmail) && ($userID == getUserID($loginEmail))))
-				echo "\n<tr>\n\t<td><i>Please record your password somewhere safe for future use!</i></td>\n</tr>";
+				echo "\n\t\t<tr>\n\t\t\t<td><i>Please record your password somewhere safe for future use!</i></td>\n\t\t</tr>";
 	
 			// Print title, first name, last name and institutional abbreviation:
-			echo "\n<tr>\n\t<td>\n\t\t";
+			echo "\n\t\t<tr>\n\t\t\t<td>\n\t\t\t\t";
 			if (!empty($row["title"]))
 				echo $row["title"] . ". ";
 			echo htmlentities($row["first_name"]) . " " . htmlentities($row["last_name"]) . " (" . htmlentities($row["abbrev_institution"]) . ")"; // Since the first name, last name and abbrev. institution fields are mandatory, we don't need to check if they're empty
 	
 			// Print institution name:
 			if (!empty($row["institution"]))
-				echo "\n\t\t<br>\n\t\t" . htmlentities($row["institution"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["institution"]);
 	
 			// Print corporate institution name:
 			if (!empty($row["corporate_institution"]))
-				echo "\n\t\t<br>\n\t\t" . htmlentities($row["corporate_institution"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["corporate_institution"]);
 	
 			// If any of the address lines contain data, add a spacer row:
 			if (!empty($row["address_line_1"]) || !empty($row["address_line_2"]) || !empty($row["address_line_3"]) || !empty($row["zip_code"]) || !empty($row["city"]) || !empty($row["state"]) || !empty($row["country"]))
-				echo "\n\t\t<br>";
+				echo "\n\t\t\t\t<br>";
 	
 			// Print first address line:
 			if (!empty($row["address_line_1"]))
-				echo "\n\t\t<br>\n\t\t" . htmlentities($row["address_line_1"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["address_line_1"]);
 	
 			// Print second address line:
 			if (!empty($row["address_line_2"]))
-				echo "\n\t\t<br>\n\t\t" . htmlentities($row["address_line_2"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["address_line_2"]);
 	
 			// Print third address line:
 			if (!empty($row["address_line_3"]))
-				echo "\n\t\t<br>\n\t\t" . htmlentities($row["address_line_3"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["address_line_3"]);
 	
 			// Print zip code and city:
 			if (!empty($row["zip_code"]) && !empty($row["city"])) // both fields are available
-				echo "\n\t\t<br>\n\t\t" . htmlentities($row["zip_code"]) . " " . htmlentities($row["city"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["zip_code"]) . " " . htmlentities($row["city"]);
 			elseif (!empty($row["zip_code"]) && empty($row["city"])) // only 'zip_code' available
-				echo "\n\t\t<br>\n\t\t" . htmlentities($row["zip_code"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["zip_code"]);
 			elseif (empty($row["zip_code"]) && !empty($row["city"])) // only 'city' field available
-				echo "\n\t\t<br>\n\t\t" . htmlentities($row["city"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["city"]);
 	
 			// Print state:
 			if (!empty($row["state"]))
-				echo "\n\t\t<br>\n\t\t" . htmlentities($row["state"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["state"]);
 	
 			// Print country:
 			if (!empty($row["country"]))
-				echo "\n\t\t<br>\n\t\t" . htmlentities($row["country"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . htmlentities($row["country"]);
 	
 			// If any of the phone/url/email fields contain data, add a spacer row:
 			if (!empty($row["phone"]) || !empty($row["url"]) || !empty($row["email"]))
-				echo "\n\t\t<br>";
+				echo "\n\t\t\t\t<br>";
 	
 			// Print phone number:
 			if (!empty($row["phone"]))
-				echo "\n\t\t<br>\n\t\t" . "Phone: " . htmlentities($row["phone"]);
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . "Phone: " . htmlentities($row["phone"]);
 	
 			// Print URL:
 			if (!empty($row["url"]))
-				echo "\n\t\t<br>\n\t\t" . "URL: <a href=\"" . $row["url"] . "\">" . $row["url"] . "</a>";
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . "URL: <a href=\"" . $row["url"] . "\">" . $row["url"] . "</a>";
 	
 			// Print email:
-				echo "\n\t\t<br>\n\t\t" . "Email: <a href=\"mailto:" . $row["email"] . "\">" . $row["email"] . "</a>"; // Since the email field is mandatory, we don't need to check if it's empty
+				echo "\n\t\t\t\t<br>\n\t\t\t\t" . "Email: <a href=\"mailto:" . $row["email"] . "\">" . $row["email"] . "</a>"; // Since the email field is mandatory, we don't need to check if it's empty
 
-			echo "\n\t</td>\n</tr>";
+			echo "\n\t\t\t</td>\n\t\t</tr>";
 
-			// If the admin is logged in, display a button that will allow to edit/delete the currently shown user:
+			// If the admin is logged in, allow the display of a button that will delete the currently shown user:
 			if (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail)) // ('$adminLoginEmail' is specified in 'ini.inc.php')
 			{
 				if ($userAction == "Delete")
-					echo "\n<tr>\n\t<td>"
-						. "\n\t\t<form action=\"user_removal.php\" method=\"POST\">"
-						. "\n\t\t\t<input type=\"hidden\" name=\"userID\" value=\"" . $userID . "\">"
-						. "\n\t\t\t<input type=\"submit\" value=\"" . $userAction . " User\">"
-						. "\n\t\t</form>"
-						. "\n\t</td>\n</tr>";
-				else
-					echo "\n<tr>\n\t<td>"
-						. "\n\t\t<form action=\"user_details.php\" method=\"POST\">"
-						. "\n\t\t\t<input type=\"hidden\" name=\"userID\" value=\"" . $userID . "\">"
-						. "\n\t\t\t<input type=\"submit\" value=\"" . $userAction . " User\">"
-						. "\n\t\t</form>"
-						. "\n\t</td>\n</tr>";
+					echo "\n\t\t<tr>"
+						. "\n\t\t\t<td>"
+						. "\n\t\t\t\t<form action=\"user_removal.php\" method=\"POST\">"
+						. "\n\t\t\t\t\t<input type=\"hidden\" name=\"userID\" value=\"" . $userID . "\">"
+						. "\n\t\t\t\t\t<input type=\"submit\" value=\"" . $userAction . " User\">"
+						. "\n\t\t\t\t</form>"
+						. "\n\t\t\t</td>"
+						. "\n\t\t</tr>";
 			}
+
+			if ($userAction != "Delete")
+				echo "\n\t\t<tr>"
+					. "\n\t\t\t<td>"
+					. "\n\t\t\t\t<form action=\"user_details.php\" method=\"POST\">"
+					. "\n\t\t\t\t\t<input type=\"hidden\" name=\"userID\" value=\"" . $userID . "\">"
+					. "\n\t\t\t\t\t<input type=\"submit\" value=\"" . $userAction . " Details\">"
+					. "\n\t\t\t\t</form>"
+					. "\n\t\t\t</td>"
+					. "\n\t\t</tr>";
+
+			// Close left sub-table:
+			echo "\n\t\t</table>";
+	
+			// Close left table cell of main table:
+			echo "\n\t</td>";
+
+			// ------------------------------------------------------------
+
+			// Start right table cell of main table:
+			echo "\n\t<td valign=\"top\">";
+
+			// Start right sub-table:
+			echo "\n\t\t<table border=\"0\" cellpadding=\"0\" cellspacing=\"10\" summary=\"User account options\">";
+
+			echo "\n\t\t<tr>\n\t\t\t<th align=\"left\" class=\"smaller\" colspan=\"2\">Display Options:</th>\n\t\t</tr>";
+
+			echo "\n\t\t<tr valign=\"top\">"
+				. "\n\t\t\t<td>Use language:</td>"
+				. "\n\t\t\t<td>" . $row["language"] . "</td>"
+				. "\n\t\t</tr>";
+
+		if ($loginEmail == $adminLoginEmail) // if the admin is logged in
+		{
+			$ShowEnabledDescriptor = "Enabled";
+
+			// get all formats/styles/types that are available and were enabled by the admin for the current user:
+			$userTypesArray = getEnabledUserFormatsStylesTypes($userID, "type", "", false); // function 'getEnabledUserFormatsStylesTypes()' is defined in 'include.inc.php'
+
+			$citationStylesArray = getEnabledUserFormatsStylesTypes($userID, "style", "", false);
+		
+			$exportFormatsArray = getEnabledUserFormatsStylesTypes($userID, "format", "export", false);
+		}
+		else // if a normal user is logged in
+		{
+			$ShowEnabledDescriptor = "Show";
+
+			// get all formats/styles/types that were selected by the current user
+			// and (if some formats/styles/types were found) save them as semicolon-delimited string to an appropriate session variable:
+			$userTypesArray = getVisibleUserFormatsStylesTypes($userID, "type", ""); // function 'getVisibleUserFormatsStylesTypes()' is defined in 'include.inc.php'
+
+			$citationStylesArray = getVisibleUserFormatsStylesTypes($userID, "style", "");
+		
+			$exportFormatsArray = getVisibleUserFormatsStylesTypes($userID, "format", "export");
+
+			// Note: the function 'getVisibleUserFormatsStylesTypes()' will only update the appropriate session variables if
+			//       either a normal user is logged in -OR- the admin is logged in AND the updated user data are his own(*);
+			//       otherwise, the function will simply return an array containing all matching values
+			//       (*) the admin-condition won't apply here, though, since this function gets only called for normal users. This means, that
+			//           the admin is currently not able to hide any items from his popup lists via the admin interface (he'll need to hack the MySQL tables)!
+		}
+		
+			echo "\n\t\t<tr valign=\"top\">"
+				. "\n\t\t\t<td>" . $ShowEnabledDescriptor . " reference types:</td>"
+				. "\n\t\t\t<td>" . implode(", ", $userTypesArray) . "</td>"
+				. "\n\t\t</tr>";
+
+			echo "\n\t\t<tr valign=\"top\">"
+				. "\n\t\t\t<td>" . $ShowEnabledDescriptor . " citation styles:</td>"
+				. "\n\t\t\t<td>" . implode(", ", $citationStylesArray) . "</td>"
+				. "\n\t\t</tr>";
+
+			echo "\n\t\t<tr valign=\"top\">"
+				. "\n\t\t\t<td>" . $ShowEnabledDescriptor . " export formats:</td>"
+				. "\n\t\t\t<td>" . implode(", ", $exportFormatsArray) . "</td>"
+				. "\n\t\t</tr>";
+
+			if ($userAction != "Delete")
+				echo "\n\t\t<tr>"
+					. "\n\t\t\t<td>"
+					. "\n\t\t\t\t<form action=\"user_options.php\" method=\"POST\">"
+					. "\n\t\t\t\t\t<input type=\"hidden\" name=\"userID\" value=\"" . $userID . "\">"
+					. "\n\t\t\t\t\t<input type=\"submit\" value=\"" . $userAction . " Options\">"
+					. "\n\t\t\t\t</form>"
+					. "\n\t\t\t</td>"
+					. "\n\t\t</tr>";
+
+			// Close right sub-table:
+			echo "\n\t\t</table>";
+	
+			// Close right table cell of main table:
+			echo "\n\t</td>";
+
+			echo "\n</tr>";
 		}
 		else // no user exists with this user ID
 			echo "\n<tr>\n\t<td>(No user exists with this user ID!)</td>\n</tr>";
 
+		// Close main table:
 		echo "\n</table>";
 	}
 
