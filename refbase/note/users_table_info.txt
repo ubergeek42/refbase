@@ -26,7 +26,7 @@ email	the user's email address at work (required!) -> needed for logging into th
 url	the user's (professional) web page
 keywords	any keys for this user
 notes	any notes for this user
-last_login	date of the user's last successful login to the database -> future versions may use this info to ask the user for a new password
+last_login	date & time of the user's last successful login to the database -> future versions may use this info to ask the user for a new password
 logins	total number of successful logins for this user -> future versions may offer simple usage statistics
 language	the user's preferred language -> future versions might offer language customization
 records	list of record id's for all records that were saved by this user -> future versions may offer to save any record to a personal list of records
@@ -64,8 +64,8 @@ email	VARCHAR(50)
 url	VARCHAR(255)
 keywords	TEXT
 notes	TEXT
-last_login	DATE
-logins	MEDIUMINT UNSIGNED
+last_login	DATETIME
+logins	MEDIUMINT UNSIGNED NOT NULL
 language	VARCHAR(50)
 records	TEXT
 queries	TEXT
@@ -83,7 +83,7 @@ modified_by	VARCHAR(100)
 table creation code
 -------------------
 
-CREATE TABLE users (first_name VARCHAR(50), last_name VARCHAR(50), title VARCHAR(25), institution VARCHAR(255), abbrev_institution VARCHAR(25), corporate_institution VARCHAR(255), address VARCHAR(255), address_line_1 VARCHAR(50), address_line_2 VARCHAR(50), address_line_3 VARCHAR(50), zip_code VARCHAR(25), city VARCHAR(40), state VARCHAR(50), country VARCHAR(40), phone VARCHAR(50), email VARCHAR(50), url VARCHAR(255), keywords TEXT, notes TEXT, last_login DATE, logins MEDIUMINT UNSIGNED, language VARCHAR(50), records TEXT, queries TEXT, user_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, marked ENUM('no','yes') NOT NULL, created_date DATE, created_time TIME, created_by VARCHAR(100), modified_date DATE, modified_time TIME, modified_by VARCHAR(100));
+CREATE TABLE users (first_name VARCHAR(50), last_name VARCHAR(50), title VARCHAR(25), institution VARCHAR(255), abbrev_institution VARCHAR(25), corporate_institution VARCHAR(255), address VARCHAR(255), address_line_1 VARCHAR(50), address_line_2 VARCHAR(50), address_line_3 VARCHAR(50), zip_code VARCHAR(25), city VARCHAR(40), state VARCHAR(50), country VARCHAR(40), phone VARCHAR(50), email VARCHAR(50), url VARCHAR(255), keywords TEXT, notes TEXT, last_login DATETIME, logins MEDIUMINT UNSIGNED NOT NULL, language VARCHAR(50), records TEXT, queries TEXT, user_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, marked ENUM('no','yes') NOT NULL, created_date DATE, created_time TIME, created_by VARCHAR(100), modified_date DATE, modified_time TIME, modified_by VARCHAR(100));
 
 
 rules for data import
