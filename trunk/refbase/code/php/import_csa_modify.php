@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import_csa_modify.php
 	// Created:    21-Nov-03, 22:46
-	// Modified:   24-Nov-03, 02:24
+	// Modified:   20-May-04, 23:07
 
 	// This php script accepts input from 'import_csa.php'. It will process the CSA full record data
 	// and call 'record.php' with all provided fields pre-filled. The user can then verify the data,
@@ -27,24 +27,16 @@
 
 	// --------------------------------------------------------------------
 
-	// Initialize the session
-	session_start();
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session();
 
-	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
-
-	// Register an error array - just in case!
-	if (!session_is_registered("errors"))
-		session_register("errors");
-	
-	// Clear any errors that might have been found previously:
-	$errors = array();
-	
 	// --------------------------------------------------------------------
 
 	// First of all, check if the user is logged in:
-	if (!session_is_registered("loginEmail")) // -> if the user isn't logged in
+	if (!isset($_SESSION['loginEmail'])) // -> if the user isn't logged in
 	{
-		header("Location: user_login.php?referer=" . rawurlencode($HTTP_REFERER)); // ask the user to login first, then he'll get directed back to 'import_csa.php'
+		header("Location: user_login.php?referer=" . rawurlencode($_SERVER['HTTP_REFERER'])); // ask the user to login first, then he'll get directed back to 'import_csa.php'
 
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
@@ -87,11 +79,14 @@
 
 	if (!empty($rejectReasonsArray)) // if any of the required fields is missing
 	{
-		session_register("HeaderString"); // save an error message
+		// save an error message:
 		$HeaderString = "<b><span class=\"warning\">Incorrect input format!</span></b> Please use the CSA 'full record' data format.";
 
+		// Write back session variables:
+		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+
 		// Redirect the browser back to the CSA import form:
-		header("Location: import_csa.php"); // Note: if 'header("Location: $HTTP_REFERER")' is used, the error message won't get displayed! ?:-/
+		header("Location: import_csa.php"); // Note: if 'header("Location: " . $_SERVER['HTTP_REFERER'])' is used, the error message won't get displayed! ?:-/
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
 
@@ -103,16 +98,29 @@
 
 	// just for DEBUGGING purposes:
 		// If there's no stored message available:
-//		if (!session_is_registered("HeaderString"))
+//		if (!isset($_SESSION['HeaderString']))
 //			$HeaderString = "Data extracted from CSA full record(s):"; // Provide the default message
 //		else
-//			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
+//		{
+//			$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
+
+//			// Note: though we clear the session variable, the current message is still available to this script via '$HeaderString':
+//			deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+//		}
+
+		// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+		// ('' will produce the default 'Web' output style)
+//		if (isset($_REQUEST['viewType']))
+//			$viewType = $_REQUEST['viewType'];
+//		else
+//			$viewType = "";
+
 		// Show the login status:
 //		showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 	
 		// (2a) Display header:
 		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-//		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Add Literature from CSA Record Data", "index,follow", "Extract literature data from Cambridge Scientific Abstracts and add the data to the " . htmlentities($officialDatabaseName), "", false, "");
+//		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Add Literature from CSA Record Data", "index,follow", "Extract literature data from Cambridge Scientific Abstracts and add the data to the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
 //		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// just for DEBUGGING purposes:
