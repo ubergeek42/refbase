@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   02-Oct-04, 19:29
+	// Modified:   03-Oct-04, 21:55
 
 	// This file contains important
 	// functions that are shared
@@ -376,27 +376,27 @@
 		if ("$orig_fieldname" == "last_login") // when original field name = 'last_login' (defined in 'users' table) then...
 			$newORDER = eregi_replace("ORDER BY last_login", "ORDER BY last_login DESC", $newORDER); // ...sort 'last_login' column in DESCENDING order (so that latest date+time sorts first)
 
-		$orderBy = ereg_replace("ORDER BY ", "", $newORDER); // remove 'ORDER BY ' phrase in order to store just the 'ORDER BY' field spec within the 'orderBy' variable
+		$orderBy = eregi_replace("ORDER BY ", "", $newORDER); // remove 'ORDER BY ' phrase in order to store just the 'ORDER BY' field spec within the 'orderBy' variable
 
 		// call the 'newORDERclause()' function to replace the ORDER clause:
 		$queryURLNewOrder = newORDERclause($newORDER, $query);
 
 		// figure out if clicking on the current field name will sort in ascending or descending order:
 		// (note that for 1st-level sort attributes, this value will be modified again below)
-		if (ereg("ORDER BY [^ ]+ DESC", $newORDER)) // if 1st-level sort is in descending order...
+		if (eregi("ORDER BY [^ ]+ DESC", $newORDER)) // if 1st-level sort is in descending order...
 			$linkTitleSortOrder = " (descending order)"; // ...sorting will be conducted in DESCending order
 		else
 			$linkTitleSortOrder = " (ascending order)"; // ...sorting will be conducted in ASCending order
 
 		// toggle sort order for the 1st-level sort attribute:
-		if (preg_match("/ORDER BY $orig_fieldname(?! DESC)/", $query)) // if 1st-level sort is by this attribute (in ASCending order)...
+		if (preg_match("/ORDER BY $orig_fieldname(?! DESC)/i", $query)) // if 1st-level sort is by this attribute (in ASCending order)...
 		{
-			$queryURLNewOrder = preg_replace("/(ORDER%20BY%20$orig_fieldname)(?!%20DESC)/", "\\1%20DESC", $queryURLNewOrder); // ...change sort order to DESCending
+			$queryURLNewOrder = preg_replace("/(ORDER%20BY%20$orig_fieldname)(?!%20DESC)/i", "\\1%20DESC", $queryURLNewOrder); // ...change sort order to DESCending
 			$linkTitleSortOrder = " (descending order)"; // adjust the link title attribute's sort info accordingly
 		}
-		elseif (preg_match("/ORDER BY $orig_fieldname DESC/", $query)) // if 1st-level sort is by this attribute (in DESCending order)...
+		elseif (preg_match("/ORDER BY $orig_fieldname DESC/i", $query)) // if 1st-level sort is by this attribute (in DESCending order)...
 		{
-			$queryURLNewOrder = preg_replace("/(ORDER%20BY%20$orig_fieldname)%20DESC/", "\\1", $queryURLNewOrder); // ...change sort order to ASCending
+			$queryURLNewOrder = preg_replace("/(ORDER%20BY%20$orig_fieldname)%20DESC/i", "\\1", $queryURLNewOrder); // ...change sort order to ASCending
 			$linkTitleSortOrder = " (ascending order)"; // adjust the link title attribute's sort info accordingly
 		}
 
@@ -407,9 +407,9 @@
 		$tableHeaderLink = "$HTMLbeforeLink<a href=\"$href?sqlQuery=$queryURLNewOrder&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;formType=$formType&amp;showRows=$showRows&amp;rowOffset=$rowOffset&amp;submit=$submitType&amp;orderBy=" . rawurlencode($orderBy) . "&amp;oldQuery=" . rawurlencode($oldQuery) . "&amp;viewType=$viewType\" title=$linkTitle>$linkName</a>";
 
 		// append sort indicator after the 1st-level sort attribute:
-		if (preg_match("/ORDER BY $orig_fieldname(?! DESC)(?=,| LIMIT|$)/", $query)) // if 1st-level sort is by this attribute (in ASCending order)...
+		if (preg_match("/ORDER BY $orig_fieldname(?! DESC)(?=,| LIMIT|$)/i", $query)) // if 1st-level sort is by this attribute (in ASCending order)...
 			$tableHeaderLink .= "&nbsp;<img src=\"img/sort_asc.gif\" alt=\"(up)\" title=\"sorted by field '" . $orig_fieldname . "' (ascending order)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append an upward arrow image
-		elseif (preg_match("/ORDER BY $orig_fieldname DESC/", $query)) // if 1st-level sort is by this attribute (in DESCending order)...
+		elseif (preg_match("/ORDER BY $orig_fieldname DESC/i", $query)) // if 1st-level sort is by this attribute (in DESCending order)...
 			$tableHeaderLink .= "&nbsp;<img src=\"img/sort_desc.gif\" alt=\"(down)\" title=\"sorted by field '" . $orig_fieldname . "' (descending order)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append a downward arrow image
 
 		$tableHeaderLink .=  $HTMLafterLink; // append any necessary HTML
@@ -721,8 +721,8 @@ EOF;
 	// (i.e., provide options to show the user's groups)
 	function buildGroupSearchElements($href, $queryURL, $query, $showQuery, $showLinks, $showRows)
 	{
-		if (preg_match("/.+user_groups RLIKE \"[()|^.;* ]+[^;]+?[()|$.;* ]+\"/", $query)) // if the query does contain a 'WHERE' clause that searches for a particular user group
-			$currentGroup = preg_replace("/.+user_groups RLIKE \"[()|^.;* ]+([^;]+?)[()|$.;* ]+\".*/", "\\1", $query); // extract the particular group name
+		if (preg_match("/.+user_groups RLIKE \"[()|^.;* ]+[^;]+?[()|$.;* ]+\"/i", $query)) // if the query does contain a 'WHERE' clause that searches for a particular user group
+			$currentGroup = preg_replace("/.+user_groups RLIKE \"[()|^.;* ]+([^;]+?)[()|$.;* ]+\".*/i", "\\1", $query); // extract the particular group name
 		else
 			$currentGroup = "none";
 
@@ -1469,19 +1469,19 @@ EOF;
 
 		// define an array of search & replace actions:
 		// (Note that the order of array elements IS important since it defines when a search/replace action gets executed)
-		$sqlSearchReplacePatterns = array(" != "                    =>  " is not equal to ",
-										" = "                       =>  " is equal to ",
-										" > "                       =>  " is greater than ",
-										" < "                       =>  " is less than ",
-										"NOT RLIKE \"\\^(.+?)\\$"   =>  "is not equal to \"\\1",
-										"NOT RLIKE \"\\^"           =>  "does not start with \"",
-										"NOT RLIKE \"(.+?)\\$"      =>  "does not end with \"\\1",
-										"NOT RLIKE"                 =>  "does not contain",
-										"RLIKE \"\\^(.+?)\\$"       =>  "is equal to \"\\1",
-										"RLIKE \"\\^"               =>  "starts with \"",
-										"RLIKE \"(.+?)\\$"          =>  "ends with \"\\1",
-										"RLIKE"                     =>  "contains",
-										"AND"                       =>  "and");
+		$sqlSearchReplacePatterns = array(" != "                         =>  " is not equal to ",
+										" = "                            =>  " is equal to ",
+										" > "                            =>  " is greater than ",
+										" < "                            =>  " is less than ",
+										"NOT RLIKE \"\\^([^\"]+?)\\$\""  =>  "is not equal to \"\\1\"",
+										"NOT RLIKE \"\\^"                =>  "does not start with \"",
+										"NOT RLIKE \"([^\"]+?)\\$\""     =>  "does not end with \"\\1\"",
+										"NOT RLIKE"                      =>  "does not contain",
+										"RLIKE \"\\^([^\"]+?)\\$\""      =>  "is equal to \"\\1\"",
+										"RLIKE \"\\^"                    =>  "starts with \"",
+										"RLIKE \"([^\"]+?)\\$\""         =>  "ends with \"\\1\"",
+										"RLIKE"                          =>  "contains",
+										"AND"                            =>  "and");
 
 		// Perform search & replace actions on the SQL query:
 		$translatedSQL = searchReplaceText($sqlSearchReplacePatterns, $translatedSQL); // function 'searchReplaceText()' is defined in 'include.inc.php'
