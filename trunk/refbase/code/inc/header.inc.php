@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./header.inc.php
 	// Created:    28-Jul-02, 11:21
-	// Modified:   12-Oct-04, 14:04
+	// Modified:   16-Feb-05, 20:47
 
 	// This is the header include file.
 	// It contains functions that provide the HTML header
@@ -99,9 +99,9 @@
 
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This holds the title logo and info">
 <tr>
-	<td valign="middle" rowspan="2" align="left" width="170"><a href="<? echo $hostInstitutionURL; ?>"><img src="img/logo.gif" border="0" alt="<? echo htmlentities($hostInstitutionAbbrevName); ?> Home" title="<? echo htmlentities($hostInstitutionName); ?>" width="143" height="107"></a></td>
+	<td valign="middle" rowspan="2" align="left" width="170"><a href="<? echo $hostInstitutionURL; ?>"><img src="img/logo.gif" border="0" alt="<? echo encodeHTML($hostInstitutionAbbrevName); ?> Home" title="<? echo encodeHTML($hostInstitutionName); ?>" width="143" height="107"></a></td>
 	<td>
-		<h2><? echo htmlentities($officialDatabaseName); ?></h2>
+		<h2><? echo encodeHTML($officialDatabaseName); ?></h2>
 		<span class="smallup">
 			<a href="index.php" title="goto main page">Home</a>&nbsp;|&nbsp;
 			<a href="simple_search.php" title="search the main fields of the database">Simple Search</a>&nbsp;|&nbsp;
@@ -128,7 +128,7 @@
 		// -------------------------------------------------------
 ?>
 
-<!--&nbsp;|&nbsp;<a href="help.php" title="display help">Help</a>-->
+			<!--&nbsp;|&nbsp;<a href="help.php" title="display help">Help</a>-->
 		</span>
 	</td>
 	<td class="small" align="right" valign="middle"><? echo $loginWelcomeMsg; ?><br><? echo $loginStatus; ?></td>
