@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./index.php
 	// Created:    29-Jul-02, 16:45
-	// Modified:   27-Mar-05, 00:48
+	// Modified:   28-Mar-05, 20:27
 
 	// This script builds the main page.
 	// It provides login and quick search forms
@@ -70,11 +70,20 @@
 
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Home", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $loc["Home"], "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (5) CLOSE the database connection:
 	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
+
+	// Define variable holding common drop-down elements, i.e. build properly formatted <option> tag elements:
+	$dropDownFieldNameArray = array("author" => $loc["DropDownFieldName_Author"],
+									"title" => $loc["DropDownFieldName_Title"],
+									"year" => $loc["DropDownFieldName_Year"],
+									"keywords" => $loc["DropDownFieldName_Keywords"],
+									"abstract" => $loc["DropDownFieldName_Abstract"]);
+
+	$dropDownItems = buildSelectMenuOptions($dropDownFieldNameArray, "", "\t\t\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 ?>
@@ -104,7 +113,7 @@ else
 			<ul type="circle">
 				<li><?php echo $loc["Features_ComprehensiveDataset"]; 
 					// report the total number of records:
-					echo ", ". $loc["currently featuring"] . $recordCount . " " . $loc["Records"]; ?></li>
+					echo ", ". $loc["currently featuring"] . $recordCount . " " . $loc["records"]; ?></li>
 				<li><?php echo $loc["Features_StandardizedInterface"]; ?></li>
 				<li><?php echo $loc["Features_SearchOptions"]; ?></li>
 				<li><?php echo $loc["Features_DisplayCiteExportOptions"]; ?></li>
@@ -140,7 +149,7 @@ if (!isset($_SESSION['loginEmail']))
 				<br>
 				<input type="password" name="loginPassword" size="12">
 				<br>
-				<input type="submit" value="Login">
+				<input type="submit" value="<?php echo $loc["ButtonTitle_Login"]; ?>">
 			</form><?php
 	}
 else
@@ -151,30 +160,31 @@ else
 				<input type="hidden" name="showQuery" value="0">
 				<input type="hidden" name="showLinks" value="1">
 				<input type="radio" name="myRefsRadio" value="1" checked>&nbsp;<?php echo $loc["All"]; ?>
+
 				<br>
 				<input type="radio" name="myRefsRadio" value="0">&nbsp;<?php echo $loc["Only"]; ?>:
 				<br>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findMarked" value="1">
 				<select name="markedSelector">
-					<option><?php echo $loc["marked"]; ?></option>
-					<option><?php echo $loc["not"]." ". $loc["marked"]; ?></option>
+					<option value="marked"><?php echo $loc["marked"]; ?></option>
+					<option value="not marked"><?php echo $loc["not"]." ". $loc["marked"]; ?></option>
 				</select>
 				<br>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findSelected" value="1">
 				<select name="selectedSelector">
-					<option><?php echo $loc["selected"]; ?></option>
-					<option><?php echo $loc["not"]." ". $loc["selected"]; ?></option>
+					<option value="selected"><?php echo $loc["selected"]; ?></option>
+					<option value="not selected"><?php echo $loc["not"]." ". $loc["selected"]; ?></option>
 				</select>
 				<br>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findCopy" value="1">&nbsp;<?php echo $loc["copy"]; ?>:
 				<select name="copySelector">
-					<option><?php echo $loc["true"]; ?></option>
-					<option><?php echo $loc["fetch"]; ?></option>
-					<option><?php echo $loc["ordered"]; ?></option>
-					<option><?php echo $loc["false"]; ?></option>
+					<option value="true"><?php echo $loc["true"]; ?></option>
+					<option value="fetch"><?php echo $loc["fetch"]; ?></option>
+					<option value="ordered"><?php echo $loc["ordered"]; ?></option>
+					<option value="false"><?php echo $loc["false"]; ?></option>
 				</select>
 				<br>
-				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findUserKeys" value="1">&nbsp;<?php echo $loc["key"]; ?>:&nbsp;
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findUserKeys" value="1">&nbsp;<?php echo $loc["key"]; ?>:&nbsp;&nbsp;
 				<input type="text" name="userKeysName" size="7">
 				<br>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findUserNotes" value="1">&nbsp;<?php echo $loc["note"]; ?>:&nbsp;
@@ -183,7 +193,7 @@ else
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findUserFile" value="1">&nbsp;<?php echo $loc["file"]; ?>:&nbsp;&nbsp;&nbsp;
 				<input type="text" name="userFileName" size="7">
 				<br>
-				<input type="submit" value="<?php echo $loc["Search"]; ?>">
+				<input type="submit" value="<?php echo $loc["ButtonTitle_Show"]; ?>">
 			</form><?php
 	}
 ?>
@@ -196,9 +206,9 @@ else
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
-		<td><?php echo $loc["Search"]." ".$loc["SearchDB"]; ?>:
+		<td><?php echo $loc["SearchDB"]; ?>:
 			<ul type="circle">
-				<li><a href="simple_search.php"><?php echo $loc["simple"]; ?> <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["search"]." ".$loc["SearchMain"]; ?></li>
+				<li><a href="simple_search.php"><?php echo $loc["Simple"]; ?> <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["search"]." ".$loc["SearchMain"]; ?></li>
 				<li><a href="advanced_search.php"><?php echo $loc["Advanced"]; ?> <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["search"]." ".$loc["SearchAll"]; ?></li><?php
 
 		// -------------------------------------------------------
@@ -221,17 +231,17 @@ else
 				<input type="hidden" name="formType" value="quickSearch">
 				<input type="hidden" name="showQuery" value="0">
 				<input type="hidden" name="showLinks" value="1">
-				<select name="quickSearchSelector">
-					<option selected><?php echo $loc["author"]; ?></option>
-					<option><?php echo $loc["title"]; ?></option>
-					<option><?php echo $loc["year"]; ?></option>
-					<option><?php echo $loc["keywords"]; ?></option>
-					<option><?php echo $loc["abstract"]; ?></option>
+				<select name="quickSearchSelector"><?php
+
+$quickSearchDropDownItems = ereg_replace("<option([^>]*)>" . $loc["DropDownFieldName_Author"], "<option\\1 selected>" . $loc["DropDownFieldName_Author"], $dropDownItems); // select the 'author' menu entry ...
+echo $quickSearchDropDownItems;
+?>
+
 				</select>
 				<br>
 				<input type="text" name="quickSearchName" size="12">
 				<br>
-				<input type="submit" value="<?php echo $loc["Search"]; ?>">
+				<input type="submit" value="<?php echo $loc["ButtonTitle_Search"]; ?>">
 			</form>
 		</td>
 	</tr>
@@ -308,7 +318,7 @@ if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND
 
 				</select>
 				<br>
-				<input type="submit" value="Show"<?php echo $groupSearchDisabled; ?>>
+				<input type="submit" value="<?php echo $loc["ButtonTitle_Show"]; ?>"<?php echo $groupSearchDisabled; ?>>
 			</form><?php
 	}
 else
@@ -342,7 +352,7 @@ else
 if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_queries", $_SESSION['user_permissions'])))
 	{
 ?>
-			<div class="header"><b>Recall My Query:</b></div><?php
+			<div class="header"><b><?php echo $loc["RecallMyQuery"]; ?>:</b></div><?php
 	}
 else
 	{
@@ -404,7 +414,7 @@ if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND
 
 				</select>
 				<br>
-				<input type="submit" name="submit" value="Go"<?php echo $querySearchDisabled; ?>>&nbsp;<input type="submit" name="submit" value="Edit"<?php echo $querySearchDisabled; ?>>
+				<input type="submit" name="submit" value="<?php echo $loc["ButtonTitle_Go"]; ?>"<?php echo $querySearchDisabled; ?>>&nbsp;<input type="submit" name="submit" value="<?php echo $loc["ButtonTitle_Edit"]; ?>"<?php echo $querySearchDisabled; ?>>
 			</form><?php
 	}
 else
