@@ -94,8 +94,11 @@
 
 	// ----------------------------------------------
 
-	// (4) Go back to the list of users:
-	header("Location: users.php");
+	// (4) File a message and go back to the list of users:
+	session_register("HeaderString"); // save an informative message
+	$HeaderString = "User was deleted successfully!";
+
+	header("Location: users.php"); // re-direct to the list of users
 
 	// (5) CLOSE the database connection:
 	if (!(mysql_close($connection)))
