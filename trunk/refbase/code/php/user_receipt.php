@@ -122,13 +122,13 @@
 			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
-		displayHTMLhead("IP&Ouml; Literature Database -- User Receipt", "noindex,nofollow", "Receipt page confirming correct submission of new user details to the IP&Ouml; Literature Database", "", false, "");
+		displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Receipt", "noindex,nofollow", "Receipt page confirming correct submission of new user details to the " . htmlentities($officialDatabaseName), "", false, "");
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
 
-		$confirmationText = "Thanks for your interest in the " . $officialDatabaseName . "!"
+		$confirmationText = "Thanks for your interest in the " . htmlentities($officialDatabaseName) . "!"
 					. "<br><br>The data you provided have been sent to our database admin."
 					. "<br>We'll process your request and mail back to you as soon as we can!"
-					. "<br><br>[Back to <a href=\"index.php\">Literature Database Home</a>]";
+					. "<br><br>[Back to <a href=\"index.php\">" . htmlentities($officialDatabaseName) . " Home</a>]";
 
 		// Start a table:
 		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays user submission feedback\">";
@@ -151,6 +151,7 @@
 		global $loginLinks;
 		global $loginEmail;
 		global $adminLoginEmail;
+		global $officialDatabaseName;
 
 		// CONSTRUCT SQL QUERY:
 		$query = "SELECT * FROM users WHERE user_id = $userID";
@@ -170,7 +171,7 @@
 			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
-		displayHTMLhead("IP&Ouml; Literature Database -- User Receipt", "noindex,nofollow", "Receipt page confirming correct entry of user details for the IP&Ouml; Literature Database", "", false, "");
+		displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Receipt", "noindex,nofollow", "Receipt page confirming correct entry of user details for the " . htmlentities($officialDatabaseName), "", false, "");
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
 
 		// Start a table:
@@ -247,8 +248,8 @@
 			echo "\n\t</td>\n</tr>";
 
 			// If the admin is logged in, display an 'Edit User Account' link:
-		 	if (($loginEmail == $adminLoginEmail) && ($userID != getUserID($loginEmail, $connection)))
-		 		echo "\n<tr>\n\t<td><a href=\"user_details.php?userID=" . $userID . "\">[Edit User Data]</a></td>\n</tr>";
+			if (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail)) // ('$adminLoginEmail' is specified in 'ini.inc.php')
+				echo "\n<tr>\n\t<td><a href=\"user_details.php?userID=" . $userID . "\">[Edit User Data]</a></td>\n</tr>";
 		}
 		else // no user exists with this user ID
 			echo "\n<tr>\n\t<td>(No user exists with this user ID!)</td>\n</tr>";
