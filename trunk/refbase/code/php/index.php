@@ -34,7 +34,7 @@
 
 	// If there's no stored message available:
 	if (!isset($_SESSION['HeaderString']))
-		$HeaderString = $loc["Welcome"] ." ". $loc["ThisDatabase"] ." ". $loc["provides"] ." ". $loc["access to"] . htmlentities($scientificFieldDescriptor) ." ". $loc["Literature"]. "."; // Provide the default welcome message
+		$HeaderString = $loc["Default Welcome Message"]; // Provide the default welcome message
 	else
 	{
 		$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
