@@ -117,14 +117,14 @@
 			</ul>
 		</td>
 		<td width="80" valign="top">
-			<form action="login.php" method="POST">
+			<form action="index.php" method="POST">
 				User Name:
 				<br>
 				<input type="text" name="loginName" size="12">
 				<br>
 				Password:
 				<br>
-				<input type="text" name="pwdName" size="12">
+				<input type="password" name="pwdName" size="12">
 				<br>
 				<input type="submit" value="Login">
 			</form>
@@ -180,7 +180,7 @@
 	<tr>
 		<td width="15">&nbsp;</td>
 		<td>This literature database is maintained by the <a href="http://www.uni-kiel.de/ipoe/">Institut f&uuml;r Polar&ouml;kologie</a> (IP&Ouml;), Kiel. You're welcome to send any questions or suggestions to our <a href="mailto:&#105;&#112;&#111;&#101;&#108;&#105;&#116;&#64;&#105;&#112;&#111;&#101;&#46;&#117;&#110;&#105;&#45;&#107;&#105;&#101;&#108;&#46;&#100;&#101;">feedback</a> address. The database is powered by <a href="http://www.refbase.net">refbase</a>, an open source database front-end for managing scientific literature &amp; citations that was initiated at IP&Ouml;.</td>
-		<td width="80" valign="top"><a href="http://www.refbase.net/"><img src="images/refbase_credit.gif" alt="powered by refbase" width="80" height="44" hspace="0" border="0"></a></td>
+		<td width="80" valign="top"><a href="http://www.refbase.net/"><img src="img/refbase_credit.gif" alt="powered by refbase" width="80" height="44" hspace="0" border="0"></a></td>
 	</tr>
 </table><?php
 	// --------------------------------------------------------------------
