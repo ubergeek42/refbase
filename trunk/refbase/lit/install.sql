@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./install.sql
 # Created:    02-Oct-04, 20:11
-# Modified:   16-Oct-04, 18:00
+# Modified:   24-Oct-04, 19:12
 
 # MySQL database structure & initial data
 
@@ -304,6 +304,29 @@ INSERT INTO `help_cats` VALUES (1, 0, 'Spencer', NULL, NULL),
 (13, 15, 'Field Description', NULL, NULL),
 (14, 5, 'ProCite Import', NULL, NULL),
 (15, 12, 'Entering Data', NULL, NULL);
+
+# --------------------------------------------------------
+
+#
+# table structure for table `languages`
+#
+
+DROP TABLE IF EXISTS `languages`;
+CREATE TABLE `languages` (
+  `language_id` mediumint(8) unsigned NOT NULL auto_increment,
+  `language_name` varchar(50) default NULL,
+  `language_enabled` enum('true','false') NOT NULL default 'true',
+  `order_by` varchar(25) default NULL,
+  PRIMARY KEY  (`language_id`),
+  KEY `language_name` (`language_name`)
+) TYPE=MyISAM AUTO_INCREMENT=3 ;
+
+#
+# data for table `languages`
+#
+
+INSERT INTO `languages` VALUES (1,'en','true','1'),
+(2,'de','true','2');
 
 # --------------------------------------------------------
 
@@ -693,7 +716,7 @@ CREATE TABLE `users` (
   `notes` text,
   `last_login` datetime default NULL,
   `logins` mediumint(8) unsigned default NULL,
-  `language` varchar(50) default NULL,
+  `language` varchar(50) default 'en',
   `user_id` mediumint(8) unsigned NOT NULL auto_increment,
   `group_id` mediumint(8) unsigned NOT NULL default '0',
   `marked` enum('no','yes') NOT NULL default 'no',
@@ -710,4 +733,4 @@ CREATE TABLE `users` (
 # data for table `users`
 #
 
-INSERT INTO `users` VALUES ('Initial', 'refbase user', 'Mr', '', 'refbase', '', NULL, '', '', '', '', '', '', '', '', 'user@refbase.net', 'http://www.refbase.net/', NULL, NULL, '2004-10-02 16:55:51', 74, NULL, 1, 0, 'no', '2004-01-08', '21:57:03', 'Initial refbase user (user@refbase.net)', '2004-01-08', '21:57:13', 'Initial refbase user (user@refbase.net)');
+INSERT INTO `users` VALUES ('Initial', 'refbase user', 'Mr', '', 'refbase', '', NULL, '', '', '', '', '', '', '', '', 'user@refbase.net', 'http://www.refbase.net/', NULL, NULL, '2004-10-02 16:55:51', 74, 'en', 1, 0, 'no', '2004-01-08', '21:57:03', 'Initial refbase user (user@refbase.net)', '2004-01-08', '21:57:13', 'Initial refbase user (user@refbase.net)');
