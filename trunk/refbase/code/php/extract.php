@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./extract.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   29-Sep-04, 22:15
+	// Modified:   26-Oct-04, 22:47
 
 	// Search form that offers to extract
 	// literature cited within a text and build
@@ -109,7 +109,7 @@
 
 	if (isset($_SESSION['user_styles']))
 	{
-		$optionTags = buildSelectMenuOptions($_SESSION['user_styles'], " *; *", "\t\t\t"); // build properly formatted <option> tag elements from the items listed in the 'user_styles' session variable
+		$optionTags = buildSelectMenuOptions($_SESSION['user_styles'], " *; *", "\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'user_styles' session variable
 		echo $optionTags;
 	}
 	else
