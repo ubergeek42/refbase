@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_removal.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   30-May-04, 17:52
+	// Modified:   17-Oct-04, 15:31
 
 	// This script deletes a user from the 'users' and 'auth' tables.
 	// The script can be only called by the admin. If the removal succeeds, it redirects to 'users.php'.
@@ -27,6 +27,12 @@
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
 	start_session(true);
 
+	// Extract the 'userID' parameter from the request:
+	if (isset($_REQUEST['userID']))
+		$userID = $_REQUEST['userID'];
+	else
+		$userID = "";
+
 	// Check if the admin is logged in
 	if (!(isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail))) // ('$adminLoginEmail' is specified in 'ini.inc.php')
 	{
@@ -45,7 +51,7 @@
 	}
 
 	// Check the correct parameters have been passed
-	if ($userID == "")
+	if (empty($userID))
 	{
 		// save an error message:
 		$HeaderString = "<b><span class=\"warning\">Incorrect parameters to script 'user_removal.php'!</span></b>";
