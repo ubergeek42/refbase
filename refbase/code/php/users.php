@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 0:25 Uhr
-	// Modified:   07-Sep-03, 18:13 Uhr
+	// Modified:   16-Nov-03, 21:33 Uhr
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -49,22 +49,54 @@
 	// [ !! NOTE !!: for details see <http://www.php.net/release_4_2_1.php> & <http://www.php.net/manual/en/language.variables.predefined.php> ]
 
 	// Extract the form used for searching:
-	$formType = $_REQUEST['formType'];
+	if (isset($_REQUEST['formType']))
+		$formType = $_REQUEST['formType'];
+	else
+		$formType = "";
 	
 	// Extract the type of display requested by the user (either 'Display', 'Export' or ''):
 	// ('' will produce the default columnar output style)
-	$displayType = $_REQUEST['submit'];
+	if (isset($_REQUEST['submit']))
+		$displayType = $_REQUEST['submit'];
+	else
+		$displayType = "";
 
 	// Extract other variables from the request:
-	$sqlQuery = $_REQUEST['sqlQuery'];
-	$showQuery = $_REQUEST['showQuery'];
-	$showLinks = $_REQUEST['showLinks'];
-	$showRows = $_REQUEST['showRows'];
-	$rowOffset = $_REQUEST['rowOffset'];
+	if (isset($_REQUEST['sqlQuery']))
+		$sqlQuery = $_REQUEST['sqlQuery'];
+	else
+		$sqlQuery = "";
+
+	if (isset($_REQUEST['showQuery']))
+		$showQuery = $_REQUEST['showQuery'];
+	else
+		$showQuery = "";
+
+	if (isset($_REQUEST['showLinks']))
+		$showLinks = $_REQUEST['showLinks'];
+	else
+		$showLinks = "";
+
+	if (isset($_REQUEST['showRows']))
+		$showRows = $_REQUEST['showRows'];
+	else
+		$showRows = "";
+
+	if (isset($_REQUEST['rowOffset']))
+		$rowOffset = $_REQUEST['rowOffset'];
+	else
+		$rowOffset = "";
 
 	// In order to generalize routines we have to query further variables here:
-	$exportFormat = $_REQUEST['exportFormatSelector']; // get the export format chosen by the user (only occurs in 'extract.php' form  and in query result lists)
-	$oldQuery = $_REQUEST['oldQuery']; // get the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
+	if (isset($_REQUEST['exportFormatSelector']))
+		$exportFormat = $_REQUEST['exportFormatSelector']; // get the export format chosen by the user (only occurs in 'extract.php' form  and in query result lists)
+	else
+		$exportFormat = "";
+
+	if (isset($_REQUEST['oldQuery']))
+		$oldQuery = $_REQUEST['oldQuery']; // get the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
+	else
+		$oldQuery = "";
 
 	// If $showLinks is empty we set it to true (i.e., show the links column by default):
 	if ($showLinks == "")
@@ -86,8 +118,8 @@
 	elseif ("$formType" == "refineSearch") // the user used the "Search within Results" form above the query results list (that was produced by 'users.php')
 		$query = extractFormElementsRefine($displayType, $sqlQuery, $showLinks);
 
-	else
-		$query = "SELECT first_name, last_name, abbrev_institution, institution, email, user_id FROM users WHERE user_id RLIKE \".+\" ORDER BY last_name, first_name"; // build the default query
+	else // build the default query:
+		$query = "SELECT first_name, last_name, abbrev_institution, email, last_login, logins, user_id FROM users WHERE user_id RLIKE \".+\" ORDER BY last_login DESC, last_name, first_name";
 
 	// ----------------------------------------------
 
@@ -149,7 +181,10 @@
 	// Third, build the appropriate header string (which is required as parameter to the 'showPageHeader()' function):
 	if (!session_is_registered("HeaderString")) // if there's no stored message available provide the default message:
 	{
-		$HeaderString = " users found:";
+		if ($rowsFound == 1)
+			$HeaderString = " user found:";
+		else
+			$HeaderString = " users found:";
 
 		if ($rowsFound > 0)
 			$HeaderString = ($rowOffset + 1) . "&#8211;" . $showMaxRow . " of " . $rowsFound . $HeaderString;
@@ -166,7 +201,7 @@
 
 	// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
 	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Manage Users", "noindex,nofollow", "Administration page that lists users of the " . htmlentities($officialDatabaseName) . ", with links for adding, editing or deleting any users", "", false, "");
-	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
+	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (4b) DISPLAY results:
 	showUsers($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $exportFormat, $showMaxRow); // show all users
@@ -225,7 +260,7 @@
 		
 			// Build a TABLE ROW with links for "previous" & "next" browsing, as well as links to intermediate pages
 			// call the 'buildBrowseLinks()' function (defined in 'include.inc'):
-			$BrowseLinks = buildBrowseLinks("users.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "", "", $exportOrder, $orderBy, $headerMsg);
+			$BrowseLinks = buildBrowseLinks("users.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "", "", "", "", ""); // Note: we set the last 3 fields ('$exportOrder', '$orderBy' & $headerMsg') to "" since they aren't (yet) required here
 			echo $BrowseLinks;
 
 			//    and insert a spacer TABLE ROW:
@@ -352,7 +387,12 @@
 	{
 		$refineSearchSelector = $_POST['refineSearchSelector']; // extract field name chosen by the user
 		$refineSearchName = $_POST['refineSearchName']; // extract search text entered by the user
-		$showRefineSearchFieldRadio = $_POST['showRefineSearchFieldRadio']; // extract user option whether searched field should be displayed
+
+		if (isset($_POST['showRefineSearchFieldRadio']))
+			$showRefineSearchFieldRadio = $_POST['showRefineSearchFieldRadio']; // extract user option whether searched field should be displayed
+		else
+			$showRefineSearchFieldRadio = "";
+
 		$refineSearchActionRadio = $_POST['refineSearchActionRadio']; // extract user option whether matched records should be included or excluded
 
 		$query = rawurldecode($sqlQuery); // URL decode SQL query (it was URL encoded before incorporation into a hidden tag of the 'refineSearch' form to avoid any HTML syntax errors)
@@ -372,7 +412,7 @@
 					// for all columns except the last:
 					$query = preg_replace("/(SELECT.*? )$refineSearchSelector, (.+FROM users)/","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
 			}
-		// else if $showRefineSearchFieldRadio == '' (which is the form's default) we don't change the display of any columns
+		// else if $showRefineSearchFieldRadio == "" (which is the form's default) we don't change the display of any columns
 
 		$query = str_replace(' FROM users',', user_id FROM users',$query); // add 'user_id' column (although it won't be visible the 'user_id' column gets included in every search query)
 																		// (which is required in order to obtain unique checkbox names as well as for use in the 'getUserID()' function)
