@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./queries.php
 	// Created:    16-May-04, 22:03
-	// Modified:   31-May-04, 19:13
+	// Modified:   15-Feb-05, 23:11
 
 	// This script takes a user query name (which was passed to the script by use of the 'Recall My Query' form on the main page 'index.php')
 	// and extracts all saved settings for this particular query from the 'queries' MySQL table. It will then build an appropriate query URL
@@ -17,6 +17,7 @@
 	*/
 
 	// Incorporate some include files:
+	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
 	include 'includes/include.inc.php'; // include common functions
 	include 'initialize/ini.inc.php'; // include common variables
 
@@ -59,7 +60,7 @@
 
 		// CONSTRUCT SQL QUERY:
 		// Fetch all saved settings for the user's query from the 'queries' table:
-		$query = "SELECT query_id, display_type, view_type, query, show_query, show_links, show_rows, cite_style_selector, cite_order FROM queries WHERE user_id = $loginUserID AND query_name = '$querySearchSelector'"; // the global variable '$loginUserID' gets set in function 'start_session()' within 'include.inc.php'
+		$query = "SELECT query_id, display_type, view_type, query, show_query, show_links, show_rows, cite_style_selector, cite_order FROM $tableQueries WHERE user_id = $loginUserID AND query_name = '$querySearchSelector'"; // the global variable '$loginUserID' gets set in function 'start_session()' within 'include.inc.php'
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection (function 'queryMySQLDatabase()' is defined in 'include.inc.php')
 
@@ -93,7 +94,7 @@
 		}
 
 		// We also update the time stamp for that query in the 'queries' table:
-		$updateQuery = "UPDATE queries SET "
+		$updateQuery = "UPDATE $tableQueries SET "
 					. "last_execution = NOW() " // set 'last_execution' field to the current date & time in 'DATETIME' format (which is 'YYYY-MM-DD HH:MM:SS', e.g.: '2003-12-31 23:45:59')
 					. "WHERE user_id = " . $loginUserID . " AND query_id = " . $row['query_id'];
 
