@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   14-Oct-04, 22:41
+	// Modified:   18-Oct-04, 00:28
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -358,7 +358,7 @@
 	// --- Form within 'search.php': ---------------
 	elseif ($formType == "refineSearch" OR $formType == "displayOptions") // the user used the "Search within Results" (or "Display Options") form above the query results list (that was produced by 'search.php')
 		{
-			$query = extractFormElementsRefineDisplay($displayType, $sqlQuery, $showLinks, $userID);
+			$query = extractFormElementsRefineDisplay("refs", $displayType, $sqlQuery, $showLinks, $userID); // function 'extractFormElementsRefineDisplay()' is defined in 'include.inc.php' since it's also used by 'users.php'
 		}
 
 	// --- Form within 'search.php': ---------------
@@ -689,7 +689,7 @@
 				//        Call the 'buildDisplayOptionsElements()' function (defined in 'include.inc.php') which does the actual work:
 				$formElementsDisplayOptions = buildDisplayOptionsElements("search.php", $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $displayOptionsSelectorElements1, $displayOptionsSelectorElements2, $displayOptionsSelectorElementSelected, $fieldsToDisplay);
 
-				echo displayResultsHeader($formElementsGroup, $formElementsRefine, $formElementsDisplayOptions); // function 'displayResultsHeader()' is defined in 'results_header.inc.php'
+				echo displayResultsHeader("search.php", $formElementsGroup, $formElementsRefine, $formElementsDisplayOptions); // function 'displayResultsHeader()' is defined in 'results_header.inc.php'
 			}
 
 
@@ -792,9 +792,9 @@
 					$info = mysql_fetch_field ($result, $i); // get the meta-data for the attribute
 					$orig_fieldname = $info->name; // get the attribute name
 
-					// Perform search & replace actions on the text of the 'title', 'keywords' and 'abstract' fields:
+					// Perform search & replace actions on the text of the 'title', 'address', 'keywords' and 'abstract' fields:
 					// (the array '$markupSearchReplacePatterns' in 'ini.inc.php' defines which search & replace actions will be employed)
-					if (ereg("^(title|keywords|abstract)$", $orig_fieldname)) // apply the defined search & replace actions to the 'title', 'keywords' and 'abstract' fields:
+					if (ereg("^(title|address|keywords|abstract)$", $orig_fieldname)) // apply the defined search & replace actions to the 'title', 'address', 'keywords' and 'abstract' fields:
 						$row[$i] = searchReplaceText($markupSearchReplacePatterns, $row[$i]); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
 					echo "\n\t<td valign=\"top\">" . $row[$i] . "</td>";
@@ -1095,9 +1095,9 @@
 					if (ereg("^abstract$", $orig_fieldname)) // for the abstract field, transform newline ('\n') characters into <br> tags
 						$row[$i] = ereg_replace("\n", "<br>", $row[$i]);
 
-					// Perform search & replace actions on the text of the 'title', 'keywords' and 'abstract' fields:
+					// Perform search & replace actions on the text of the 'title', 'address', 'keywords' and 'abstract' fields:
 					// (the array '$markupSearchReplacePatterns' in 'ini.inc.php' defines which search & replace actions will be employed)
-					if (ereg("^(title|keywords|abstract)$", $orig_fieldname)) // apply the defined search & replace actions to the 'title', 'keywords' and 'abstract' fields:
+					if (ereg("^(title|address|keywords|abstract)$", $orig_fieldname)) // apply the defined search & replace actions to the 'title', 'address', 'keywords' and 'abstract' fields:
 						$row[$i] = searchReplaceText($markupSearchReplacePatterns, $row[$i]); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
 					$recordData .= $row[$i]; // print the attribute data
@@ -1470,97 +1470,6 @@
 
 	// --------------------------------------------------------------------
 
-	// MODIFY USER GROUPS
-	// add (remove) selected records to (from) the specified user group
-	function modifyUserGroups($displayType, $recordSerialsArray, $recordSerialsString, $userID, $userGroup, $userGroupActionRadio)
-	{
-		global $oldQuery;
-		global $connection;
-
-		// Check whether the contents of the '$userGroup' variable shall be interpreted as regular expression:
-		// Note: We assume the variable contents to be a (perl-style!) regular expression if the following conditions are true:
-		//       - the user checked the radio button next to the group text entry field ('userGroupName')
-		//       - the entered string starts with 'REGEXP:'
-		if (($userGroupActionRadio == "0") AND (ereg("^REGEXP:", $userGroup))) // don't escape possible meta characters
-		{
-			$userGroup = preg_replace("/REGEXP:(.+)/", "(\\1)", $userGroup); // remove 'REGEXP:' tage & enclose the following pattern in brackets
-			// The enclosing brackets ensure that a pipe '|' which is used in the grep pattern doesn't cause any harm.
-			// E.g., without enclosing brackets, the pattern 'mygroup|.+' would be (among others) resolved to ' *; *mygroup|.+ *' (see below).
-			// This, in turn, would cause the pattern to match beyond the group delimiter (semicolon), causing severe damage to the user's
-			// other group names!
-
-			// to assure that the regular pattern specifed by the user doesn't match beyond our group delimiter ';' (semicolon),
-			// we'll need to convert any greedy regex quantifiers to non-greedy ones:
-			$userGroup = preg_replace("/(?<![?+*]|[\d,]})([?+*]|\{\d+(, *\d*)?\})(?!\?)/", "\\1?", $userGroup);
-		}
-
-		// otherwise we escape any possible meta characters:
-		else // if the user checked the radio button next to the group popup menu ($userGroupActionRadio == "1") -OR-
-			// the radio button next to the group text entry field was selected BUT the string does NOT start with an opening bracket and end with a closing bracket...
-			$userGroup = preg_quote($userGroup, "/"); // escape meta characters (including '/' that is used as delimiter for the PCRE replace functions below and which gets passed as second argument)
-
-
-		// for the current user, get all entries within the 'user_data' table that refer to the selected records (listed in '$recordSerialsString'):
-		$query = "SELECT record_id, user_groups FROM user_data WHERE record_id RLIKE \"^(" . $recordSerialsString . ")$\" AND user_id = " . $userID;
-
-		$result = queryMySQLDatabase($query, $oldQuery); // RUN the query on the database through the connection (function 'queryMySQLDatabase()' is defined in 'include.inc.php')
-
-		$foundSerialsArray = array(""); // initialize array variable (which will hold the serial numbers of all found records)
-
-		$rowsFound = @ mysql_num_rows($result);
-		if ($rowsFound > 0) // If there were rows found ...
-		{
-			while ($row = @ mysql_fetch_array($result)) // for all rows found
-			{
-				$recordID = $row["record_id"]; // get the serial number of the current record
-				$foundSerialsArray[] = $recordID; // add this record's serial to the array of found serial numbers
-
-				$recordUserGroups = $row["user_groups"]; // extract the user groups that the current record belongs to
-
-				// ADD the specified user group to the 'user_groups' field:
-				if ($displayType == "Add" AND !ereg("(^|.*;) *$userGroup *(;.*|$)", $recordUserGroups)) // if the specified group isn't listed already within the 'user_groups' field:
-				{
-					if (empty($recordUserGroups)) // and if the 'user_groups' field is completely empty
-						$recordUserGroups = ereg_replace("^.*$", "$userGroup", $recordUserGroups); // add the specified user group to the 'user_groups' field
-					else // if the 'user_groups' field does already contain some user content:
-						$recordUserGroups = ereg_replace("^(.+)$", "\\1; $userGroup", $recordUserGroups); // append the specified user group to the 'user_groups' field
-				}
-
-				// REMOVE the specified user group from the 'user_groups' field:
-				elseif ($displayType == "Remove") // remove the specified group from the 'user_groups' field:
-				{
-					$recordUserGroups = preg_replace("/^ *$userGroup *(?=;|$)/", "", $recordUserGroups); // the specified group is listed at the very beginning of the 'user_groups' field
-					$recordUserGroups = preg_replace("/ *; *$userGroup *(?=;|$)/", "", $recordUserGroups); // the specified group occurs after some other group name within the 'user_groups' field
-					$recordUserGroups = ereg_replace("^ *; *", "", $recordUserGroups); // remove any remaining group delimiters at the beginning of the 'user_groups' field
-				}
-
-				// for the current record & user ID, update the matching entry within the 'user_data' table:
-				$queryUserData = "UPDATE user_data SET user_groups = \"" . $recordUserGroups . "\" WHERE record_id = " . $recordID . " AND user_id = " . $userID;
-
-				$resultUserData = queryMySQLDatabase($queryUserData, $oldQuery); // RUN the query on the database through the connection (function 'queryMySQLDatabase()' is defined in 'include.inc.php')
-			}
-		}
-
-		// for all selected records that have no entries in the 'user_data' table (for this user), we'll need to add a new entry containing the specified group:
-		$leftoverSerialsArray = array_diff($recordSerialsArray, $foundSerialsArray); // get all unique array elements of '$recordSerialsArray' which are not in '$foundSerialsArray'
-
-		foreach ($leftoverSerialsArray as $leftoverRecordID) // for each record that we haven't processed yet (since it doesn't have an entry in the 'user_data' table for this user)
-		{
-			// for the current record & user ID, add a new entry (containing the specified group) to the 'user_data' table:
-			$queryUserData = "INSERT INTO user_data SET "
-							. "user_groups = \"$userGroup\", "
-							. "record_id = \"$leftoverRecordID\", "
-							. "user_id = \"$userID\", "
-							. "data_id = NULL"; // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
-
-			$resultUserData = queryMySQLDatabase($queryUserData, $oldQuery); // RUN the query on the database through the connection (function 'queryMySQLDatabase()' is defined in 'include.inc.php')
-		}
-
-		getUserGroups($userID); // update the 'userGroups' session variable (function 'getUserGroups()' is defined in 'include.inc.php')
-	}
-
-	// --------------------------------------------------------------------
-
 	//	BUILD RESULTS FOOTER
 	// (i.e., build a TABLE containing rows with buttons for displaying/citing selected records)
 	function buildResultsFooter($NoColumns, $showRows, $citeStyle, $selectedRecordsArray)
@@ -1628,13 +1537,15 @@
 									. "\n\t\tusing style:&nbsp;&nbsp;"
 									. "\n\t\t<select name=\"citeStyleSelector\" title=\"choose the output style for your reference list\"$citeStyleDisabled>";
 
-				if (isset($_SESSION['user_styles']))
+				if (!isset($_SESSION['user_styles']))
+				{
+					$ResultsFooterRow .= "<option>(no styles available)</option>";
+				}
+				else
 				{
 					$optionTags = buildSelectMenuOptions($_SESSION['user_styles'], " *; *", "\t\t\t"); // build properly formatted <option> tag elements from the items listed in the 'user_styles' session variable
 					$ResultsFooterRow .= $optionTags;
 				}
-				else
-					$ResultsFooterRow .= "<option>(no styles available)</option>";
 
 				$ResultsFooterRow .= "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
 									. "\n\t\tsort by:&nbsp;&nbsp;"
@@ -1691,7 +1602,7 @@
 					}
 
 					$ResultsFooterRow .= "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
-										. "\n\t\t<input type=\"radio\" name=\"userGroupActionRadio\" value=\"0\" title=\"click here if you want to setup a new group or specify a custom string describing your group(s); then, enter the group name in the text box to the right\"$groupSearchTextInputChecked>"
+										. "\n\t\t<input type=\"radio\" name=\"userGroupActionRadio\" value=\"0\" title=\"click here if you want to setup a new group; then, enter the group name in the text box to the right\"$groupSearchTextInputChecked>"
 										. "\n\t\t<input type=\"text\" name=\"userGroupName\" value=\"\" size=\"8\" title=\"$groupSearchTextInputTitle\">"
 										. "\n\t</td>"
 
@@ -4331,95 +4242,14 @@
 
 	// --------------------------------------------------------------------
 
-	// Build the database query from user input provided by the "Search within Results" or "Display Options" forms above the query results list (which, in turn, was returned by 'search.php'):
-	function extractFormElementsRefineDisplay($displayType, $sqlQuery, $showLinks, $userID)
-	{
-		$query = $sqlQuery;
-
-		if ($displayType == "Search") // the user clicked the 'Search' button of the "Search within Results" form
-		{
-			$fieldSelector = $_POST['refineSearchSelector']; // extract field name chosen by the user
-			$refineSearchName = $_POST['refineSearchName']; // extract search text entered by the user
-
-			if (isset($_POST['refineSearchExclude'])) // extract user option whether matched records should be included or excluded
-				$refineSearchActionCheckbox = $_POST['refineSearchExclude']; // the user marked the checkbox next to "Exclude matches"
-			else
-				$refineSearchActionCheckbox = "0"; // the user did NOT mark the checkbox next to "Exclude matches"
-
-			if ($refineSearchName != "") // if the user typed a search string into the text entry field...
-			{
-				// Depending on the chosen output action, construct an appropriate SQL query:
-				if ($refineSearchActionCheckbox == "0") // if the user did NOT mark the checkbox next to "Exclude matches"
-					{
-						// for the fields 'marked=no', 'copy=false' and 'selected=no', force NULL values to be matched:
-						if (($fieldSelector == "marked" AND $refineSearchName == "no") OR ($fieldSelector == "copy" AND $refineSearchName == "false") OR ($fieldSelector == "selected" AND $refineSearchName == "no"))
-							$query = eregi_replace("WHERE","WHERE ($fieldSelector RLIKE \"$refineSearchName\" OR $fieldSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
-						else // add default 'WHERE' clause:
-							$query = eregi_replace("WHERE","WHERE $fieldSelector RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
-					}
-				else // $refineSearchActionCheckbox == "1" // if the user marked the checkbox next to "Exclude matches"
-					{
-						// for the fields 'marked=yes', 'copy!=false' and 'selected=yes', force NULL values to be excluded:
-						if (($fieldSelector == "marked" AND $refineSearchName == "yes") OR ($fieldSelector == "copy" AND $refineSearchName != "false") OR ($fieldSelector == "selected" AND $refineSearchName == "yes"))
-							$query = eregi_replace("WHERE","WHERE ($fieldSelector NOT RLIKE \"$refineSearchName\" OR $fieldSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
-						else // add default 'WHERE' clause:
-							$query = eregi_replace("WHERE","WHERE $fieldSelector NOT RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
-					}
-				$query = eregi_replace(' AND serial RLIKE ".+"','',$query); // remove any 'AND serial RLIKE ".+"' which isn't required anymore
-			}
-			// else, if the user did NOT type a search string into the text entry field, we simply keep the old WHERE clause...
-		}
-
-
-		elseif ($displayType == "Show" OR $displayType == "Hide") // the user clicked either the 'Show' or the 'Hide' button of the "Display Options" form
-		// (hitting <enter> within the 'ShowRows' text entry field of the "Display Options" form will act as if the user clicked the 'Show' button)
-		{
-			$fieldSelector = $_POST['displayOptionsSelector']; // extract field name chosen by the user
-
-			if ($displayType == "Show") // if the user clicked the 'Show' button...
-				{
-					if (!preg_match("/SELECT.*\W$fieldSelector\W.*FROM refs/i", $query)) // ...and the field is *not* already displayed...
-						$query = eregi_replace(" FROM refs",", $fieldSelector FROM refs",$query); // ...then SHOW the field that was used for refining the search results
-				}
-			elseif ($displayType == "Hide") // if the user clicked the 'Hide' button...
-				{
-					if (preg_match("/SELECT.*\W$fieldSelector\W.*FROM refs/i", $query)) // ...and the field *is* currently displayed...
-					{
-						// for all columns except the first:
-						$query = preg_replace("/(SELECT.+?), $fieldSelector( .*FROM refs)/i","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
-						// for all columns except the last:
-						$query = preg_replace("/(SELECT.*? )$fieldSelector, (.+FROM refs)/i","\\1\\2",$query); // ...then HIDE the field that was used for refining the search results
-					}
-				}
-		}
-
-
-		// the following changes to the SQL query are performed for both forms ("Search within Results" and "Display Options"):
-
-		// if the chosen field is one of the user specific fields from table 'user_data': 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'bibtex_id' or 'related'
-		if (ereg("^(marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)$", $fieldSelector))
-			if (!eregi("LEFT JOIN user_data", $query)) // ...and if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
-				$query = eregi_replace(" FROM refs"," FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = $userID",$query); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
-
-		$query = eregi_replace(' FROM refs',', orig_record FROM refs',$query); // add 'orig_record' column (although it won't be visible the 'orig_record' column gets included in every search query)
-																				// (which is required in order to present visual feedback on duplicate records)
-
-		$query = eregi_replace(' FROM refs',', serial FROM refs',$query); // add 'serial' column (although it won't be visible the 'serial' column gets included in every search query)
-																		// (which is required in order to obtain unique checkbox names)
-
-		if ($showLinks == "1")
-			$query = eregi_replace(' FROM refs',', file, url, doi FROM refs',$query); // add 'file', 'url' & 'doi' columns
-
-
-		return $query;
-	}
+	// Note: function 'extractFormElementsRefineDisplay()' is defined in 'include.inc.php' since it's also used by 'users.php'
 
 	// --------------------------------------------------------------------
 
 	// Build the database query from records selected by the user within the query results list (which, in turn, was returned by 'search.php'):
 	function extractFormElementsQueryResults($displayType, $showLinks, $citeOrder, $orderBy, $userID, $sqlQuery, $referer, $recordSerialsArray)
 	{
-		if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_groups", $_SESSION['user_permissions']))) // if a user is logged in AND the 'user_permissions' session variable contains 'allow_user_groups', show form elements to add/remove the selected records to/from a user's group:
+		if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_groups", $_SESSION['user_permissions']))) // if a user is logged in AND the 'user_permissions' session variable contains 'allow_user_groups', extract form elements which add/remove the selected records to/from a user's group:
 		{
 			$userGroupActionRadio = $_POST['userGroupActionRadio']; // extract user option whether we're supposed to process an existing group name or any custom/new group name that was specified by the user
 
@@ -4491,7 +4321,7 @@
 						saveSessionVariable("selectedRecords", $recordSerialsArray); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 
 				if (ereg("^(Add|Remove)$", $displayType) AND !empty($userGroup)) // the user clicked either the 'Add' or the 'Remove' button
-					modifyUserGroups($displayType, $recordSerialsArray, $recordSerialsString, $userID, $userGroup, $userGroupActionRadio); // add (remove) selected records to (from) the specified user group  (function 'modifyUserGroups()' is defined above!)
+					modifyUserGroups("user_data", $displayType, $recordSerialsArray, $recordSerialsString, $userID, $userGroup, $userGroupActionRadio); // add (remove) selected records to (from) the specified user group (function 'modifyUserGroups()' is defined in 'include.inc.php')
 
 
 				// re-apply the current sqlQuery:
