@@ -5,9 +5,9 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./advanced_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   13-Dec-03, 23:57
+	// Modified:   30-May-04, 17:16
 
-	// Search formular providing access to all fields of the database.
+	// Search form providing access to all fields of the database.
 	// It offers some output options (like how many records to display per page)
 	// and let's you specify the output sort order (up to three levels deep).
 
@@ -25,39 +25,44 @@
 
 	// --------------------------------------------------------------------
 
-	// Connect to a session
-	session_start();
-
-	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session();
 
 	// --------------------------------------------------------------------
 
-	if (!session_is_registered("loginEmail")) // if NO user is logged in
+	if (!isset($_SESSION['loginEmail'])) // if NO user is logged in
 		$loginUserID = ""; // set '$loginUserID' to "" so that 'selectDistinct()' function can be executed without problems
 
 	// --------------------------------------------------------------------
 
 	// (1) Open the database connection and use the literature database:
-	if (!($connection = @ mysql_connect($hostName,$username,$password)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to connect to the host:", "");
-
-	if (!(mysql_select_db($databaseName, $connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to connect to the database:", "");
+	connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 	// If there's no stored message available:
-	if (!session_is_registered("HeaderString"))
+	if (!isset($_SESSION['HeaderString']))
 		$HeaderString = "Search all fields of the database:"; // Provide the default message
 	else
-		session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
+	{
+		$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
+
+		// Note: though we clear the session variable, the current message is still available to this script via '$HeaderString':
+		deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+	}
+
+	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// ('' will produce the default 'Web' output style)
+	if (isset($_REQUEST['viewType']))
+		$viewType = $_REQUEST['viewType'];
+	else
+		$viewType = "";
 
 	// Show the login status:
 	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Advanced Search", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", true, "");
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Advanced Search", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", true, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (2b) Start <form> and <table> holding the form elements:
@@ -1003,7 +1008,7 @@
 			. "\n\t<td><input type=\"text\" name=\"modifiedByName2\" size=\"42\"></td>"
 			. "\n</tr>";
 
-	if (session_is_registered("loginEmail")) // if a user is logged in, display user specific fields:
+	if (isset($_SESSION['loginEmail'])) // if a user is logged in, display user specific fields:
 	{
 		echo "\n<tr>"
 			. "\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
@@ -1095,7 +1100,7 @@
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td>&nbsp;</td>"
-			. "\n\t<td valign=\"top\"><b>Output Options:</b></td>\n\t<td>&nbsp;</td>"
+			. "\n\t<td valign=\"top\"><b>Display Options:</b></td>\n\t<td>&nbsp;</td>"
 			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showLinks\" value=\"1\" checked>&nbsp;&nbsp;&nbsp;Display Links</td>"
 			. "\n\t<td valign=\"middle\">Show&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"showRows\" value=\"10\" size=\"4\">&nbsp;&nbsp;&nbsp;records per page"
 			. "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"Search\"></td>"
@@ -1104,8 +1109,8 @@
 			. "\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
 			. "\n</tr>";
 
-	if (session_is_registered("loginEmail")) // if a user is logged in, add user specific fields to the sort menus:
-		$userSpecificSortFields = "\n\t\t\t<option></option>\n\t\t\t<option>marked</option>\n\t\t\t<option>copy</option>\n\t\t\t<option>selected</option>\n\t\t\t<option>user_keys</option>\n\t\t\t<option>user_notes</option>\n\t\t\t<option>user_file</option>";
+	if (isset($_SESSION['loginEmail'])) // if a user is logged in, add user specific fields to the sort menus:
+		$userSpecificSortFields = "\n\t\t\t<option></option>\n\t\t\t<option>marked</option>\n\t\t\t<option>copy</option>\n\t\t\t<option>selected</option>\n\t\t\t<option>user_keys</option>\n\t\t\t<option>user_notes</option>\n\t\t\t<option>user_groups</option>\n\t\t\t<option>user_file</option>\n\t\t\t<option>bibtex_id</option>";
 	else
 		$userSpecificSortFields = "";
 
@@ -1137,9 +1142,7 @@
 			. "\n</form>";
 
 	// (5) Close the database connection:
-	if (!(mysql_close($connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
+	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 
@@ -1164,7 +1167,7 @@
 
 	// Query to find distinct values of $columnName
 	// in $refsTableName
-	if (session_is_registered("loginEmail")) // if a user is logged in
+	if (isset($_SESSION['loginEmail'])) // if a user is logged in
 		if ($RestrictToField == "")
 			 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName LEFT JOIN $userDataTableName ON $refsTablePrimaryKey = $userDataTablePrimaryKey AND $userDataTableUserID = $userDataTableUserIDvalue ORDER BY $columnName";
 		else
@@ -1175,10 +1178,8 @@
 		else
 			 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName WHERE $RestrictToField RLIKE $RestrictToFieldContents ORDER BY $columnName";
 
-	// Run the distinctQuery on the databaseName
-	if (!($resultId = @ mysql_query($distinctQuery, $connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("Your query:\n<br>\n<br>\n<code>$distinctQuery</code>\n<br>\n<br>\n caused the following error:", "");
+	// Run the distinctQuery on the database through the connection:
+	$resultId = queryMySQLDatabase($distinctQuery, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 	// Retrieve all distinct values
 	$i = 0;
@@ -1249,5 +1250,6 @@
 
 	// --------------------------------------------------------------------
 ?>
+
 </body>
 </html> 
