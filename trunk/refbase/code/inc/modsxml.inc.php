@@ -11,7 +11,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
   //
   // Created:    02-Oct-04, 12:00
-  // Modified:   21-Mar-05, 19:44
+  // Modified:   21-Mar-05, 20:37
 
   // This include file contains functions that'll export records to MODS XML.
   // Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -33,13 +33,6 @@
   //   There's a lot of overlap in the portions that depend on types.  I plan
   //     on refactoring this, so that they can make calls to the same function.
 
-  // I need to add these fields:
-  //   series_editor
-  //   series_title
-  //   abbrev_series_title
-  //   series_volume
-  //   series_issue
-
   // I don't know what to do with some fields
   // See <http://www.loc.gov/standards/mods/v3/mods-3-0-outline.html>
   //   - Require clever parsing
@@ -54,6 +47,55 @@
 
 
   // --------------------------------------------------------------------
+
+  // Generates relatedItem branch for series
+  function serialBranch($series_editor, $series_title, $abbrev_series_title,
+                        $series_volume, $series_issue) {
+    $series = new XMLBranch("relatedItem");
+    $series->setTagAttribute("type", "host");
+
+    // title
+    if (!empty($series_title))
+      $series->setTagContent($series_title, "relatedItem/titleInfo/title");
+
+    // abbrev. title
+    if (!empty($abbrev_series_title)) {
+      $titleabbrev = NEW XMLBranch("titleInfo");
+      $titleabbrev->setTagAttribute("type", "abbreviated");
+      $titleabbrev->setTagContent($abbrev_series_title, "titleInfo/title");
+      $series->addXMLBranch($titleabbrev);
+    }
+
+    // editor
+    if (!empty($series_editor)) {
+      if (ereg(" *\(eds?\)$", $series_editor))
+        $series_editor = ereg_replace("[ \r\n]*\(eds?\)", "", $series_editor);
+      $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $series_editor,
+                                 "personal", "editor");
+      foreach ($nameArray as $singleName)
+        $series->addXMLBranch($singleName);
+    }
+
+    // volume, issue
+    if ((!empty($series_volume)) || (!empty($series_issue))) {
+      $part = new XMLBranch("part");
+      if (!empty($series_volume)) {
+        $detailvolume = new XMLBranch("detail");
+        $detailvolume->setTagContent($series_volume, "detail/number");
+        $detailvolume->setTagAttribute("type", "volume");
+        $part->addXMLBranch($detailvolume);
+      }
+      if (!empty($series_issue)) {
+        $detailnumber = new XMLBranch("detail");
+        $detailnumber->setTagContent($series_issue, "detail/number");
+        $detailnumber->setTagAttribute("type", "number");
+        $part->addXMLBranch($detailnumber);
+      }
+      $series->addXMLBranch($part);
+    }
+
+    return $series;
+  }
 
   // Separates people's names and then those names into their functional parts:
   //   {{Family1,{Given1-1,Given1-2}},{Family2,{Given2}}})
@@ -392,6 +434,18 @@
     //   | the relatedItem branch.
 
     if (!ereg("Book Chapter|Journal Article", $row['type'])) {
+      // name
+      //   editor
+      if (!empty($row['editor'])) {
+        $editor=$row['editor'];
+        if (ereg(" *\(eds?\)$", $editor))
+          $editor = ereg_replace("[ \r\n]*\(eds?\)", "", $editor);
+        $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $editor,
+                                   "personal", "editor");
+        foreach ($nameArray as $singleName)
+          $record->addXMLBranch($singleName);
+      }
+
       // genre
       //   type
       //      NOTE: Is there a better MARC genre[1] for 'manuscript?'
@@ -479,11 +533,16 @@
         $record->addXMLBranch($identifier);
       }
 
-      // name
-      //   editor
-      if (!empty($row['editor']))
-        $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $row['editor'], "personal",
-                                   "editor");
+      // series
+      if ((!empty($row['series_editor'])) || (!empty($row['series_title'])) ||
+          (!empty($row['abbrev_series_title'])) ||
+          (!empty($row['series_volume'])) || (!empty($row['series_issue']))) {
+        $record->addXMLBranch(serialBranch($row['series_editor'],
+                                           $row['series_title'],
+                                           $row['abbrev_series_title'],
+                                           $row['series_volume'],
+                                           $row['series_issue']));
+      }
     }
 
     // --- END TYPE != BOOK CHAPTER || JOURNAL ARTICLE ---
@@ -491,7 +550,7 @@
 
     // --- BEGIN TYPE == BOOK CHAPTER || JOURNAL ARTICLE ---
     //   | NOTE: These are currently the only types that have publication,
-    //   |       abbrev_journal, volume, issue, pages added.
+    //   |       abbrev_journal, volume, and issue added.
     //   | A lot of info goes into the relatedItem branch
 
     else { //if (ereg("Book Chapter|Journal Article", $row['type']))
@@ -625,6 +684,17 @@
       if (!empty($row['editor']))
         $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $row['editor'], "personal",
                                    "editor");
+
+      // series
+      if ((!empty($row['series_editor'])) || (!empty($row['series_title'])) ||
+          (!empty($row['abbrev_series_title'])) ||
+          (!empty($row['series_volume'])) || (!empty($row['series_issue']))) {
+        $related->addXMLBranch(serialBranch($row['series_editor'],
+                                            $row['series_title'],
+                                            $row['abbrev_series_title'],
+                                            $row['series_volume'],
+                                            $row['series_issue']));
+      }
 
       $record->addXMLBranch($related);
     }
