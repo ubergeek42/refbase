@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./install.sql
 # Created:    02-Oct-04, 20:11
-# Modified:   27-Feb-05, 20:50
+# Modified:   24-Mar-05, 12:27
 
 # MySQL database structure & initial data (for use with 'latin1' character set)
 
@@ -151,7 +151,7 @@ CREATE TABLE `formats` (
 
 INSERT INTO `formats` VALUES (1, 'MODS XML','import', 'true', 'import_modsxml.php', '6', 1),
 (2, 'MODS XML','export', 'true', 'export_modsxml.php', '6', 1),
-(3, 'Text (CSV)','export', 'true', 'export_textcsv.php', '7', 1),
+(3, 'Text (CSV)','export', 'false', 'export_textcsv.php', '7', 1),
 (4, 'Bibtex','import', 'true', 'bibutils/import_bib2xml.php', '1', 2),
 (5, 'Bibtex','export', 'true', 'bibutils/export_xml2bib.php', '1', 2),
 (6, 'Endnote','import', 'true', 'bibutils/import_end2xml.php', '2', 2),
