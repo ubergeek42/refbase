@@ -127,8 +127,8 @@
 			. "\n\t<td valign=\"top\"><input type=\"checkbox\" name=\"showQuery\" value=\"1\"$checkQuery>&nbsp;&nbsp;&nbsp;".$loc["show"]." ".$loc["SQLQuery"]
 			. "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$loc["OutputType"].":&nbsp;&nbsp;"
 			. "\n\t\t<select name=\"viewType\">"
-			. "\n\t\t\t<option>Web</option>"
-			. "\n\t\t\t<option>Print</option>"
+			. "\n\t\t\t<option>".$loc["web"]."</option>"
+			. "\n\t\t\t<option>".$loc["print"]."</option>"
 			. "\n\t\t</select>"
 			. "\n\t</td>"
 			. "\n</tr>"
@@ -138,26 +138,26 @@
 	// adjust the title string for the search button
 	{
 		$sqlSearchButtonLock = "";
-		$sqlSearchTitle = "search the database using the above query & display options";
+		$sqlSearchTitle = $loc["SearchVerbatim"];
 	}
 	else // Note, that disabling the submit button is just a cosmetic thing -- the user can still submit the form by pressing enter or by building the correct URL from scratch!
 	{
-		$sqlSearchButtonLock = " disabled";
-		$sqlSearchTitle = "not available since you have no permission to perform custom SQL searches";
+		$sqlSearchButtonLock = " ".$loc["disabled"];
+		$sqlSearchTitle = $loc["You have no permission"];
 	}
 
-	echo "\n\t<td><br><input type=\"submit\" value=\"Search\"$sqlSearchButtonLock title=\"$sqlSearchTitle\"></td>"
+	echo "\n\t<td><br><input type=\"submit\" value=\"".$loc["Search"]."\"$sqlSearchButtonLock title=\"$sqlSearchTitle\"></td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td align=\"center\" colspan=\"3\">&nbsp;</td>"
 			. "\n</tr>"
-			. "\n<tr>\n\t<td valign=\"top\"><b>Examples:</b></td>\n\t<td>&nbsp;</td>"
+			. "\n<tr>\n\t<td valign=\"top\"><b>".$loc["Examples"].":</b></td>\n\t<td>&nbsp;</td>"
 			. "\n\t<td><code>SELECT author, title, year, publication FROM refs WHERE publication = \"Polar Biology\" AND author RLIKE \"Legendre|Ambrose\" ORDER BY year DESC, author</code></td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td valign=\"top\">&nbsp;</td>\n\t<td>&nbsp;</td>"
 			. "\n\t<td><code>SELECT serial, author, title, year, publication, volume FROM refs ORDER BY serial DESC LIMIT 10</code></td>"
 			. "\n</tr>"
-			. "\n<tr>\n\t<td valign=\"top\"><b>Help:</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td>The <a href=\"http://www.mysql.com/documentation/index.html\">MySQL online manual</a> has a <a href=\"http://www.mysql.com/documentation/mysql/bychapter/manual_Tutorial.html\">tutorial introduction</a> on using MySQL and provides a detailed description of the <a href=\"http://www.mysql.com/doc/S/E/SELECT.html\"><code>SELECT</code> syntax</a>.</td>"
+			. "\n<tr>\n\t<td valign=\"top\"><b>".$loc["Help"].":</b></td>\n\t<td>&nbsp;</td>"
+			. "\n\t<td>".$loc["MySQL-Info"]."</td>"
 			. "\n</tr>"
 			. "\n</table>"
 			. "\n</form>";
