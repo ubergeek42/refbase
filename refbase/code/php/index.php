@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./index.php
 	// Created:    29-Jul-02, 16:45
-	// Modified:   20-Jan-03, 23:29
+	// Modified:   06-Sep-03, 01:39
 
 	// This script builds the main page.
 	// It provides login and quick search forms
@@ -84,7 +84,7 @@
 <table align="center" border="0" cellpadding="2" cellspacing="5" width="90%" summary="This table explains features, goals and usage of the <? echo htmlentities($officialDatabaseName); ?>">
 	<tr>
 		<td colspan="2"><h3>Goals &amp; Features</h3></td>
-		<td width="158" valign="bottom"><?php
+		<td width="163" valign="bottom"><?php
 if (!session_is_registered("loginEmail"))
 	{
 ?><div class="header"><b>Login:</b></div><?php
@@ -111,7 +111,7 @@ else
 				<li>various display &amp; export options</li>
 			</ul>
 		</td>
-		<td width="158" valign="top">
+		<td width="163" valign="top">
 <?php
 if (!session_is_registered("loginEmail"))
 	{
@@ -145,11 +145,22 @@ else
 					<option>not marked</option>
 				</select>
 				<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findCopy" value="1">&nbsp;copy:
+				<select name="copySelector">
+					<option>true</option>
+					<option>fetch</option>
+					<option>ordered</option>
+					<option>false</option>
+				</select>
+				<br>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findUserKeys" value="1">&nbsp;key:&nbsp;&nbsp;
-				<input type="text" name="UserKeysName" size="7">
+				<input type="text" name="userKeysName" size="7">
 				<br>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findUserNotes" value="1">&nbsp;note:&nbsp;
-				<input type="text" name="UserNotesName" size="7">
+				<input type="text" name="userNotesName" size="7">
+				<br>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="findUserFile" value="1">&nbsp;file:&nbsp;&nbsp;&nbsp;
+				<input type="text" name="userFileName" size="7">
 				<br>
 				<input type="submit" value="Show">
 			</form><?php
@@ -159,7 +170,7 @@ else
 	</tr>
 	<tr>
 		<td colspan="2"><h3>Search</h3></td>
-		<td width="158" valign="bottom"><div class="header"><b>Quick Search:</b></div></td>
+		<td width="163" valign="bottom"><div class="header"><b>Quick Search:</b></div></td>
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
@@ -182,7 +193,7 @@ else
 	echo "\n\t\t\t</ul>\n";
 ?>
 		</td>
-		<td width="158" valign="top">
+		<td width="163" valign="top">
 			<form action="search.php" method="POST">
 				<input type="hidden" name="formType" value="quickSearch">
 				<input type="hidden" name="showQuery" value="0">
@@ -207,7 +218,7 @@ else
 	<tr>
 		<td width="15">&nbsp;</td>
 		<td>This literature database is maintained by the <a href="<? echo $hostInstitutionURL; ?>"><? echo htmlentities($hostInstitutionName); ?></a> (<? echo htmlentities($hostInstitutionAbbrevName); ?>). You're welcome to send any questions or suggestions to our <a href="mailto:<? echo $feedbackEmail; ?>">feedback</a> address. The database is powered by <a href="http://www.refbase.net">refbase</a>, an open source database front-end for managing scientific literature &amp; citations.</td>
-		<td width="158" valign="top"><a href="http://www.refbase.net/"><img src="img/refbase_credit.gif" alt="powered by refbase" width="80" height="44" hspace="0" border="0"></a></td>
+		<td width="163" valign="top"><a href="http://www.refbase.net/"><img src="img/refbase_credit.gif" alt="powered by refbase" width="80" height="44" hspace="0" border="0"></a></td>
 	</tr>
 </table><?php
 	// --------------------------------------------------------------------
