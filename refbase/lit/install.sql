@@ -410,6 +410,8 @@ INSERT INTO `styles` VALUES (1, 'Polar Biol', 'true', 'PolarBiol_MarBiol_MEPS.in
 (2, 'Mar Biol', 'true', 'PolarBiol_MarBiol_MEPS.inc.php', '2'),
 (3, 'MEPS', 'true', 'PolarBiol_MarBiol_MEPS.inc.php', '3'),
 (4, 'Deep Sea Res', 'true', 'DeepSeaRes.inc.php', '4'),
+# Uncomment the following line to use MODS XML as a citation style.
+#(6, 'MODS XML', 'true', 'MODS_XML.inc.php', '6'),
 (5, 'Text Citation', 'true', 'TextCitation.inc.php', '5');
 
 # --------------------------------------------------------

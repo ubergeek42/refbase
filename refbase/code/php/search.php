@@ -45,6 +45,7 @@
 	//  - 'Display' => display details for each of the selected records ('displayDetails()' function)
 	//  - 'Cite' => build a proper citation for each of the selected records ('generateCitations()' function)
 	// Note that the 'submit' parameter can be also one of the following:
+  //   - 'Export' => generate and return an exported file ('generateExport()' function)
 	//   - 'RSS' => these value gets included within the 'track' link (in the page header) and will cause 'search.php' to return results as RSS feed
 	//   - 'Search', 'Show' or 'Hide' => these values change/refine the search results or their appearance on screen (how many entries & which columns get displayed)
 	//   - 'Add', 'Remove', 'Remember' or 'Forget' => these values will trigger actions that act on the selected records
@@ -76,6 +77,24 @@
 		{
 			// save an appropriate error message:
 			$HeaderString = "<b><span class=\"warning\">You have no permission to use the cite feature!</span></b>";
+	
+			// Write back session variables:
+			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+	
+			if (ereg(".+extract.php", $_SERVER['HTTP_REFERER'])) // if the query was submitted by 'extract.php'
+				header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to calling page
+			else
+				header("Location: index.php"); // redirect to main page ('index.php')
+	
+			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		}
+	}
+  elseif ($displayType == "Export") 
+	{
+		if (isset($_SESSION['user_permissions']) AND !ereg("allow_export", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain 'allow_export'...
+		{
+			// save an appropriate error message:
+			$HeaderString = "<b><span class=\"warning\">You have no permission to use the export feature!</span></b>";
 	
 			// Write back session variables:
 			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -162,6 +181,14 @@
 		$citeStyle = "";
 	if (ereg("%20", $citeStyle)) // if '$citeStyle' still contains URL encoded data... ('%20' is the URL encoded form of a space, see note below!)
 		$citeStyle = rawurldecode($citeStyle); // ...URL decode 'citeStyle' statement (it was URL encoded before incorporation into a hidden tag of the 'sqlSearch' form to avoid any HTML syntax errors)
+													// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
+													//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
+	if (isset($_REQUEST['exportFormatSelector']))
+		$exportFormat = $_REQUEST['exportFormatSelector']; // get the export format style chosen by the user (only occurs in 'extract.php' form and in query result lists)
+	else
+		$exportFormat = "";
+	if (ereg("%20", $exportFormat)) // if '$exportFormat' still contains URL encoded data... ('%20' is the URL encoded form of a space, see note below!)
+		$exportFormat = rawurldecode($exportFormat); // ...URL decode 'exportFormat' statement (it was URL encoded before incorporation into a hidden tag of the 'sqlSearch' form to avoid any HTML syntax errors)
 													// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
 													//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
 
@@ -361,199 +388,214 @@
 		$addCounterMax = 0;
 
 
-	// (3) RUN QUERY, (4) DISPLAY HEADER & RESULTS
+	// (3) RUN QUERY, (4) DISPLAY EXPORT FILE OR HEADER & RESULTS
 
 	// (3) RUN the query on the database through the connection:
 	$result = queryMySQLDatabase($query, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
-	// (4a) DISPLAY header:
-	// First, build the appropriate SQL query in order to embed it into the 'your query' URL:
-	if ($showLinks == "1")
-		$query = eregi_replace(', file, url, doi FROM refs',' FROM refs',$query); // strip 'file', 'url' & 'doi' columns from SQL query
-
-	$query = eregi_replace(', serial FROM refs',' FROM refs',$query); // strip 'serial' column from SQL query
-
-	$query = eregi_replace(', orig_record FROM refs',' FROM refs',$query); // strip 'orig_record' column from SQL query
-
-	$query = eregi_replace(", $fileVisibilityException[0] FROM refs",' FROM refs',$query); // strip column that's given in '$fileVisibilityException' (defined in 'ini.inc.php')
-
-	if (ereg("(simple|advanced|library|quick)Search", $formType)) // if $formType is "simpleSearch", "advancedSearch", "librarySearch" or "quickSearch" and there is more than one WHERE clause (indicated by '...AND...'):
-		$query = eregi_replace('WHERE serial RLIKE ".+" AND','WHERE',$query); // strip first WHERE clause (which was added only due to an internal workaround)
-
-	$queryURL = rawurlencode($query); // URL encode SQL query
-
-	if (!eregi("^SELECT", $query)) // for queries other than SELECT queries (e.g. UPDATE, DELETE or INSERT queries that were executed by the admin via use of 'sql_search.php')
-		$affectedRows = ($result ? mysql_affected_rows ($connection) : 0); // get the number of rows that were modified (or return 0 if an error occurred)
-
-	// Second, find out how many rows are available:
-	$rowsFound = @ mysql_num_rows($result);
-	if ($rowsFound > 0) // If there were rows found ...
+	// (4) If Export, display the exported file.  Else, DISPLAY html
+	if (($displayType == "Export")&&(empty($headerMsg)))  
 		{
-			// ... setup variables in order to facilitate "previous" & "next" browsing:
-			// a) Set '$rowOffset' to zero if not previously defined, or if a wrong number (<=0) was given
-			if (empty($rowOffset) || ($rowOffset <= 0) || ($showRows >= $rowsFound)) // the third condition is only necessary if '$rowOffset' gets embedded within the 'displayOptions' form (see function 'buildDisplayOptionsElements()' in 'include.inc.php')
-				$rowOffset = 0;
-
-			// Adjust the '$showRows' value if not previously defined, or if a wrong number (<=0 or float) was given
-			if (empty($showRows) || ($showRows <= 0) || !ereg("^[0-9]+$", $showRows))
-				$showRows = 5;
-
-			// NOTE: The current value of '$rowOffset' is embedded as hidden tag within the 'displayOptions' form. By this, the current row offset can be re-applied
-			//       after the user pressed the 'Show'/'Hide' button within the 'displayOptions' form. But then, to avoid that browse links don't behave as expected,
-			//       we need to adjust the actual value of '$rowOffset' to an exact multiple of '$showRows':
-			$offsetRatio = ($rowOffset / $showRows);
-			if (!is_integer($offsetRatio)) // check whether the value of the '$offsetRatio' variable is not an integer
-			{ // if '$offsetRatio' is a float:
-				$offsetCorrectionFactor = floor($offsetRatio); // get it's next lower integer
-				if ($offsetCorrectionFactor != 0)
-					$rowOffset = ($offsetCorrectionFactor * $showRows); // correct the current row offset to the closest multiple of '$showRows' *below* the current row offset
-				else
-					$rowOffset = 0;
-			}
-			
-			// b) The "Previous" page begins at the current offset LESS the number of rows per page
-			$previousOffset = $rowOffset - $showRows;
-			
-			// c) The "Next" page begins at the current offset PLUS the number of rows per page
-			$nextOffset = $rowOffset + $showRows;
-			
-			// d) Seek to the current offset
-			mysql_data_seek($result, $rowOffset);
-		}
-	else // set variables to zero in order to prevent 'Undefined variable...' messages when nothing was found ('$rowsFound = 0'):
-		{
-			$rowOffset = 0;
-			$previousOffset = 0;
-			$nextOffset = 0;
-		}
-
-	// Third, calculate the maximum result number on each page ('$showMaxRow' is required as parameter to the 'displayDetails()' function)
-	if (($rowOffset + $showRows) < $rowsFound)
-		$showMaxRow = ($rowOffset + $showRows); // maximum result number on each page
-	else
-		$showMaxRow = $rowsFound; // for the last results page, correct the maximum result number if necessary
-
-	// Fourth, check if there's some query URL available pointing to a previous search results page
-	if ($oldQuery == "")
-		{
-			// If there's no query URL available, we build the *full* query URL for the page currently displayed. The variable '$oldQuery' will get included into every 'browse'/'field title'/'display details'/'edit record'/'add record' link. Plus it will get written into a hidden form tag so that it's available on 'display details' (batch display)
-			// The variable '$oldQuery' gets routed thru the 'display details' and 'record.php' forms to facilitate a link to the current results page on the subsequent receipt page that follows any add/edit/delete action!
-			$oldQuery = "sqlQuery=" . $query . "&amp;showQuery=" . $showQuery . "&amp;showLinks=" . $showLinks . "&amp;formType=sqlSearch&amp;showRows=" . $showRows . "&amp;rowOffset=" . $rowOffset . "&amp;submit=" . $displayType . "&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=" . $citeOrder;
-		}
-	else // there's already a query URL available
-		// Note: If there's an existing 'oldQuery', a new 'oldQuery' will be generated only, if the output is routed thru the 'displayColumns()' function!
-		//       This will only happen if $displayType == '' (i.e., not 'Display', 'Cite' or 'RSS').
-		{
-			if (ereg('sqlQuery%3D', $oldQuery)) // if '$oldQuery' still contains URL encoded data... ('%3D' is the URL encoded form of '=', see note below!)
-				$oldQuery = rawurldecode($oldQuery); // ...URL decode old query URL (it was URL encoded before incorporation into a hidden tag of the 'queryResults' form to avoid any HTML syntax errors)
-												// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
-												//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
-			$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
-			$oldQuery = ereg_replace('(\\\\)+','\\\\',$oldQuery);
-		}
-
-	// Finally, build the appropriate header string (which is required as parameter to the 'showPageHeader()' function):
-	if (!isset($_SESSION['HeaderString'])) // if there's no stored message available
-	{
-		if (!empty($headerMsg)) // if there's a custom header message available, e.g. one that describes who's literature is being displayed...
-		{
-			$HeaderString = $headerMsg; // ...we use that string as header message ('$headerMsg' could contain something like: "Literature of Matthias Steffens:")
-		}
-		else // provide the default message:
-		{
-			if (eregi("^SELECT", $query)) // for SELECT queries:
-			{
-				if ($rowsFound == 1)
-					$HeaderStringPart = " record ";
-				else
-					$HeaderStringPart = " records ";
-
-				$HeaderStringPart .= "found matching ";
-
-				if (isset($_SESSION['user_permissions']) AND ereg("allow_sql_search", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_sql_search'...
-					// ...generate a link to 'sql_search.php' with a custom SQL query that matches the current result set & display options:
-					$HeaderString = $HeaderStringPart . "<a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;submit=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;oldQuery=" . rawurlencode($oldQuery) . "\" title=\"modify your current query\">your query</a>";
-				else // use of 'sql_search.php' isn't allowed for this user
-					$HeaderString = $HeaderStringPart . "your query"; // so we ommit the link
-
-				if (isset($_SESSION['user_permissions']) AND ((isset($_SESSION['loginEmail']) AND ereg("(allow_user_queries|allow_rss_feeds)", $_SESSION['user_permissions'])) OR (!isset($_SESSION['loginEmail']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])))) // if the 'user_permissions' session variable contains 'allow_rss_feeds' -OR- if logged in, aditionally: 'allow_user_queries':
-					$HeaderString .= " (";
-
-				if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_queries", $_SESSION['user_permissions']))) // if a user is logged in AND the 'user_permissions' session variable contains 'allow_user_queries'...
+			if (ereg(".+search.php", $referer) AND empty($recordSerialsArray)) // no checkboxes were marked
+				//NOTE: This doesn't work as expected.  I get returned no response, but it doesn't tell me that it is because I didn't check anything.  I should figure out how to fix this,
+				$nothingChecked = true;
+			else // some checkboxes were marked -OR- the query resulted from another script like 'show.php' or 'rss.php' (which has no checkboxes to mark!)
 				{
-					// ...we'll show a link to save the current query:
-					$HeaderString .= "<a href=\"query_manager.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;displayType=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;viewType=$viewType&amp;oldQuery=" . rawurlencode($oldQuery) . "\" title=\"save your current query\">save</a>";
+				 	generateExport($result, $exportFormat);
 
-					if (isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_rss_feeds', we'll insert a pipe between the 'save' and 'track' links...
-						$HeaderString .= " | ";
+					// NOTE: I disconnect from the database and exit this php file.  This is Kind of sloppy, but I want to avoid getting the </BODY></HTML>
+					disconnectFromMySQLDatabase($oldQuery); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
+					exit();
 				}
+		}
+		// (4a) DISPLAY header:
+		// First, build the appropriate SQL query in order to embed it into the 'your query' URL:
+			if ($showLinks == "1")
+				$query = eregi_replace(', file, url, doi FROM refs',' FROM refs',$query); // strip 'file', 'url' & 'doi' columns from SQL query
 
-				if (isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_rss_feeds', we'll show a link that will generate a dynamic RSS feed for the current query...
+			$query = eregi_replace(', serial FROM refs',' FROM refs',$query); // strip 'serial' column from SQL query
+
+			$query = eregi_replace(', orig_record FROM refs',' FROM refs',$query); // strip 'orig_record' column from SQL query
+
+			$query = eregi_replace(", $fileVisibilityException[0] FROM refs",' FROM refs',$query); // strip column that's given in '$fileVisibilityException' (defined in 'ini.inc.php')
+
+			if (ereg("(simple|advanced|library|quick)Search", $formType)) // if $formType is "simpleSearch", "advancedSearch", "librarySearch" or "quickSearch" and there is more than one WHERE clause (indicated by '...AND...'):
+				$query = eregi_replace('WHERE serial RLIKE ".+" AND','WHERE',$query); // strip first WHERE clause (which was added only due to an internal workaround)
+
+			$queryURL = rawurlencode($query); // URL encode SQL query
+
+			if (!eregi("^SELECT", $query)) // for queries other than SELECT queries (e.g. UPDATE, DELETE or INSERT queries that were executed by the admin via use of 'sql_search.php')
+				$affectedRows = ($result ? mysql_affected_rows ($connection) : 0); // get the number of rows that were modified (or return 0 if an error occurred)
+
+			// Second, find out how many rows are available:
+			$rowsFound = @ mysql_num_rows($result);
+			if ($rowsFound > 0) // If there were rows found ...
 				{
-					// ...extract the 'WHERE' clause from the SQL query to include it within the RSS link:
-					$queryWhereClause = preg_replace("/^.+?WHERE (.+?)(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$).*?$/i","\\1",$query);
+					// ... setup variables in order to facilitate "previous" & "next" browsing:
+					// a) Set '$rowOffset' to zero if not previously defined, or if a wrong number (<=0) was given
+					if (empty($rowOffset) || ($rowOffset <= 0) || ($showRows >= $rowsFound)) // the third condition is only necessary if '$rowOffset' gets embedded within the 'displayOptions' form (see function 'buildDisplayOptionsElements()' in 'include.inc.php')
+						$rowOffset = 0;
+
+					// Adjust the '$showRows' value if not previously defined, or if a wrong number (<=0 or float) was given
+					if (empty($showRows) || ($showRows <= 0) || !ereg("^[0-9]+$", $showRows))
+						$showRows = 5;
+
+					// NOTE: The current value of '$rowOffset' is embedded as hidden tag within the 'displayOptions' form. By this, the current row offset can be re-applied
+					//       after the user pressed the 'Show'/'Hide' button within the 'displayOptions' form. But then, to avoid that browse links don't behave as expected,
+					//       we need to adjust the actual value of '$rowOffset' to an exact multiple of '$showRows':
+					$offsetRatio = ($rowOffset / $showRows);
+					if (!is_integer($offsetRatio)) // check whether the value of the '$offsetRatio' variable is not an integer
+					{ // if '$offsetRatio' is a float:
+						$offsetCorrectionFactor = floor($offsetRatio); // get it's next lower integer
+						if ($offsetCorrectionFactor != 0)
+							$rowOffset = ($offsetCorrectionFactor * $showRows); // correct the current row offset to the closest multiple of '$showRows' *below* the current row offset
+						else
+							$rowOffset = 0;
+					}
+			
+					// b) The "Previous" page begins at the current offset LESS the number of rows per page
+					$previousOffset = $rowOffset - $showRows;
 				
-					// ...and display a link that will generate a dynamic RSS feed for the current query:
-					$HeaderString .= "<a href=\"rss.php?where=" . rawurlencode($queryWhereClause) . "&amp;showRows=$showRows\" title=\"track newly added records matching your current query by subscribing to this RSS feed\">track</a>";
+					// c) The "Next" page begins at the current offset PLUS the number of rows per page
+					$nextOffset = $rowOffset + $showRows;
+				
+					// d) Seek to the current offset
+					mysql_data_seek($result, $rowOffset);
+				}
+			else // set variables to zero in order to prevent 'Undefined variable...' messages when nothing was found ('$rowsFound = 0'):
+				{
+					$rowOffset = 0;
+					$previousOffset = 0;
+					$nextOffset = 0;
 				}
 
-				if (isset($_SESSION['user_permissions']) AND ((isset($_SESSION['loginEmail']) AND ereg("(allow_user_queries|allow_rss_feeds)", $_SESSION['user_permissions'])) OR (!isset($_SESSION['loginEmail']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])))) // if the 'user_permissions' session variable contains 'allow_rss_feeds' -OR- if logged in, aditionally: 'allow_user_queries':
-					$HeaderString .= ")";
+			// Third, calculate the maximum result number on each page ('$showMaxRow' is required as parameter to the 'displayDetails()' function)
+			if (($rowOffset + $showRows) < $rowsFound)
+				$showMaxRow = ($rowOffset + $showRows); // maximum result number on each page
+			else
+				$showMaxRow = $rowsFound; // for the last results page, correct the maximum result number if necessary
 
-				if ($showQuery == "1")
-					$HeaderString .= ":\n<br>\n<br>\n<code>$query</code>";
-				else // $showQuery == "0" or wasn't specified
-					$HeaderString .= ":";
-			
-				if ($rowsFound > 0)
-					$HeaderString = ($rowOffset + 1) . "&#8211;" . $showMaxRow . " of " . $rowsFound . $HeaderString;
-				elseif ($rowsFound == 0)
-					$HeaderString = $rowsFound . $HeaderString;
-				else
-					$HeaderString = $HeaderString; // well, this is actually bad coding but I do it for clearity reasons...
-			}
-			else // for queries other than SELECT queries (e.g. UPDATE, DELETE or INSERT queries that were executed by the admin via use of 'sql_search.php') display the number of rows that were modified:
+			// Fourth, check if there's some query URL available pointing to a previous search results page
+			if ($oldQuery == "")
+				{
+					// If there's no query URL available, we build the *full* query URL for the page currently displayed. The variable '$oldQuery' will get included into every 'browse'/'field title'/'display details'/'edit record'/'add record' link. Plus it will get written into a hidden form tag so that it's available on 'display details' (batch display)
+					// The variable '$oldQuery' gets routed thru the 'display details' and 'record.php' forms to facilitate a link to the current results page on the subsequent receipt page that follows any add/edit/delete action!
+					$oldQuery = "sqlQuery=" . $query . "&amp;showQuery=" . $showQuery . "&amp;showLinks=" . $showLinks . "&amp;formType=sqlSearch&amp;showRows=" . $showRows . "&amp;rowOffset=" . $rowOffset . "&amp;submit=" . $displayType . "&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=" . $citeOrder;
+				}
+			else // there's already a query URL available
+				// Note: If there's an existing 'oldQuery', a new 'oldQuery' will be generated only, if the output is routed thru the 'displayColumns()' function!
+				//       This will only happen if $displayType == '' (i.e., not 'Display', 'Cite' or 'RSS').
+				{
+					if (ereg('sqlQuery%3D', $oldQuery)) // if '$oldQuery' still contains URL encoded data... ('%3D' is the URL encoded form of '=', see note below!)
+						$oldQuery = rawurldecode($oldQuery); // ...URL decode old query URL (it was URL encoded before incorporation into a hidden tag of the 'queryResults' form to avoid any HTML syntax errors)
+														// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
+														//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
+					$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
+					$oldQuery = ereg_replace('(\\\\)+','\\\\',$oldQuery);
+				}
+
+			// Finally, build the appropriate header string (which is required as parameter to the 'showPageHeader()' function):
+			if (!isset($_SESSION['HeaderString'])) // if there's no stored message available
 			{
-				if ($affectedRows == 1)
-					$HeaderStringPart = " record was ";
-				else
-					$HeaderStringPart = " records were ";
+				if (!empty($headerMsg)) // if there's a custom header message available, e.g. one that describes who's literature is being displayed...
+				{
+					$HeaderString = $headerMsg; // ...we use that string as header message ('$headerMsg' could contain something like: "Literature of Matthias Steffens:")
+				}
+				else // provide the default message:
+				{
+					if (eregi("^SELECT", $query)) // for SELECT queries:
+					{
+						if ($rowsFound == 1)
+							$HeaderStringPart = " record ";
+						else
+							$HeaderStringPart = " records ";
+	
+						$HeaderStringPart .= "found matching ";
+	
+						if (isset($_SESSION['user_permissions']) AND ereg("allow_sql_search", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_sql_search'...
+							// ...generate a link to 'sql_search.php' with a custom SQL query that matches the current result set & display options:
+							$HeaderString = $HeaderStringPart . "<a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;submit=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;oldQuery=" . rawurlencode($oldQuery) . "\" title=\"modify your current query\">your query</a>";
+						else // use of 'sql_search.php' isn't allowed for this user
+							$HeaderString = $HeaderStringPart . "your query"; // so we ommit the link
 
-				if ($showQuery == "1")
-					$HeaderString = $affectedRows . $HeaderStringPart . "affected by <a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;submit=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;oldQuery=" . rawurlencode($oldQuery) . "\">your query</a>:\n<br>\n<br>\n<code>$query</code>";
-				else // $showQuery == "0" or wasn't specified
-					$HeaderString = $affectedRows . $HeaderStringPart . "affected by <a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;submit=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;oldQuery=" . rawurlencode($oldQuery) . "\">your query</a>:";
+						if (isset($_SESSION['user_permissions']) AND ((isset($_SESSION['loginEmail']) AND ereg("(allow_user_queries|allow_rss_feeds)", $_SESSION['user_permissions'])) OR (!isset($_SESSION['loginEmail']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])))) // if the 'user_permissions' session variable contains 'allow_rss_feeds' -OR- if logged in, aditionally: 'allow_user_queries':
+							$HeaderString .= " (";
+	
+						if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_queries", $_SESSION['user_permissions']))) // if a user is logged in AND the 'user_permissions' session variable contains 'allow_user_queries'...
+						{
+							// ...we'll show a link to save the current query:
+							$HeaderString .= "<a href=\"query_manager.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;displayType=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;viewType=$viewType&amp;oldQuery=" . rawurlencode($oldQuery) . "\" title=\"save your current query\">save</a>";
+
+							if (isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_rss_feeds', we'll insert a pipe between the 'save' and 'track' links...
+								$HeaderString .= " | ";
+						}
+
+						if (isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_rss_feeds', we'll show a link that will generate a dynamic RSS feed for the current query...
+						{
+							// ...extract the 'WHERE' clause from the SQL query to include it within the RSS link:
+							$queryWhereClause = preg_replace("/^.+?WHERE (.+?)(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$).*?$/i","\\1",$query);
+				
+							// ...and display a link that will generate a dynamic RSS feed for the current query:
+							$HeaderString .= "<a href=\"rss.php?where=" . rawurlencode($queryWhereClause) . "&amp;showRows=$showRows\" title=\"track newly added records matching your current query by subscribing to this RSS feed\">track</a>";
+						}
+	
+						if (isset($_SESSION['user_permissions']) AND ((isset($_SESSION['loginEmail']) AND ereg("(allow_user_queries|allow_rss_feeds)", $_SESSION['user_permissions'])) OR (!isset($_SESSION['loginEmail']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])))) // if the 'user_permissions' session variable contains 'allow_rss_feeds' -OR- if logged in, aditionally: 'allow_user_queries':
+							$HeaderString .= ")";
+
+						if ($showQuery == "1")
+							$HeaderString .= ":\n<br>\n<br>\n<code>$query</code>";
+						else // $showQuery == "0" or wasn't specified
+							$HeaderString .= ":";
+				
+						if ($rowsFound > 0)
+							$HeaderString = ($rowOffset + 1) . "&#8211;" . $showMaxRow . " of " . $rowsFound . $HeaderString;
+						elseif ($rowsFound == 0)
+							$HeaderString = $rowsFound . $HeaderString;
+						else
+							$HeaderString = $HeaderString; // well, this is actually bad coding but I do it for clearity reasons...
+					}
+					else // for queries other than SELECT queries (e.g. UPDATE, DELETE or INSERT queries that were executed by the admin via use of 'sql_search.php') display the number of rows that were modified:
+					{
+						if ($affectedRows == 1)
+							$HeaderStringPart = " record was ";
+						else
+							$HeaderStringPart = " records were ";
+
+						if ($showQuery == "1")
+							$HeaderString = $affectedRows . $HeaderStringPart . "affected by <a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;submit=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;oldQuery=" . rawurlencode($oldQuery) . "\">your query</a>:\n<br>\n<br>\n<code>$query</code>";
+						else // $showQuery == "0" or wasn't specified
+							$HeaderString = $affectedRows . $HeaderStringPart . "affected by <a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;submit=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;oldQuery=" . rawurlencode($oldQuery) . "\">your query</a>:";
+					}
+				}
 			}
-		}
-	}
-	else
-	{
-		$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
+			else
+			{
+				$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
 
-		// Note: though we clear the session variable, the current message is still available to this script via '$HeaderString':
-		deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
-	}
+				// Note: though we clear the session variable, the current message is still available to this script via '$HeaderString':
+				deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+			}
 
 
-	// Now, show the login status:
-	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
+			// Now, show the login status:
+			showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
-	// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Query Results", "index,follow", "Results from the " . htmlentities($officialDatabaseName), "", true, "", $viewType);
-	if ($viewType != "Print") // Note: we ommit the visible header in print view! ('viewType=Print')
-		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
+			// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
+			displayHTMLhead(htmlentities($officialDatabaseName) . " -- Query Results", "index,follow", "Results from the " . htmlentities($officialDatabaseName), "", true, "", $viewType);
+			if ($viewType != "Print") // Note: we ommit the visible header in print view! ('viewType=Print')
+				showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
 
 
-	// (4b) DISPLAY results:
-	if ($displayType == "Display") // display details for each of the selected records
-		displayDetails($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $showMaxRow, $headerMsg, $userID, $viewType, $selectedRecordsArray);
+			// (4b) DISPLAY results:
+			if ($displayType == "Display") // display details for each of the selected records
+				displayDetails($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $showMaxRow, $headerMsg, $userID, $viewType, $selectedRecordsArray);
+	
+			elseif ($displayType == "Cite") // build a proper citation for each of the selected records
+				generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $headerMsg, $userID, $viewType, $selectedRecordsArray);
 
-	elseif ($displayType == "Cite") // build a proper citation for each of the selected records
-		generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $headerMsg, $userID, $viewType, $selectedRecordsArray);
-
-	else // show all records in columnar style
-		displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $addCounterMax);
-
+	 		else // show all records in columnar style
+				displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $addCounterMax);
+		 
 	// --------------------------------------------------------------------
 
 	// (5) CLOSE CONNECTION
@@ -1165,7 +1207,7 @@
 
 		// BEGIN RESULTS FOOTER --------------------
 		// Note: we ommit the results footer in print view! ('viewType=Print')
-		if ($viewType != "Print")
+	  if ($viewType != "Print")
 		{
 			// Again, insert the (already constructed) BROWSE LINKS
 			// (i.e., a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages)
@@ -1190,6 +1232,46 @@
 
 	// --------------------------------------------------------------------
 
+	function generateExport($result, $exportFormat)
+	{
+		global $markupSearchReplacePatterns; // defined in 'ini.inc.php'
+		$exportFormatFile = getFormatFile($exportFormat); // fetch the name of the citation style file that's associated with the style given in '$citeStyle'
+
+		// include the found citation style file *once*:
+    // NOTE: It currently looks in styles/ rather than exports/
+		include_once "styles/" . $exportFormatFile; // instead of 'include_once' we could also use: 'if ($rowCounter == 0) { include "styles/" . $citeStyleFile; }'
+
+		$exportArray = Array(); // Initialize array for individually exported records
+		
+		// Generate the export for each individual record and push them onto an array
+		while ($row = @ mysql_fetch_array($result)) // for all rows found
+		  {
+				foreach ($row as $rowFieldName => $rowFieldValue)
+				
+					if (!ereg($rowFieldName, "^(author|editor)$")) // we HTML encode higher ASCII chars for all but the author & editor fields. The author & editor fields are excluded here
+						// since these fields must be passed *without* HTML entities to the 'reArrangeAuthorContents()' function (which will then handle the HTML encoding by itself)
+						// (Note: 'htmlentities($row[$i])' for HTML encoding higher ASCII will only work correctly if character encoding of data is ISO-8859-1!)
+						$row[$rowFieldName] = htmlentities($row[$rowFieldName]); // HTML encode higher ASCII characters within each of the fields
+
+				// Perform search & replace actions on the text of the 'title' field:
+				// (the array '$markupSearchReplacePatterns' in 'ini.inc.php' defines which search & replace actions will be employed)
+				$row['title'] = searchReplaceText($markupSearchReplacePatterns, $row['title']); // function 'searchReplaceText()' is defined in 'include.inc.php'
+
+				$record = exportRecord($row, $exportFormat); // function 'exportRecord()' is defined in the citation style file given in '$exportStyleFile' (which, in turn, must reside in the 'styles' directory of the refbase root directory)
+
+				// Add the current record to an array of exports.
+				if (!empty($record)) // unless the record buffer is empty...
+					{
+						array_push($exportArray,$record);
+					}
+			}
+
+		// Generate and serve a file of ALL records.
+		// NOTE: we are just echoing the export as a string.  We should probably be intelligent about setting mimetype, etc
+		$exportText = exportCollection($exportArray, $exportFormat); // function 'exportRecord()' is defined in the citation style file given in '$exportFormatFile' (which, in turn, ust reside in the 'styles' directory of the refbase root directory
+		echo $exportText;
+	}
+	
 	// SHOW THE RESULTS IN AN HTML <TABLE> (citation layout)
 	function generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $headerMsg, $userID, $viewType, $selectedRecordsArray)
 	{
@@ -4285,6 +4367,16 @@
 			else // if any other or no '$citeOrder' parameter is specified, we supply the default ORDER BY pattern (which is suitable for citation in a journal etc.):
 				$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY first_author, author_count, author, year, title";
 			}
+		if ($displayType == "Export") 
+			{
+      // NOTE: Not all fields are currently added to MODS export, but we will
+      //       want to add more & will need all fields for user-specified
+      //       exports.
+			// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'bibtex_id' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause.
+      // NOTE: No method to sort the export.  We probably don't need one.
+				$query = "SELECT * FROM refs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY year DESC, first_author, author_count, author, title";
+			}
+
 		elseif ($displayType == "Display") // (hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
 			{
 				// for the selected records, select *all* available fields:
@@ -4609,7 +4701,8 @@
 
 	// DISPLAY THE HTML FOOTER:
 	// call the 'displayfooter()' function from 'footer.inc.php')
-	if ($viewType != "Print") // Note: we ommit the footer in print view! ('viewType=Print')
+	if ($viewType != "Print") // Note: we ommit the footer in print view!
+  
 		displayfooter($oldQuery);
 
 	// --------------------------------------------------------------------
