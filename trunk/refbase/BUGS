@@ -10,3 +10,13 @@ We are aware of the following problems, bugs and/or limitations:
   will cause unpredictable results. So, until we have a functional
   support of transactions, please remember to reload record data if
   you kept a record's "edit" form open for a longer period of time.
+
+* the 'allow_edit_call_number' permission setting isn't honoured yet
+
+* refbase does currently not attempt to rename uploaded files
+  according to some standardized scheme. Instead, file names are
+  taken as defined by the user. Plus, refbase won't check if a file
+  with this file name exists already. I.e., if a user uploads a file
+  with a name that equals the name of an existing file, the existing
+  file will be overwritten. The problem will be addressed in a future
+  release.
