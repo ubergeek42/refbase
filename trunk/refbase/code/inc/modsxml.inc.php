@@ -438,12 +438,17 @@
       //   editor
       if (!empty($row['editor'])) {
         $editor=$row['editor'];
+	$author=$row['author'];
         if (ereg(" *\(eds?\)$", $editor))
           $editor = ereg_replace("[ \r\n]*\(eds?\)", "", $editor);
-        $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $editor,
-                                   "personal", "editor");
-        foreach ($nameArray as $singleName)
-          $record->addXMLBranch($singleName);
+        if (ereg(" *\(eds?\)$", $author))
+          $author = ereg_replace("[ \r\n]*\(eds?\)", "", $author);
+        if ($editor != $author) {
+          $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $editor,
+                                     "personal", "editor");
+          foreach ($nameArray as $singleName)
+            $record->addXMLBranch($singleName);
+        }
       }
 
       // genre
