@@ -11,7 +11,7 @@
 	// Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
 	//
 	// Created:    02-Oct-04, 12:00
-	// Modified:   13-Oct-04, 00:10
+	// Modified:   25-Feb-05, 22:51
 
 	// This include file contains functions that'll export records to MODS XML format.
 	// Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -30,7 +30,6 @@
 
 	// TODO:
 	//   Stuff in '// NOTE' comments
-	//   citekey
 	//   There's a lot of overlap in the portions that depend on types.  I plan
 	//     on refactoring this, so that they can make calls to the same function.
 
@@ -44,7 +43,7 @@
 	// I don't know what to do with some fields
 	// See <http://www.loc.gov/standards/mods/v3/mods-3-0-outline.html>
 	//   address--This could be name->affiliation, but it would need to be parsed
-	//            in a smart mannter
+	//            in a smart manner
 	//   corporate_author
 	//   keywords
 	//   medium
@@ -156,6 +155,7 @@
 		// Create an XML object for a single record.
 		// Later, we might add an ID attribute (e.g. a cite key)
 		$record = new XML("mods");
+		$record->setTagAttribute("ID",$row['cite_key']);
 
 
 		// titleInfo
@@ -294,6 +294,15 @@
 				$identifier->setTagAttribute("type","doi");
 				$record->addXMLBranch($identifier);
 			}
+		// identifier
+		//   cite_key
+		if (!empty($row['cite_key']))
+			{
+				$identifier = new XMLBranch("identifier");
+				$identifier->setTagContent($row['cite_key']);
+				$identifier->setTagAttribute("type","citekey");
+				$record->addXMLBranch($identifier);
+			}
 		//   local--CALL NUMBER
 		//   NOTE: This should really be parsed!
 		if (!empty($row['call_number']))
@@ -308,8 +317,8 @@
 
 
 		// --- BEGIN TYPE != BOOK CHAPTER || JOURNAL ARTICLE ---
-		//   | BOOK WHOLE, JOURNAL, MANUSCRIPT, and MAP have some info as a branh
-		//   | off the root, where as BOOK CHAPTER and JOURNAL ARTICLE plase it in
+		//   | BOOK WHOLE, JOURNAL, MANUSCRIPT, and MAP have some info as a branch
+		//   | off the root, where as BOOK CHAPTER and JOURNAL ARTICLE place it in
 		//   | the relatedItem branch.
 
 		if (!ereg("Book Chapter|Journal Article", $row['type']))
