@@ -9,10 +9,10 @@ The following is just a (very) quick guide to installation:
 
 - Move all files from within the 'files' directory to your web directory.
 
-- Open the file 'db.inc' in a text editor and edit the values of all
-  contained variables to fit your needs. (Note that you'll be able to use
-  the refbase package without modifying these variables, but we highly
-  recommend not to use the default values!)
+- Open the file 'db.inc' in a text editor and edit the values of the
+  variables '$databaseName', '$username' and '$password' to fit your needs.
+  (Note that you'll be able to use the refbase package without modifying
+  these variables, but we highly recommend not to use the default values!)
 
 - Now, open a web browser and access the 'install.php' script by typing:
 
@@ -69,6 +69,10 @@ global configuration file:
 - Open the file 'ini.inc.php' & edit all values of the contained variables
   to fit your needs. Please see the comments within the file for further
   guidance.
+
+  Especially note that if you've chosen 'utf8' (Unicode) as default character
+  set on installation, you must re-save the file 'ini.inc.php' with Unicode
+  encoding.
 
 
 
