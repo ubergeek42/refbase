@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   17-Feb-05, 20:34
+	// Modified:   23-Feb-05, 22:18
 
 	// This file contains important
 	// functions that are shared
@@ -294,7 +294,7 @@
 	// Get the 'user_id' for the record entry in table 'auth' whose email matches that in 'loginEmail':
 	function getUserID($loginEmail)
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableAuth; // defined in 'db.inc.php'
 
 		connectToMySQLDatabase("");
 
@@ -899,7 +899,7 @@ EOF;
 	// Build the database query from user input provided by the "Search within Results" or "Display Options" forms above the query results list (which, in turn, was returned by 'search.php' or 'users.php', respectively):
 	function extractFormElementsRefineDisplay($queryTable, $displayType, $query, $showLinks, $userID)
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableRefs, $tableUserData, $tableUsers; // defined in 'db.inc.php'
 
 		// extract form variables:
 		if ($displayType == "Search") // the user clicked the 'Search' button of the "Search within Results" form
@@ -1165,7 +1165,7 @@ EOF;
 	//  clicking this link will show all records that match the serials or partial queries that were specified within the 'related' field)
 	function buildRelatedRecordsLink($relatedFieldString, $userID)
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
 		// initialize some arrays:
 		$serialsArray = array(); // we'll use this array to hold all record serial numbers that we encounter
@@ -1232,7 +1232,7 @@ EOF;
 	function modifyUserGroups($queryTable, $displayType, $recordSerialsArray, $recordSerialsString, $userID, $userGroup, $userGroupActionRadio)
 	{
 		global $oldQuery;
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableUserData, $tableUsers; // defined in 'db.inc.php'
 
 		connectToMySQLDatabase("");
 
@@ -1337,7 +1337,7 @@ EOF;
 	//       - if "$queryTable = users", this function will fetch unique values from the 'user_groups' field of the 'users' table (where the admin can assign one or more groups to particular *users*)
 	function getUserGroups($queryTable, $userID)
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableUserData, $tableUsers; // defined in 'db.inc.php'
 
 		connectToMySQLDatabase("");
 
@@ -1398,7 +1398,7 @@ EOF;
 	// and (if some queries were found) save them as semicolon-delimited string to the session variable 'userQueries':
 	function getUserQueries($userID)
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableQueries; // defined in 'db.inc.php'
 
 		connectToMySQLDatabase("");
 
@@ -1434,7 +1434,7 @@ EOF;
 	// Get all available formats/styles/types:
 	function getAvailableFormatsStylesTypes($dataType, $formatType) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export' or 'import'
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableDepends, $tableFormats, $tableStyles, $tableTypes; // defined in 'db.inc.php'
 
 		connectToMySQLDatabase("");
 
@@ -1465,7 +1465,7 @@ EOF;
 	// Get all formats/styles/types that are available and were enabled by the admin for the current user:
 	function getEnabledUserFormatsStylesTypes($userID, $dataType, $formatType, $returnIDsAsValues) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export' or 'import'
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableDepends, $tableFormats, $tableStyles, $tableTypes, $tableUserFormats, $tableUserStyles, $tableUserTypes; // defined in 'db.inc.php'
 
 		connectToMySQLDatabase("");
 
@@ -1504,7 +1504,7 @@ EOF;
 	{
 		global $loginEmail;
 		global $adminLoginEmail; // ('$adminLoginEmail' is specified in 'ini.inc.php')
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableDepends, $tableFormats, $tableStyles, $tableTypes, $tableUserFormats, $tableUserStyles, $tableUserTypes; // defined in 'db.inc.php'
 
 		connectToMySQLDatabase("");
 
@@ -1614,7 +1614,7 @@ EOF;
 	// That said, this function assumes unique style names, i.e., there's no error checking for duplicates!
 	function getStyleFile($citeStyle)
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableStyles; // defined in 'db.inc.php'
 
 		connectToMySQLDatabase("");
 
@@ -1633,7 +1633,7 @@ EOF;
 	// Fetch the path/name of the format file that's associated with the format given in '$formatName'
 	function getFormatFile($formatName, $formatType) // '$formatType' must be either 'export' or 'import'
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableFormats; // defined in 'db.inc.php'
 
 		connectToMySQLDatabase("");
 
@@ -1652,7 +1652,7 @@ EOF;
 	// Fetch the path of the external utility that's required for a particular import/export format
 	function getExternalUtilityPath($externalUtilityName)
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableDepends; // defined in 'db.inc.php'
 
 		connectToMySQLDatabase("");
 
@@ -1717,7 +1717,7 @@ EOF;
 	// if !empty($userID): get the preferred language for the user with the specified userID
 	function getLanguages($userID)
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableLanguages, $tableUsers; // defined in 'db.inc.php'
 
 		connectToMySQLDatabase("");
 
@@ -1841,7 +1841,7 @@ EOF;
 	{
 		global $loginEmail;
 		global $loginUserID;
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
 		// handle the display & querying of user specific fields:
 		if (!isset($_SESSION['loginEmail'])) // if NO user is logged in...
