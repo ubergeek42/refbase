@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./error.php
 	// Created:    5-Jan-03, 16:35
-	// Modified:   14-Aug-03, 20:12
+	// Modified:   16-Nov-03, 22:22
 
 	// This php script will display an error page
 	// showing any error that did occur. It will display
@@ -48,6 +48,11 @@
 	$oldQuery = $_REQUEST['oldQuery']; // fetch the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
 	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
 
+	if (isset($HTTP_REFERER))
+		$referer = $HTTP_REFERER;
+	else
+		$referer = "index.php"; // if there's no HTTP referer available we relocate back to the main page
+
 	// --------------------------------------------------------------------
 
 	// (4) DISPLAY HEADER & RESULTS
@@ -59,7 +64,7 @@
 	// (4a) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
 	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Error", "noindex,nofollow", "Feedback page that shows any error that occurred while using the " . htmlentities($officialDatabaseName), "", false, "");
-	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
+	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
 
 
 	// URL encode the sqlQuery part within '$oldQuery' while maintaining the rest unencoded(!):
@@ -72,7 +77,7 @@
 	$links = "\n<tr>"
 			. "\n\t<td>"
 			. "\n\t\tChoose how to proceed:&nbsp;&nbsp;"
-			. "\n\t\t<a href=\"" . str_replace('&','&amp;',$HTTP_REFERER) . "\">Go Back</a>"; // provide a 'go back' link (the following would only work with javascript: <a href=\"javascript:history.back()\">Go Back</a>")
+			. "\n\t\t<a href=\"" . str_replace('&','&amp;',$referer) . "\">Go Back</a>"; // provide a 'go back' link (the following would only work with javascript: <a href=\"javascript:history.back()\">Go Back</a>")
 
 	if ($oldQuery != "") // only provide a link to any previous search results if '$oldQuery' isn't empty
 		$links .= "\n\t\t&nbsp;&nbsp;-OR-&nbsp;&nbsp;"
@@ -83,12 +88,12 @@
 			. "\n\t</td>"
 			. "\n</tr>";
 
-	showErrorMessage($errorNo, $errorMsg, $links);
+	showErrorMessage($errorNo, $errorMsg, $links, $oldQuery);
 
 	// --------------------------------------------------------------------
 
 	// SHOW ERROR MESSAGE:
-	function showErrorMessage($errorNo, $errorMsg, $links)
+	function showErrorMessage($errorNo, $errorMsg, $links, $oldQuery)
 	// includes code from 'footer.inc'
 	{
 		global $officialDatabaseName;
@@ -102,9 +107,9 @@
 		. "\n</table>"
 		. "\n<hr align=\"center\" width=\"95%\">"
 		. "\n<p align=\"center\"><a href=\"simple_search.php\">Simple Search</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"advanced_search.php\">Advanced Search</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"sql_search.php\">SQL Search</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"library_search.php\">Library Search</a></p>"
-		. "\n<p align=\"center\"><a href=\"$hostInstitutionURL\">" . htmlentities($hostInstitutionAbbrevName) . " Home</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"index.php\">" . htmlentities($officialDatabaseName) . " Home</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"record.php\">Add Record</a></p>"
+		. "\n<p align=\"center\"><a href=\"$hostInstitutionURL\">" . htmlentities($hostInstitutionAbbrevName) . " Home</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"index.php\">" . htmlentities($officialDatabaseName) . " Home</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"record.php?recordAction=add&amp;oldQuery=" . rawurlencode($oldQuery) . "\">Add Record</a></p>"
 		. "\n<p align=\"center\">"
-		.  date(r)
+		.  date('r')
 		. "</p>"
 		. "\n</body>"
 		. "\n</html>");
