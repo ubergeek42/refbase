@@ -232,8 +232,11 @@
 	{
 		global $oldQuery; // This is required since the 'add record' link gets constructed outside this function, otherwise it would still contain the older query URL!)
 
-		$orderBy = str_replace('LIMIT','¥LIMIT',$query); // put a unique delimiter in front of the 'LIMIT'... parameter (in order to keep any 'LIMIT' parameter)
-		$orderBy = ereg_replace(".+ORDER BY ([^¥]+)","\\1",$orderBy); // extract 'ORDER BY'... parameter
+		if (ereg(".+LIMIT *[0-9]+",$query)) // query does contain the 'LIMIT' parameter
+			$orderBy = ereg_replace(".+ORDER BY (.+) LIMIT.+","\\1",$query); // extract 'ORDER BY'... parameter (without including any 'LIMIT' parameter)
+		else // query does not contain the 'LIMIT' parameter
+			$orderBy = ereg_replace(".+ORDER BY (.+)","\\1",$query); // extract 'ORDER BY'... parameter
+			
 
 	// If the query has results ...
 	if ($rowsFound > 0) 
