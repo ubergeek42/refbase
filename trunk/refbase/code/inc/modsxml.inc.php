@@ -11,7 +11,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
   //
   // Created:    02-Oct-04, 12:00
-  // Modified:   21-Mar-05, 17:56
+  // Modified:   21-Mar-05, 19:44
 
   // This include file contains functions that'll export records to MODS XML.
   // Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -32,8 +32,6 @@
   //   Stuff in '// NOTE' comments
   //   There's a lot of overlap in the portions that depend on types.  I plan
   //     on refactoring this, so that they can make calls to the same function.
-
-  // pages for books
 
   // I need to add these fields:
   //   series_editor
@@ -435,6 +433,34 @@
 
         $record->addXMLBranch($thesismarc);
         $record->addXMLBranch($thesis);
+      }
+
+      // physicalDescription
+      //   pages
+      if (!empty($row['pages'])) {
+        $description = new XMLBranch("physicalDescription");
+        $pages = new XMLBranch("extent");
+        $pages->setTagAttribute("unit", "page");
+        if (ereg("[0-9] *- *[0-9]", $row['pages'])) { // if a page range
+          // split the page range into start and end pages
+          list($pagestart, $pageend) = preg_split('/\s*[-]\s*/', $row['pages']);
+          if ($pagestart < $pageend) { // extents MUST span multiple pages
+            $pages->setTagContent($pagestart, "extent/start");
+            $pages->setTagContent($pageend, "extent/end");
+          }
+          else {
+            $pages->setTagContent($row['pages']);
+          }
+        }
+        else if (ereg("[0-9] *pp?", $row['pages'])) { // if a number of pages
+          list($pagetotal) = preg_split('/\s*pp?/', $row['pages']);
+          $pages->setTagContent($pagetotal, "extent/total");
+        }          
+        else {
+          $pages->setTagContent($row['pages']);
+        }
+        $description->addXMLBranch($pages);
+        $record->addXMLBranch($description);
       }
 
       // identifier
