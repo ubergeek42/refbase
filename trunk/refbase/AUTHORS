@@ -1,12 +1,12 @@
-This file lists the current members of the Refbase Development Team,
+This file lists the current members of the refbase development team,
 i.e., people who have write access to the CVS.
 
-Please avoid sending e-mail with Refbase-related questions directly to
+Please avoid sending e-mail with refbase-related questions directly to
 them; your questions are likely to be answered much faster if you post
 them to the one of the mailing lists or forums on sourceforge:
   <http://sourceforge.net/projects/refbase/>
 
-- Matthias Steffens <refbase@extracts.de>
+- Matthias Steffens <refbase@extracts.de>:
   Project manager, lead developer, application engineering & design
 
 - Michael Bartz <michaelbartz@users.sourceforge.net>:
