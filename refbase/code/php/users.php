@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 00:25
-	// Modified:   18-Oct-04, 00:34
+	// Modified:   26-Oct-04, 22:49
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -310,7 +310,7 @@
 				//    - Build a FORM containing options to refine the search results:
 				//      First, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
 				//      Since 'users.php' can be only called by the admin we simply specify all fields within the first variable...
-				$refineSearchSelectorElements1 = "first_name, last_name, title, institution, abbrev_institution, corporate_institution, address_line_1, address_line_2, address_line_3, zip_code, city, state, country, phone, email, url, last_login, logins, user_id, user_groups, created_date, created_time, created_by, modified_date, modified_time, modified_by";
+				$refineSearchSelectorElements1 = "first_name, last_name, title, institution, abbrev_institution, corporate_institution, address_line_1, address_line_2, address_line_3, zip_code, city, state, country, phone, email, url, language, keywords, notes, marked, last_login, logins, user_id, user_groups, created_date, created_time, created_by, modified_date, modified_time, modified_by";
 				$refineSearchSelectorElements2 = ""; // ... and keep the second one blank (compare with 'search.php')
 				$refineSearchSelectorElementSelected = "last_name"; // this column will be selected by default
 				//      Call the 'buildRefineSearchElements()' function (defined in 'include.inc.php') which does the actual work:
@@ -318,7 +318,7 @@
 
 				//    - Build a FORM containing display options (show/hide columns or change the number of records displayed per page):
 				//      Again, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
-				$displayOptionsSelectorElements1 = "first_name, last_name, title, institution, abbrev_institution, corporate_institution, address_line_1, address_line_2, address_line_3, zip_code, city, state, country, phone, email, url, last_login, logins, user_id, user_groups, created_date, created_time, created_by, modified_date, modified_time, modified_by";
+				$displayOptionsSelectorElements1 = "first_name, last_name, title, institution, abbrev_institution, corporate_institution, address_line_1, address_line_2, address_line_3, zip_code, city, state, country, phone, email, url, language, keywords, notes, marked, last_login, logins, user_id, user_groups, created_date, created_time, created_by, modified_date, modified_time, modified_by";
 				$displayOptionsSelectorElements2 = ""; // again we'll keep the second one blank (compare with 'search.php')
 				$displayOptionsSelectorElementSelected = "last_name"; // this column will be selected by default
 				//      Call the 'buildDisplayOptionsElements()' function (defined in 'include.inc.php') which does the actual work:
@@ -417,10 +417,13 @@
 					echo "\n\t<td valign=\"top\">";
 	
 					echo "\n\t\t<a href=\"user_receipt.php?userID=" . $row["user_id"]
-						. "\"><img src=\"img/details.gif\" alt=\"details\" title=\"show details\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
+						. "\"><img src=\"img/details.gif\" alt=\"details\" title=\"show details and options\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
 	
 					echo "\n\t\t<a href=\"user_details.php?userID=" . $row["user_id"]
-						. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit user\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
+						. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit details\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
+	
+					echo "\n\t\t<a href=\"user_options.php?userID=" . $row["user_id"]
+						. "\"><img src=\"img/options.gif\" alt=\"options\" title=\"edit options\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
 	
 					$adminUserID = getUserID($adminLoginEmail); // ...get the admin's 'user_id' using his/her 'adminLoginEmail' (function 'getUserID()' is defined in 'include.inc.php')
 					if ($row["user_id"] != $adminUserID) // we only provide a delete link if this user isn't the admin:
@@ -513,7 +516,7 @@
 		}
 		else
 		{
-			$optionTags = buildSelectMenuOptions($_SESSION['adminUserGroups'], " *; *", "\t\t\t"); // build properly formatted <option> tag elements from the items listed in the 'adminUserGroups' session variable
+			$optionTags = buildSelectMenuOptions($_SESSION['adminUserGroups'], " *; *", "\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'adminUserGroups' session variable
 			$userResultsFooterRow .= $optionTags;
 		}
 
