@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   23-Feb-05, 22:18
+	// Modified:   27-Feb-05, 00:47
 
 	// This file contains important
 	// functions that are shared
@@ -1743,6 +1743,26 @@ EOF;
 		}
 
 		return $languagesArray;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Update the specified user permissions for the selected user(s):
+	function updateUserPermissions($recordSerialsString, $userPermissionsArray) // '$userPermissionsArray' must contain one or more key/value elements of the form array('allow_add' => 'yes', 'allow_delete' => 'no') where key is a particular 'allow_*' field name from table 'user_permissions' and value is either 'yes' or 'no'
+	{
+		connectToMySQLDatabase("");
+
+		// CONSTRUCT SQL QUERY:
+		// prepare the 'SET' part of the SQL query string:
+		foreach($userPermissionsArray as $permissionKey => $permissionValue)
+			$permissionQueryArray[] = $permissionKey . " = \"" . $permissionValue . "\"";
+
+		$permissionQueryString = implode(", ", $permissionQueryArray);
+
+		// Update all specified permission settings in the 'user_permissions' table for the selected user(s):
+		$query = "UPDATE user_permissions SET " . $permissionQueryString . " WHERE user_id RLIKE \"^(" . $recordSerialsString . ")$\"";
+
+		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 	}
 
 	// --------------------------------------------------------------------
