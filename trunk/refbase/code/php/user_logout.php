@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_logout.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   14-Aug-03, 20:12
+	// Modified:   07-Jan-04, 23:19
 
 	// This script logs a user out and redirects 
 	// to the calling page. If the script is called
@@ -52,7 +52,7 @@
 		$HeaderString = "<b><span class=\"warning\">You cannot logout since you are not logged in anymore!</span></b>";
 	}
 
-	if (!preg_match("/.*user(_details|_receipt|s)\.php.*/", $referer))
+	if (!preg_match("/.*user(_details|_receipt|s)\.php.*|.*install\.php.*/", $referer))
 		header("Location: $referer"); // redirect the user to the calling page
 	else
 		header("Location: index.php"); // back to main page

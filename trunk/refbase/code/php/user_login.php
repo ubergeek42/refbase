@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   16-Nov-03, 21:53
+	// Modified:   07-Jan-04, 23:19
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -53,7 +53,7 @@
 	// Check if the user is already logged in
 	if (session_is_registered("loginEmail"))
 	{
-		if (!ereg("error\.php\?.+|user_login\.php$", $referer))
+		if (!ereg("error\.php\?.+|user_login\.php$|install\.php", $referer))
 			header("Location: $referer"); // redirect the user to the calling page
 		else
 			header("Location: index.php"); // back to main page
