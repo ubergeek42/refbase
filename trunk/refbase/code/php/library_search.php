@@ -14,7 +14,7 @@
 </head>
 <body>
 <?php
-	// Search formular providing the main fields. Searches will be restricted to records belonging to the IPOE library
+	// Search formular providing the main fields
 
 	// This is included to hide the username and password:
 	include 'db.inc';
@@ -209,7 +209,7 @@
 	 // in $tableName
 	 // Note: in order to avoid book names we'll restrict the query to records whose location contains 'IP… Library'!
 	 $distinctQuery = "SELECT DISTINCT $columnName
-						FROM $tableName WHERE location RLIKE \"IP… Library\" ORDER BY $columnName";
+						FROM $tableName WHERE location RLIKE \"IPÖ Library\" ORDER BY $columnName";
 
 	 // Run the distinctQuery on the databaseName
 	 if (!($resultId = @ mysql_query ($distinctQuery, 
