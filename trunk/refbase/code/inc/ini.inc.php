@@ -161,19 +161,20 @@
 	$defaultLanguage = "en"; // e.g. "en" oder "de"
 
 
-	// The following search & replace actions will be applied to the 'title', 'keywords' and 'abstract'
-	// fields. This feature is meant to provide richer text capabilities (like displaying italics or
-	// super-/subscript) from the plain text data delivered by the MySQL database. It works by means of
-	// "human readable markup" that's used within the plain text fields of the database to define rich
-	// text characters (note that the current implementation only supports the 'title', 'keywords' and
-	// 'abstract' fields!). E.g., if you enclose a particular word by substrings (like '_in-situ_') this
-	// word will be output in italics. Similarly, 'CO[sub:2]' will cause the number in 'CO2' to be set
-	// as subscript while '[delta]' will produce a proper delta symbol. Feel free to customize this
-	// markup scheme to your needs (the left column below represents regular expression patterns
-	// matching the human readable markup that's used in your database while the right column represents
-	// the equivalent HTML encoding). If you do not wish to perform any search and replace actions, just
-	// specify an empty array, like: '$markupSearchReplacePatterns = array();'. Search & replace patterns
-	// must be specified as perl-style regular expression (in this case, without the leading & trailing
+	// The following search & replace actions will be applied to the 'title', 'address', 'keywords' and
+	// 'abstract' fields. This feature is meant to provide richer text capabilities (like displaying
+	// italics or super-/subscript) from the plain text data delivered by the MySQL database. It works
+	// by means of "human readable markup" that's used within the plain text fields of the database to
+	// define rich text characters (note that the current implementation only supports the 'title',
+	// 'address', 'keywords' and 'abstract' fields!). E.g., if you enclose a particular word by
+	// substrings (like '_in-situ_') this word will be output in italics. Similarly, '**word**' will
+	// print the word in boldface, 'CO[sub:2]' will cause the number in 'CO2' to be set as subscript
+	// while '[delta]' will produce a proper delta symbol. Feel free to customize this markup scheme to
+	// your needs (the left column below represents regular expression patterns matching the human
+	// readable markup that's used in your database while the right column represents the equivalent
+	// HTML encoding). If you do not wish to perform any search and replace actions, just specify an
+	// empty array, like: '$markupSearchReplacePatterns = array();'. Search & replace patterns must be
+	// specified as perl-style regular expression (in this case, without the leading & trailing
 	// slashes) -> see note at the end of this file.
 	$markupSearchReplacePatterns = array("_(.+?)_"          =>  "<i>\\1</i>",
 										"\\*\\*(.+?)\\*\\*" =>  "<b>\\1</b>",
