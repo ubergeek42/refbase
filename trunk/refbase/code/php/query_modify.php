@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./query_modify.php
 	// Created:    23-May-04, 20:42
-	// Modified:   03-Oct-04, 21:56
+	// Modified:   15-Feb-05, 23:21
 
 	// This php script will perform adding, editing & deleting of user queries.
 	// It then relocates back to the main page ('index.php') so that the user
@@ -176,7 +176,7 @@
 	
 	if (($queryAction == "add") OR (($queryAction == "edit") AND ($queryName != $origQueryName))) // if the user did modify the query name, check if the new query name does already exist for this user:
 	{
-		$query = "SELECT query_id, query_name FROM queries WHERE user_id = $loginUserID AND query_name = '$queryName'"; // the global variable '$loginUserID' gets set in function 'start_session()' within 'include.inc.php'
+		$query = "SELECT query_id, query_name FROM $tableQueries WHERE user_id = $loginUserID AND query_name = '$queryName'"; // the global variable '$loginUserID' gets set in function 'start_session()' within 'include.inc.php'
 	
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection (function 'queryMySQLDatabase()' is defined in 'include.inc.php')
 	
@@ -217,7 +217,7 @@
 	if ($queryAction == "edit")
 	{
 			// UPDATE - update the relevant query
-			$query = "UPDATE queries SET "
+			$query = "UPDATE $tableQueries SET "
 					. "query_name = \"$queryName\", "
 					. "display_type = \"$displayType\", "
 					. "view_type = \"$queryViewType\", "
@@ -233,13 +233,13 @@
 	elseif ($queryAction == "delet")
 	{
 			// DELETE - delete existing query
-			$query = "DELETE FROM queries WHERE query_id = $queryID";
+			$query = "DELETE FROM $tableQueries WHERE query_id = $queryID";
 	}
 
 	else // add the data:
 	{
 			// INSERT - add new query
-			$query = "INSERT INTO queries SET "
+			$query = "INSERT INTO $tableQueries SET "
 					. "user_id = \"$loginUserID\", " // the global variable '$loginUserID' gets set in function 'start_session()' within 'include.inc.php'
 					. "query_name = \"$queryName\", "
 					. "display_type = \"$displayType\", "
