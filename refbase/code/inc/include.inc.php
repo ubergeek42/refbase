@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   01-Nov-04, 21:33
+	// Modified:   17-Feb-05, 20:34
 
 	// This file contains important
 	// functions that are shared
@@ -106,7 +106,7 @@
 	// Connect to the MySQL database:
 	function connectToMySQLDatabase($oldQuery)
 	{
-		global $hostName; // these variables are specified in 'ini.inc.php' 
+		global $hostName; // these variables are specified in 'db.inc.php' 
 		global $username;
 		global $password;
 		global $databaseName;
@@ -244,7 +244,7 @@
 		// Is the user logged in?
 		if (isset($_SESSION['loginEmail']))
 			{
-				$loginWelcomeMsg = "Welcome<br><em>" . htmlentities($loginFirstName) . " " . htmlentities($loginLastName) . "</em>!";
+				$loginWelcomeMsg = "Welcome<br><em>" . encodeHTML($loginFirstName) . " " . encodeHTML($loginLastName) . "</em>!";
 
 				if ($loginEmail == $adminLoginEmail)
 					$loginStatus = "You're logged in as<br><span class=\"warning\">Admin</span> (<em>" . $loginEmail . "</em>)";
@@ -294,11 +294,13 @@
 	// Get the 'user_id' for the record entry in table 'auth' whose email matches that in 'loginEmail':
 	function getUserID($loginEmail)
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		connectToMySQLDatabase("");
 
 		// CONSTRUCT SQL QUERY:
 		// We find the user_id through the 'users' table, using the session variable holding their 'loginEmail'.
-		$query = "SELECT user_id FROM auth WHERE email = '$loginEmail'";
+		$query = "SELECT user_id FROM $tableAuth WHERE email = '$loginEmail'";
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 		$row = mysql_fetch_array($result);
@@ -897,6 +899,8 @@ EOF;
 	// Build the database query from user input provided by the "Search within Results" or "Display Options" forms above the query results list (which, in turn, was returned by 'search.php' or 'users.php', respectively):
 	function extractFormElementsRefineDisplay($queryTable, $displayType, $query, $showLinks, $userID)
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		// extract form variables:
 		if ($displayType == "Search") // the user clicked the 'Search' button of the "Search within Results" form
 		{
@@ -959,25 +963,25 @@ EOF;
 		}
 
 		// the following changes to the SQL query are performed for both forms ("Search within Results" and "Display Options"):
-		if ($queryTable == "refs") // 'search.php':
+		if ($queryTable == $tableRefs) // 'search.php':
 		{
 			// if the chosen field is one of the user specific fields from table 'user_data': 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related'
 			if (ereg("^(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)$", $fieldSelector))
-				if (!eregi("LEFT JOIN user_data", $query)) // ...and if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
-					$query = eregi_replace(" FROM refs"," FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = $userID",$query); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
+				if (!eregi("LEFT JOIN $tableUserData", $query)) // ...and if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
+					$query = eregi_replace(" FROM $tableRefs"," FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = $userID",$query); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
 
-			$query = eregi_replace(' FROM refs',', orig_record FROM refs',$query); // add 'orig_record' column (although it won't be visible the 'orig_record' column gets included in every search query)
+			$query = eregi_replace(" FROM $tableRefs",", orig_record FROM $tableRefs",$query); // add 'orig_record' column (although it won't be visible the 'orig_record' column gets included in every search query)
 																					// (which is required in order to present visual feedback on duplicate records)
 	
-			$query = eregi_replace(' FROM refs',', serial FROM refs',$query); // add 'serial' column (although it won't be visible the 'serial' column gets included in every search query)
+			$query = eregi_replace(" FROM $tableRefs",", serial FROM $tableRefs",$query); // add 'serial' column (although it won't be visible the 'serial' column gets included in every search query)
 																			// (which is required in order to obtain unique checkbox names)
 
 			if ($showLinks == "1")
-				$query = eregi_replace(' FROM refs',', file, url, doi FROM refs',$query); // add 'file', 'url' & 'doi' columns
+				$query = eregi_replace(" FROM $tableRefs",", file, url, doi FROM $tableRefs",$query); // add 'file', 'url' & 'doi' columns
 		}
-		elseif ($queryTable == "users") // 'users.php':
+		elseif ($queryTable == $tableUsers) // 'users.php':
 		{
-			$query = eregi_replace(' FROM users',', user_id FROM users',$query); // add 'user_id' column (although it won't be visible the 'user_id' column gets included in every search query)
+			$query = eregi_replace(" FROM $tableUsers",", user_id FROM $tableUsers",$query); // add 'user_id' column (although it won't be visible the 'user_id' column gets included in every search query)
 																				// (which is required in order to obtain unique checkbox names as well as for use in the 'getUserID()' function)
 		}
 
@@ -1066,8 +1070,7 @@ EOF;
 		$newAuthorContents = preg_replace("/  +/", " ", $newAuthorContents); // remove double spaces (which occur e.g., when both, $betweenInitialsDelim & $newAuthorsInitialsDelim, end with a space)
 		$newAuthorContents = preg_replace("/ +([,.;:?!])/", "\\1", $newAuthorContents); // remove spaces before [,.;:?!]
 		
-		// (Note: 'htmlentities()' for HTML encoding higher ASCII will only work correctly if character encoding of data is ISO-8859-1!)
-		$newAuthorContents = htmlentities($newAuthorContents); // HTML encode higher ASCII characters within the newly arranged author contents
+		$newAuthorContents = encodeHTML($newAuthorContents); // HTML encode higher ASCII characters within the newly arranged author contents
 
 		return $newAuthorContents;
 	}
@@ -1162,6 +1165,8 @@ EOF;
 	//  clicking this link will show all records that match the serials or partial queries that were specified within the 'related' field)
 	function buildRelatedRecordsLink($relatedFieldString, $userID)
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		// initialize some arrays:
 		$serialsArray = array(); // we'll use this array to hold all record serial numbers that we encounter
 		$queriesArray = array(); // this array will hold all sub-queries that were extracted from the 'related' field
@@ -1205,9 +1210,9 @@ EOF;
 
 		// if any of the user specific fields are present in the contents of the 'related' field, we'll add the 'LEFT JOIN...' part to the 'FROM' clause:
 		if (ereg("marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related",$queriesString))
-			$relatedQuery .= " FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = $userID";
+			$relatedQuery .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = $userID";
 		else // we skip the 'LEFT JOIN...' part of the 'FROM' clause:
-			$relatedQuery .= " FROM refs";
+			$relatedQuery .= " FROM $tableRefs";
 
 		$relatedQuery .= " WHERE " . $queriesString . " ORDER BY author, year DESC, publication"; // add 'WHERE' & 'ORDER BY' clause
 		
@@ -1227,6 +1232,7 @@ EOF;
 	function modifyUserGroups($queryTable, $displayType, $recordSerialsArray, $recordSerialsString, $userID, $userGroup, $userGroupActionRadio)
 	{
 		global $oldQuery;
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
 
 		connectToMySQLDatabase("");
 
@@ -1253,10 +1259,10 @@ EOF;
 			$userGroup = preg_quote($userGroup, "/"); // escape meta characters (including '/' that is used as delimiter for the PCRE replace functions below and which gets passed as second argument)
 
 
-		if ($queryTable == "user_data") // for the current user, get all entries within the 'user_data' table that refer to the selected records (listed in '$recordSerialsString'):
-			$query = "SELECT record_id, user_groups FROM user_data WHERE record_id RLIKE \"^(" . $recordSerialsString . ")$\" AND user_id = " . $userID;
-		elseif ($queryTable == "users") // for the admin, get all entries within the 'users' table that refer to the selected records (listed in '$recordSerialsString'):
-			$query = "SELECT user_id as record_id, user_groups FROM users WHERE user_id RLIKE \"^(" . $recordSerialsString . ")$\"";
+		if ($queryTable == $tableUserData) // for the current user, get all entries within the 'user_data' table that refer to the selected records (listed in '$recordSerialsString'):
+			$query = "SELECT record_id, user_groups FROM $tableUserData WHERE record_id RLIKE \"^(" . $recordSerialsString . ")$\" AND user_id = " . $userID;
+		elseif ($queryTable == $tableUsers) // for the admin, get all entries within the 'users' table that refer to the selected records (listed in '$recordSerialsString'):
+			$query = "SELECT user_id as record_id, user_groups FROM $tableUsers WHERE user_id RLIKE \"^(" . $recordSerialsString . ")$\"";
 			// (note that by using 'user_id as record_id' we can use the term 'record_id' as identifier of the primary key for both tables)
 
 
@@ -1291,17 +1297,17 @@ EOF;
 					$recordUserGroups = ereg_replace("^ *; *", "", $recordUserGroups); // remove any remaining group delimiters at the beginning of the 'user_groups' field
 				}
 
-				if ($queryTable == "user_data") // for the current record & user ID, update the matching entry within the 'user_data' table:
-					$queryUserData = "UPDATE user_data SET user_groups = \"" . $recordUserGroups . "\" WHERE record_id = " . $recordID . " AND user_id = " . $userID;
-				elseif ($queryTable == "users") // for the current user ID, update the matching entry within the 'users' table:
-					$queryUserData = "UPDATE users SET user_groups = \"" . $recordUserGroups . "\" WHERE user_id = " . $recordID;
+				if ($queryTable == $tableUserData) // for the current record & user ID, update the matching entry within the 'user_data' table:
+					$queryUserData = "UPDATE $tableUserData SET user_groups = \"" . $recordUserGroups . "\" WHERE record_id = " . $recordID . " AND user_id = " . $userID;
+				elseif ($queryTable == $tableUsers) // for the current user ID, update the matching entry within the 'users' table:
+					$queryUserData = "UPDATE $tableUsers SET user_groups = \"" . $recordUserGroups . "\" WHERE user_id = " . $recordID;
 
 
 				$resultUserData = queryMySQLDatabase($queryUserData, $oldQuery); // RUN the query on the database through the connection
 			}
 		}
 
-		if ($queryTable == "user_data")
+		if ($queryTable == $tableUserData)
 		{
 			// for all selected records that have no entries in the 'user_data' table (for this user), we'll need to add a new entry containing the specified group:
 			$leftoverSerialsArray = array_diff($recordSerialsArray, $foundSerialsArray); // get all unique array elements of '$recordSerialsArray' which are not in '$foundSerialsArray'
@@ -1309,7 +1315,7 @@ EOF;
 			foreach ($leftoverSerialsArray as $leftoverRecordID) // for each record that we haven't processed yet (since it doesn't have an entry in the 'user_data' table for this user)
 			{
 				// for the current record & user ID, add a new entry (containing the specified group) to the 'user_data' table:
-				$queryUserData = "INSERT INTO user_data SET "
+				$queryUserData = "INSERT INTO $tableUserData SET "
 								. "user_groups = \"$userGroup\", "
 								. "record_id = \"$leftoverRecordID\", "
 								. "user_id = \"$userID\", "
@@ -1331,17 +1337,19 @@ EOF;
 	//       - if "$queryTable = users", this function will fetch unique values from the 'user_groups' field of the 'users' table (where the admin can assign one or more groups to particular *users*)
 	function getUserGroups($queryTable, $userID)
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		connectToMySQLDatabase("");
 
 		// CONSTRUCT SQL QUERY:
 		// Note: 'user_groups RLIKE ".+"' will cause the database to only return user data entries where the 'user_groups' field
 		//       is neither NULL (=> 'user_groups IS NOT NULL') nor the empty string (=> 'user_groups NOT RLIKE "^$"')
-		if ($queryTable == "user_data")
+		if ($queryTable == $tableUserData)
 			// Find all unique 'user_groups' entries in the 'user_data' table belonging to the current user:
-			$query = "SELECT DISTINCT user_groups FROM user_data WHERE user_id = '$userID' AND user_groups RLIKE \".+\"";
-		elseif ($queryTable == "users")
+			$query = "SELECT DISTINCT user_groups FROM $tableUserData WHERE user_id = '$userID' AND user_groups RLIKE \".+\"";
+		elseif ($queryTable == $tableUsers)
 			// Find all unique 'user_groups' entries in the 'users' table:
-			$query = "SELECT DISTINCT user_groups FROM users WHERE user_groups RLIKE \".+\"";
+			$query = "SELECT DISTINCT user_groups FROM $tableUsers WHERE user_groups RLIKE \".+\"";
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 
@@ -1370,16 +1378,16 @@ EOF;
 			$userGroupsString = implode('; ', $userGroupsArray);
 
 			// Write the resulting string of user groups into a session variable:
-			if ($queryTable == "user_data")
+			if ($queryTable == $tableUserData)
 				saveSessionVariable("userGroups", $userGroupsString);
-			elseif ($queryTable == "users")
+			elseif ($queryTable == $tableUsers)
 				saveSessionVariable("adminUserGroups", $userGroupsString);
 		}
 		else // no user groups found
 		{ // delete any session variable (which is now outdated):
-			if ($queryTable == "user_data")
+			if ($queryTable == $tableUserData)
 				deleteSessionVariable("userGroups");
-			elseif ($queryTable == "users")
+			elseif ($queryTable == $tableUsers)
 				deleteSessionVariable("adminUserGroups");
 		}
 	}
@@ -1390,12 +1398,14 @@ EOF;
 	// and (if some queries were found) save them as semicolon-delimited string to the session variable 'userQueries':
 	function getUserQueries($userID)
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		connectToMySQLDatabase("");
 
 		// CONSTRUCT SQL QUERY:
 		// Find all unique query entries in the 'queries' table belonging to the current user:
 		// (query names should be unique anyhow, so the DISTINCT parameter wouldn't be really necessary)
-		$query = "SELECT DISTINCT query_name FROM queries WHERE user_id = '$userID' ORDER BY last_execution DESC";
+		$query = "SELECT DISTINCT query_name FROM $tableQueries WHERE user_id = '$userID' ORDER BY last_execution DESC";
 		// Note: we sort (in descending order) by the 'last_execution' field to get the last used query entries first;
 		//       by that, the last used query will be always at the top of the popup menu within the 'Recall My Query' form
 
@@ -1424,17 +1434,19 @@ EOF;
 	// Get all available formats/styles/types:
 	function getAvailableFormatsStylesTypes($dataType, $formatType) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export' or 'import'
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		connectToMySQLDatabase("");
 
 		// CONSTRUCT SQL QUERY:
 		if ($dataType == "format")
-			$query = "SELECT format_name, format_id FROM formats LEFT JOIN depends ON formats.depends_id = depends.depends_id WHERE format_type = '" . $formatType . "' AND format_enabled = 'true' AND depends_enabled = 'true' ORDER BY order_by, format_name";
+			$query = "SELECT format_name, format_id FROM $tableFormats LEFT JOIN $tableDepends ON $tableFormats.depends_id = $tableDepends.depends_id WHERE format_type = '" . $formatType . "' AND format_enabled = 'true' AND depends_enabled = 'true' ORDER BY order_by, format_name";
 
 		elseif ($dataType == "style")
-			$query = "SELECT style_name, style_id FROM styles LEFT JOIN depends ON styles.depends_id = depends.depends_id WHERE style_enabled = 'true' AND depends_enabled = 'true' ORDER BY order_by, style_name";
+			$query = "SELECT style_name, style_id FROM $tableStyles LEFT JOIN $tableDepends ON $tableStyles.depends_id = $tableDepends.depends_id WHERE style_enabled = 'true' AND depends_enabled = 'true' ORDER BY order_by, style_name";
 
 		elseif ($dataType == "type")
-			$query = "SELECT type_name, type_id FROM types WHERE type_enabled = 'true' ORDER BY order_by, type_name";
+			$query = "SELECT type_name, type_id FROM $tableTypes WHERE type_enabled = 'true' ORDER BY order_by, type_name";
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 	
@@ -1453,17 +1465,19 @@ EOF;
 	// Get all formats/styles/types that are available and were enabled by the admin for the current user:
 	function getEnabledUserFormatsStylesTypes($userID, $dataType, $formatType, $returnIDsAsValues) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export' or 'import'
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		connectToMySQLDatabase("");
 
 		// CONSTRUCT SQL QUERY:
 		if ($dataType == "format")
-			$query = "SELECT formats.format_name, formats.format_id FROM formats LEFT JOIN user_formats on formats.format_id = user_formats.format_id LEFT JOIN depends ON formats.depends_id = depends.depends_id WHERE format_type = '" . $formatType . "' AND format_enabled = 'true' AND depends_enabled = 'true' AND user_id = '" . $userID . "' ORDER BY formats.order_by, formats.format_name";
+			$query = "SELECT $tableFormats.format_name, $tableFormats.format_id FROM $tableFormats LEFT JOIN $tableUserFormats on $tableFormats.format_id = $tableUserFormats.format_id LEFT JOIN $tableDepends ON $tableFormats.depends_id = $tableDepends.depends_id WHERE format_type = '" . $formatType . "' AND format_enabled = 'true' AND depends_enabled = 'true' AND user_id = '" . $userID . "' ORDER BY $tableFormats.order_by, $tableFormats.format_name";
 
 		elseif ($dataType == "style")
-			$query = "SELECT styles.style_name, styles.style_id FROM styles LEFT JOIN user_styles on styles.style_id = user_styles.style_id LEFT JOIN depends ON styles.depends_id = depends.depends_id WHERE style_enabled = 'true' AND depends_enabled = 'true' AND user_id = '" . $userID . "' ORDER BY styles.order_by, styles.style_name";
+			$query = "SELECT $tableStyles.style_name, $tableStyles.style_id FROM $tableStyles LEFT JOIN $tableUserStyles on $tableStyles.style_id = $tableUserStyles.style_id LEFT JOIN $tableDepends ON $tableStyles.depends_id = $tableDepends.depends_id WHERE style_enabled = 'true' AND depends_enabled = 'true' AND user_id = '" . $userID . "' ORDER BY $tableStyles.order_by, $tableStyles.style_name";
 
 		elseif ($dataType == "type")
-			$query = "SELECT types.type_name, types.type_id FROM types LEFT JOIN user_types USING (type_id) WHERE type_enabled = 'true' AND user_id = '" . $userID . "' ORDER BY types.order_by, types.type_name";
+			$query = "SELECT $tableTypes.type_name, $tableTypes.type_id FROM $tableTypes LEFT JOIN $tableUserTypes USING (type_id) WHERE type_enabled = 'true' AND user_id = '" . $userID . "' ORDER BY $tableTypes.order_by, $tableTypes.type_name";
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 	
@@ -1490,6 +1504,7 @@ EOF;
 	{
 		global $loginEmail;
 		global $adminLoginEmail; // ('$adminLoginEmail' is specified in 'ini.inc.php')
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
 
 		connectToMySQLDatabase("");
 
@@ -1508,19 +1523,19 @@ EOF;
 			//       - 'user_formats' table: there must be an entry for the given user where the 'format_id' matches the 'format_id' of the given format in table 'formats' -AND-
 			//                               the 'show_format' field must contain 'true' for the 'format_id' that matches the 'format_id' of the given format in table 'formats'
 			//                               (the 'user_formats' table specifies all of the available formats for a particular user that have been selected by this user to be included in the format popups)
-			$query = "SELECT format_name FROM formats LEFT JOIN user_formats on formats.format_id = user_formats.format_id LEFT JOIN depends ON formats.depends_id = depends.depends_id WHERE format_type = '" . $formatType . "' AND format_enabled = 'true' AND depends_enabled = 'true' AND user_id = '" . $userID . "' AND show_format = 'true' ORDER BY formats.order_by, formats.format_name";
+			$query = "SELECT format_name FROM $tableFormats LEFT JOIN $tableUserFormats on $tableFormats.format_id = $tableUserFormats.format_id LEFT JOIN $tableDepends ON $tableFormats.depends_id = $tableDepends.depends_id WHERE format_type = '" . $formatType . "' AND format_enabled = 'true' AND depends_enabled = 'true' AND user_id = '" . $userID . "' AND show_format = 'true' ORDER BY $tableFormats.order_by, $tableFormats.format_name";
 		}
 		elseif ($dataType == "style")
 		{
 			// Find all enabled+visible styles in table 'user_styles' belonging to the current user:
 			// (same conditions apply as for formats)
-			$query = "SELECT style_name FROM styles LEFT JOIN user_styles on styles.style_id = user_styles.style_id LEFT JOIN depends ON styles.depends_id = depends.depends_id WHERE style_enabled = 'true' AND depends_enabled = 'true' AND user_id = '" . $userID . "' AND show_style = 'true' ORDER BY styles.order_by, styles.style_name";
+			$query = "SELECT style_name FROM $tableStyles LEFT JOIN $tableUserStyles on $tableStyles.style_id = $tableUserStyles.style_id LEFT JOIN $tableDepends ON $tableStyles.depends_id = $tableDepends.depends_id WHERE style_enabled = 'true' AND depends_enabled = 'true' AND user_id = '" . $userID . "' AND show_style = 'true' ORDER BY $tableStyles.order_by, $tableStyles.style_name";
 		}
 		elseif ($dataType == "type")
 		{
 			// Find all enabled+visible types in table 'user_types' belonging to the current user:
 			// (opposed to formats & styles, we're not checking for any dependencies here)
-			$query = "SELECT type_name FROM types LEFT JOIN user_types USING (type_id) WHERE user_id = '" . $userID . "' AND show_type = 'true' ORDER BY types.order_by, types.type_name";
+			$query = "SELECT type_name FROM $tableTypes LEFT JOIN $tableUserTypes USING (type_id) WHERE user_id = '" . $userID . "' AND show_type = 'true' ORDER BY $tableTypes.order_by, $tableTypes.type_name";
 		}
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
@@ -1599,11 +1614,13 @@ EOF;
 	// That said, this function assumes unique style names, i.e., there's no error checking for duplicates!
 	function getStyleFile($citeStyle)
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		connectToMySQLDatabase("");
 
 		// CONSTRUCT SQL QUERY:
 		// get the 'style_spec' for the record entry in table 'styles' whose 'style_name' matches that in '$citeStyle':
-		$query = "SELECT style_spec FROM styles WHERE style_name = '$citeStyle'";
+		$query = "SELECT style_spec FROM $tableStyles WHERE style_name = '$citeStyle'";
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 		$row = mysql_fetch_array($result);
@@ -1616,11 +1633,13 @@ EOF;
 	// Fetch the path/name of the format file that's associated with the format given in '$formatName'
 	function getFormatFile($formatName, $formatType) // '$formatType' must be either 'export' or 'import'
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		connectToMySQLDatabase("");
 
 		// CONSTRUCT SQL QUERY:
 		// get the 'format_spec' for the record entry in table 'formats' whose 'format_name' matches that in '$formatName':
-		$query = "SELECT format_spec FROM formats WHERE format_name = '" . $formatName . "' AND format_type = '" . $formatType . "'";
+		$query = "SELECT format_spec FROM $tableFormats WHERE format_name = '" . $formatName . "' AND format_type = '" . $formatType . "'";
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 		$row = mysql_fetch_array($result);
@@ -1633,11 +1652,13 @@ EOF;
 	// Fetch the path of the external utility that's required for a particular import/export format
 	function getExternalUtilityPath($externalUtilityName)
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		connectToMySQLDatabase("");
 
 		// CONSTRUCT SQL QUERY:
 		// get the path for the record entry in table 'depends' whose field 'depends_external' matches that in '$externalUtilityName':
-		$query = "SELECT depends_path FROM depends WHERE depends_external = '" . $externalUtilityName . "'";
+		$query = "SELECT depends_path FROM $tableDepends WHERE depends_external = '" . $externalUtilityName . "'";
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 		$row = mysql_fetch_array($result);
@@ -1696,16 +1717,18 @@ EOF;
 	// if !empty($userID): get the preferred language for the user with the specified userID
 	function getLanguages($userID)
 	{
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+
 		connectToMySQLDatabase("");
 
 		// CONSTRUCT SQL QUERY:
 		if (empty($userID))
 			// Find all unique language entries in the 'languages' table that are enabled:
 			// (language names should be unique anyhow, so the DISTINCT parameter wouldn't be really necessary)
-			$query = "SELECT DISTINCT language_name FROM languages WHERE language_enabled = 'true' ORDER BY order_by";
+			$query = "SELECT DISTINCT language_name FROM $tableLanguages WHERE language_enabled = 'true' ORDER BY order_by";
 		else
 			// Get the preferred language for the user with the user ID given in '$userID':
-			$query = "SELECT language AS language_name FROM users WHERE user_id = '" . $userID . "'";
+			$query = "SELECT language AS language_name FROM $tableUsers WHERE user_id = '" . $userID . "'";
 		
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
@@ -1788,12 +1811,37 @@ EOF;
 
 	// --------------------------------------------------------------------
 
+	// Encode HTML entities:
+	// (this custom function is provided so that it'll be easier to change the way how entities are HTML encoded later on)
+	function encodeHTML($sourceString)
+	{
+		global $contentTypeCharset; // defined in 'ini.inc.php'
+
+		$encodedString = htmlentities($sourceString, ENT_COMPAT, "$contentTypeCharset");
+		// Notes from <http://www.php.net/manual/en/function.htmlentities.php>:
+		//
+		//     - The optional second parameter lets you define what will be done with 'single' and "double" quotes.
+		//       It takes on one of three constants with the default being ENT_COMPAT:
+		//       ENT_COMPAT:   Will convert double-quotes and leave single-quotes alone.
+		//       ENT_QUOTES:   Will convert both double and single quotes.
+		//       ENT_NOQUOTES: Will leave both double and single quotes unconverted.
+		//
+		//     - The optional third argument defines the character set used in conversion. Support for this argument
+		//       was added in PHP 4.1.0. Presently, the ISO-8859-1 character set is used as the default.
+
+
+		return $encodedString;
+	}
+
+	// --------------------------------------------------------------------
+
 	// Verify the SQL query specified by the user and modify it if security concerns are encountered:
 	// (this function does add/remove user-specific query code as required and will fix problems with escape sequences within the SQL query)
 	function verifySQLQuery($sqlQuery, $referer, $displayType, $showLinks)
 	{
 		global $loginEmail;
 		global $loginUserID;
+		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
 
 		// handle the display & querying of user specific fields:
 		if (!isset($_SESSION['loginEmail'])) // if NO user is logged in...
@@ -1820,8 +1868,8 @@ EOF;
 				$sqlQuery = preg_replace("/ORDER BY *(?=LIMIT|GROUP BY|HAVING|PROCEDURE|FOR UPDATE|LOCK IN|$)/i", "ORDER BY author, year DESC, publication", $sqlQuery); // ...supply generic 'ORDER BY' clause if it did ONLY contain user specific fields
 			}
 	
-			if ((eregi(".+search.php",$referer)) AND (eregi("LEFT JOIN user_data",$sqlQuery))) // if the calling script ends with 'search.php' (i.e., is NOT 'show.php', see note below!) AND the 'LEFT JOIN...' statement is part of the 'FROM' clause...
-				$sqlQuery = eregi_replace("FROM refs LEFT JOIN.+WHERE","FROM refs WHERE",$sqlQuery); // ...delete 'LEFT JOIN...' part from 'FROM' clause
+			if ((eregi(".+search.php",$referer)) AND (eregi("LEFT JOIN $tableUserData",$sqlQuery))) // if the calling script ends with 'search.php' (i.e., is NOT 'show.php', see note below!) AND the 'LEFT JOIN...' statement is part of the 'FROM' clause...
+				$sqlQuery = eregi_replace("FROM $tableRefs LEFT JOIN.+WHERE","FROM $tableRefs WHERE",$sqlQuery); // ...delete 'LEFT JOIN...' part from 'FROM' clause
 	
 			if ((eregi(".+search.php",$referer) OR $displayType == "RSS") AND (eregi("WHERE.+(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)",$sqlQuery))) // if a user who's NOT logged in tries to query user specific fields (by use of 'sql_search.php')...
 			// Note that the script 'show.php' may query the user specific field 'selected' (e.g., by URLs of the form: 'show.php?author=...&userID=...&only=selected')
@@ -1843,7 +1891,7 @@ EOF;
 	
 		else // if a user is logged in...
 		{
-			if (eregi("LEFT JOIN user_data",$sqlQuery)) // if the 'LEFT JOIN...' statement is part of the 'FROM' clause...
+			if (eregi("LEFT JOIN $tableUserData",$sqlQuery)) // if the 'LEFT JOIN...' statement is part of the 'FROM' clause...
 			{
 				// ...and any user specific fields other(!) than just the 'selected' field are part of the 'SELECT' or 'WHERE' clause...
 				// Note that we exclude the 'selected' field here (although it is user specific). By that we allow the 'selected' field to be queried by every user that's logged in.
@@ -1857,20 +1905,20 @@ EOF;
 	
 			// if we're going to display record details for a logged in user, we have to ensure the display of user specific fields (which may have been deleted from a query due to a previous logout action);
 			// in 'Display Details' view, the 'call_number' and 'serial' fields are the last generic fields before any user specific fields:
-			if (($displayType == "Display") AND (eregi(", call_number, serial FROM refs",$sqlQuery))) // if the user specific fields are missing from the SELECT statement...
-				$sqlQuery = eregi_replace(', call_number, serial FROM refs',', call_number, serial, marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key, related FROM refs',$sqlQuery); // ...add all user specific fields to the 'SELECT' clause
+			if (($displayType == "Display") AND (eregi(", call_number, serial FROM $tableRefs",$sqlQuery))) // if the user specific fields are missing from the SELECT statement...
+				$sqlQuery = eregi_replace(", call_number, serial FROM $tableRefs",", call_number, serial, marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key, related FROM $tableRefs",$sqlQuery); // ...add all user specific fields to the 'SELECT' clause
 	
-			if (($displayType == "Display" OR $displayType == "RSS") AND (!eregi("LEFT JOIN user_data",$sqlQuery))) // if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
-				$sqlQuery = eregi_replace(" FROM refs"," FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = $loginUserID",$sqlQuery); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
+			if (($displayType == "Display" OR $displayType == "RSS") AND (!eregi("LEFT JOIN $tableUserData",$sqlQuery))) // if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
+				$sqlQuery = eregi_replace(" FROM $tableRefs"," FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = $loginUserID",$sqlQuery); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
 		}
 	
 		if (eregi("^SELECT",$sqlQuery)) // restrict adding of columns to SELECT queries (so that 'DELETE FROM refs ...' statements won't get modified as well):
 		{
-			$sqlQuery = eregi_replace(' FROM refs',', orig_record FROM refs',$sqlQuery); // add 'orig_record' column (which is required in order to present visual feedback on duplicate records)
-			$sqlQuery = eregi_replace(' FROM refs',', serial FROM refs',$sqlQuery); // add 'serial' column (which is required in order to obtain unique checkbox names)
+			$sqlQuery = eregi_replace(" FROM $tableRefs",", orig_record FROM $tableRefs",$sqlQuery); // add 'orig_record' column (which is required in order to present visual feedback on duplicate records)
+			$sqlQuery = eregi_replace(" FROM $tableRefs",", serial FROM $tableRefs",$sqlQuery); // add 'serial' column (which is required in order to obtain unique checkbox names)
 	
 			if ($showLinks == "1")
-				$sqlQuery = eregi_replace(' FROM refs',', file, url, doi FROM refs',$sqlQuery); // add 'file', 'url' & 'doi' columns
+				$sqlQuery = eregi_replace(" FROM $tableRefs",", file, url, doi FROM $tableRefs",$sqlQuery); // add 'file', 'url' & 'doi' columns
 		}
 	
 		// fix escape sequences within the SQL query:
@@ -1909,7 +1957,7 @@ EOF;
 		$authorName = preg_replace("/(.+?)\([^)]+\)/", "\\1", $createdBy);
 		$authorEmail = preg_replace("/.+?\(([^)]+)\)/", "\\1", $createdBy);
 
-		$rfc2822address = htmlentities($authorName . "<" . $authorEmail . ">");
+		$rfc2822address = encodeHTML($authorName . "<" . $authorEmail . ">");
 
 
 		return $rfc2822address;
@@ -1969,9 +2017,9 @@ EOF;
 
 		// write channel info:
 		$rssData .= "\n\t<channel>"
-					. "\n\t\t<title>" . htmlentities($officialDatabaseName) . "</title>"
+					. "\n\t\t<title>" . encodeHTML($officialDatabaseName) . "</title>"
 					. "\n\t\t<link>" . $databaseBaseURL . "</link>"
-					. "\n\t\t<description>" . htmlentities($rssChannelDescription) . "</description>"
+					. "\n\t\t<description>" . encodeHTML($rssChannelDescription) . "</description>"
 					. "\n\t\t<language>en</language>"
 					. "\n\t\t<pubDate>" . $currentDateTimeStamp . "</pubDate>"
 					. "\n\t\t<lastBuildDate>" . $currentDateTimeStamp . "</lastBuildDate>"
@@ -1980,7 +2028,7 @@ EOF;
 		// write image data:
 		$rssData .=  "\n\n\t\t<image>"
 					. "\n\t\t\t<url>" . $databaseBaseURL . "img/logo.gif</url>"
-					. "\n\t\t\t<title>" . htmlentities($officialDatabaseName) . "</title>"
+					. "\n\t\t\t<title>" . encodeHTML($officialDatabaseName) . "</title>"
 					. "\n\t\t\t<link>" . $databaseBaseURL . "</link>"
 					. "\n\t\t</image>";
 
@@ -1989,7 +2037,7 @@ EOF;
 		{
 			// Perform search & replace actions on the text of the 'title' field:
 			// (the array '$markupSearchReplacePatterns' in 'ini.inc.php' defines which search & replace actions will be employed)
-//			$row['title'] = searchReplaceText($markupSearchReplacePatterns, htmlentities($row['title']));
+//			$row['title'] = searchReplaceText($markupSearchReplacePatterns, encodeHTML($row['title']));
 			// Note: search/replace seems to work but the resulting HTML code doesn't get displayed properly in my news reader... ?:-/
 
 			$citeStyleFile = getStyleFile($defaultCiteStyle); // fetch the name of the citation style file that's associated with the style given in '$defaultCiteStyle' (which, in turn, is defined in 'ini.inc.php')
@@ -2003,11 +2051,13 @@ EOF;
 			// append a RSS item for the current record:
 			$rssData .= "\n\n\t\t<item>"
 
-						. "\n\t\t\t<title>" . htmlentities($row['title']) . "</title>"
+						. "\n\t\t\t<title>" . encodeHTML($row['title']) . "</title>"
 
 						. "\n\t\t\t<link>" . $databaseBaseURL . "show.php?record=" . $row['serial'] . "</link>"
 
-						. "\n\t\t\t<description>" . htmlentities($record) . "</description>"
+						. "\n\t\t\t<description>" . encodeHTML($record)
+
+						. "\n\t\t\t&lt;br&gt;&lt;br&gt;Edited by " . encodeHTML($row['modified_by']) . " on " . generateUNIXTimeStamp($row['modified_date'], $row['modified_time']) . ".</description>"
 
 						. "\n\t\t\t<guid isPermaLink=\"true\">" . $databaseBaseURL . "show.php?record=" . $row['serial'] . "</guid>"
 
