@@ -325,7 +325,9 @@
 				. "created_by = \"$currentUser\", "
 				. "modified_date = \"$currentDate\", "
 				. "modified_time = \"$currentTime\", "
-				. "modified_by = \"$currentUser\"";
+				. "modified_by = \"$currentUser\", "
+				. "last_login = NOW(), " // set 'last_login' field to the current date & time in 'DATETIME' format (which is 'YYYY-MM-DD HH:MM:SS', e.g.: '2003-12-31 23:45:59')
+				. "logins = 1 "; // set the number of logins to 1 (so that any subsequent login attempt can be counted correctly)
 	}
 	// if '$addNewUsers' is set to 'admin': MAIL feedback to new user & send data to admin for approval:
 	// no user is logged in (since 'user_details.php' cannot be called w/o a 'userID' by a logged in user,
@@ -492,11 +494,13 @@
 			session_register("loginUserID");
 			session_register("loginFirstName");
 			session_register("loginLastName");
+			session_register("abbrevInstitution");
 	
 			$loginEmail = $formVars["email"];
 			$loginUserID = $userID;
 			$loginFirstName = $formVars["firstName"];
 			$loginLastName = $formVars["lastName"];
+			$abbrevInstitution = $formVars["abbrevInstitution"];
 		}
 	}
 
