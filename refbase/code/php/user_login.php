@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   17-Feb-05, 20:19
+	// Modified:   23-Feb-05, 22:20
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -104,7 +104,7 @@
 		global $loginLastName;
 		global $adminLoginEmail;
 		global $abbrevInstitution;
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableAuth, $tableUserData, $tableUsers; // defined in 'db.inc.php'
 
 		// Get the two character salt from the email address collected from the challenge
 		$salt = substr($loginEmail, 0, 2); 

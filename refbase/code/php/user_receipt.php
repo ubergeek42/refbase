@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_receipt.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   17-Feb-05, 20:21
+	// Modified:   23-Feb-05, 22:21
 
 	// This script shows the user a receipt for their user UPDATE or INSERT.
 	// It carries out no database actions and can be bookmarked.
@@ -197,7 +197,7 @@
 		global $loginEmail;
 		global $adminLoginEmail;
 		global $officialDatabaseName;
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableUsers; // defined in 'db.inc.php'
 
 		// CONSTRUCT SQL QUERY:
 		$query = "SELECT * FROM $tableUsers WHERE user_id = $userID";
