@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 00:25
-	// Modified:   27-Feb-05, 21:00
+	// Modified:   28-Feb-05, 00:14
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -533,8 +533,8 @@
 								. "\n\t<td align=\"left\" valign=\"top\">&nbsp;</td>"
 
 								. "\n\t<td align=\"left\" valign=\"top\" colspan=\"" . ($NoColumns - 1) . "\">"
-								. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Allow\" title=\"allow all selected users to use the specified option\">&nbsp;"
-								. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Disallow\" title=\"do not allow the selected users to use the specified option\">&nbsp;&nbsp;&nbsp;feature:&nbsp;&nbsp;"
+								. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Allow\" title=\"allow all selected users to use the specified feature\">&nbsp;"
+								. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Disallow\" title=\"do not allow the selected users to use the specified feature\">&nbsp;&nbsp;&nbsp;feature:&nbsp;&nbsp;"
 								. "\n\t\t<select name=\"userPermissionSelector\" title=\"select the permission setting you'd like to change for the selected users\">";
 
 		$userPermissionsArray = array('allow_add'                => 'Add records',
