@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   14-Oct-04, 23:19
+	// Modified:   16-Feb-05, 21:59
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -64,9 +64,11 @@
 	$mailingListEmail = "ANNOUNCEMENT_EMAIL_ADDRESS"; // e.g. "ipoelit-announce@ipoe.uni-kiel.de"
 
 
-	// The character encoding that's used as content-type for HTML output and announcement emails:
-	// Note: the encoding type specified here must match the type of encoding you've chosen on install
-	//       for your refbase MySQL tables!
+	// The character encoding that's used as content-type for HTML, RSS and email output:
+	// IMPORTANT NOTES: - the encoding type specified here must match the default character set you've
+	//                    chosen on install for your refbase MySQL database & tables!
+	//                  - plus, the character encoding of this file ('ini.inc.php') must match the
+	//                    encoding type specified here:
 	$contentTypeCharset = "ISO-8859-1"; // e.g. "ISO-8859-1" or "UTF-8"
 
 
@@ -76,6 +78,29 @@
 
 	// The path to the CSS stylesheet which will be used for print view:
 	$printStyleSheet = "css/style_print.css"; // e.g. "css/style_print.css"
+
+
+	// Defines the default user permissions when adding new users:
+	// Possible values for each of the permission settings: "yes", "no"
+	// Allow a newly created user to:
+	$defaultUserPermissions = array("yes", // add records to the database ('allow_add')
+									"yes", // edit records in the database ('allow_edit')
+									"yes", // delete records from the database ('allow_delete')
+									"yes", // download files which are associated with particular records ('allow_download')
+									"yes", // upload files to the database ('allow_upload')
+									"yes", // view any record details ('allow_details_view')
+									"yes", // view records in print view ('allow_print_view')
+									"yes", // build a reference list from selected records ('allow_cite')
+									"yes", // import records into the database ('allow_import')
+									"yes", // batch import records into the database ('allow_batch_import')
+									"yes", // export records from the database ('allow_export')
+									"yes", // batch export records from the database ('allow_batch_export')
+									"yes", // use the 'user groups' feature ('allow_user_groups')
+									"yes", // use the 'user queries' feature ('allow_user_queries')
+									"yes", // generate dynamic RSS feeds from any query ('allow_rss_feeds')
+									"yes", // execute custom SQL queries via 'sql_search.php' ('allow_sql_search')
+									"yes", // change his/her personal data (like name, address or password) ('allow_change_personinfo')
+									"no"); // fully edit the contents of the 'call_number' field (like the database admin) ('allow_edit_call_number')
 
 
 	// Specify who'll be allowed to see files associated with any records:
@@ -153,7 +178,7 @@
 
 
 	// The default language selection, can be overwritten by userdefined language
-	$defaultLanguage = "en"; // e.g. "en" oder "de"
+	$defaultLanguage = "en"; // e.g. "en" or "de"
 
 
 	// The following search & replace actions will be applied to the 'title', 'address', 'keywords' and
