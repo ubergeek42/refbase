@@ -142,11 +142,11 @@
 		global $adminLoginEmail; // ('$adminLoginEmail' is specified in 'ini.inc.php')
 
 		// Setup some additional headers:
-		$emailHeaders = "From: " . $adminLoginEmail . "\r\n"
-						. "Return-Path: " . $adminLoginEmail . "\r\n"
-						. "X-Sender: " . $adminLoginEmail . "\r\n"
-						. "X-Mailer: PHP\r\n"
-						. "X-Priority: 3\r\n";
+		$emailHeaders = "From: " . $adminLoginEmail . "\n"
+						. "Return-Path: " . $adminLoginEmail . "\n"
+						. "X-Sender: " . $adminLoginEmail . "\n"
+						. "X-Mailer: PHP\n"
+						. "X-Priority: 3";
 
 		// Send the email:
 		mail($emailRecipient, $emailSubject, $emailBody, $emailHeaders);
