@@ -12,10 +12,13 @@ user_id	the user's unique ID number (which corresponds to the user_id number of 
 record_id	the unique ID number of the record this data entry is referring to (which corresponds to the 'serial' number of the record's entry within the "refs" table)
 marked	has the user marked this record?
 copy	has the user a printed copy of this record?
-user_file	if the user owns a digital copy of this record, he can specify its file name/path here
+selected	has the user selected this publication? (by that he can label publications that are important to him/her OR, if he/she's among the authors, indicate that this is one of the "better" publications)
 user_keys	the user's personal keywords for this record
 user_notes	the user's personal notes for this record
-selected	has the user selected this publication? (by that he can label publications that are important to him/her OR, if he/she's among the authors, indicate that this is one of the "better" publications)
+user_file	if the user owns a digital copy of this record, he can specify its file name/path here
+user_groups	the user's personal groups to which this record belongs
+bibtex_id	the unique BibTeX record identifier used when exporting to BibTeX format
+related	contains pointers to related records. Pointers can be serial numbers or partial queries, e.g.: '1234; 2678; 1988; author=steffens' -> items separated by ";" will be connected by OR. Pure-digit items: assumed to be record serials. Dynamic items: 'field=content' syntax will be resolved to 'field RLIKE "content"'
 
 
 
@@ -27,10 +30,13 @@ user_id	MEDIUMINT UNSIGNED NOT NULL
 record_id	MEDIUMINT UNSIGNED NOT NULL
 marked	ENUM("no","yes") NOT NULL
 copy	ENUM("false","true","ordered","fetch") NOT NULL
-user_file	VARCHAR(255)
+selected	ENUM("no","yes") NOT NULL
 user_keys	TEXT
 user_notes	TEXT
-selected	ENUM("no","yes") NOT NULL
+user_file	VARCHAR(255)
+user_groups	TEXT
+bibtex_id	VARCHAR(255)
+related	TEXT
 
 INDEX	(user_id,record_id)
 
@@ -39,7 +45,7 @@ INDEX	(user_id,record_id)
 table creation code
 -------------------
 
-CREATE TABLE user_data (data_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id MEDIUMINT UNSIGNED NOT NULL, record_id MEDIUMINT UNSIGNED NOT NULL, marked ENUM("no","yes") NOT NULL, copy ENUM("false","true","ordered","fetch") NOT NULL, user_file VARCHAR(255), user_keys TEXT, user_notes TEXT, selected ENUM("no","yes") NOT NULL, INDEX (user_id,record_id));
+CREATE TABLE user_data (data_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id MEDIUMINT UNSIGNED NOT NULL, record_id MEDIUMINT UNSIGNED NOT NULL, marked ENUM("no","yes") NOT NULL, copy ENUM("false","true","ordered","fetch") NOT NULL, selected ENUM("no","yes") NOT NULL, user_keys TEXT, user_notes TEXT, user_file VARCHAR(255), user_groups TEXT, bibtex_id VARCHAR(255), related TEXT, INDEX (user_id,record_id));
 
 
 rules for data import
@@ -57,9 +63,9 @@ rules for data import
 load data code
 --------------
 
-LOAD DATA LOCAL INFILE "/Users/matthias/Doktor/05-Intern/IPOE_Literature_Database/user_data.txt" INTO TABLE user_data;
+LOAD DATA LOCAL INFILE "/PATH/TO/FILE/user_data.txt" INTO TABLE user_data;
 
-oder alternativ im Terminal-Kommando-Prompt:
+or, alternatively, use something like the following from your shell:
 
-mysqlimport --local -u root -p literature "/Users/matthias/Doktor/05-Intern/IPOE_Literature_Database/user_data.txt"
+mysqlimport --local -u root -p YOUR_DB_NAME "/PATH/TO/FILE/user_data.txt"
 
