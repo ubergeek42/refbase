@@ -348,15 +348,32 @@
 			if ("$showLinks" == "1")
 			{
 				echo "\n\t<td valign=\"top\">";
+
+				echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20address%2C%20corporate_author%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20location%2C%20call_number%2C%20reprint_status%2C%20marked%2C%20approved%2C%20file%2C%20serial%2C%20type%2C%20notes%2C%20user_keys%2C%20user_notes%20FROM%20refs%20"
+					. "WHERE%20serial%20RLIKE%20%22%5E%28" . $row["serial"]
+					. "%29%24%22%20ORDER%20BY%20" . rawurlencode($orderBy)
+					. "&amp;showQuery=" . $showQuery
+					. "&amp;showLinks=" . $showLinks
+					. "&amp;formType=sqlSearch"
+					. "&amp;submit=Display"
+					. "\"><img src=\"img/details.gif\" alt=\"details\" title=\"show details\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
+
+				echo "\n\t\t<a href=\"record.php?recordAction=edit&amp;serialNo=" . $row["serial"]
+					. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit record\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
+
+				if (!empty($row["url"]) OR (!empty($row["doi"])))
+					echo "\n\t\t<br>";
+
 				if (!empty($row["url"]))
-					echo "<a href=\"" . $row["url"] . "\"><img src=\"img/link.gif\" alt=\"url\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
-	
-				if (!empty($row["doi"]))
-					echo "<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/doi.gif\" alt=\"doi\" width=\"20\" height=\"10\" hspace=\"0\" border=\"0\"></a>";
-	
-				if (empty($row["url"]) AND (empty($row["doi"])))
+					echo "\n\t\t<a href=\"" . $row["url"] . "\"><img src=\"img/link.gif\" alt=\"url\" title=\"goto web page\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+
+				if (!empty($row["url"]) AND (!empty($row["doi"])))
 					echo "&nbsp;&nbsp;";
-				echo "</td>";
+
+				if (!empty($row["doi"]))
+					echo "\n\t\t<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/doi.gif\" alt=\"doi\" title=\"goto web page (via DOI)\" width=\"20\" height=\"10\" hspace=\"0\" border=\"0\"></a>";
+
+				echo "\n\t</td>";
 			}
 			// Finish the row
 			echo "\n</tr>";
@@ -543,15 +560,22 @@
 									if ($i == "0") // ... print a column with links if it's the first row of attribute data:
 									{
 										$recordData .= "\n\t<td valign=\"top\">";
-										if (!empty($row["url"]))
-											$recordData .= "<a href=\"" . $row["url"] . "\"><img src=\"img/link.gif\" alt=\"url\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
-							
-										if (!empty($row["doi"]))
-											$recordData .= "<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/doi.gif\" alt=\"doi\" width=\"20\" height=\"10\" hspace=\"0\" border=\"0\"></a>";
-							
-										if (empty($row["url"]) AND (empty($row["doi"])))
+										$recordData .= "\n\t\t<a href=\"record.php?recordAction=edit&amp;serialNo=" . $row["serial"]
+													. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit record\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
+
+										if (!empty($row["url"]) OR (!empty($row["doi"])))
 											$recordData .= "&nbsp;&nbsp;";
-										$recordData .= "</td>";
+
+										if (!empty($row["url"]))
+											$recordData .= "\n\t\t<a href=\"" . $row["url"] . "\"><img src=\"img/link.gif\" alt=\"url\" title=\"goto web page\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+							
+										if (!empty($row["url"]) AND (!empty($row["doi"])))
+											$recordData .= "&nbsp;&nbsp;";
+
+										if (!empty($row["doi"]))
+											$recordData .= "\n\t\t<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/doi.gif\" alt=\"doi\" title=\"goto web page (via DOI)\" width=\"20\" height=\"10\" hspace=\"0\" border=\"0\"></a>";
+
+										$recordData .= "\n\t</td>";
 									}
 									else // ... otherwise simply print an empty TD tag:
 										$recordData .= "\n\t<td valign=\"top\">&nbsp;</td>";
