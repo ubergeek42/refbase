@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   27-Feb-05, 13:26
+	// Modified:   27-Feb-05, 22:27
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -380,7 +380,7 @@
 
 		sendEmail($emailRecipient, $emailSubject, $emailBody);
 
-		header("Location: user_receipt.php?userID=0"); // Note: we use the non-existing user ID '0' as trigger to show the email notification receipt page (instead of the standard receipt page)
+		header("Location: user_receipt.php?userID=-1"); // Note: we use the non-existing user ID '-1' as trigger to show the email notification receipt page (instead of the standard receipt page)
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
 
