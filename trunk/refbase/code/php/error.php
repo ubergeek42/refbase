@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./error.php
 	// Created:    5-Jan-03, 16:35
-	// Modified:   01-Mar-04, 17:06
+	// Modified:   29-Aug-04, 22:49
 
 	// This php script will display an error page
 	// showing any error that did occur. It will display
@@ -70,7 +70,7 @@
 	// (4a) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Error", "noindex,nofollow", "Feedback page that shows any error that occurred while using the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
-	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery, $viewType);
+	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
 
 
 	// URL encode the sqlQuery part within '$oldQuery' while maintaining the rest unencoded(!):
