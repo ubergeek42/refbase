@@ -11,7 +11,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
   //
   // Created:    02-Oct-04, 12:00
-  // Modified:   20-Mar-05, 06:40
+  // Modified:   20-Mar-05, 17:40
 
   // This include file contains functions that'll export records to MODS XML.
   // Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -48,8 +48,8 @@
   //     - address (?name->affiliation?)
   //     - medium  (?typeOfResource?)
   //   - Don't know how refbase users use these
-  //     - corporate_author
-  //     - area
+  //     - corporate_author (could be either an affiliation or a separate name)
+  //     - area (could be either topic or geographic, so we do nothing)
   //     - expedition
   //   - Can't find a place in MODS XML
   //     - file
@@ -388,6 +388,7 @@
       if (!empty($row['editor']))
         $nameArray = separateNames("; ", ", ", " ", $row['editor'], "personal",
                                    "editor");
+    }
 
     // --- END TYPE != BOOK CHAPTER || JOURNAL ARTICLE ---
 
@@ -406,7 +407,6 @@
       if (!empty($row['publication']))
         $related->setTagContent($row['publication'],
                                 "relatedItem/titleInfo/title");
-      }
 
       // title (Abbreviated Journa)
       if (!empty($row['abbrev_journal'])) {
@@ -533,7 +533,7 @@
       $record->addXMLBranch($related);
     }
 
-    // --- END TYPE != BOOK CHAPTER || JOURNAL ARTICLE ---
+    // --- END TYPE == BOOK CHAPTER || JOURNAL ARTICLE ---
 
 
     return $record;
