@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   17-Feb-05, 19:40
+	// Modified:   24-Feb-05, 14:44
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -631,7 +631,7 @@
 		global $markupSearchReplacePatterns; // defined in 'ini.inc.php'
 		global $fileVisibility; // defined in 'ini.inc.php'
 		global $fileVisibilityException; // defined in 'ini.inc.php'
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
 		if (eregi(".+LIMIT *[0-9]+",$query)) // query does contain the 'LIMIT' parameter
 			$orderBy = eregi_replace(".+ORDER BY (.+) LIMIT.+","\\1",$query); // extract 'ORDER BY'... parameter (without including any 'LIMIT' parameter)
@@ -1348,7 +1348,7 @@
 	function generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $headerMsg, $userID, $viewType, $selectedRecordsArray)
 	{
 		global $markupSearchReplacePatterns; // defined in 'ini.inc.php'
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
 		// If the query has results ...
 		if ($rowsFound > 0)
@@ -1673,7 +1673,7 @@
 	// Build the database query from user input provided by the 'simple_search.php' form:
 	function extractFormElementsSimple($showLinks)
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableRefs; // defined in 'db.inc.php'
 
 		$query = "SELECT"; // (Note: we care about the wrong "SELECT, author" etc. syntax later on...)
 
@@ -1937,7 +1937,7 @@
 	function extractFormElementsLibrary($showLinks)
 	{
 		global $librarySearchPattern; // defined in 'ini.inc.php'
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableRefs; // defined in 'db.inc.php'
 
 		$query = "SELECT"; // (Note: we care about the wrong "SELECT, author" etc. syntax later on...)
 
@@ -2364,7 +2364,7 @@
 	// Build the database query from user input provided by the 'advanced_search.php' form:
 	function extractFormElementsAdvanced($showLinks, $loginEmail, $userID)
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
 		$query = "SELECT"; // (Note: we care about the wrong "SELECT, author" etc. syntax later on...)
 
@@ -4332,7 +4332,7 @@
 	// Build the database query from records selected by the user within the query results list (which, in turn, was returned by 'search.php'):
 	function extractFormElementsQueryResults($displayType, $showLinks, $citeOrder, $orderBy, $userID, $sqlQuery, $referer, $recordSerialsArray)
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
 		if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_groups", $_SESSION['user_permissions']))) // if a user is logged in AND the 'user_permissions' session variable contains 'allow_user_groups', extract form elements which add/remove the selected records to/from a user's group:
 		{
@@ -4368,11 +4368,23 @@
 		// Depending on the chosen output format, construct an appropriate SQL query:
 		if ($displayType == "Cite")
 			{
-			// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
-			if ($citeOrder == "year") // sort records first by year (descending), then in the usual way:
-				$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial FROM $tableRefs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY year DESC, first_author, author_count, author, title";
-			else // if any other or no '$citeOrder' parameter is specified, we supply the default ORDER BY pattern (which is suitable for citation in a journal etc.):
-				$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial FROM $tableRefs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY first_author, author_count, author, year, title";
+				// for the selected records, select all fields that are visible in Citation view:
+				$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi";
+
+				if (isset($_SESSION['loginEmail'])) // if a user is logged in...
+					$query .= ", cite_key"; // add user-specific fields which are required in Citation view
+
+				$query .= ", serial"; // add 'serial' column
+
+				if (isset($_SESSION['loginEmail'])) // if a user is logged in...
+					$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID . " WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\"";
+				else // NO user logged in
+					$query .= " FROM $tableRefs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\"";
+
+				if ($citeOrder == "year") // sort records first by year (descending), then in the usual way:
+					$query .= " ORDER BY year DESC, first_author, author_count, author, title";
+				else // if any other or no '$citeOrder' parameter is specified, we supply the default ORDER BY pattern (which is suitable for citation in a journal etc.):
+					$query .= " ORDER BY first_author, author_count, author, year, title";
 			}
 
 		elseif (ereg("^(Display|Export)$", $displayType)) // (hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
@@ -4425,7 +4437,7 @@
 	// Build the database query from user input provided by the 'extract.php' form:
 	function extractFormElementsExtract($citeOrder)
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableRefs; // defined in 'db.inc.php'
 
 		// Extract form elements (that are unique to the 'extract.php' form):
 		$sourceText = $_POST['sourceText']; // get the source text that contains the record serial numbers
@@ -4456,7 +4468,7 @@
 	// Build the database query from user input provided by the "Quick Search" form on the main page ('index.php'):
 	function extractFormElementsQuick($showLinks)
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableRefs; // defined in 'db.inc.php'
 
 		$query = "SELECT author, title, year, publication";
 
@@ -4496,7 +4508,7 @@
 	// Build the database query from user input provided by the "Show My Group" form on the main page ('index.php') or above the query results list (that was produced by 'search.php'):
 	function extractFormElementsGroup($sqlQuery, $showLinks, $userID)
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
 		if (!empty($sqlQuery)) // if there's a previous SQL query available (as is the case if the group search originated from a search results page - and not from the main page 'index.php')
 		{
@@ -4539,7 +4551,7 @@
 	//       'showLogin()' function (from 'include.inc.php').
 	function extractFormElementsMyRefs($showLinks, $loginEmail, $userID)
 	{
-		global $tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers; // defined in 'db.inc.php'
+		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
 		$query = "SELECT author, title, year, publication, volume, pages";
 
