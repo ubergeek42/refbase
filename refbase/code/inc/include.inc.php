@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   27-Feb-05, 20:52
+	// Modified:   28-Mar-05, 22:07
 
 	// This file contains important
 	// functions that are shared
@@ -1802,6 +1802,122 @@ EOF;
 
 		return $optionTags;
 	}
+
+	// --------------------------------------------------------------------
+
+	// Produce a <select> list with unique items from the specified field
+	// Parameters:
+	// 1: Database connection
+	// 2. Table that contains values
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value (display string)
+	// 11. String that gets submitted instead of the display string given in 10.
+	// 12. Optional <OPTION SELECTED>
+	// 13. Restrict query to field... (keep empty if no restriction wanted)
+	// 14. ...where field contents are...
+	// 15. Split field contents into substrings? (yes = true, no = false)
+	// 16. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
+	function selectDistinct($connection,
+							$refsTableName,
+							$refsTablePrimaryKey,
+							$userDataTableName,
+							$userDataTablePrimaryKey,
+							$userDataTableUserID,
+							$userDataTableUserIDvalue,
+							$columnName,
+							$pulldownName,
+							$additionalOptionDisplay,
+							$additionalOption,
+							$defaultValue,
+							$RestrictToField,
+							$RestrictToFieldContents,
+							$SplitValues,
+							$SplitPattern)
+	{
+	$defaultWithinResultSet = FALSE;
+
+	// Query to find distinct values of $columnName
+	// in $refsTableName
+	if (isset($_SESSION['loginEmail'])) // if a user is logged in
+		if ($RestrictToField == "")
+			 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName LEFT JOIN $userDataTableName ON $refsTablePrimaryKey = $userDataTablePrimaryKey AND $userDataTableUserID = $userDataTableUserIDvalue ORDER BY $columnName";
+		else
+			 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName LEFT JOIN $userDataTableName ON $refsTablePrimaryKey = $userDataTablePrimaryKey AND $userDataTableUserID = $userDataTableUserIDvalue WHERE $RestrictToField RLIKE $RestrictToFieldContents ORDER BY $columnName";
+	else // if NO user is logged in
+		if ($RestrictToField == "")
+			 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName ORDER BY $columnName";
+		else
+			 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName WHERE $RestrictToField RLIKE $RestrictToFieldContents ORDER BY $columnName";
+
+	// Run the distinctQuery on the database through the connection:
+	$resultId = queryMySQLDatabase($distinctQuery, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+
+	// Retrieve all distinct values
+	$i = 0;
+	while ($row = @ mysql_fetch_array($resultId))
+		if ($SplitValues) // If desired, split field contents into substrings
+			{
+				// split field data on the pattern specified in $SplitPattern:
+				$splittedFieldData = split($SplitPattern, $row[$columnName]); // yields an array as a result
+				// ... copy all array elements to end of $resultBuffer:
+				foreach($splittedFieldData as $element)
+					$resultBuffer[$i++] = $element;
+			}
+		else // copy field data (as is) to end of $resultBuffer:
+			$resultBuffer[$i++] = $row[$columnName];
+
+	if ($SplitValues) // (otherwise, data are already DISTINCT and ORDERed BY!)
+		{
+			// remove duplicate values from array:
+			$resultBuffer = array_unique($resultBuffer);
+			// sort in ascending order:
+			sort($resultBuffer);
+		}
+
+	// Start the select widget
+	echo "\n\t\t<select name=\"$pulldownName\">";		 
+
+	// Is there an additional option?
+	if (isset($additionalOptionDisplay))
+		// Yes, but is it the default option?
+		if ($defaultValue == $additionalOptionDisplay)
+			// Show the additional option as selected
+			echo "\n\t\t\t<option value=\"$additionalOption\" selected>$additionalOptionDisplay</option>";
+		else
+			// Just show the additional option
+			echo "\n\t\t\t<option value=\"$additionalOption\">$additionalOptionDisplay</option>";
+
+	// check for a default value
+	if (isset($defaultValue))
+	{
+		// Yes, there's a default value specified
+
+		// Check if the defaultValue is in the 
+		// database values
+		foreach ($resultBuffer as $result)
+			if ($result == $defaultValue)
+				// Yes, show as selected
+				echo "\n\t\t\t<option selected>$result</option>";
+			else
+				// No, just show as an option
+				echo "\n\t\t\t<option>$result</option>";
+	}	// end if defaultValue
+	else 
+	{ 
+		// No defaultValue
+		
+		// Show database values as options
+		foreach ($resultBuffer as $result)
+			echo "\n\t\t\t<option>$result</option>";
+	}
+	echo "\n\t\t</select>";
+	} // end of function
 
 	// --------------------------------------------------------------------
 
