@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 00:25
-	// Modified:   23-Feb-05, 22:23
+	// Modified:   27-Feb-05, 00:30
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -58,8 +58,9 @@
 	else
 		$formType = "";
 	
-	// Extract the type of display requested by the user (either 'Display', 'Cite' or ''):
-	// ('' will produce the default columnar output style)
+	// Extract the type of display requested by the user. Normally, this will be one of the following:
+	//  - '' => if the 'submit' parameter is empty, this will produce the default columnar output style ('showUsers()' function)
+	//   - 'Add', 'Remove', 'Allow' or 'Disallow' => these values will trigger actions that act on the selected users
 	if (isset($_REQUEST['submit']))
 		$displayType = $_REQUEST['submit'];
 	else
@@ -449,7 +450,7 @@
 				// Insert a divider line (which separates the results data from the results footer):
 				echo "\n<hr align=\"center\" width=\"93%\">";
 
-				// Build a TABLE containing rows with buttons for displaying/citing selected records
+				// Build a TABLE containing rows with buttons which will trigger actions that act on the selected users
 				// Call the 'buildResultsFooter()' function (which does the actual work):
 				$userResultsFooter = buildUserResultsFooter($NoColumns);
 				echo $userResultsFooter;
@@ -477,7 +478,7 @@
 	function buildUserResultsFooter($NoColumns)
 	{
 		// Start a TABLE
-		$userResultsFooterRow = "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"90%\" summary=\"This table holds the results footer which offers a form to assign selected users to a group\">";
+		$userResultsFooterRow = "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"90%\" summary=\"This table holds the results footer which offers a form to assign selected users to a group and set their permissions\">";
 
 		$userResultsFooterRow .= "\n<tr>"
 
@@ -522,6 +523,43 @@
 		$userResultsFooterRow .= "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
 								. "\n\t\t<input type=\"radio\" name=\"userGroupActionRadio\" value=\"0\" title=\"click here if you want to setup a new group; then, enter the group name in the text box to the right\"$groupSearchTextInputChecked>"
 								. "\n\t\t<input type=\"text\" name=\"userGroupName\" value=\"\" size=\"8\" title=\"$groupSearchTextInputTitle\">"
+								. "\n\t</td>"
+	
+								. "\n</tr>";
+
+		// Set user permissions functionality:
+		$userResultsFooterRow .= "\n<tr>"
+
+								. "\n\t<td align=\"left\" valign=\"top\">&nbsp;</td>"
+
+								. "\n\t<td align=\"left\" valign=\"top\" colspan=\"" . ($NoColumns - 1) . "\">"
+								. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Allow\" title=\"allow all selected users to use the specified option\">&nbsp;"
+								. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Disallow\" title=\"do not allow the selected users to use the specified option\">&nbsp;&nbsp;&nbsp;feature:&nbsp;&nbsp;"
+								. "\n\t\t<select name=\"userPermissionSelector\" title=\"select the permission setting you'd like to change for the selected users\">";
+
+		$userPermissionsArray = array('allow_add'                 => 'add records',
+										'allow_edit'              => 'edit records',
+										'allow_delete'            => 'delete records',
+										'allow_download'          => 'file download',
+										'allow_upload'            => 'file upload',
+										'allow_details_view'      => 'details view',
+										'allow_print_view'        => 'print view',
+										'allow_cite'              => 'cite',
+										'allow_import'            => 'import',
+										'allow_batch_import'      => 'batch import',
+										'allow_export'            => 'export',
+										'allow_batch_export'      => 'batch export',
+										'allow_user_groups'       => 'user groups',
+										'allow_user_queries'      => 'user queries',
+										'allow_rss_feeds'         => 'RSS feeds',
+										'allow_sql_search'        => 'SQL search',
+										'allow_change_personinfo' => 'change personal info');
+//										'allow_edit_call_number'  => 'edit call number');
+
+		$optionTags = buildSelectMenuOptions($userPermissionsArray, "", "\t\t\t", true); // build properly formatted <option> tag elements from the items listed in the '$userPermissionsArray' variable
+		$userResultsFooterRow .= $optionTags;
+
+		$userResultsFooterRow .= "\n\t\t</select>"
 								. "\n\t</td>"
 	
 								. "\n</tr>";
@@ -592,6 +630,12 @@
 				$userGroup = "";
 		}
 
+		// extract the specified permission setting:
+		if (isset($_POST['userPermissionSelector']))
+			$userPermission = $_POST['userPermissionSelector']; // extract the value of the 'userPermissionSelector' popup menu
+		else
+			$userPermission = "";
+
 
 		// join array elements:
 		if (!empty($recordSerialsArray)) // the user did check some checkboxes
@@ -599,8 +643,29 @@
 		else // the user didn't check any checkboxes
 			$recordSerialsString = "0"; // we use '0' which definitely doesn't exist as serial, resulting in a "nothing found" feedback
 
-
-		modifyUserGroups($tableUsers, $displayType, $recordSerialsArray, $recordSerialsString, "", $userGroup, $userGroupActionRadio); // add (remove) selected records to (from) the specified user group (function 'modifyUserGroups()' is defined in 'include.inc.php')
+		if (!empty($recordSerialsArray))
+		{
+			if (ereg("^(Add|Remove)$", $displayType)) // (hitting <enter> within the 'userGroupName' text entry field will act as if the user clicked the 'Add' button)
+			{
+				modifyUserGroups($tableUsers, $displayType, $recordSerialsArray, $recordSerialsString, "", $userGroup, $userGroupActionRadio); // add (remove) selected records to (from) the specified user group (function 'modifyUserGroups()' is defined in 'include.inc.php')
+			}
+			elseif (ereg("^(Allow|Disallow)$", $displayType))
+			{
+				if ($displayType == "Allow")
+					$userPermissionsArray = array("$userPermission" => "yes");
+				else // ($displayType == "Disallow")
+					$userPermissionsArray = array("$userPermission" => "no");
+	
+				// Update the specified user permission for the current user:
+				updateUserPermissions($recordSerialsString, $userPermissionsArray);
+	
+				// save an informative message:
+				$HeaderString = "User permission <code>$userPermission</code> was updated successfully!";
+			
+				// Write back session variables:
+				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+			}
+		}
 
 
 		// re-apply the current sqlQuery:
