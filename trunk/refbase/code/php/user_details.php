@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_details.php
 	// Created:    16-Apr-02, 10:55
-	// Modified:   16-Nov-03, 21:52
+	// Modified:   10-Jan-04, 12:45
 
 	// This script shows the user a user <form>. It can be used both for INSERTing a new user and for UPDATE-ing an existing user.
 	// If the user is logged in, then it is an UPDATE; otherwise, an INSERT. The script also shows error messages above widgets that
@@ -88,7 +88,7 @@
 					else // ask a user to submit its user details for approval by the database admin:
 						$HeaderString = "Please fill in the details below to join. Fields shown in <b>bold</b> are mandatory.";
 			else // -> there were errors validating the user's details
-				$HeaderString = "There were validation errors regarding the details you entered. Please check the comments above the respective fields.";
+				$HeaderString = "<b><span class=\"warning\">There were validation errors regarding the details you entered. Please check the comments above the respective fields:</span></b>";
 	else
 		session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
 
