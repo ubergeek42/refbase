@@ -17,11 +17,12 @@ About refbase
     - display the selected records in different citation formats
   LOGGED IN USERS
     - user specific fields which are stored individually for each user
-    - display or search winthin only the user's own literature
-    - export selected records to MODS XML
+    - display or search within only the user's own literature
+    - export selected records to MODS XML and (via the freely available
+      bibutils utilities) to BibTex, EndNote, and RIS
     - automatic email announcements for newly added records
     - save and recall search queries
-    - assing records to user-specific groups
+    - adding records to user-specific groups
     - add/edit/delete records as well as file upload & download links
     - import of full records from Cambridge Scientific Abstracts
   ADMINISTRATOR
@@ -34,13 +35,14 @@ Credits
 
 Requirements
 ------------
-  PHP    <http://www.php.net/>
-  MySQL  <http://www.mysql.com/>
+  - a web server (like the Apache HTTP Server <http://httpd.apache.org/>)
+  - PHP (version 4.1.0 or greater) <http://www.php.net/>
+  - MySQL <http://www.mysql.com/>
 
 Installation
 ------------
   See INSTALL
-  
+
 New Features
 ------------
   See NEWS
@@ -56,6 +58,10 @@ Known issues
 What is missing?
 ----------------
   See TODO
+
+License
+-------
+  See COPYING
 
 Further information
 -------------------
