@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_receipt.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   20-Jan-03, 23:29
+	// Modified:   16-Nov-03, 21:55
 
 	// This script shows the user a receipt for their user UPDATE or INSERT.
 	// It carries out no database actions and can be bookmarked.
@@ -73,7 +73,11 @@
 	// (since only the admin will be allowed to delete a user):
  	if (session_is_registered("loginEmail") && ($loginEmail == $adminLoginEmail)) // ('$adminLoginEmail' is specified in 'ini.inc.php')
  	{
-		$userAction = $_REQUEST['userAction'];
+		if (isset($_REQUEST['userAction']))
+			$userAction = $_REQUEST['userAction'];
+		else
+			$userAction = ""; // we do it for clarity reasons here (and in order to prevent any 'Undefined variable...' messages)
+
 		if ($userAction == "Delete")
 		{
 			if ($userID == getUserID($loginEmail, NULL)) // if the admin userID was passed to the script
@@ -145,7 +149,7 @@
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
 		displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Receipt", "noindex,nofollow", "Receipt page confirming correct submission of new user details to the " . htmlentities($officialDatabaseName), "", false, "");
-		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
+		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 		$confirmationText = "Thanks for your interest in the " . htmlentities($officialDatabaseName) . "!"
 					. "<br><br>The data you provided have been sent to our database admin."
@@ -197,7 +201,7 @@
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
 		displayHTMLhead(htmlentities($officialDatabaseName) . " -- User Receipt", "noindex,nofollow", "Receipt page confirming correct entry of user details for the " . htmlentities($officialDatabaseName), "", false, "");
-		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks);
+		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 		// Start a table:
 		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays user account details\">";
