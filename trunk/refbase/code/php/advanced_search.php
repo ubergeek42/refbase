@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./advanced_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   12-Oct-04, 14:02
+	// Modified:   01-Nov-04, 22:45
 
 	// Search form providing access to all fields of the database.
 	// It offers some output options (like how many records to display per page)
@@ -1067,8 +1067,8 @@
 				 "userKeysName",
 				 "All",
 				 "All",
-				 "type",
-				 "\"journal\"",
+				 "",
+				 "",
 				 true,
 				 " *[,;()] *");
 
@@ -1092,6 +1092,62 @@
 			. "\n\t<td><b>User File:</b></td>\n\t<td>&nbsp;</td>"
 			. "\n\t<td>\n\t\t<select name=\"userFileSelector\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
 			. "\n\t<td><input type=\"text\" name=\"userFileName\" size=\"42\"></td>"
+			. "\n</tr>"
+			. "\n<tr>"
+			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showUserGroups\" value=\"1\"></td>"
+			. "\n\t<td><b>User Groups:</b></td>\n\t<td align=\"center\"><input type=\"radio\" name=\"userGroupsRadio\" value=\"1\" checked></td>"
+			. "\n\t<td>\n\t\t<select name=\"userGroupsSelector\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
+			. "\n\t<td>";
+
+	// (3) Run the query on the literature database through the connection:
+	//     (here by use of the 'selectDistinct' function)
+	// Produce the select list
+	// Parameters:
+	// 1: Database connection
+	// 2. Table that contains values
+	// 3. The field name of the table's primary key
+	// 4. Table name of the user data table
+	// 5. The field name within the user data table that corresponds to the field in 3.
+	// 6. The field name of the user ID field within the user data table
+	// 7. The user ID of the currently logged in user (which must be provided as a session variable)
+	// 8. Attribute that contains values
+	// 9. <SELECT> element name
+	// 10. An additional non-database value
+	// 11. Optional <OPTION SELECTED>
+	// 12. Restrict query to field... (keep empty if no restriction wanted)
+	// 13. ...where field contents are...
+	// 14. Split field contents into substrings? (yes = true, no = false)
+	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
+	selectDistinct($connection,
+				 "refs",
+				 "serial",
+				 "user_data",
+				 "record_id",
+				 "user_id",
+				 $loginUserID,
+				 "user_groups",
+				 "userGroupsName",
+				 "All",
+				 "All",
+				 "",
+				 "",
+				 true,
+				 " *[,;()] *");
+
+	echo "\n\t</td>"
+			. "\n</tr>";
+
+	echo "\n<tr>"
+			. "\n\t<td>&nbsp;</td>"
+			. "\n\t<td align=\"right\">or:</td>\n\t<td align=\"center\"><input type=\"radio\" name=\"userGroupsRadio\" value=\"0\"></td>"
+			. "\n\t<td>\n\t\t<select name=\"userGroupsSelector2\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
+			. "\n\t<td><input type=\"text\" name=\"userGroupsName2\" size=\"42\"></td>"
+			. "\n</tr>"
+			. "\n<tr>"
+			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showCiteKey\" value=\"1\"></td>"
+			. "\n\t<td><b>Cite Key:</b></td>\n\t<td>&nbsp;</td>"
+			. "\n\t<td>\n\t\t<select name=\"citeKeySelector\">\n\t\t\t<option>contains</option>\n\t\t\t<option>does not contain</option>\n\t\t\t<option>is equal to</option>\n\t\t\t<option>is not equal to</option>\n\t\t\t<option>starts with</option>\n\t\t\t<option>ends with</option>\n\t\t</select>\n\t</td>"
+			. "\n\t<td><input type=\"text\" name=\"citeKeyName\" size=\"42\"></td>"
 			. "\n</tr>";
 	}
 
@@ -1110,7 +1166,7 @@
 			. "\n</tr>";
 
 	if (isset($_SESSION['loginEmail'])) // if a user is logged in, add user specific fields to the sort menus:
-		$userSpecificSortFields = "\n\t\t\t<option></option>\n\t\t\t<option>marked</option>\n\t\t\t<option>copy</option>\n\t\t\t<option>selected</option>\n\t\t\t<option>user_keys</option>\n\t\t\t<option>user_notes</option>\n\t\t\t<option>user_groups</option>\n\t\t\t<option>user_file</option>\n\t\t\t<option>bibtex_id</option>";
+		$userSpecificSortFields = "\n\t\t\t<option></option>\n\t\t\t<option>marked</option>\n\t\t\t<option>copy</option>\n\t\t\t<option>selected</option>\n\t\t\t<option>user_keys</option>\n\t\t\t<option>user_notes</option>\n\t\t\t<option>user_file</option>\n\t\t\t<option>user_groups</option>\n\t\t\t<option>cite_key</option>";
 	else
 		$userSpecificSortFields = "";
 
