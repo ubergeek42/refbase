@@ -25,7 +25,7 @@ allow_user_groups	specifies whether this group is allowed to use the 'user group
 allow_user_queries	specifies whether this group is allowed to use the 'user queries' feature
 allow_rss_feeds	specifies whether this group is allowed to generate dynamic RSS feeds from any query
 allow_sql_search	specifies whether this group is allowed to execute custom SQL queries via 'sql_search.php'
-allow_change_personinfo	specifies whether this group is allowed to change his personal data (like name, address or password)
+allow_modify_options	specifies whether this group is allowed to change his personal data (like name, address or password)
 allow_edit_call_number	specifies whether this group is allowed to fully edit the contents of the 'call_number' field (like the database admin)
 
 
@@ -51,7 +51,7 @@ allow_user_groups	ENUM('yes','no') NOT NULL
 allow_user_queries	ENUM('yes','no') NOT NULL
 allow_rss_feeds	ENUM('yes','no') NOT NULL
 allow_sql_search	ENUM('yes','no') NOT NULL
-allow_change_personinfo	ENUM('yes','no') NOT NULL
+allow_modify_options	ENUM('yes','no') NOT NULL
 allow_edit_call_number	ENUM('no','yes') NOT NULL
 
 INDEX	(group_id)
@@ -61,7 +61,7 @@ INDEX	(group_id)
 table creation code
 -------------------
 
-CREATE TABLE group_permissions (group_permission_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, group_id MEDIUMINT UNSIGNED NOT NULL, allow_add ENUM('yes','no') NOT NULL, allow_edit ENUM('yes','no') NOT NULL, allow_delete ENUM('yes','no') NOT NULL, allow_download ENUM('yes','no') NOT NULL, allow_upload ENUM('yes','no') NOT NULL, allow_details_view ENUM('yes','no') NOT NULL, allow_print_view ENUM('yes','no') NOT NULL, allow_cite ENUM('yes','no') NOT NULL, allow_import ENUM('yes','no') NOT NULL, allow_batch_import ENUM('yes','no') NOT NULL, allow_export ENUM('yes','no') NOT NULL, allow_batch_export ENUM('yes','no') NOT NULL, allow_user_groups ENUM('yes','no') NOT NULL, allow_user_queries ENUM('yes','no') NOT NULL, allow_rss_feeds ENUM('yes','no') NOT NULL, allow_sql_search ENUM('yes','no') NOT NULL, allow_change_personinfo ENUM('yes','no') NOT NULL, allow_edit_call_number ENUM('no','yes') NOT NULL, INDEX (group_id));
+CREATE TABLE group_permissions (group_permission_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, group_id MEDIUMINT UNSIGNED NOT NULL, allow_add ENUM('yes','no') NOT NULL, allow_edit ENUM('yes','no') NOT NULL, allow_delete ENUM('yes','no') NOT NULL, allow_download ENUM('yes','no') NOT NULL, allow_upload ENUM('yes','no') NOT NULL, allow_details_view ENUM('yes','no') NOT NULL, allow_print_view ENUM('yes','no') NOT NULL, allow_cite ENUM('yes','no') NOT NULL, allow_import ENUM('yes','no') NOT NULL, allow_batch_import ENUM('yes','no') NOT NULL, allow_export ENUM('yes','no') NOT NULL, allow_batch_export ENUM('yes','no') NOT NULL, allow_user_groups ENUM('yes','no') NOT NULL, allow_user_queries ENUM('yes','no') NOT NULL, allow_rss_feeds ENUM('yes','no') NOT NULL, allow_sql_search ENUM('yes','no') NOT NULL, allow_modify_options ENUM('yes','no') NOT NULL, allow_edit_call_number ENUM('no','yes') NOT NULL, INDEX (group_id));
 
 
 rules for data import
