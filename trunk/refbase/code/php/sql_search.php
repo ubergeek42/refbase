@@ -1,5 +1,15 @@
 <?php
-	// Search formular that offers to specify a custom sql query
+	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
+	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+	//             Please see the GNU General Public License for more details.
+	// File:       ./sql_search.php
+	// Created:    29-Jul-02, 16:39
+	// Modified:   12-Jan-03, 16:35
+
+	// Search formular that offers to specify a custom sql query.
+	// It offers some output options (like how many records to display per page)
+	// and provides some examples and links for further information on sql queries.
 
 	/*
 	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book

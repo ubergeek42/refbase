@@ -1,4 +1,14 @@
 <?php
+	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
+	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+	//             Please see the GNU General Public License for more details.
+	// File:       ./search.php
+	// Created:    30-Jul-02, 17:40
+	// Modified:   2-Jun-03, 23:27
+
+	// This is the main script that handles the search query and displays the query results
+
 	// VERSION 1.4
 	// -- generates the query URL of the currently displayed results page and routes it thru 'Display Details' and 'Add/Edit Record'
 	//    so that its's available on the subsequent receipt page that follows any add/edit/delete action!

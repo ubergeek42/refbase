@@ -1,4 +1,12 @@
 <?php
+	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
+	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+	//             Please see the GNU General Public License for more details.
+	// File:       ./user_validation.php
+	// Created:    16-Apr-02, 10:54
+	// Modified:   2-Jun-03, 13:16
+
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
 	// if it fails, it creates error messages and these are later displayed by 'user_details.php'.

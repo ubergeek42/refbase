@@ -1,4 +1,12 @@
-/* refbase CSS definitions */
+	/* Project:    Web Reference Database (refbase) <http://www.refbase.net> */
+	/* Copyright:  Matthias Steffens <mailto:refbase@extracts.de> */
+	/*             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY. */
+	/*             Please see the GNU General Public License for more details. */
+	/* File:       ./style.css */
+	/* Created:    20-Oct-02, 15:08 */
+	/* Modified:   19-Jan-03, 14:51 */
+
+	/* refbase CSS definitions */
 
 
 body        { background:#FFFFFF; color:#000000; }

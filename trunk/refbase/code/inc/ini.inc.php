@@ -1,4 +1,12 @@
 <?php
+	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
+	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+	//             Please see the GNU General Public License for more details.
+	// File:       ./ini.inc.php
+	// Created:    12-Jan-03, 17:58
+	// Modified:   2-Jun-03, 13:44
+
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
 	// I.e., you can adjust their values as needed but you must not change the variable names themselves!

@@ -1,7 +1,15 @@
 <?php
-	// Form that offers to add records or edit/delete existing ones
+	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
+	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+	//             Please see the GNU General Public License for more details.
+	// File:       ./record.php
+	// Created:    29-Jul-02, 16:39
+	// Modified:   20-Jan-03, 23:29
 
-
+	// Form that offers to add
+	// records or edit/delete
+	// existing ones.
 
 	/*
 	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book

@@ -1,4 +1,12 @@
 <?php
+	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
+	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+	//             Please see the GNU General Public License for more details.
+	// File:       ./user_receipt.php
+	// Created:    16-Apr-02, 10:54
+	// Modified:   20-Jan-03, 23:29
+
 	// This script shows the user a receipt for their user UPDATE or INSERT.
 	// It carries out no database actions and can be bookmarked.
 	// The user must be logged in to view it.

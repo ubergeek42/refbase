@@ -1,4 +1,12 @@
 <?php
+	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
+	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+	//             Please see the GNU General Public License for more details.
+	// File:       ./error.php
+	// Created:    5-Jan-03, 16:35
+	// Modified:   12-Jan-03, 15:40
+
 	// This php script will display an error page
 	// showing any error that did occur. It will display
 	// a link to the previous search results page (if any)
