@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   02-Oct-04, 01:01
+	// Modified:   02-Oct-04, 01:11
 
 	// This file contains important
 	// functions that are shared
