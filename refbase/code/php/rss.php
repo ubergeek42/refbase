@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./rss.php
 	// Created:    25-Sep-04, 12:10
-	// Modified:   30-Sep-04, 14:29
+	// Modified:   01-Oct-04, 21:15
 
 	// This script will generate a dynamic RSS feed for the current query.
 	// Useage: Perform your query until you've got the desired results. Then, copy the "track" link in the header
