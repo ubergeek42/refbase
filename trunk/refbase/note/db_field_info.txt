@@ -1,5 +1,5 @@
-MySQL database "literature"
-===========================
+MySQL database "literature", table "refs"
+=========================================
 
 field names
 -----------
