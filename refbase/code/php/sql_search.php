@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sql_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   27-Mar-05, 00:31
+	// Modified:   28-Mar-05, 20:32
 
 	// Search form that offers to specify a custom sql query.
 	// It offers some output options (like how many records to display per page)
@@ -138,7 +138,7 @@
 
 	</td>
 	<td valign="top">
-		<?php echo $loc["Show"]; ?>&nbsp;&nbsp;&nbsp;<input type="text" name="showRows" value="<?php echo $showRows; ?>" size="4">&nbsp;&nbsp;&nbsp;<?php echo $loc["Records"]." ".$loc["per page"]; ?>
+		<?php echo $loc["Show"]; ?>&nbsp;&nbsp;&nbsp;<input type="text" name="showRows" value="<?php echo $showRows; ?>" size="4">&nbsp;&nbsp;&nbsp;<?php echo $loc["records"]." ".$loc["per page"]; ?>
 
 	</td>
 </tr>
@@ -152,8 +152,8 @@
 	<td valign="top">
 		<?php echo $loc["ViewType"]; ?>:&nbsp;&nbsp;
 		<select name="viewType">
-			<option><?php echo $loc["web"]; ?></option>
-			<option><?php echo $loc["print"]; ?></option>
+			<option value="Web"><?php echo $loc["web"]; ?></option>
+			<option value="Print"><?php echo $loc["print"]; ?></option>
 		</select>
 	</td>
 </tr>
