@@ -96,8 +96,13 @@
 		}
 
 	// --- Form within 'search.php': ---------------
+	elseif ("$formType" == "refineSearch") // the user used the "Search within Results" form above the query results list (that was produced by 'search.php')
+		{
+			$query = extractFormElementsRefine($displayType, $sqlQuery, $showLinks);
+		}
 
-	elseif ($formType == "queryResults") // the user clicked either the 'Display' or 'Export' button within a query results list (that was produced by 'search.php')
+	// --- Form within 'search.php': ---------------
+	elseif ("$formType" == "queryResults") // the user clicked either the 'Display' or 'Export' button within a query results list (that was produced by 'search.php')
 		{
 			// first, check if the user did mark any checkboxes (and set up variables accordingly, they will be used within the 'displayRows()' function)
 			if (!empty($recordSerialsArray)) // some checkboxes were marked
@@ -154,10 +159,10 @@
 
 	$query = str_replace(', serial FROM refs',' FROM refs',$query); // strip 'serial' column from SQL query
 
-	if ("$formType" == "simpleSearch")
+	if (ereg("(simple|quick)Search", $formType)) // if $formType is "simpleSearch" or "quickSearch" and there is more than one WHERE clause (indicated by '...AND...'):
 		$query = str_replace('WHERE serial RLIKE ".+" AND','WHERE',$query); // strip first WHERE clause (which was added only due to an internal workaround)
 
-	$queryURL = rawurlencode ($query); // URL encode SQL query
+	$queryURL = rawurlencode($query); // URL encode SQL query
 
 	// Find out how many rows are available:
 	$rowsFound = @ mysql_num_rows($result);
@@ -200,7 +205,7 @@
 		exportRows($result, $rowsFound, $query, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $exportFormat);
 
 	else // show all records in columnar style
-		displayColumns($result, $rowsFound, $query, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $exportFormat);
+		displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $exportFormat);
 
 
 	// (5) CLOSE the database connection:
@@ -252,20 +257,11 @@
 	// --------------------------------------------------------------------
 
 	// SHOW THE RESULTS IN AN HTML <TABLE> (columnar layout)
-	function displayColumns($result, $rowsFound, $query, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $exportFormat)
+	function displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $exportFormat)
 	{
 		$orderBy = str_replace('LIMIT','¥LIMIT',$query); // put a unique delimiter in front of the 'LIMIT'... parameter (in order to keep any 'LIMIT' parameter)
 		$orderBy = ereg_replace(".+ORDER BY ([^¥]+)","\\1",$orderBy); // extract 'ORDER BY'... parameter
 
-		// Start a form
-		echo "\n<form action=\"search.php\" method=\"POST\" name=\"queryResults\">"
-				. "\n<input type=\"hidden\" name=\"formType\" value=\"queryResults\">"
-				. "\n<input type=\"hidden\" name=\"submit\" value=\"Display\">" // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
-				. "\n<input type=\"hidden\" name=\"orderBy\" value=\"$orderBy\">" // embed the current ORDER BY parameter so that it can be re-applied when displaying details
-				. "\n<input type=\"hidden\" name=\"showLinks\" value=\"$showLinks\">"; // embed the current value of '$showLinks' so that it's available on 'display details'
-		// Start a table, with column headers
-		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"80%\" summary=\"This table holds the database results for your query\">";
-		
 	// If the query has results ...
 	if ($rowsFound > 0) 
 	{
@@ -287,12 +283,37 @@
 		else
 			$NoColumns = (1+$fieldsToDisplay); // add checkbox column
 
-		// 2) Build a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages
+
+		// 2) Build a FORM & TABLE containing a field popup, a text entry field and two buttons ('Refine' & 'Exclude') for searching within results
+		// Call the 'buildRefineSearchElements()' function (which does the actual work):
+		$RefineSearch = buildRefineSearchElements($queryURL, $showQuery, $showLinks, $showRows, $NoColumns);
+		echo $RefineSearch;
+
+
+		// 3) Start another FORM
+		echo "\n<form action=\"search.php\" method=\"POST\" name=\"queryResults\">"
+				. "\n<input type=\"hidden\" name=\"formType\" value=\"queryResults\">"
+				. "\n<input type=\"hidden\" name=\"submit\" value=\"Display\">" // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
+				. "\n<input type=\"hidden\" name=\"orderBy\" value=\"$orderBy\">" // embed the current ORDER BY parameter so that it can be re-applied when displaying details
+				. "\n<input type=\"hidden\" name=\"showQuery\" value=\"$showQuery\">" // embed the current value of '$showQuery' so that it's available on 'display details' (batch display)
+				. "\n<input type=\"hidden\" name=\"showLinks\" value=\"$showLinks\">"; // embed the current value of '$showLinks' so that it's available on 'display details' (batch display)
+
+		//    and start a TABLE, with column headers
+		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"80%\" summary=\"This table holds the database results for your query\">";
+		
+
+		// 4) Build a TABLE ROW with links for "previous" & "next" browsing, as well as links to intermediate pages
 		//    call the 'buildBrowseLinks()' function:
 		$BrowseLinks = buildBrowseLinks($query, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "", $exportFormat);
 		echo $BrowseLinks;
 
-		// 3) For the column headers, start another TABLE row ...
+		//    and insert a spacer TABLE ROW:
+		echo "\n<tr align=\"center\">"
+			. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>"
+			. "\n</tr>";
+
+
+		// 5) For the column headers, start another TABLE ROW ...
 		echo "\n<tr>";
 
 		// ... print a marker ('x') column (which will hold the checkboxes within the results part)
@@ -332,7 +353,7 @@
 		// (i.e., upto the limit specified in $showRows) fetch a row into the $row array and ...
 		for ($rowCounter=0; (($rowCounter < $showRows) && ($row = @ mysql_fetch_array($result))); $rowCounter++)
 		{
-			// ... start a TABLE row ...
+			// ... start a TABLE ROW ...
 			echo "\n<tr>";
 
 			// ... print a column with a checkbox
@@ -381,6 +402,11 @@
 		// END RESULTS DATA COLUMNS ----------------
 
 		// BEGIN RESULTS FOOTER --------------------
+		// Insert a spacer TABLE ROW:
+		echo "\n<tr align=\"center\">"
+			. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>"
+			. "\n</tr>";
+
 		// Again, insert the (already constructed) BROWSE LINKS
 		// (i.e., a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages)
 		echo $BrowseLinks;
@@ -390,18 +416,22 @@
 		$ResultsFooter = buildResultsFooter($NoColumns, $showRows, $exportFormat);
 		echo $ResultsFooter;
 		// END RESULTS FOOTER ----------------------
+
+		// Then, finish the table
+		echo "\n</table>";
+
+		// Finally, finish the form
+		echo "\n</form>";
 	}
 	else
 	{
 		// Report that nothing was found:
-		echo "\n<tr>\n\t<td valign=\"top\">Sorry, but your query didn't produce any results!&nbsp;&nbsp;<a href=\"javascript:history.back()\">Go Back</a></td>\n";
+		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"80%\" summary=\"This table holds the database results for your query\">"
+				. "\n<tr>"
+				. "\n\t<td valign=\"top\">Sorry, but your query didn't produce any results!&nbsp;&nbsp;<a href=\"javascript:history.back()\">Go Back</a></td>"
+				. "\n</tr>"
+				. "\n</table>";
 	}// end if $rowsFound body
-
-	// Then, finish the table
-	echo "\n</table>";
-
-	// Finally, finish the form
-	echo "\n</form>";
 	}
 
 	// --------------------------------------------------------------------
@@ -1355,6 +1385,65 @@
 
 	// --------------------------------------------------------------------
 
+	//	BUILD REFINE SEARCH ELEMENTS
+	// (i.e., build a row with a field popup, a text entry field and two buttons ('Refine' & 'Exclude') for searching within results)
+	function buildRefineSearchElements($queryURL, $showQuery, $showLinks, $showRows, $NoColumns)
+	{
+		// Start a FORM:
+		$RefineSearchRow .= "\n<form action=\"search.php\" method=\"POST\" name=\"refineSearch\">"
+				. "\n\t<input type=\"hidden\" name=\"formType\" value=\"refineSearch\">"
+				. "\n\t<input type=\"hidden\" name=\"submit\" value=\"Restrict\">" // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'refineSearchName' text entry field will act as if the user clicked the 'Restrict' button)
+				. "\n\t<input type=\"hidden\" name=\"sqlQuery\" value=\"$queryURL\">" // embed the current sqlQuery so that it can be re-applied when displaying refined results
+				. "\n\t<input type=\"hidden\" name=\"showQuery\" value=\"$showQuery\">" // embed the current value of '$showQuery' so that it's available when displaying refined results
+				. "\n\t<input type=\"hidden\" name=\"showLinks\" value=\"$showLinks\">" // embed the current value of '$showLinks' so that it's available when displaying refined results
+				. "\n\t<input type=\"hidden\" name=\"showRows\" value=\"$showRows\">"; // embed the current value of '$showRows' so that it's available when displaying refined results
+
+		// Start a TABLE:
+		$RefineSearchRow .= "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"80%\" summary=\"This table holds a search form that enables you to refine the previous search result\">";
+
+		// Append a TABLE ROW with POPUP, TEXT ENTRY FIELD and BUTTONS for searching within found records
+		$RefineSearchRow .= "\n<tr>";
+		$RefineSearchRow .= "\n\t<td align=\"center\" valign=\"top\" colspan=\"$NoColumns\">";
+		// Build the visible form elements:
+		$RefineSearchRow .= "\n\t\tSearch within Results:&nbsp;&nbsp;&nbsp;&nbsp;"
+							. "\n\t\t<select name=\"refineSearchSelector\">"
+							. "\n\t\t\t<option selected>author</option>"
+							. "\n\t\t\t<option>title</option>"
+							. "\n\t\t\t<option>year</option>"
+							. "\n\t\t\t<option>keywords</option>"
+							. "\n\t\t\t<option>abstract</option>"
+							. "\n\t\t\t<option>publication</option>"
+							. "\n\t\t\t<option>editor</option>"
+							. "\n\t\t\t<option>publisher</option>"
+							. "\n\t\t\t<option>area</option>"
+							. "\n\t\t\t<option>type</option>"
+							. "\n\t\t\t<option>reprint_status</option>"
+							. "\n\t\t\t<option>location</option>"
+							. "\n\t\t\t<option>notes</option>"
+							. "\n\t\t\t<option>user_keys</option>"
+							. "\n\t\t\t<option>user_notes</option>"
+							. "\n\t\t</select>&nbsp;&nbsp;"
+							. "\n\t\tcontains:&nbsp;&nbsp;"
+							. "\n\t\t<input type=\"text\" name=\"refineSearchName\" size=\"12\">&nbsp;&nbsp;"
+							. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Restrict\">&nbsp;&nbsp;"
+							. "\n\t\tto&nbsp;&nbsp;or&nbsp;&nbsp;"
+							. "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Exclude\">&nbsp;&nbsp;"
+							. "\n\t\tmatched records";
+		// Finish the data and row tags:
+		$RefineSearchRow .= "\n\t</td>"
+							. "\n</tr>";
+
+		// Finish the table:
+		$RefineSearchRow .= "\n</table>";
+
+		// Finish the form:
+		$RefineSearchRow .= "\n</form>";
+
+		return $RefineSearchRow;
+	}
+
+	// --------------------------------------------------------------------
+
 	//	BUILD BROWSE LINKS
 	// (i.e., build a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages)
 	function buildBrowseLinks($query, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, $maxPageNo, $formType, $displayType, $exportFormat)
@@ -1533,7 +1622,7 @@
 		$queryNewOrder = str_replace('LIMIT','¥LIMIT',$query); // put a unique delimiter in front of the 'LIMIT'... parameter (in order to keep any 'LIMIT' parameter)
 		$queryNewOrder = ereg_replace('ORDER BY [^¥]+',$newORDER,$queryNewOrder); // replace old 'ORDER BY'... parameter by new one
 		$queryNewOrder = str_replace('¥',' ',$queryNewOrder); // remove the unique delimiter again
-		$queryURLNewOrder = rawurlencode ($queryNewOrder); // URL encode query
+		$queryURLNewOrder = rawurlencode($queryNewOrder); // URL encode query
 		return $queryURLNewOrder;
 	}
 
@@ -3768,6 +3857,36 @@
 
 		// Finally, fix the wrong syntax where its says "ORDER BY, author, title, ..." instead of "ORDER BY author, title, ...":
 		$query = str_replace("ORDER BY , ","ORDER BY ",$query);
+
+
+		return $query;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Build the database query from user input provided by the "Search within Results" form above the query results list (which, in turn, was returned by 'search.php'):
+	function extractFormElementsRefine($displayType, $sqlQuery, $showLinks)
+	{
+		$refineSearchSelector = $_POST['refineSearchSelector']; // extract field name chosen by the user
+		$refineSearchName = $_POST['refineSearchName']; // extract search text entered by the user
+
+		$query = rawurldecode($sqlQuery); // URL decode SQL query (it was URL encoded before incorporation into a hidden tag of the 'refineSearch' form to avoid any HTML syntax errors)
+
+		$query = str_replace(' FROM refs',', serial FROM refs',$query); // add 'serial' column (although it won't be visible the 'serial' column gets included in every search query)
+																		// (which is required in order to obtain unique checkbox names)
+
+		if ("$showLinks" == "1")
+			$query = str_replace(' FROM refs',', url, doi FROM refs',$query); // add 'url' & 'doi' columns
+
+		if ("$refineSearchName" != "") // if the user typed a search string into the text entry field...
+			// Depending on the chosen output format, construct an appropriate SQL query:
+			if ($displayType == "Exclude")
+					$query = str_replace("WHERE","WHERE $refineSearchSelector NOT RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
+
+			else // $displayType == "Restrict" (hitting <enter> within the 'refineSearchName' text entry field will act as if the user clicked the 'Restrict' button)
+					$query = str_replace("WHERE","WHERE $refineSearchSelector RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
+
+		// else, if the user did NOT type a search string into the text entry field, we simply reproduce the old query...
 
 
 		return $query;
