@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   2-Jun-03, 13:16
+	// Modified:   07-Sep-03, 14:40
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -258,6 +258,11 @@
 	// If we made it here, then the data is valid!
 
 	// CONSTRUCT SQL QUERY:
+	// First, setup some required variables:
+	$currentDate = date('Y-m-d'); // get the current date in a format recognized by mySQL (which is 'YYYY-MM-DD', e.g.: '2003-12-31')
+	$currentTime = date('H:i:s'); // get the current time in a format recognized by mySQL (which is 'HH:MM:SS', e.g.: '23:59:49')
+	$currentUser = $loginFirstName . " " . $loginLastName . " (" . $loginEmail . ")"; // here we use session variables to construct the user name, e.g.: 'Matthias Steffens (msteffens@ipoe.uni-kiel.de)'
+
 	// If a user is logged in and has submitted 'user_details.php' with a 'userID' parameter:
 	// (while the admin has no restrictions, a normal user can only submit 'user_details.php' with his own 'userID' as parameter!)
 	if (session_is_registered("loginEmail") && ($_REQUEST['userID'] != "")) // -> perform an update:
@@ -283,7 +288,10 @@
 				. "state = \"" . $formVars["state"] . "\", "
 				. "country = \"" . $formVars["country"] . "\", "
 				. "phone = \"" . $formVars["phone"] . "\", "
-				. "url = \"" . $formVars["url"] . "\" "
+				. "url = \"" . $formVars["url"] . "\", "
+				. "modified_date = \"$currentDate\", "
+				. "modified_time = \"$currentTime\", "
+				. "modified_by = \"$currentUser\" "
 				. "WHERE user_id = $userID";
 	}
 	// If an authorized user uses 'user_details.php' to add a new user (-> 'userID' is empty!):
@@ -311,8 +319,13 @@
 				. "country = \"" . $formVars["country"] . "\", "
 				. "phone = \"" . $formVars["phone"] . "\", "
 				. "url = \"" . $formVars["url"] . "\", "
-				. "email = \"" . $formVars["email"] . "\"";
-	
+				. "email = \"" . $formVars["email"] . "\", "
+				. "created_date = \"$currentDate\", "
+				. "created_time = \"$currentTime\", "
+				. "created_by = \"$currentUser\", "
+				. "modified_date = \"$currentDate\", "
+				. "modified_time = \"$currentTime\", "
+				. "modified_by = \"$currentUser\"";
 	}
 	// if '$addNewUsers' is set to 'admin': MAIL feedback to new user & send data to admin for approval:
 	// no user is logged in (since 'user_details.php' cannot be called w/o a 'userID' by a logged in user,
