@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./index.php
 	// Created:    29-Jul-02, 16:45
-	// Modified:   13-Feb-05, 20:40
+	// Modified:   27-Mar-05, 00:48
 
 	// This script builds the main page.
 	// It provides login and quick search forms
@@ -79,7 +79,7 @@
 	// --------------------------------------------------------------------
 ?>
 
-<table align="center" border="0" cellpadding="2" cellspacing="5" width="90%" summary="This table explains features, goals and usage of the <? echo encodeHTML($officialDatabaseName); ?>">
+<table align="center" border="0" cellpadding="2" cellspacing="5" width="90%" summary="This table explains features, goals and usage of the <?php echo encodeHTML($officialDatabaseName); ?>">
 	<tr>
 		<td colspan="2"><h3><?php echo $loc["Goals"]; ?> &amp; <?php echo $loc["Features"]; ?></h3></td>
 		<td width="180" valign="bottom"><?php
@@ -95,35 +95,35 @@ else
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
-		<td><? echo $loc["ThisDatabaseAttempts"] . encodeHTML($scientificFieldDescriptor); ?>.
-			<br>
-			<br>
-			<?php echo $loc["ThisDatabase"] ." ". $loc["provides"]; ?>
-			<ul type="circle">
-				<li>a comprehensive dataset on <? echo encodeHTML($scientificFieldDescriptor)." ".$loc["Literature"]; 
-	// report the total number of records:
-	echo ", ". $loc["currently featuring"] . $recordCount . $loc["Records"];
-	?>
-	</li>
-	<?php echo $loc["ListOfFeatures"]; ?>
+		<td><?php echo $loc["ThisDatabaseAttempts"]; ?>
 
-				
+			<br>
+			<br>
+			<?php echo $loc["ThisDatabase"] . " " . $loc["provides"] . ":"; ?>
+
+			<ul type="circle">
+				<li><?php echo $loc["Features_ComprehensiveDataset"]; 
+					// report the total number of records:
+					echo ", ". $loc["currently featuring"] . $recordCount . " " . $loc["Records"]; ?></li>
+				<li><?php echo $loc["Features_StandardizedInterface"]; ?></li>
+				<li><?php echo $loc["Features_SearchOptions"]; ?></li>
+				<li><?php echo $loc["Features_DisplayCiteExportOptions"]; ?></li>
 				<li><?php
 
-		// -------------------------------------------------------
-		if (isset($_SESSION['user_permissions']) AND ereg("(allow_import|allow_batch_import)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains either 'allow_import' or 'allow_batch_import'...
-		{
-		// ... include a link to 'import_csa.php':
-			echo "<a href=\"import_csa.php\">". $loc["Import"] ."</a>";
-		}
-		else
-		{
-			echo $loc["Import"];
-		}
+				// -------------------------------------------------------
+				if (isset($_SESSION['user_permissions']) AND ereg("(allow_import|allow_batch_import)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains either 'allow_import' or 'allow_batch_import'...
+				{
+				// ... include a link to 'import_csa.php':
+					echo "<a href=\"import_csa.php\">". $loc["Import"] ."</a>";
+				}
+				else
+				{
+					echo $loc["Import"];
+				}
 
-		// -------------------------------------------------------
+				// -------------------------------------------------------
 
-			echo $loc["CSAImportLinkTitle"] . "</li>"; ?>
+				echo $loc["CSAImportLinkTitle"]; ?></li>
 			</ul>
 		</td>
 		<td width="163" valign="top">
@@ -196,10 +196,10 @@ else
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
-		<td><?php echo $loc["SearchDB"]; ?>:
+		<td><?php echo $loc["Search"]." ".$loc["SearchDB"]; ?>:
 			<ul type="circle">
-				<li><a href="simple_search.php"><?php echo $loc["simple"]; ?> <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["SearchMain"]; ?></li>
-				<li><a href="advanced_search.php"><?php echo $loc["Advanced"]; ?> <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["SearchAll"]; ?></li><?php
+				<li><a href="simple_search.php"><?php echo $loc["simple"]; ?> <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["search"]." ".$loc["SearchMain"]; ?></li>
+				<li><a href="advanced_search.php"><?php echo $loc["Advanced"]; ?> <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["search"]." ".$loc["SearchAll"]; ?></li><?php
 
 		// -------------------------------------------------------
 		if (isset($_SESSION['user_permissions']) AND ereg("allow_sql_search", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_sql_search'...
@@ -207,13 +207,13 @@ else
 		// ... include a link to 'sql_search.php':
 ?>
 
-				<li><a href="sql_search.php">SQL <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["SearchSQL"]; ?></li><?php
+				<li><a href="sql_search.php">SQL <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["search"]." ".$loc["SearchSQL"]; ?></li><?php
 		}
 
 		// -------------------------------------------------------
 ?>
 
-				<li><a href="library_search.php"><?php echo $loc["Library"]; ?> <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["SearchExt"]; ?> <? echo encodeHTML($hostInstitutionName); ?></li>
+				<li><a href="library_search.php"><?php echo $loc["Library"]; ?> <?php echo $loc["Search"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["search"]." ".$loc["SearchExt"]; ?> <?php echo encodeHTML($hostInstitutionName); ?></li>
 			</ul>
 		</td>
 		<td width="163" valign="top">
@@ -271,9 +271,9 @@ else
 			<ul type="circle" class="moveup">
 				<li><?php echo $loc["view all"]; ?>:
 					<ul type="circle">
-						<li><?php echo $loc["added"]; ?>: <a href="show.php?date=<? echo $CurrentDate; ?>"><?php echo $loc["today"]; ?></a> | <a href="show.php?date=<? echo $DateYesterday; ?>"><?php echo $loc["yesterday"]; ?></a> | <a href="show.php?date=<? echo $DateLastWeek; ?>&amp;range=after"><?php echo $loc["last 7 days"]; ?></a></li>
-						<li><?php echo $loc["edited"]; ?>: <a href="show.php?date=<? echo $CurrentDate; ?>&amp;when=edited"><?php echo $loc["today"]; ?></a> | <a href="show.php?date=<? echo $DateYesterday; ?>&amp;when=edited"><?php echo $loc["yesterday"]; ?></a> | <a href="show.php?date=<? echo $DateLastWeek; ?>&amp;when=edited&amp;range=after"><?php echo $loc["last 7 days"]; ?></a></li>
-						<li><?php echo $loc["published in"]; ?>: <a href="show.php?year=<? echo $CurrentYear; ?>"><? echo $CurrentYear; ?></a> | <a href="show.php?year=<? echo ($CurrentYear - 1); ?>"><? echo ($CurrentYear - 1); ?></a> | <a href="show.php?year=<? echo ($CurrentYear - 2); ?>"><? echo ($CurrentYear - 2); ?></a> | <a href="show.php?year=<? echo ($CurrentYear - 3); ?>"><? echo ($CurrentYear - 3); ?></a></li>
+						<li><?php echo $loc["added"]; ?>: <a href="show.php?date=<?php echo $CurrentDate; ?>"><?php echo $loc["today"]; ?></a> | <a href="show.php?date=<?php echo $DateYesterday; ?>"><?php echo $loc["yesterday"]; ?></a> | <a href="show.php?date=<?php echo $DateLastWeek; ?>&amp;range=after"><?php echo $loc["last 7 days"]; ?></a></li>
+						<li><?php echo $loc["edited"]; ?>: <a href="show.php?date=<?php echo $CurrentDate; ?>&amp;when=edited"><?php echo $loc["today"]; ?></a> | <a href="show.php?date=<?php echo $DateYesterday; ?>&amp;when=edited"><?php echo $loc["yesterday"]; ?></a> | <a href="show.php?date=<?php echo $DateLastWeek; ?>&amp;when=edited&amp;range=after"><?php echo $loc["last 7 days"]; ?></a></li>
+						<li><?php echo $loc["published in"]; ?>: <a href="show.php?year=<?php echo $CurrentYear; ?>"><?php echo $CurrentYear; ?></a> | <a href="show.php?year=<?php echo ($CurrentYear - 1); ?>"><?php echo ($CurrentYear - 1); ?></a> | <a href="show.php?year=<?php echo ($CurrentYear - 2); ?>"><?php echo ($CurrentYear - 2); ?></a> | <a href="show.php?year=<?php echo ($CurrentYear - 3); ?>"><?php echo ($CurrentYear - 3); ?></a></li>
 					</ul>
 				</li>
 			</ul>
@@ -291,7 +291,7 @@ if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND
 				<input type="hidden" name="formType" value="groupSearch">
 				<input type="hidden" name="showQuery" value="0">
 				<input type="hidden" name="showLinks" value="1">
-				<select name="groupSearchSelector"<? echo $groupSearchDisabled; ?>><?php
+				<select name="groupSearchSelector"<?php echo $groupSearchDisabled; ?>><?php
 
 				if (isset($_SESSION['userGroups']))
 				{
@@ -308,7 +308,7 @@ if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND
 
 				</select>
 				<br>
-				<input type="submit" value="Show"<? echo $groupSearchDisabled; ?>>
+				<input type="submit" value="Show"<?php echo $groupSearchDisabled; ?>>
 			</form><?php
 	}
 else
@@ -361,14 +361,14 @@ if (isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSIO
 	{
 ?>
 
-				<li><a href="show.php"><?php echo $loc["SearchSerial"]; ?></a></li><?php
+				<li><a href="show.php"><?php echo $loc["SearchSerialLinkText"]; ?></a><?php echo $loc["SearchSerial"]; ?></li><?php
 	}
 
 if (isset($_SESSION['user_permissions']) AND ereg("allow_cite", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_cite'...
 	{
 ?>
 
-				<li><a href="extract.php"><?php echo $loc["ExtractCitations"]; ?></a></li><?php
+				<li><a href="extract.php"><?php echo $loc["ExtractCitationsLinkText"]; ?></a><?php echo $loc["ExtractCitations"]; ?></li><?php
 	}
 ?>
 
@@ -387,7 +387,7 @@ if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND
 				<input type="hidden" name="formType" value="querySearch">
 				<input type="hidden" name="showQuery" value="0">
 				<input type="hidden" name="showLinks" value="1">
-				<select name="querySearchSelector"<? echo $querySearchDisabled; ?>><?php
+				<select name="querySearchSelector"<?php echo $querySearchDisabled; ?>><?php
 
 				if (isset($_SESSION['userQueries']))
 				{
@@ -404,7 +404,7 @@ if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND
 
 				</select>
 				<br>
-				<input type="submit" name="submit" value="Go"<? echo $querySearchDisabled; ?>>&nbsp;<input type="submit" name="submit" value="Edit"<? echo $querySearchDisabled; ?>>
+				<input type="submit" name="submit" value="Go"<?php echo $querySearchDisabled; ?>>&nbsp;<input type="submit" name="submit" value="Edit"<?php echo $querySearchDisabled; ?>>
 			</form><?php
 	}
 else
@@ -421,7 +421,7 @@ else
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
-    <td><?php echo $loc["ThisDatabaseIsMaintained"]; ?> <a href="<? echo $hostInstitutionURL; ?>"><? echo encodeHTML($hostInstitutionName); ?></a> (<? echo encodeHTML($hostInstitutionAbbrevName); ?>). <?php echo $loc["You are welcome to send"]; ?> <a href="mailto:<? echo $feedbackEmail; ?>"><?php echo $loc["feedback address"]; ?></a>. <?php echo $loc["refbaseDesc"]; ?></td>
+		<td><?php echo $loc["ThisDatabaseIsMaintained"]; ?> <a href="<?php echo $hostInstitutionURL; ?>"><?php echo encodeHTML($hostInstitutionName); ?></a> (<?php echo encodeHTML($hostInstitutionAbbrevName); ?>). <?php echo $loc["You are welcome to send"]; ?> <a href="mailto:<?php echo $feedbackEmail; ?>"><?php echo $loc["feedback address"]; ?></a>. <?php echo $loc["refbaseDesc"]; ?></td>
 		<td width="163" valign="top"><a href="http://www.refbase.net/"><img src="img/refbase_credit.gif" alt="powered by refbase" width="80" height="44" hspace="0" border="0"></a></td>
 	</tr>
 </table><?php
