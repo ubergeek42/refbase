@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   31-Oct-04, 21:23
+	// Modified:   01-Nov-04, 21:33
 
 	// This file contains important
 	// functions that are shared
@@ -961,8 +961,8 @@ EOF;
 		// the following changes to the SQL query are performed for both forms ("Search within Results" and "Display Options"):
 		if ($queryTable == "refs") // 'search.php':
 		{
-			// if the chosen field is one of the user specific fields from table 'user_data': 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'bibtex_id' or 'related'
-			if (ereg("^(marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)$", $fieldSelector))
+			// if the chosen field is one of the user specific fields from table 'user_data': 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related'
+			if (ereg("^(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)$", $fieldSelector))
 				if (!eregi("LEFT JOIN user_data", $query)) // ...and if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
 					$query = eregi_replace(" FROM refs"," FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = $userID",$query); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
 
@@ -1204,7 +1204,7 @@ EOF;
 		$relatedQuery = "SELECT author, title, year, publication, volume, pages";
 
 		// if any of the user specific fields are present in the contents of the 'related' field, we'll add the 'LEFT JOIN...' part to the 'FROM' clause:
-		if (ereg("marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related",$queriesString))
+		if (ereg("marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related",$queriesString))
 			$relatedQuery .= " FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = $userID";
 		else // we skip the 'LEFT JOIN...' part of the 'FROM' clause:
 			$relatedQuery .= " FROM refs";
@@ -1799,10 +1799,10 @@ EOF;
 		if (!isset($_SESSION['loginEmail'])) // if NO user is logged in...
 		{
 			// ... and any user specific fields are part of the SELECT or ORDER BY statement...
-			if (eregi("(SELECT|ORDER BY|,) (marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)",$sqlQuery))
+			if (eregi("(SELECT|ORDER BY|,) (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)",$sqlQuery))
 			{
 				// if the 'SELECT' clause contains any user specific fields:
-				if (preg_match("/SELECT(.(?!FROM))+?(marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)/i",$sqlQuery))
+				if (preg_match("/SELECT(.(?!FROM))+?(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)/i",$sqlQuery))
 				{
 					// save an appropriate error message:
 					$HeaderString = "<b><span class=\"warning\">Display of user specific fields was ommitted!</span></b>";
@@ -1812,8 +1812,8 @@ EOF;
 					saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 				}
 	
-				$sqlQuery = eregi_replace("(SELECT|ORDER BY) (marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)( DESC)?", "\\1 ", $sqlQuery); // ...delete any user specific fields from beginning of 'SELECT' or 'ORDER BY' clause
-				$sqlQuery = eregi_replace(", (marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)( DESC)?", "", $sqlQuery); // ...delete any remaining user specific fields from 'SELECT' or 'ORDER BY' clause
+				$sqlQuery = eregi_replace("(SELECT|ORDER BY) (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)( DESC)?", "\\1 ", $sqlQuery); // ...delete any user specific fields from beginning of 'SELECT' or 'ORDER BY' clause
+				$sqlQuery = eregi_replace(", (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)( DESC)?", "", $sqlQuery); // ...delete any remaining user specific fields from 'SELECT' or 'ORDER BY' clause
 				$sqlQuery = eregi_replace("(SELECT|ORDER BY) *, *", "\\1 ", $sqlQuery); // ...remove any field delimiters that directly follow the 'SELECT' or 'ORDER BY' terms
 	
 				$sqlQuery = preg_replace("/SELECT *(?=FROM)/i", "SELECT author, title, year, publication, volume, pages ", $sqlQuery); // ...supply generic 'SELECT' clause if it did ONLY contain user specific fields
@@ -1823,13 +1823,13 @@ EOF;
 			if ((eregi(".+search.php",$referer)) AND (eregi("LEFT JOIN user_data",$sqlQuery))) // if the calling script ends with 'search.php' (i.e., is NOT 'show.php', see note below!) AND the 'LEFT JOIN...' statement is part of the 'FROM' clause...
 				$sqlQuery = eregi_replace("FROM refs LEFT JOIN.+WHERE","FROM refs WHERE",$sqlQuery); // ...delete 'LEFT JOIN...' part from 'FROM' clause
 	
-			if ((eregi(".+search.php",$referer) OR $displayType == "RSS") AND (eregi("WHERE.+(marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related)",$sqlQuery))) // if a user who's NOT logged in tries to query user specific fields (by use of 'sql_search.php')...
+			if ((eregi(".+search.php",$referer) OR $displayType == "RSS") AND (eregi("WHERE.+(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)",$sqlQuery))) // if a user who's NOT logged in tries to query user specific fields (by use of 'sql_search.php')...
 			// Note that the script 'show.php' may query the user specific field 'selected' (e.g., by URLs of the form: 'show.php?author=...&userID=...&only=selected')
 			// but since (in that case) the '$referer' variable is either empty or does not end with 'search.php' this if clause will not apply (which is ok since we want to allow 'show.php' to query the 'selected' field)
 			{
 				// ...delete 'LEFT JOIN...' part from 'FROM' clause -> this is already accomplished by the code above!
-				$sqlQuery = preg_replace("/WHERE (marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related).+?(?= AND| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","WHERE",$sqlQuery); // ...delete any user specific fields from 'WHERE' clause
-				$sqlQuery = preg_replace("/( AND)? (marked|copy|selected|user_keys|user_notes|user_file|user_groups|bibtex_id|related).+?(?= AND| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","",$sqlQuery); // ...delete any user specific fields from 'WHERE' clause
+				$sqlQuery = preg_replace("/WHERE (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related).+?(?= AND| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","WHERE",$sqlQuery); // ...delete any user specific fields from 'WHERE' clause
+				$sqlQuery = preg_replace("/( AND)? (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related).+?(?= AND| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","",$sqlQuery); // ...delete any user specific fields from 'WHERE' clause
 				$sqlQuery = eregi_replace("WHERE AND","WHERE",$sqlQuery); // ...delete any superfluous 'AND' that wasn't removed properly by the two regex patterns above
 				$sqlQuery = preg_replace("/WHERE(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","WHERE serial RLIKE \".+\"",$sqlQuery); // ...supply generic 'WHERE' clause if it did ONLY contain user specific fields
 	
@@ -1848,7 +1848,7 @@ EOF;
 				// ...and any user specific fields other(!) than just the 'selected' field are part of the 'SELECT' or 'WHERE' clause...
 				// Note that we exclude the 'selected' field here (although it is user specific). By that we allow the 'selected' field to be queried by every user that's logged in.
 				// This is done to support the 'show.php' script which may query the user specific field 'selected' (e.g., by URLs of the form: 'show.php?author=...&userID=...&only=selected')
-				if (eregi(", (marked|copy|user_keys|user_notes|user_file|user_groups|bibtex_id|related)",$sqlQuery) OR eregi("WHERE.+(marked|copy|user_keys|user_notes|user_file|user_groups|bibtex_id|related)",$sqlQuery))
+				if (eregi(", (marked|copy|user_keys|user_notes|user_file|user_groups|cite_key|related)",$sqlQuery) OR eregi("WHERE.+(marked|copy|user_keys|user_notes|user_file|user_groups|cite_key|related)",$sqlQuery))
 				{
 					$sqlQuery = eregi_replace("user_id *= *[0-9]+","user_id = $loginUserID",$sqlQuery); // ...replace any other user ID with the ID of the currently logged in user
 					$sqlQuery = eregi_replace("location RLIKE [^ ]+","location RLIKE \"$loginEmail\"",$sqlQuery); // ...replace any other user email address with the login email address of the currently logged in user
@@ -1858,7 +1858,7 @@ EOF;
 			// if we're going to display record details for a logged in user, we have to ensure the display of user specific fields (which may have been deleted from a query due to a previous logout action);
 			// in 'Display Details' view, the 'call_number' and 'serial' fields are the last generic fields before any user specific fields:
 			if (($displayType == "Display") AND (eregi(", call_number, serial FROM refs",$sqlQuery))) // if the user specific fields are missing from the SELECT statement...
-				$sqlQuery = eregi_replace(', call_number, serial FROM refs',', call_number, serial, marked, copy, selected, user_keys, user_notes, user_file, user_groups, bibtex_id, related FROM refs',$sqlQuery); // ...add all user specific fields to the 'SELECT' clause
+				$sqlQuery = eregi_replace(', call_number, serial FROM refs',', call_number, serial, marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key, related FROM refs',$sqlQuery); // ...add all user specific fields to the 'SELECT' clause
 	
 			if (($displayType == "Display" OR $displayType == "RSS") AND (!eregi("LEFT JOIN user_data",$sqlQuery))) // if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
 				$sqlQuery = eregi_replace(" FROM refs"," FROM refs LEFT JOIN user_data ON serial = record_id AND user_id = $loginUserID",$sqlQuery); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
