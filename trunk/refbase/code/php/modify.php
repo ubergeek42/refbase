@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./modify.php
 	// Created:    18-Dec-02, 23:08
-	// Modified:   01-Oct-04, 22:43
+	// Modified:   17-Oct-04, 20:38
 
 	// This php script will perform adding, editing & deleting of records.
 	// It then calls 'receipt.php' which displays links to the modified/added record
@@ -439,7 +439,7 @@
 	}
 	
 
-	// assign correct values to the calculation fields 'first_author', 'author_count', 'first_page' and 'volume_numeric':
+	// assign correct values to the calculation fields 'first_author', 'author_count', 'first_page', 'volume_numeric' and 'series_volume_numeric':
 	if (!empty($authorName))
 	{
 		$first_author = ereg_replace("^([^;]+).*","\\1",$authorName); // extract first author from 'author' field
@@ -468,6 +468,14 @@
 			$volumeNumericNo = ereg_replace("^[^0-9]*([0-9]+).*","\\1",$volumeNo); // extract first number from 'volume' field
 		else
 			$volumeNumericNo = "0"; // will get transformed into 'NULL' further down...
+	}
+
+	if (!empty($seriesVolumeNo))
+	{
+		if (ereg("([0-9]+)",$seriesVolumeNo)) // if the 'series_volume' field contains any numeric value(s)
+			$seriesVolumeNumericNo = ereg_replace("^[^0-9]*([0-9]+).*","\\1",$seriesVolumeNo); // extract first number from 'series_volume' field
+		else
+			$seriesVolumeNumericNo = "0"; // will get transformed into 'NULL' further down...
 	}
 
 
@@ -652,6 +660,7 @@
 					. "series_title = \"$seriesTitleName\", "
 					. "abbrev_series_title = \"$abbrevSeriesTitleName\", "
 					. "series_volume = \"$seriesVolumeNo\", "
+					. "series_volume_numeric = \"$seriesVolumeNumericNo\", "
 					. "series_issue = \"$seriesIssueNo\", "
 					. "edition = \"$editionNo\", "
 					. "issn = \"$issnName\", "
@@ -744,6 +753,7 @@
 					. "series_title = \"$seriesTitleName\", "
 					. "abbrev_series_title = \"$abbrevSeriesTitleName\", "
 					. "series_volume = \"$seriesVolumeNo\", "
+					. "series_volume_numeric = \"$seriesVolumeNumericNo\", "
 					. "series_issue = \"$seriesIssueNo\", "
 					. "edition = \"$editionNo\", "
 					. "issn = \"$issnName\", "
@@ -810,6 +820,7 @@
 					. "series_title = \"$seriesTitleName\", "
 					. "abbrev_series_title = \"$abbrevSeriesTitleName\", "
 					. "series_volume = \"$seriesVolumeNo\", "
+					. "series_volume_numeric = \"$seriesVolumeNumericNo\", "
 					. "series_issue = \"$seriesIssueNo\", "
 					. "edition = \"$editionNo\", "
 					. "issn = \"$issnName\", "
@@ -853,10 +864,10 @@
 		$queryRefs = ereg_replace("\"$first_page\"", "NULL", $queryRefs);
 		$queryDeleted = ereg_replace("\"$first_page\"", "NULL", $queryDeleted);
 	}
-	if (ereg("^$|^0$",$seriesVolumeNo))
+	if (ereg("^$|^0$",$seriesVolumeNumericNo))
 	{
-		$queryRefs = ereg_replace("\"$seriesVolumeNo\"", "NULL", $queryRefs);
-		$queryDeleted = ereg_replace("\"$seriesVolumeNo\"", "NULL", $queryDeleted);
+		$queryRefs = ereg_replace("\"$seriesVolumeNumericNo\"", "NULL", $queryRefs);
+		$queryDeleted = ereg_replace("\"$seriesVolumeNumericNo\"", "NULL", $queryDeleted);
 	}
 	if (ereg("^$|^0$",$editionNo))
 	{
@@ -880,7 +891,7 @@
 
 		$result = queryMySQLDatabase($queryUserData, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
-		getUserGroups($loginUserID); // update the 'userGroups' session variable (function 'getUserGroups()' is defined in 'include.inc.php')
+		getUserGroups("user_data", $loginUserID); // update the 'userGroups' session variable (function 'getUserGroups()' is defined in 'include.inc.php')
 	}
 	elseif ($recordAction == "add")
 	{
@@ -906,7 +917,7 @@
 
 		$result = queryMySQLDatabase($queryUserData, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
-		getUserGroups($loginUserID); // update the 'userGroups' session variable (function 'getUserGroups()' is defined in 'include.inc.php')
+		getUserGroups("user_data", $loginUserID); // update the 'userGroups' session variable (function 'getUserGroups()' is defined in 'include.inc.php')
 
 
 		// Send EMAIL announcement:
