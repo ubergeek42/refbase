@@ -352,10 +352,10 @@
 			{
 				echo "\n\t<td valign=\"top\">";
 				if (!empty($row["url"]))
-					echo "<a href=\"" . $row["url"] . "\"><img src=\"images/pfeil.gif\" alt=\"url\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
+					echo "<a href=\"" . $row["url"] . "\"><img src=\"img/link.jpg\" alt=\"url\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
 	
 				if (!empty($row["doi"]))
-					echo "<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"images/doi.gif\" alt=\"doi\" width=\"20\" height=\"10\" hspace=\"0\" border=\"0\"></a>";
+					echo "<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/doi.gif\" alt=\"doi\" width=\"20\" height=\"10\" hspace=\"0\" border=\"0\"></a>";
 	
 				if (empty($row["url"]) AND (empty($row["doi"])))
 					echo "&nbsp;&nbsp;";
@@ -501,10 +501,10 @@
 //			{
 //				echo "\n\t<td valign=\"top\">";
 //				if (!empty($row["url"]))
-//					echo "<a href=\"" . $row["url"] . "\"><img src=\"images/pfeil.gif\" alt=\"url\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
+//					echo "<a href=\"" . $row["url"] . "\"><img src=\"img/link.jpg\" alt=\"url\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
 //	
 //				if (!empty($row["doi"]))
-//					echo "<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"images/doi.gif\" alt=\"doi\" width=\"20\" height=\"10\" hspace=\"0\" border=\"0\"></a>";
+//					echo "<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/doi.gif\" alt=\"doi\" width=\"20\" height=\"10\" hspace=\"0\" border=\"0\"></a>";
 //	
 //				if (empty($row["url"]) AND (empty($row["doi"])))
 //					echo "&nbsp;&nbsp;";
@@ -591,9 +591,9 @@
 
 		// append sort indicator after the 1st-level sort attribute:
 		if (preg_match("/ORDER BY $orig_fieldname(?! DESC)(?=,|$)/", $query)) // if 1st-level sort is by this attribute (in ASCending order)...
-			$tableHeaderLink .= "&nbsp;<img src=\"images/pfeil_up.gif\" alt=\"(up)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append an upward arrow image
+			$tableHeaderLink .= "&nbsp;<img src=\"img/sort_asc.gif\" alt=\"(up)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append an upward arrow image
 		elseif (preg_match("/ORDER BY $orig_fieldname DESC/", $query)) // if 1st-level sort is by this attribute (in DESCending order)...
-			$tableHeaderLink .= "&nbsp;<img src=\"images/pfeil_down.gif\" alt=\"(down)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append a downward arrow image
+			$tableHeaderLink .= "&nbsp;<img src=\"img/sort_desc.gif\" alt=\"(down)\" width=\"8\" height=\"10\" hspace=\"0\" border=\"0\">"; // ...append a downward arrow image
 
 		$tableHeaderLink .=  $HTMLafterLink; // append any necessary HTML
 
