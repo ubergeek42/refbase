@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./advanced_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   01-Nov-04, 22:45
+	// Modified:   17-Feb-05, 19:05
 
 	// Search form providing access to all fields of the database.
 	// It offers some output options (like how many records to display per page)
@@ -63,7 +63,7 @@
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Advanced Search", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", true, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Advanced Search", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", true, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (2b) Start <form> and <table> holding the form elements:
@@ -118,9 +118,9 @@
 	// 14. Split field contents into substrings? (yes = true, no = false)
 	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "serial",
-				 "user_data",
+				 $tableUserData,
 				 "record_id",
 				 "user_id",
 				 $loginUserID,
@@ -192,9 +192,9 @@
 	// 14. Split field contents into substrings? (yes = true, no = false)
 	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "serial",
-				 "user_data",
+				 $tableUserData,
 				 "record_id",
 				 "user_id",
 				 $loginUserID,
@@ -242,9 +242,9 @@
 	// 14. Split field contents into substrings? (yes = true, no = false)
 	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "serial",
-				 "user_data",
+				 $tableUserData,
 				 "record_id",
 				 "user_id",
 				 $loginUserID,
@@ -322,9 +322,9 @@
 	// 14. Split field contents into substrings? (yes = true, no = false)
 	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "serial",
-				 "user_data",
+				 $tableUserData,
 				 "record_id",
 				 "user_id",
 				 $loginUserID,
@@ -372,9 +372,9 @@
 	// 14. Split field contents into substrings? (yes = true, no = false)
 	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "serial",
-				 "user_data",
+				 $tableUserData,
 				 "record_id",
 				 "user_id",
 				 $loginUserID,
@@ -443,9 +443,9 @@
 	// 14. Split field contents into substrings? (yes = true, no = false)
 	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "serial",
-				 "user_data",
+				 $tableUserData,
 				 "record_id",
 				 "user_id",
 				 $loginUserID,
@@ -493,9 +493,9 @@
 	// 14. Split field contents into substrings? (yes = true, no = false)
 	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "serial",
-				 "user_data",
+				 $tableUserData,
 				 "record_id",
 				 "user_id",
 				 $loginUserID,
@@ -573,9 +573,9 @@
 	// 14. Split field contents into substrings? (yes = true, no = false)
 	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "serial",
-				 "user_data",
+				 $tableUserData,
 				 "record_id",
 				 "user_id",
 				 $loginUserID,
@@ -623,9 +623,9 @@
 	// 14. Split field contents into substrings? (yes = true, no = false)
 	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "serial",
-				 "user_data",
+				 $tableUserData,
 				 "record_id",
 				 "user_id",
 				 $loginUserID,
@@ -691,9 +691,9 @@
 	// 14. Split field contents into substrings? (yes = true, no = false)
 	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "serial",
-				 "user_data",
+				 $tableUserData,
 				 "record_id",
 				 "user_id",
 				 $loginUserID,
@@ -783,9 +783,9 @@
 	// 14. Split field contents into substrings? (yes = true, no = false)
 	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "serial",
-				 "user_data",
+				 $tableUserData,
 				 "record_id",
 				 "user_id",
 				 $loginUserID,
@@ -848,9 +848,9 @@
 	// 14. Split field contents into substrings? (yes = true, no = false)
 	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "serial",
-				 "user_data",
+				 $tableUserData,
 				 "record_id",
 				 "user_id",
 				 $loginUserID,
@@ -919,9 +919,9 @@
 	// 14. Split field contents into substrings? (yes = true, no = false)
 	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "serial",
-				 "user_data",
+				 $tableUserData,
 				 "record_id",
 				 "user_id",
 				 $loginUserID,
@@ -984,9 +984,9 @@
 	// 14. Split field contents into substrings? (yes = true, no = false)
 	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "serial",
-				 "user_data",
+				 $tableUserData,
 				 "record_id",
 				 "user_id",
 				 $loginUserID,
@@ -1058,9 +1058,9 @@
 	// 14. Split field contents into substrings? (yes = true, no = false)
 	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "serial",
-				 "user_data",
+				 $tableUserData,
 				 "record_id",
 				 "user_id",
 				 $loginUserID,
@@ -1120,9 +1120,9 @@
 	// 14. Split field contents into substrings? (yes = true, no = false)
 	// 15. POSIX-PATTERN to split field contents into substrings (in order to obtain actual values)
 	selectDistinct($connection,
-				 "refs",
+				 $tableRefs,
 				 "serial",
-				 "user_data",
+				 $tableUserData,
 				 "record_id",
 				 "user_id",
 				 $loginUserID,
