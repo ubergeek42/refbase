@@ -5,9 +5,9 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./library_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   16-Nov-03, 21:44
+	// Modified:   30-May-04, 17:42
 
-	// Search formular providing the main fields.
+	// Search form providing the main fields.
 	// Searches will be restricted to records belonging
 	// to the IPOE <http://www.uni-kiel.de/ipoe/> library.
 
@@ -25,34 +25,39 @@
 
 	// --------------------------------------------------------------------
 
-	// Connect to a session
-	session_start();
-
-	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session();
 
 	// --------------------------------------------------------------------
 
 	// (1) Open the database connection and use the literature database:
-	if (!($connection = @ mysql_connect($hostName,$username,$password)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to connect to the host:", "");
-
-	if (!(mysql_select_db($databaseName, $connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to connect to the database:", "");
+	connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 	// If there's no stored message available:
-	if (!session_is_registered("HeaderString"))
+	if (!isset($_SESSION['HeaderString']))
 		$HeaderString = "Search the $hostInstitutionAbbrevName library:"; // Provide the default message
 	else
-		session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
+	{
+		$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
+
+		// Note: though we clear the session variable, the current message is still available to this script via '$HeaderString':
+		deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+	}
+
+	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// ('' will produce the default 'Web' output style)
+	if (isset($_REQUEST['viewType']))
+		$viewType = $_REQUEST['viewType'];
+	else
+		$viewType = "";
 
 	// Show the login status:
 	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Library Search", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "");
+	displayHTMLhead(htmlentities($officialDatabaseName) . " -- Library Search", "index,follow", "Search the " . htmlentities($officialDatabaseName), "", false, "", $viewType);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (2b) Start <form> and <table> holding the form elements:
@@ -167,7 +172,7 @@
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td>&nbsp;</td>"
-			. "\n\t<td valign=\"top\"><b>Output Options:</b></td>\n\t<td>&nbsp;</td>"
+			. "\n\t<td valign=\"top\"><b>Display Options:</b></td>\n\t<td>&nbsp;</td>"
 			. "\n\t<td valign=\"middle\"><input type=\"checkbox\" name=\"showLinks\" value=\"1\" checked>&nbsp;&nbsp;&nbsp;Display Links</td>"
 			. "\n\t<td valign=\"middle\">Show&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"showRows\" value=\"10\" size=\"4\">&nbsp;&nbsp;&nbsp;records per page"
 			. "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"submit\" value=\"Search\"></td>"
@@ -197,9 +202,7 @@
 			. "\n</form>";
 	
 	// (5) Close the database connection:
-	if (!(mysql_close($connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
+	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 
@@ -211,60 +214,60 @@
 							$additionalOption,
 							$defaultValue)
 	{
-	 $defaultWithinResultSet = FALSE;
-
-	 // Query to find distinct values of $columnName
-	 // in $tableName
-	 // Note: in order to avoid book names we'll restrict the query to records whose location contains 'IP… Library'!
-	 $distinctQuery = "SELECT DISTINCT $columnName FROM $tableName WHERE location RLIKE \"IPÖ Library\" ORDER BY $columnName";
-
-	 // Run the distinctQuery on the databaseName
-	 if (!($resultId = @ mysql_query($distinctQuery, $connection)))
-		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-			showErrorMsg("Your query:\n<br>\n<br>\n<code>$distinctQuery</code>\n<br>\n<br>\n caused the following error:", "");
-
-	 // Retrieve all distinct values
-	 $i = 0;
-	 while ($row = @ mysql_fetch_array($resultId))
-		$resultBuffer[$i++] = $row[$columnName];
-
-	 // Start the select widget
-	 echo "\n\t\t<select name=\"$pulldownName\">";		 
-
-	 // Is there an additional option?
-	 if (isset($additionalOption))
-		// Yes, but is it the default option?
-		if ($defaultValue == $additionalOption)
-			// Show the additional option as selected
-			echo "\n\t\t\t<option selected>$additionalOption</option>";
-		else
-			// Just show the additional option
-			echo "\n\t\t\t<option>$additionalOption</option>";
-
-	 // check for a default value
-	 if (isset($defaultValue))
-	 {
-		// Yes, there's a default value specified
-
-		// Check if the defaultValue is in the 
-		// database values
-		foreach ($resultBuffer as $result)
-			if ($result == $defaultValue)
-				// Yes, show as selected
-				echo "\n\t\t\t<option selected>$result</option>";
+		$defaultWithinResultSet = FALSE;
+	
+		// Query to find distinct values of $columnName
+		// in $tableName
+		// Note: in order to avoid book names we'll restrict the query to records whose location contains 'IP… Library'!
+		$distinctQuery = "SELECT DISTINCT $columnName FROM $tableName WHERE location RLIKE \"IPÖ Library\" ORDER BY $columnName";
+	
+		// Run the distinctQuery on the database through the connection:
+		$resultId = queryMySQLDatabase($distinctQuery, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+	
+		// Retrieve all distinct values
+		$i = 0;
+		while ($row = @ mysql_fetch_array($resultId))
+			$resultBuffer[$i++] = $row[$columnName];
+	
+		// Start the select widget
+		echo "\n\t\t<select name=\"$pulldownName\">";		 
+	
+		// Is there an additional option?
+		if (isset($additionalOption))
+		{
+			// Yes, but is it the default option?
+			if ($defaultValue == $additionalOption)
+				// Show the additional option as selected
+				echo "\n\t\t\t<option selected>$additionalOption</option>";
 			else
-				// No, just show as an option
+				// Just show the additional option
+				echo "\n\t\t\t<option>$additionalOption</option>";
+		}
+	
+		// check for a default value
+		if (isset($defaultValue))
+		{
+			// Yes, there's a default value specified
+	
+			// Check if the defaultValue is in the 
+			// database values
+			foreach ($resultBuffer as $result)
+				if ($result == $defaultValue)
+					// Yes, show as selected
+					echo "\n\t\t\t<option selected>$result</option>";
+				else
+					// No, just show as an option
+					echo "\n\t\t\t<option>$result</option>";
+		}	// end if defaultValue
+		else 
+		{
+			// No defaultValue
+			
+			// Show database values as options
+			foreach ($resultBuffer as $result)
 				echo "\n\t\t\t<option>$result</option>";
-	 }	// end if defaultValue
-	 else 
-	 { 
-		// No defaultValue
-		
-		// Show database values as options
-		foreach ($resultBuffer as $result)
-			echo "\n\t\t\t<option>$result</option>";
-	 }
-	 echo "\n\t\t</select>";
+		}
+		echo "\n\t\t</select>";
 	} // end of function
 
 	// --------------------------------------------------------------------
@@ -275,5 +278,6 @@
 
 	// --------------------------------------------------------------------
 ?>
+
 </body>
-</html> 
+</html>
