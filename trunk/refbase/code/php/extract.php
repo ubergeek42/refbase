@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./extract.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   12-Jan-03, 16:48
+	// Modified:   06-Sep-03, 15:14
 
 	// Search formular that offers to extract
 	// literature cited within a text and build
@@ -47,7 +47,8 @@
 
 	// (2b) Start <form> and <table> holding the form elements:
 	echo "\n<form action=\"search.php\" method=\"POST\">";
-	echo "\n<input type=\"hidden\" name=\"formType\" value=\"extractSearch\">";
+	echo "\n<input type=\"hidden\" name=\"formType\" value=\"extractSearch\">"
+		. "\n<input type=\"hidden\" name=\"showLinks\" value=\"1\">"; // embed '$showLinks=1' so that links get displayed on any 'display details' page
 	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the search form\">"
 			. "\n<tr>\n\t<td width=\"58\" valign=\"top\"><b>Extract Citations From:</b></td>\n\t<td width=\"10\">&nbsp;</td>"
 			. "\n\t<td><textarea name=\"sourceText\" rows=\"6\" cols=\"60\">Paste your text here...</textarea></td>"
@@ -70,6 +71,11 @@
 			. "\n\t\t\t<option>MEPS</option>"
 			. "\n\t\t\t<option>Deep Sea Res</option>"
 			. "\n\t\t\t<option>Text Citation</option>"
+			. "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
+			. "\n\t\tsort by:&nbsp;&nbsp;"
+			. "\n\t\t<select name=\"exportOrder\">"
+			. "\n\t\t\t<option>author</option>"
+			. "\n\t\t\t<option>year</option>"
 			. "\n\t\t</select>\n\t</td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td align=\"center\" colspan=\"3\">&nbsp;</td>"
