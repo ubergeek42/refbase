@@ -29,10 +29,8 @@ notes	any notes for this user
 last_login	date & time of the user's last successful login to the database -> future versions may use this info to ask the user for a new password
 logins	total number of successful logins for this user -> future versions may offer simple usage statistics
 language	the user's preferred language -> future versions might offer language customization
-records	list of record id's for all records that were saved by this user -> future versions may offer to save any record to a personal list of records
-queries	list of all queries that were saved by this user -> future versions may offer to save any query to a personal list of queries
-permissions	a comma separated list of identifier keys which specify the database actions that can be executed by this user via the web interface. Full permissions would be: "ALL" or (if specified explicitly:) "SELECT, INSERT, UPDATE, DELETE, DOWNLOAD, UPLOAD, IMPORT, EXPORT, BATCHIMPORT" (note that these permissions do NOT apply for executing raw SQL queries other than SELECT which is still restricted to the admin!)
 user_id	the user's unique ID number (which is simply the unique serial number of this record)
+group_id	the group's unique ID number (which corresponds to the group_id number of the group's record entry within the "groups" table)
 marked	gives the possibility to set a flag for this record
 created_date	the creation date of this record
 created_time	the creation time of this record
@@ -68,10 +66,8 @@ notes	TEXT
 last_login	DATETIME
 logins	MEDIUMINT UNSIGNED NOT NULL
 language	VARCHAR(50)
-records	TEXT
-queries	TEXT
-permissions	VARCHAR(150)
 user_id	MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY
+group_id	MEDIUMINT UNSIGNED NOT NULL
 marked	ENUM('no','yes') NOT NULL
 created_date	DATE
 created_time	TIME
@@ -85,7 +81,7 @@ modified_by	VARCHAR(100)
 table creation code
 -------------------
 
-CREATE TABLE users (first_name VARCHAR(50), last_name VARCHAR(50), title VARCHAR(25), institution VARCHAR(255), abbrev_institution VARCHAR(25), corporate_institution VARCHAR(255), address VARCHAR(255), address_line_1 VARCHAR(50), address_line_2 VARCHAR(50), address_line_3 VARCHAR(50), zip_code VARCHAR(25), city VARCHAR(40), state VARCHAR(50), country VARCHAR(40), phone VARCHAR(50), email VARCHAR(50), url VARCHAR(255), keywords TEXT, notes TEXT, last_login DATETIME, logins MEDIUMINT UNSIGNED NOT NULL, language VARCHAR(50), records TEXT, queries TEXT, permissions VARCHAR(150), user_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, marked ENUM('no','yes') NOT NULL, created_date DATE, created_time TIME, created_by VARCHAR(100), modified_date DATE, modified_time TIME, modified_by VARCHAR(100));
+CREATE TABLE users (first_name VARCHAR(50), last_name VARCHAR(50), title VARCHAR(25), institution VARCHAR(255), abbrev_institution VARCHAR(25), corporate_institution VARCHAR(255), address VARCHAR(255), address_line_1 VARCHAR(50), address_line_2 VARCHAR(50), address_line_3 VARCHAR(50), zip_code VARCHAR(25), city VARCHAR(40), state VARCHAR(50), country VARCHAR(40), phone VARCHAR(50), email VARCHAR(50), url VARCHAR(255), keywords TEXT, notes TEXT, last_login DATETIME, logins MEDIUMINT UNSIGNED NOT NULL, language VARCHAR(50), user_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, group_id MEDIUMINT UNSIGNED NOT NULL, marked ENUM('no','yes') NOT NULL, created_date DATE, created_time TIME, created_by VARCHAR(100), modified_date DATE, modified_time TIME, modified_by VARCHAR(100));
 
 
 rules for data import
