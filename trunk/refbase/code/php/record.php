@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./record.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   29-Sep-04, 12:50
+	// Modified:   03-Oct-04, 21:27
 
 	// Form that offers to add
 	// records or edit/delete
@@ -1082,14 +1082,18 @@
 				// build an informative title string:
 				if (!isset($loginEmail)) // if the user isn't logged in
 					$deleteTitle = "you can't delete this record since you're not logged in";
-				elseif (!ereg($loginEmail,$locationName)) // if any normal user is logged in & the 'location' field doesn't list her email address
+
+				elseif (!ereg($loginEmail, $locationName)) // if any normal user is logged in & the 'location' field doesn't list her email address
 					$deleteTitle = "you can't delete this record since it doesn't belong to your personal literature data set";
-				elseif (ereg(";",$locationName)) // if the 'location' field contains more than one user (which is indicated by a semicolon character)
+
+				// Note that we use '$row['location']' instead of the '$locationName' variable for the following tests since for the latter high ASCII characters were converted into HTML entities.
+				// E.g., the german umlaut 'Ÿ' would be presented as '&uuml;', thus containing a semicolon character *within* the user's name!
+				elseif (ereg(";", $row['location'])) // if the 'location' field contains more than one user (which is indicated by a semicolon character)
 				{
 					// if we made it here, the current user is listed within the 'location' field of this record
-					if (ereg("^[^;]+;[^;]+$", $locationName)) // the 'location' field does contain exactly one ';' => two authors, i.e., there's only one "other user" listed within the 'location' field
+					if (ereg("^[^;]+;[^;]+$", $row['location'])) // the 'location' field does contain exactly one ';' => two authors, i.e., there's only one "other user" listed within the 'location' field
 						$deleteTitle = "you can't delete this record since it also belongs to the personal literature data set of another user";
-					elseif (ereg("^[^;]+;[^;]+;[^;]+", $locationName)) // the 'location' field does contain at least two ';' => more than two authors, i.e., there are two or more "other users" listed within the 'location' field
+					elseif (ereg("^[^;]+;[^;]+;[^;]+", $row['location'])) // the 'location' field does contain at least two ';' => more than two authors, i.e., there are two or more "other users" listed within the 'location' field
 						$deleteTitle = "you can't delete this record since it also belongs to the personal literature data set of other users";
 				}
 	
