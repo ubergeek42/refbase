@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_logout.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   07-Jan-04, 23:19
+	// Modified:   31-May-04, 10:42
 
 	// This script logs a user out and redirects 
 	// to the calling page. If the script is called
@@ -21,55 +21,59 @@
 
 	// --------------------------------------------------------------------
 
-	// Restore the session
-	session_start();
-
-	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session();
 
 	// --------------------------------------------------------------------
 
-	$referer = $_REQUEST['referer']; // get the referring URL (if any)
-	if (empty($referer))
-		$referer = $HTTP_REFERER;
-
-	// Is the user logged in?
-	if (session_is_registered("loginEmail"))
+	if (isset($_REQUEST['referer']))
 	{
-		session_unregister("loginEmail"); // remove the user's email address (as a result the user will be logged out)
+		$referer = $_REQUEST['referer']; // get the referring URL from the superglobal '$_REQUEST' variable (if any)
+	}
+	elseif (isset($_SESSION['referer']))
+	{
+		$referer = $_SESSION['referer']; // get the referring URL from the superglobal '$_SESSION' variable (if any)
+	}
+	else // if '$referer' is still not set
+	{
+		if (isset($_SERVER['HTTP_REFERER']))
+			$referer = $_SERVER['HTTP_REFERER'];
+		else
+			$referer = "index.php"; // if all other attempts fail, we'll re-direct to the main page
+	}
+	
+	// Is the user logged in?
+	if (isset($_SESSION['loginEmail']))
+	{
+		// Delete the 'loginEmail' session variable & other session variables we've registered on login:
+		// (function 'deleteSessionVariable()' is defined in 'include.inc.php')
+		deleteSessionVariable("loginEmail"); // remove the user's email address (as a result the user will be logged out)
+		deleteSessionVariable("loginUserID"); // clear the user's user ID
+		deleteSessionVariable("loginFirstName"); // clear the user's first name
+		deleteSessionVariable("loginLastName"); // clear the user's last name
+		deleteSessionVariable("abbrevInstitution"); // clear the user's abbreviated institution name
+	
+		if (isset($_SESSION['userGroups']))
+			deleteSessionVariable("userGroups"); // clear the user's user groups (if any)
 
-		// clear other session variables we've registered on login:
-		session_unregister("loginUserID"); // clear the user's user ID
-		session_unregister("loginFirstName"); // clear the user's first name
-		session_unregister("loginLastName"); // clear the user's last name
-		session_unregister("abbrevInstitution"); // clear the user's abbreviated institution name
+		if (isset($_SESSION['userQueries']))
+			deleteSessionVariable("userQueries"); // clear the user's saved queries (if any)
 
-		if (session_is_registered("HeaderString"))
-			session_unregister("HeaderString"); // clear any previous messages
+		if (isset($_SESSION['HeaderString']))
+			deleteSessionVariable("HeaderString"); // clear any previous messages
 	}
 	else
 	{
-		session_register("HeaderString"); // save an error message
+		// save an error message:
 		$HeaderString = "<b><span class=\"warning\">You cannot logout since you are not logged in anymore!</span></b>";
+
+		// Write back session variables:
+		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 	}
 
-	if (!preg_match("/.*user(_details|_receipt|s)\.php.*|.*install\.php.*/", $referer))
+	if (!preg_match("/.*user(_details|_receipt|s)\.php.*|.*(error|install|query_manager)\.php.*/", $referer))
 		header("Location: $referer"); // redirect the user to the calling page
 	else
 		header("Location: index.php"); // back to main page
-
-	// a more smart solution would be something like the code below:
-	// (but '$referer' isn't registered yet across all pages!)
-
-//	// Redirect the browser back to the calling page
-//	if (session_is_registered("referer"))
-//	{  
-//		// Delete the redirection session variable
-//		session_unregister("referer");
-//		
-//		// Then, use it to redirect to the calling page
-//		header("Location: $referer");
-//		exit;
-//	}
-//	else
-//		header("Location: index.php");
 ?>
