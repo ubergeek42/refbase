@@ -59,7 +59,7 @@
 
 		// CONSTRUCT SQL QUERY:
 		// Fetch all saved settings for the user's query from the 'queries' table:
-		$query = "SELECT query_id, display_type, view_type, query, show_query, show_links, show_rows, export_format_selector, export_order FROM queries WHERE user_id = $loginUserID AND query_name = '$querySearchSelector'"; // the global variable '$loginUserID' gets set in function 'start_session()' within 'include.inc.php'
+		$query = "SELECT query_id, display_type, view_type, query, show_query, show_links, show_rows, cite_style_selector, cite_order FROM queries WHERE user_id = $loginUserID AND query_name = '$querySearchSelector'"; // the global variable '$loginUserID' gets set in function 'start_session()' within 'include.inc.php'
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection (function 'queryMySQLDatabase()' is defined in 'include.inc.php')
 
@@ -106,7 +106,7 @@
 
 
 		// Build the correct query URL:
-		$queryURL = "sqlQuery=" . rawurlencode($row['query']) . "&formType=sqlSearch&submit=" . $row['display_type'] . "&viewType=" . $row['view_type'] . "&showQuery=" . $row['show_query'] . "&showLinks=" . $row['show_links'] . "&showRows=" . $row['show_rows'] . "&exportOrder=" . $row['export_order'] . "&exportFormatSelector=" . $row['export_format_selector'];
+		$queryURL = "sqlQuery=" . rawurlencode($row['query']) . "&formType=sqlSearch&submit=" . $row['display_type'] . "&viewType=" . $row['view_type'] . "&showQuery=" . $row['show_query'] . "&showLinks=" . $row['show_links'] . "&showRows=" . $row['show_rows'] . "&citeOrder=" . $row['cite_order'] . "&citeStyleSelector=" . $row['cite_style_selector'];
 
 	
 		// call 'search.php' with the correct query URL in order to display all records matching the user's query:
