@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_options_modify.php
 	// Created:    26-Oct-04, 20:57
-	// Modified:   17-Feb-05, 20:20
+	// Modified:   27-Feb-05, 15:15
 
 	// This script validates user options selected within the form provided by 'user_options.php'.
 	// If validation succeeds, it UPDATEs the corresponding table fields for that user and redirects to a receipt page;
@@ -222,6 +222,28 @@
 
 				$queryArray[] = $insertFormatsQuery . implode(", ", $insertFormatsQueryValues) . ";";
 			}
+
+			// ---------------------
+			// e) update all permission settings for this user within the 'user_permissions' table:
+
+			// get all user permissions for the current user (as they were before submit of 'user_options.php'):
+			$userPermissionsArray = getPermissions($userID, "user", false); // function 'getPermissions()' is defined in 'include.inc.php'
+
+			// copy all array elements that deal with permission settings from the '$formVars' array to '$updatedUserPermissionsArray':
+			// (note that, except hidden permission settings, only those permission settings were included in the '$formVars' array whose checkboxes were marked!)
+			$updatedUserPermissionsArray = array();
+			foreach($formVars as $itemKey => $itemValue)
+				if (eregi("^allow", $itemKey))
+					$updatedUserPermissionsArray[$itemKey] = $itemValue; // allow the particular feature ('$itemValue' will be 'yes' anyhow)
+
+			// then, all permission settings that aren't contained within '$updatedUserPermissionsArray' must have been unchecked:
+			// (note: this logic only works if all permission settings queried by function 'getPermissions()' are also made available by 'user_options.php' -- either as checkbox or as hidden form tag!) 
+			foreach($userPermissionsArray as $permissionKey => $permissionValue)
+				if (!isset($updatedUserPermissionsArray[$permissionKey]))
+					$updatedUserPermissionsArray[$permissionKey] = 'no'; // disallow the particular feature
+
+			// update all user permissions for the current user:
+			updateUserPermissions($userID, $updatedUserPermissionsArray); // function 'updateUserPermissions()' is defined in 'include.inc.php'
 		}
 
 		// ---------------------------------------------------------------
