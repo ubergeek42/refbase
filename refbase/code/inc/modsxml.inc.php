@@ -11,7 +11,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
   //
   // Created:    02-Oct-04, 12:00
-  // Modified:   20-Mar-05, 17:40
+  // Modified:   21-Mar-05, 17:56
 
   // This include file contains functions that'll export records to MODS XML.
   // Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -33,6 +33,8 @@
   //   There's a lot of overlap in the portions that depend on types.  I plan
   //     on refactoring this, so that they can make calls to the same function.
 
+  // pages for books
+
   // I need to add these fields:
   //   series_editor
   //   series_title
@@ -51,7 +53,6 @@
   //     - expedition
   //   - Can't find a place in MODS XML
   //     - file
-  //   - ALL user-specific Fields
 
 
   // --------------------------------------------------------------------
@@ -96,6 +97,7 @@
   // --------------------------------------------------------------------
 
   function modsCollection($result) {
+ 
     global $contentTypeCharset; // defined in 'ini.inc.php'
 
     // Individual records are objects and collections of records are strings
@@ -148,6 +150,10 @@
 
   // Returns an XML object (mods) of a single record
   function modsRecord($row) {
+    $exportPrivate = True;  // This will be a global variable or will be used
+                            // when modsRow is called and will determine if we
+                            // export user-specific data
+
     // --- BEGIN TYPE * ---
     //   | These apply to everything
 
@@ -262,10 +268,51 @@
         $record->addXMLBranch($subjectBranch);
       }
     }
+    //   userkeys
+    //   NOTE: a copy of the above.  Needs to be a separate function later.
+    if ((!empty($row['user_keys'])) && $exportPrivate) {
+      $subjectArray = array();
+      $subjectArray = preg_split("/\s*;\s*/", $row['user_keys']); // "unrelated" keywords
+      foreach ($subjectArray as $singleSubject) {
+        $subjectBranch = new XMLBranch("subject");
+
+        $topicArray = array();
+        $topicArray = preg_split("/\s*,\s*/", $singleSubject); // "related" keywords
+        foreach ($topicArray as $singleTopic) {
+          $topicBranch = new XMLBranch("topic");
+          $topicBranch->setTagContent($singleTopic);
+
+          $subjectBranch->addXMLBranch($topicBranch);
+        }
+        $record->addXMLBranch($subjectBranch);
+      }
+    }
+    //   user_groups
+    //   NOTE: a copy of the above.  Needs to be a separate function later.
+    if ((!empty($row['user_groups'])) && $exportPrivate) {
+      $subjectArray = array();
+      $subjectArray = preg_split("/\s*;\s*/", $row['user_groups']); // "unrelated" keywords
+      foreach ($subjectArray as $singleSubject) {
+        $subjectBranch = new XMLBranch("subject");
+
+        $topicArray = array();
+        $topicArray = preg_split("/\s*,\s*/", $singleSubject); // "related" keywords
+        foreach ($topicArray as $singleTopic) {
+          $topicBranch = new XMLBranch("topic");
+          $topicBranch->setTagContent($singleTopic);
+
+          $subjectBranch->addXMLBranch($topicBranch);
+        }
+        $record->addXMLBranch($subjectBranch);
+      }
+    }
  
     // notes
     if (!empty($row['notes']))
       $record->setTagContent($row['notes'], "mods/note");
+    // user_notes
+    if ((!empty($row['user_notes'])) && $exportPrivate)
+      $record->setTagContent($row['user_notes'], "mods/note");
 
     // typeOfResource
     // maps are 'cartographic' and everything else is 'text'
