@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   17-Oct-04, 20:50
+	// Modified:   24-Oct-04, 20:59
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -267,8 +267,16 @@
 				. "state = \"" . $formVars["state"] . "\", "
 				. "country = \"" . $formVars["country"] . "\", "
 				. "phone = \"" . $formVars["phone"] . "\", "
-				. "url = \"" . $formVars["url"] . "\", "
-				. "modified_date = \"$currentDate\", "
+				. "url = \"" . $formVars["url"] . "\", ";
+
+		if (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail))
+		{
+			$query .= "keywords = \"" . $formVars["keywords"] . "\", "
+					. "notes = \"" . $formVars["notes"] . "\", "
+					. "marked = \"" . $formVars["marked"] . "\", ";
+		}
+
+		$query .= "modified_date = \"$currentDate\", "
 				. "modified_time = \"$currentTime\", "
 				. "modified_by = \"$currentUser\" "
 				. "WHERE user_id = $userID";
@@ -297,14 +305,23 @@
 				. "state = \"" . $formVars["state"] . "\", "
 				. "country = \"" . $formVars["country"] . "\", "
 				. "phone = \"" . $formVars["phone"] . "\", "
-				. "url = \"" . $formVars["url"] . "\", "
-				. "email = \"" . $formVars["email"] . "\", "
+				. "url = \"" . $formVars["url"] . "\", ";
+
+		if (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail))
+		{
+			$query .= "keywords = \"" . $formVars["keywords"] . "\", "
+					. "notes = \"" . $formVars["notes"] . "\", "
+					. "marked = \"" . $formVars["marked"] . "\", ";
+		}
+
+		$query .= "email = \"" . $formVars["email"] . "\", "
 				. "created_date = \"$currentDate\", "
 				. "created_time = \"$currentTime\", "
 				. "created_by = \"$currentUser\", "
 				. "modified_date = \"$currentDate\", "
 				. "modified_time = \"$currentTime\", "
 				. "modified_by = \"$currentUser\", "
+				. "language = \"en\", " // initially, english will be used as default language (the language setting can be changed by the user in 'user_options.php')
 				. "last_login = NOW(), " // set 'last_login' field to the current date & time in 'DATETIME' format (which is 'YYYY-MM-DD HH:MM:SS', e.g.: '2003-12-31 23:45:59')
 				. "logins = 1 "; // set the number of logins to 1 (so that any subsequent login attempt can be counted correctly)
 	}
@@ -451,6 +468,10 @@
 	saveSessionVariable("loginFirstName", $loginFirstName);
 	saveSessionVariable("loginLastName", $loginLastName);
 	saveSessionVariable("abbrevInstitution", $abbrevInstitution);
+
+	// If an authorized user uses 'user_details.php' to add a new user (-> 'userID' is empty!):
+	if ((!isset($_SESSION['loginEmail']) && ($addNewUsers == "everyone") && ($_REQUEST['userID'] == "")) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == "")))
+		saveSessionVariable("userLanguage", "en");
 
 	// Get all user groups specified by the current user
 	// and (if some groups were found) save them as semicolon-delimited string to the session variable 'userGroups':
