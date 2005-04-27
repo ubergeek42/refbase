@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   27-Mar-05, 00:07
+	// Modified:   26-Apr-05, 19:46
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -514,6 +514,26 @@
 			$oldQuery = ereg_replace('(\\\\)+','\\\\',$oldQuery);
 		}
 
+	// Fifth, setup an array of arrays holding URL and title information for all RSS feeds available on this page:
+	// (appropriate <link...> tags will be included in the HTML header for every URL specified)
+	$rssURLArray = array();
+
+	if (isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_rss_feeds'...
+	{
+		// ...extract the 'WHERE' clause from the SQL query to include it within the RSS URL:
+		$queryWhereClause = extractWhereClause($query); // function 'extractWhereClause()' is defined in 'include.inc.php'
+
+		// generate an URL pointing to the RSS feed that matches the current query:
+		$rssURL = generateRSSURL($queryWhereClause, $showRows); // function 'generateRSSURL()' is defined in 'include.inc.php'
+
+		// build a title string that matches the current query:
+		// (alternatively we could always use: "records matching current query")
+		$rssTitle = "records where " . explainSQLQuery($queryWhereClause); // function 'explainSQLQuery()' is defined in 'include.inc.php'
+
+		$rssURLArray[] = array("href" => $rssURL,
+								"title" => $rssTitle);
+	}
+
 	// Finally, build the appropriate header string (which is required as parameter to the 'showPageHeader()' function):
 	if (!isset($_SESSION['HeaderString'])) // if there's no stored message available
 	{
@@ -550,14 +570,9 @@
 						$HeaderString .= " | ";
 				}
 
-				if (isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_rss_feeds', we'll show a link that will generate a dynamic RSS feed for the current query...
-				{
-					// ...extract the 'WHERE' clause from the SQL query to include it within the RSS link:
-					$queryWhereClause = preg_replace("/^.+?WHERE (.+?)(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$).*?$/i","\\1",$query);
-
-					// ...and display a link that will generate a dynamic RSS feed for the current query:
-					$HeaderString .= "<a href=\"rss.php?where=" . rawurlencode($queryWhereClause) . "&amp;showRows=$showRows\" title=\"track newly added records matching your current query by subscribing to this RSS feed\">track</a>";
-				}
+				if (isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_rss_feeds'...
+					// ...we'll display a link that will generate a dynamic RSS feed for the current query:
+					$HeaderString .= "<a href=\"" . $rssURL . "\" title=\"track newly added records matching your current query by subscribing to this RSS feed\">RSS</a>";
 
 				if (isset($_SESSION['user_permissions']) AND ((isset($_SESSION['loginEmail']) AND ereg("(allow_user_queries|allow_rss_feeds)", $_SESSION['user_permissions'])) OR (!isset($_SESSION['loginEmail']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])))) // if the 'user_permissions' session variable contains 'allow_rss_feeds' -OR- if logged in, aditionally: 'allow_user_queries':
 					$HeaderString .= ")";
@@ -601,7 +616,7 @@
 	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 	// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Query Results", "index,follow", "Results from the " . encodeHTML($officialDatabaseName), "", true, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Query Results", "index,follow", "Results from the " . encodeHTML($officialDatabaseName), "", true, "", $viewType, $rssURLArray);
 	if ($viewType != "Print") // Note: we ommit the visible header in print view! ('viewType=Print')
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
 
@@ -1323,7 +1338,7 @@
 			}
 
 			// call the 'displayHTMLhead()' function (defined in 'header.inc.php'):
-			displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Exported Data", "index,follow", "Data exported from the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
+			displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Exported Data", "index,follow", "Data exported from the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
 
 			$exportText = "\n\t<pre>\n" . encodeHTML($exportText) . "\n\t</pre>\n</body>\n</html>\n";
 
