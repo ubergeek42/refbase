@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   27-Feb-05, 13:25
+	// Modified:   26-Apr-05, 19:41
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -257,7 +257,7 @@
 		}
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Login", "index,follow", "User login page. You must be logged in to the " . encodeHTML($officialDatabaseName) . " in order to add, edit or delete records", "", false, "", $viewType);
+		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Login", "index,follow", "User login page. You must be logged in to the " . encodeHTML($officialDatabaseName) . " in order to add, edit or delete records", "", false, "", $viewType, array());
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 		// Build the login form:

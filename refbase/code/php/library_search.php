@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./library_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   28-Mar-05, 20:58
+	// Modified:   26-Apr-05, 18:57
 
 	// Search form providing the main fields.
 	// Searches will be restricted to records belonging
@@ -58,7 +58,7 @@
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Library Search", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Library Search", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (2b) Start <form> and <table> holding the form elements:

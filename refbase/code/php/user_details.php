@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_details.php
 	// Created:    16-Apr-02, 10:55
-	// Modified:   17-Feb-05, 20:17
+	// Modified:   26-Apr-05, 19:10
 
 	// This script shows the user a user <form>. It can be used both for INSERTing a new user and for UPDATE-ing an existing user.
 	// If the user is logged in, then it is an UPDATE; otherwise, an INSERT. The script also shows error messages above widgets that
@@ -153,7 +153,7 @@
 
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Details", "noindex,nofollow", "User details required for use of the " . encodeHTML($officialDatabaseName), "\n\t<meta http-equiv=\"expires\" content=\"0\">", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Details", "noindex,nofollow", "User details required for use of the " . encodeHTML($officialDatabaseName), "\n\t<meta http-equiv=\"expires\" content=\"0\">", false, "", $viewType, array());
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (5) CLOSE the database connection:

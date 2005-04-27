@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   17-Feb-05, 19:43
+	// Modified:   26-Apr-05, 18:58
 
 	// This script serves as a routing page which takes any record serial number, date, year or author that was passed as parameter
 	// to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -144,7 +144,7 @@
 	
 		// DISPLAY header:
 		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Show Record", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
+		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Show Record", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 	
 		// Start <form> and <table> holding the form elements:

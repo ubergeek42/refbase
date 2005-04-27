@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./extract.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   16-Feb-05, 20:47
+	// Modified:   26-Apr-05, 18:58
 
 	// Search form that offers to extract
 	// literature cited within a text and build
@@ -53,7 +53,7 @@
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Extract Citations", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Extract Citations", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (2b) Start <form> and <table> holding the form elements:

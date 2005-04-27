@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_options.php
 	// Created:    24-Oct-04, 19:31
-	// Modified:   27-Feb-04, 23:10
+	// Modified:   26-Apr-05, 19:12
 
 	// This script provides options which are individual for each user.
 	// 
@@ -155,7 +155,7 @@
 
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Options", "noindex,nofollow", "User options offered by the " . encodeHTML($officialDatabaseName), "\n\t<meta http-equiv=\"expires\" content=\"0\">", true, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Options", "noindex,nofollow", "User options offered by the " . encodeHTML($officialDatabaseName), "\n\t<meta http-equiv=\"expires\" content=\"0\">", true, "", $viewType, array());
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// --------------------------------------------------------------------

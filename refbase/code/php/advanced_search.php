@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./advanced_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   05-Apr-05, 20:32
+	// Modified:   26-Apr-05, 18:54
 
 	// Search form providing access to all fields of the database.
 	// It offers some output options (like how many records to display per page)
@@ -63,7 +63,7 @@
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $loc["Advanced"] . " " . $loc["Search"], "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $loc["Advanced"] . " " . $loc["Search"], "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// Define variables holding common drop-down elements, i.e. build properly formatted <option> tag elements:

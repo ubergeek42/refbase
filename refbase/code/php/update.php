@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./update.php
 	// Created:    01-Mar-05, 20:47
-	// Modified:   24-Mar-05, 14:24
+	// Modified:   26-Apr-05, 19:30
 
 	// This file will update any refbase MySQL database installation from v0.7 to v0.8.
 	// (Note that this script currently doesn't offer any conversion from 'latin1' to 'utf8')
@@ -145,7 +145,7 @@
 
 		// DISPLAY header:
 		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Update", "index,follow", "Update form for the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
+		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Update", "index,follow", "Update form for the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 		// Start <form> and <table> holding the form elements:
@@ -565,7 +565,7 @@
 
 		// DISPLAY header:
 		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Update Feedback", "index,follow", "Update feedback for the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
+		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Update Feedback", "index,follow", "Update feedback for the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 		// Start a <table>:

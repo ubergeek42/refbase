@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./simple_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   28-Mar-05, 19:44
+	// Modified:   26-Apr-05, 18:53
 
 	// Search form providing access to the main fields of the database.
 	// It offers some output options (like how many records to display per page)
@@ -58,7 +58,7 @@
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $loc["Simple"] . " " . $loc["Search"], "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $loc["Simple"] . " " . $loc["Search"], "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// Define variables holding common drop-down elements, i.e. build properly formatted <option> tag elements:
