@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./index.php
 	// Created:    29-Jul-02, 16:45
-	// Modified:   28-Mar-05, 20:27
+	// Modified:   26-Apr-05, 17:31
 
 	// This script builds the main page.
 	// It provides login and quick search forms
@@ -50,6 +50,22 @@
 	else
 		$viewType = "";
 
+	// Setup an array of arrays holding URL and title information for all RSS feeds available on this page:
+	// (appropriate <link...> tags will be included in the HTML header for every URL specified)
+	$rssURLArray = array();
+
+	if (isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_rss_feeds'...
+	{
+		$rssURLArray[] = array("href" => "rss.php?where=serial%20RLIKE%20%22.%2B%22&amp;showRows=10",
+								"title" => "records added most recently");
+
+		$rssURLArray[] = array("href" => "rss.php?where=created_date%20%3D%20CURDATE%28%29&amp;showRows=10",
+								"title" => "records added today");
+
+		$rssURLArray[] = array("href" => "rss.php?where=modified_date%20%3D%20CURDATE%28%29&amp;showRows=10",
+								"title" => "records edited today");
+	}
+
 	// CONSTRUCT SQL QUERY:
 	$query = "SELECT COUNT(serial) FROM $tableRefs"; // query the total number of records
 
@@ -70,7 +86,7 @@
 
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $loc["Home"], "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $loc["Home"], "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, $rssURLArray);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (5) CLOSE the database connection:
@@ -91,7 +107,7 @@
 <table align="center" border="0" cellpadding="2" cellspacing="5" width="90%" summary="This table explains features, goals and usage of the <?php echo encodeHTML($officialDatabaseName); ?>">
 	<tr>
 		<td colspan="2"><h3><?php echo $loc["Goals"]; ?> &amp; <?php echo $loc["Features"]; ?></h3></td>
-		<td width="180" valign="bottom"><?php
+		<td width="163" valign="bottom"><?php
 if (!isset($_SESSION['loginEmail']))
 	{
 ?><div class="header"><b><?php echo $loc["Login"]; ?>:</b></div><?php
