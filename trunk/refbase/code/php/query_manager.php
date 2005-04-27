@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./query_manager.php
 	// Created:    04-Feb-04, 22:29
-	// Modified:   25-Feb-05, 23:43
+	// Modified:   26-Apr-05, 19:13
 
 	// This script enables you to manage your custom queries.
 	// It offers a form to save the current query or update/delete any of your saved queries.
@@ -160,9 +160,9 @@
 
 		// Adjust the help text:
 		if ($customQuery == "1") // if the script was called with parameters
-			$helpText = "Name your query and click the <em>Save Query</em> button. If you like, you can refine your query or modify any of the display options before saving.";
+			$helpText = "Name your query and click the <em>Add Query</em> button. If you like, you can refine your query or modify any of the display options before saving.";
 		else
-			$helpText = "Enter your query and set the display options to suit your needs. Then, name your query and click the <em>Save Query</em> button.";
+			$helpText = "Enter your query and set the display options to suit your needs. Then, name your query and click the <em>Edit Query</em> button.";
 	}
 
 	// --------------------------------------------------------------------
@@ -335,7 +335,7 @@
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $pageTitle, "index,follow", "Manage queries that are used to search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType);
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $pageTitle, "index,follow", "Manage queries that are used to search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
 
 	// (2b) Start <form> and <table> holding the form elements:
