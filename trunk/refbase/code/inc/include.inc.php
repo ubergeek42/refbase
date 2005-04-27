@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   28-Mar-05, 22:07
+	// Modified:   27-Apr-05, 16:03
 
 	// This file contains important
 	// functions that are shared
@@ -684,6 +684,7 @@
 		$refineSearchForm = <<<EOF
 		<form action="$href" method="POST" name="refineSearch">
 			<input type="hidden" name="formType" value="refineSearch">
+			<input type="hidden" name="submit" value="Search">
 			<input type="hidden" name="sqlQuery" value="$queryURL">
 			<input type="hidden" name="showQuery" value="$showQuery">
 			<input type="hidden" name="showLinks" value="$showLinks">
@@ -1981,6 +1982,36 @@ EOF;
 
 	// --------------------------------------------------------------------
 
+	// Encode HTML special chars:
+	// As opposed to the 'encodeHTML()' function this function will only convert the characters supported by the 'htmlspecialchars()' function:
+	// - '&' (ampersand) becomes '&amp;'
+	// - '"' (double quote) becomes '&quot;' when ENT_NOQUOTES  is not set
+	// - ''' (single quote) becomes '&#039;' only when  ENT_QUOTES is set
+	// - '<' (less than) becomes '&lt;'
+	// - '>' (greater than) becomes '&gt;'
+	// Note that these (and only these!) entities are also supported by XML (which is why we use this function within the 'generateRSS()' function and leave all other higher ASCII chars unencoded)
+	function encodeHTMLspecialchars($sourceString)
+	{
+		global $contentTypeCharset; // defined in 'ini.inc.php'
+
+		$encodedString = htmlspecialchars($sourceString, ENT_COMPAT, "$contentTypeCharset");
+		// Notes from <http://www.php.net/manual/en/function.htmlspecialchars.php>:
+		//
+		//     - The optional second parameter lets you define what will be done with 'single' and "double" quotes.
+		//       It takes on one of three constants with the default being ENT_COMPAT:
+		//       ENT_COMPAT:   Will convert double-quotes and leave single-quotes alone.
+		//       ENT_QUOTES:   Will convert both double and single quotes.
+		//       ENT_NOQUOTES: Will leave both double and single quotes unconverted.
+		//
+		//     - The optional third argument defines the character set used in conversion. Support for this argument
+		//       was added in PHP 4.1.0. Presently, the ISO-8859-1 character set is used as the default.
+
+
+		return $encodedString;
+	}
+
+	// --------------------------------------------------------------------
+
 	// Verify the SQL query specified by the user and modify it if security concerns are encountered:
 	// (this function does add/remove user-specific query code as required and will fix problems with escape sequences within the SQL query)
 	function verifySQLQuery($sqlQuery, $referer, $displayType, $showLinks)
@@ -2103,7 +2134,7 @@ EOF;
 		$authorName = preg_replace("/(.+?)\([^)]+\)/", "\\1", $createdBy);
 		$authorEmail = preg_replace("/.+?\(([^)]+)\)/", "\\1", $createdBy);
 
-		$rfc2822address = encodeHTML($authorName . "<" . $authorEmail . ">");
+		$rfc2822address = encodeHTMLspecialchars($authorName . "<" . $authorEmail . ">");
 
 
 		return $rfc2822address;
@@ -2126,21 +2157,45 @@ EOF;
 										" = "                            =>  " is equal to ",
 										" > "                            =>  " is greater than ",
 										" < "                            =>  " is less than ",
-										"NOT RLIKE \"\\^([^\"]+?)\\$\""  =>  "is not equal to \"\\1\"",
-										"NOT RLIKE \"\\^"                =>  "does not start with \"",
-										"NOT RLIKE \"([^\"]+?)\\$\""     =>  "does not end with \"\\1\"",
+										"NOT RLIKE \"\\^([^\"]+?)\\$\""  =>  "is not equal to '\\1'",
+										"NOT RLIKE \"\\^"                =>  "does not start with '",
+										"NOT RLIKE \"([^\"]+?)\\$\""     =>  "does not end with '\\1'",
 										"NOT RLIKE"                      =>  "does not contain",
-										"RLIKE \"\\^([^\"]+?)\\$\""      =>  "is equal to \"\\1\"",
-										"RLIKE \"\\^"                    =>  "starts with \"",
-										"RLIKE \"([^\"]+?)\\$\""         =>  "ends with \"\\1\"",
+										"RLIKE \"\\^([^\"]+?)\\$\""      =>  "is equal to '\\1'",
+										"RLIKE \"\\^"                    =>  "starts with '",
+										"RLIKE \"([^\"]+?)\\$\""         =>  "ends with '\\1'",
 										"RLIKE"                          =>  "contains",
 										"AND"                            =>  "and");
 
 		// Perform search & replace actions on the SQL query:
 		$translatedSQL = searchReplaceText($sqlSearchReplacePatterns, $translatedSQL); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
+		$translatedSQL = str_replace('"',"'",$translatedSQL); // replace any remaining " with '
+
 
 		return $translatedSQL;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Extract the 'WHERE' clause from an SQL query:
+	function extractWhereClause($query)
+	{
+		$queryWhereClause = preg_replace("/^.+?WHERE (.+?)(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$).*?$/i","\\1",$query);
+
+
+		return $queryWhereClause;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Generate an URL pointing to a RSS feed:
+	function generateRSSURL($queryWhereClause, $showRows)
+	{
+		$rssURL = "rss.php?where=" . rawurlencode($queryWhereClause) . "&amp;showRows=" . $showRows;
+
+
+		return $rssURL;
 	}
 
 	// --------------------------------------------------------------------
@@ -2155,6 +2210,10 @@ EOF;
 		global $markupSearchReplacePatterns;
 		global $contentTypeCharset;
 
+		// Note that we only convert those entities that are supported by XML (by use of the 'encodeHTMLspecialchars()' function).
+		// All other higher ASCII chars are left unencoded and valid feed output is only possible if the '$contentTypeCharset' variable is set correctly in 'ini.inc.php'.
+		// (The only exception is the item description which will contain HTML tags & entities that were defined by '$markupSearchReplacePatterns' or by the 'reArrangeAuthorContents()' function)
+
 		$currentDateTimeStamp = date('r'); // get the current date & time (in UNIX time stamp format => "date('D, j M Y H:i:s O')")
 
 		// write RSS header:
@@ -2163,9 +2222,9 @@ EOF;
 
 		// write channel info:
 		$rssData .= "\n\t<channel>"
-					. "\n\t\t<title>" . encodeHTML($officialDatabaseName) . "</title>"
+					. "\n\t\t<title>" . encodeHTMLspecialchars($officialDatabaseName) . "</title>"
 					. "\n\t\t<link>" . $databaseBaseURL . "</link>"
-					. "\n\t\t<description>" . encodeHTML($rssChannelDescription) . "</description>"
+					. "\n\t\t<description>" . encodeHTMLspecialchars($rssChannelDescription) . "</description>"
 					. "\n\t\t<language>en</language>"
 					. "\n\t\t<pubDate>" . $currentDateTimeStamp . "</pubDate>"
 					. "\n\t\t<lastBuildDate>" . $currentDateTimeStamp . "</lastBuildDate>"
@@ -2174,17 +2233,20 @@ EOF;
 		// write image data:
 		$rssData .=  "\n\n\t\t<image>"
 					. "\n\t\t\t<url>" . $databaseBaseURL . "img/logo.gif</url>"
-					. "\n\t\t\t<title>" . encodeHTML($officialDatabaseName) . "</title>"
+					. "\n\t\t\t<title>" . encodeHTMLspecialchars($officialDatabaseName) . "</title>"
 					. "\n\t\t\t<link>" . $databaseBaseURL . "</link>"
 					. "\n\t\t</image>";
 
 		// fetch results: upto the limit specified in '$showRows', fetch a row into the '$row' array and write out a RSS item:
 		for ($rowCounter=0; (($rowCounter < $showRows) && ($row = @ mysql_fetch_array($result))); $rowCounter++)
 		{
+			$origTitle = $row['title']; // save the original title contents before applying any search & replace actions
+
 			// Perform search & replace actions on the text of the 'title' field:
 			// (the array '$markupSearchReplacePatterns' in 'ini.inc.php' defines which search & replace actions will be employed)
-//			$row['title'] = searchReplaceText($markupSearchReplacePatterns, encodeHTML($row['title']));
-			// Note: search/replace seems to work but the resulting HTML code doesn't get displayed properly in my news reader... ?:-/
+			$row['title'] = searchReplaceText($markupSearchReplacePatterns, $row['title']); // function 'searchReplaceText()' is defined in 'include.inc.php'
+			// this will provide for correct rendering of italic, super/sub-script and greek letters in item descriptions (which are enclosed by '<![CDATA[...]]>' to ensure well-formed XML);
+			// item titles are still served in raw format, though, since the use of HTML in item titles breaks many news readers
 
 			$citeStyleFile = getStyleFile($defaultCiteStyle); // fetch the name of the citation style file that's associated with the style given in '$defaultCiteStyle' (which, in turn, is defined in 'ini.inc.php')
 
@@ -2197,13 +2259,13 @@ EOF;
 			// append a RSS item for the current record:
 			$rssData .= "\n\n\t\t<item>"
 
-						. "\n\t\t\t<title>" . encodeHTML($row['title']) . "</title>"
+						. "\n\t\t\t<title>" . encodeHTMLspecialchars($origTitle) . "</title>" // we avoid embedding HTML in the item title and use the raw title instead
 
 						. "\n\t\t\t<link>" . $databaseBaseURL . "show.php?record=" . $row['serial'] . "</link>"
 
-						. "\n\t\t\t<description>" . encodeHTML($record)
+						. "\n\t\t\t<description><![CDATA[" . $record
 
-						. "\n\t\t\t&lt;br&gt;&lt;br&gt;Edited by " . encodeHTML($row['modified_by']) . " on " . generateUNIXTimeStamp($row['modified_date'], $row['modified_time']) . ".</description>"
+						. "\n\t\t\t<br><br>Edited by " . encodeHTMLspecialchars($row['modified_by']) . " on " . generateUNIXTimeStamp($row['modified_date'], $row['modified_time']) . ".]]></description>"
 
 						. "\n\t\t\t<guid isPermaLink=\"true\">" . $databaseBaseURL . "show.php?record=" . $row['serial'] . "</guid>"
 
