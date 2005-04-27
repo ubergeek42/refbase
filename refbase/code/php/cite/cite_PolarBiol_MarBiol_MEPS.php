@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./cite/cite_PolarBiol_MarBiol_MEPS.php
 	// Created:    28-Sep-04, 22:14
-	// Modified:   13-Oct-04, 22:58
+	// Modified:   26-Apr-05, 15:35
 
 	// This is a citation style file (which must reside within the 'cite/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecord()' function that outputs a reference list from selected records according to the citation style used by
@@ -200,9 +200,11 @@
 								if (!empty($row['place']))
 									$record .= ", ";
 								else
+								{
 									if (!ereg(",$", $row['publisher']))
 										$record .= ",";
 									$record .= " ";
+								}
 							}
 
 						if (!empty($row['place']))			// place
@@ -273,9 +275,11 @@
 						if (!empty($row['place']))
 							$record .= ", ";
 						else
+						{
 							if (!ereg(",$", $row['publisher']))
 								$record .= ",";
 							$record .= " ";
+						}
 					}
 
 				if (!empty($row['place']))			// place
