@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./export/bibutils/export_xml2bib.php
 	// Created:    28-Sep-04, 22:14
-	// Modified:   13-Oct-04, 21:31
+	// Modified:   07-Apr-05, 11:33
 
 	// This is an export format file (which must reside within the 'export/' sub-directory of your refbase root directory). It contains a version of the
 	// 'exportRecords()' function that outputs records according to the export format used by 'BibTeX', the bibliographic companion to the LaTeX macro package.
@@ -33,6 +33,7 @@
 		$tempFile = tempnam("/tmp", "refbase-"); // Note: currently, we simply write to '/tmp' since I don't know how to dynamically query the current temp directory! ?:-/
 		$tempFileHandle = fopen($tempFile, "w"); // open temp file with write permission
 		fwrite($tempFileHandle, $recordCollection); // save data to temp file
+		fclose($tempFileHandle); // close temp file
 
 		// pass this temp file to the bibutils 'xml2bib' utility for conversion:
 		exec($bibutilsPath . "xml2bib " . $tempFile, $resultArray);
@@ -46,8 +47,6 @@
 			while (list($key, $val) = each($resultArray))
 				$resultString .= "\n" . trim($val); // append each of the array elements to a string
 		}
-
-		fclose($tempFileHandle); // close temp file
 
 		// return record data in BibTeX format:
 		return $resultString;

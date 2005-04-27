@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./export/bibutils/export_xml2end.php
 	// Created:    28-Sep-04, 22:14
-	// Modified:   13-Oct-04, 00:42
+	// Modified:   07-Apr-05, 11:34
 
 	// This is an export format file (which must reside within the 'export/' sub-directory of your refbase root directory). It contains a version of the
 	// 'exportRecords()' function that outputs records according to the export format used by the commercial bibliographic package 'Endnote' (http://www.endnote.com).
@@ -33,6 +33,7 @@
 		$tempFile = tempnam("/tmp", "refbase-"); // Note: currently, we simply write to '/tmp' since I don't know how to dynamically query the current temp directory! ?:-/
 		$tempFileHandle = fopen($tempFile, "w"); // open temp file with write permission
 		fwrite($tempFileHandle, $recordCollection); // save data to temp file
+		fclose($tempFileHandle); // close temp file
 
 		// pass this temp file to the bibutils 'xml2end' utility for conversion:
 		exec($bibutilsPath . "xml2end " . $tempFile, $resultArray);
@@ -46,8 +47,6 @@
 			while (list($key, $val) = each($resultArray))
 				$resultString .= "\n" . trim($val); // append each of the array elements to a string
 		}
-
-		fclose($tempFileHandle); // close temp file
 
 		// return record data in Endnote format:
 		return $resultString;
