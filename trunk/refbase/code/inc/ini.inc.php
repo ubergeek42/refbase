@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   27-Feb-05, 23:26
+	// Modified:   27-Apr-05, 16:16
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -235,6 +235,7 @@
 										"\\[super:(.+?)\\]" =>  "<sup>\\1</sup>",
 										"\\[sub:(.+?)\\]"   =>  "<sub>\\1</sub>",
 										"\\[permil\\]"      =>  "&permil;",
+										"\\[infinity\\]"    =>  "&infin;",
 										"\\[alpha\\]"       =>  "&alpha;",
 										"\\[beta\\]"        =>  "&beta;",
 										"\\[gamma\\]"       =>  "&gamma;",
