@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./header.inc.php
 	// Created:    28-Jul-02, 11:21
-	// Modified:   16-Feb-05, 20:47
+	// Modified:   26-Apr-05, 16:59
 
 	// This is the header include file.
 	// It contains functions that provide the HTML header
@@ -19,7 +19,7 @@
 	// --------------------------------------------------------------------
 
 	// Inserts the HTML <head>...</head> block as well as the initial <body> tag:
-	function displayHTMLhead($pageTitle, $metaRobots, $metaDescription, $additionalMeta, $includeJavaScript, $includeJavaScriptFile, $viewType)
+	function displayHTMLhead($pageTitle, $metaRobots, $metaDescription, $additionalMeta, $includeJavaScript, $includeJavaScriptFile, $viewType, $rssURLArray)
 	{
 		global $contentTypeCharset; // these variables are specified in 'ini.inc.php' 
 		global $defaultStyleSheet;
@@ -54,6 +54,17 @@
 ?>
 
 	<link rel="stylesheet" href="<? echo $defaultStyleSheet; ?>" type="text/css" title="CSS Definition"><?php
+		}
+
+		if (!empty($rssURLArray) AND isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if some RSS URLs were specified AND the 'user_permissions' session variable contains 'allow_rss_feeds'...
+		{
+			foreach ($rssURLArray as $rssURL)
+			{
+			// ...include a link tag pointing to a dynamic RSS feed for the current query:
+?>
+
+	<link rel="alternate" type="application/rss+xml" href="<? echo $rssURL['href']; ?>" title="<? echo $rssURL['title']; ?>"><?php
+			}
 		}
 
 		if (!empty($includeJavaScriptFile))
