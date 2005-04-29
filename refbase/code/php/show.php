@@ -5,11 +5,11 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   26-Apr-05, 18:58
+	// Modified:   29-Apr-05, 22:46
 
-	// This script serves as a routing page which takes any record serial number, date, year or author that was passed as parameter
-	// to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
-	// record in details view. This is to provide short URLs (like: '.../show.php?record=12345') for email announcements etc.
+	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
+	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
+	// record(s). This allows to provide short URLs (like: '.../show.php?record=12345') for email announcements or to generate publication lists.
 
 	/*
 	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
@@ -22,6 +22,7 @@
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
 	include 'initialize/ini.inc.php'; // include common variables
+	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
@@ -31,48 +32,54 @@
 
 	// --------------------------------------------------------------------
 
-	// Extract any parameters passed to the script:
-	if (isset($_REQUEST['record']))
-		$serial = $_REQUEST['record']; // get record serial number
+	// Extract any generic parameters passed to the script:
+	// (they control how found records are presented on screen)
+
+	// Extract the type of display requested by the user. Normally, this will be one of the following:
+	//  - '' => if the 'submit' parameter is empty, this will produce the default columnar output style ('displayColumns()' function)
+	//  - 'Display' => display details for each of the selected records ('displayDetails()' function)
+	//  - 'Cite' => build a proper citation for each of the selected records ('generateCitations()' function)
+	if (isset($_REQUEST['submit']))
+		$displayType = $_REQUEST['submit'];
 	else
-		$serial = "";
+		$displayType = "";
 
+	// Note that for 'show.php' we don't accept any other display types than '', 'Display' and 'Cite',
+	// if any other types were specified, we'll use the default columnar output style instead:
+	if (!empty($displayType) AND !eregi("^(Display|Cite)$", $displayType))
+		$displayType = "";		
 
-	if (isset($_REQUEST['date']))
-		$date = $_REQUEST['date']; // get date
+	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// ('' will produce the default 'Web' output style)
+	if (isset($_REQUEST['viewType']))
+		$viewType = $_REQUEST['viewType'];
 	else
-		$date = "";
+		$viewType = "";
 
-
-	if (isset($_REQUEST['when']))
-		$when = $_REQUEST['when']; // get info about what kind of date shall be searched for ("when=edited" -> search field 'modified_date'; otherwise -> search field 'created_date')
+	if (isset($_REQUEST['showQuery']))
+		$showQuery = $_REQUEST['showQuery'];
 	else
-		$when = "";
+		$showQuery = "";
 
-
-	if (isset($_REQUEST['range']))
-		$range = $_REQUEST['range']; // check the date range ("range=after" -> return all records whose created/modifed date is after '$date'; "range=before" -> return all records whose created/modifed date is before '$date')
+	if (isset($_REQUEST['showLinks']))
+		$showLinks = $_REQUEST['showLinks'];
 	else
-		$range = "";
+		$showLinks = "1"; // for 'show.php' we'll always show the links column by default if the 'showLinks' parameter isn't set explicitly to "0"
 
-
-	if (isset($_REQUEST['year']))
-		$year = $_REQUEST['year']; // get year
+	if (isset($_REQUEST['showRows']))
+		$showRows = $_REQUEST['showRows'];
 	else
-		$year = "";
+		$showRows = 0; // assigning 0 will cause 'search.php' to use the default number
 
-
-	if (isset($_REQUEST['author']))
-		$author = $_REQUEST['author']; // get author
+	if (isset($_REQUEST['citeStyleSelector']))
+		$citeStyle = $_REQUEST['citeStyleSelector']; // get cite style
 	else
-		$author = "";
+		$citeStyle = $defaultCiteStyle; // if no cite style was given, we'll use the default cite style which is defined by the '$defaultCiteStyle' variable in 'ini.inc.php'
 
-
-	if (isset($_REQUEST['without']))
-		$without = $_REQUEST['without']; // when searching for authors, check whether duplicate records should be included
+	if (isset($_REQUEST['citeOrder']))
+		$citeOrder = $_REQUEST['citeOrder']; // get information how citation data should be sorted (if this parameter is set to 'year', records will be listed in blocks sorted by year)
 	else
-		$without = "";
-
+		$citeOrder = "";
 
 	if (isset($_REQUEST['headerMsg']))
 		$headerMsg = $_REQUEST['headerMsg']; // we'll accept custom header messages as well
@@ -82,48 +89,173 @@
 	else
 		$headerMsg = "";
 
+	// --------------------------------------------------------------------
 
-	// currently, the following two fields will get only interpreted when searching for authors (i.e., the 'author' parameter must be present):
-	if (isset($_REQUEST['only']))
-		$only = $_REQUEST['only']; // check whether we are supposed to show records of a particular subset only. Currently, only "only=selected" is supported. If this
-								// parameter and value is present, we'll restrict the search results to those records that have the 'selected' bit set for a particular user.
-								// IMPORTANT: Since the 'selected' field is specific to every user (table 'user_data'), the 'userID' parameter must be specified as well!!
+	// Extract any parameters that are specific to 'show.php':
+	// (these parameters control which records will be returned by 'search.php')
+
+	// Note: you can combine different parameters to achieve an "AND" query, e.g.:
+	//
+	//       show.php?contribution_id=AWI&author=steffens&year=2005
+	//
+	//       which will find all records where:  'contribution_id' contains 'AWI'  -AND-  'author' contains 'steffens'  -AND-  'year' equals '2005'
+
+	if (isset($_REQUEST['serial']))
+		$serial = $_REQUEST['serial']; // get the record serial number that was entered by a user in the 'show.php' web form
+
+	elseif (isset($_REQUEST['record']))
+		$serial = $_REQUEST['record']; // get the record serial number that was passed by an URL of the form '.../show.php?record=12345' (as it occurs in RSS feeds and email announcements)
 	else
-		$only = "";
+		$serial = "";
 
+	if (isset($_REQUEST['recordIDSelector']))
+		$recordIDSelector = $_REQUEST['recordIDSelector']; // get the value returned from the 'recordIDSelector' drop down menu (returned value is either 'serial', 'call_number' or 'cite_key')
+	else
+		$recordIDSelector = "serial"; // use record serial numbers by default
+
+	if (isset($_REQUEST['recordConditionalSelector']))
+		$recordConditionalSelector = $_REQUEST['recordConditionalSelector']; // get the value returned from the 'recordConditionalSelector' drop down menu (returned value is either 'is equal to', 'contains' or 'is within list')
+	else
+	{
+		if (isset($_REQUEST['record'])) // normally, '$recordConditionalSelector' get's only specified in the 'show.php' web form but not in RSS/Email announcement URLs, but...
+			$recordConditionalSelector = "is equal to"; // ...if 'show.php' was called from a RSS/Email announcement URL (like '.../show.php?record=12345') we'll have to make sure that the serial field will be matched fully and not only partly
+		else
+			$recordConditionalSelector = "";
+	}
+
+	if (isset($_REQUEST['date']))
+		$date = $_REQUEST['date']; // get date
+	else
+		$date = "";
+
+	if (isset($_REQUEST['when'])) // if given only 'edited' is recognized as value
+		$when = $_REQUEST['when']; // get info about what kind of date shall be searched for ("when=edited" -> search field 'modified_date'; otherwise -> search field 'created_date')
+	else
+		$when = "";
+
+	if (isset($_REQUEST['range'])) // given value must be either 'after' or 'before'
+		$range = $_REQUEST['range']; // check the date range ("range=after" -> return all records whose created/modifed date is after '$date'; "range=before" -> return all records whose created/modifed date is before '$date')
+	else
+		$range = "";
+
+	if (isset($_REQUEST['year']))
+		$year = $_REQUEST['year']; // get year
+	else
+		$year = "";
+
+	if (isset($_REQUEST['author']))
+		$author = $_REQUEST['author']; // get author
+	else
+		$author = "";
+
+	if (isset($_REQUEST['without'])) // if given only 'dups' is recognized as value
+		$without = $_REQUEST['without']; // check whether duplicate records should be excluded ("without=dups" -> exclude duplicate records)
+	else
+		$without = "";
+
+	if (isset($_REQUEST['title']))
+		$title = $_REQUEST['title']; // get title
+	else
+		$title = "";
+
+	if (isset($_REQUEST['keywords']))
+		$keywords = $_REQUEST['keywords']; // get keywords
+	else
+		$keywords = "";
+
+	if (isset($_REQUEST['abstract']))
+		$abstract = $_REQUEST['abstract']; // get abstract
+	else
+		$abstract = "";
+
+	if (isset($_REQUEST['area']))
+		$area = $_REQUEST['area']; // get area
+	else
+		$area = "";
+
+	if (isset($_REQUEST['type']))
+		$type = $_REQUEST['type']; // get type
+	else
+		$type = "";
+
+	if (isset($_REQUEST['contribution_id']))
+		$contributionID = $_REQUEST['contribution_id']; // get contribution ID
+	else
+		$contributionID = "";
+
+	if (isset($_REQUEST['thesis'])) // given value must be either 'yes' (= find only theses) or 'no' (= exclude any theses) or a search string (like 'master', 'bachelor' or 'doctor')
+		$thesis = $_REQUEST['thesis']; // get thesis
+	else
+		$thesis = "";
+
+	if (isset($_REQUEST['selected'])) // given value must be either 'yes' or 'no'
+		$selected = $_REQUEST['selected']; // if e.g. "selected=yes", we'll restrict the search results to those records that have the 'selected' bit set to 'yes' for a particular user.
+	else								// IMPORTANT: Since the 'selected' field is specific to every user (table 'user_data'), the 'userID' parameter must be specified as well!
+		$selected = "";					//            (the 'selected' parameter can be queried with a user ID that's different from the current user's own user ID, see note at "Build FROM clause")
+
+	if (isset($_REQUEST['only']))
+	{
+		if ($_REQUEST['only'] == "selected"); // the 'only=selected' parameter/value combination was used in refbase-0.8.0 and earlier but is now replaced by 'selected=yes' (we still read it for reasons of backwards compatibility)
+			$selected = "yes";
+	}
+
+	if (isset($_REQUEST['ismarked'])) // given value must be either 'yes' or 'no' (note that this parameter is named 'ismarked' instead of 'marked' to avoid any name collisions with the 'marked' parameter that's used in conjunction with checkboxes!)
+		$marked = $_REQUEST['ismarked']; // if e.g. "ismarked=yes", we'll restrict the search results to those records that have the 'marked' bit set to 'yes' for a particular user.
+	else								// IMPORTANT: Since the 'marked' field is specific to every user (table 'user_data'), the 'userID' parameter must be specified as well!
+		$marked = "";					//            (currently, the 'ismarked' parameter can NOT be queried with a user ID that's different from the current user's own user ID!)
+
+	if (isset($_REQUEST['cite_key']))
+		$citeKey = $_REQUEST['cite_key'];
+	else								// IMPORTANT: Since the 'cite_key' field is specific to every user (table 'user_data'), the 'userID' parameter must be specified as well!
+		$citeKey = "";					//            (currently, the 'cite_key' parameter can NOT be queried with a user ID that's different from the current user's own user ID!)
+
+	if (isset($_REQUEST['call_number']))
+		$callNumber = $_REQUEST['call_number'];
+	else								// IMPORTANT: We treat any 'call_number' query as specific to every user, i.e. a user can only query his own call numbers.
+		$callNumber = "";
 
 	if (isset($_REQUEST['userID']))
-		$userID = $_REQUEST['userID']; // when searching user specific fields (like the 'selected' field), this parameter specifies the user's user ID.
-									// I.e., the 'userID' parameter does only make sense when specified together with "only=selected". As an example,
-									// "show.php?author=...&only=selected&userID=2" will show every record where the user who's identified by user ID "2" has set the selected bit to "yes".
-	else
+		$userID = $_REQUEST['userID']; // when searching user specific fields (like the 'selected' or 'marked' field), this parameter specifies the user's user ID.
+									// I.e., the 'userID' parameter does only make sense when specified together with either the 'selected' or the 'marked' parameter. As an example,
+	else							// "show.php?author=...&selected=yes&userID=2" will show every record where the user who's identified by user ID "2" has set the selected bit to "yes".
 		$userID = "";
 
 
-	// Check the correct parameters have been passed:
-	if (empty($serial) AND empty($year) AND empty($date) AND empty($author))
+	// normally, 'show.php' requires that parameters must be specified explicitly to gain any view that's different from the default view
+	// (which is columnar output as web view, display 5 records per page, show links but don't show query)
+	// There's one exception to this general rule which is if a user uses 'show.php' to query a *single* record by use of its record identifier (e.g. via '.../show.php?record=12345' or via the web form when using the "is equal to" option).
+	// In this case we'll directly jump to details view:
+	if (!empty($serial)) // if the 'record' parameter is present
+		if (empty($displayType) AND (($recordConditionalSelector == "is equal to") OR (empty($recordConditionalSelector) AND is_numeric($serial)))) // if the 'displayType' parameter wasn't explicitly specified -AND- we're EITHER supposed to match record identifiers exactly OR '$recordConditionalSelector' wasn't specified and '$serial' is a number (which is the case for email announcement URLs: '.../show.php?record=12345')
+			$displayType = "Display"; // display record details (instead of the default columnar view)
+
+	// shift some variable contents based on the value of '$recordIDSelector':
+	if ($recordIDSelector == "call_number")
 	{
-		// if 'show.php' was called without any valid parameters:
+		$callNumber = $serial; // treat content in '$serial' as call number
+		$serial = "";
+	}
+		
+	elseif ($recordIDSelector == "cite_key")
+	{
+		$citeKey = $serial; // treat content in '$serial' as cite key
+		$serial = "";
+	}
 
-		// save an error message:
-//		$HeaderString = "<b><span class=\"warning\">Incorrect or missing parameters to script 'show.php'!</span></b>";
 
-		// Write back session variables:
-//		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+	// -------------------------------------------------------------------------------------------------------------------
 
-		// Redirect the browser back to the main page:
-//		header("Location: index.php"); // Note: if 'header("Location: " . $_SERVER['HTTP_REFERER'])' is used, the error message won't get displayed! ?:-/
-//		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-		// OR ALTERNATIVELY:
-	
+	// Check the correct parameters have been passed:
+	if (empty($serial) AND empty($date) AND empty($year) AND empty($author) AND empty($title) AND empty($keywords) AND empty($abstract) AND empty($area) AND empty($type) AND empty($contributionID) AND empty($thesis) AND empty($without) AND (empty($selected) OR (!empty($selected) AND empty($userID))) AND (empty($marked) OR (!empty($marked) AND empty($userID))) AND (empty($citeKey) OR (!empty($citeKey) AND empty($userID))) AND empty($callNumber))
+	{
 		// if 'show.php' was called without any valid parameters, we'll present a form where a user can input a record serial number.
 		// Currently, this form will not present form elements for other supported options (like searching by date, year or author),
 		// since this would just double search functionality from other search forms.
 
 		// If there's no stored message available:
 		if (!isset($_SESSION['HeaderString']))
-			$HeaderString = "Display details for a particular record by entering its database serial number:"; // Provide the default message
+			$HeaderString = "Display details for a particular record by entering its record identifier:"; // Provide the default message
 		else
 		{
 			$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
@@ -131,161 +263,374 @@
 			// Note: though we clear the session variable, the current message is still available to this script via '$HeaderString':
 			deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
 		}
-	
-		// Extract the view type requested by the user (either 'Print', 'Web' or ''):
-		// ('' will produce the default 'Web' output style)
-		if (isset($_REQUEST['viewType']))
-			$viewType = $_REQUEST['viewType'];
-		else
-			$viewType = "";
 
 		// Show the login status:
 		showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
-	
+
 		// DISPLAY header:
 		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Show Record", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
+		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $loc["Show"] . " " . $loc["Record"], "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
-	
+
+		// Define variables holding drop-down elements, i.e. build properly formatted <option> tag elements:
+		$dropDownConditionalsArray = array("is equal to" => $loc["equal to"],
+											"contains" => $loc["contains"],
+											"is within list" => $loc["is within list"]);
+
+		$dropDownItems1 = buildSelectMenuOptions($dropDownConditionalsArray, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
+
+		$dropDownFieldNameArray = array("serial" => $loc["DropDownFieldName_Serial"]);
+
+		if (isset($_SESSION['loginEmail'])) // if a user is logged in
+		{
+			// add drop down items for user-specific record identifiers:
+			$dropDownFieldNameArray["call_number"] = $loc["DropDownFieldName_MyCallNumber"];
+			$dropDownFieldNameArray["cite_key"] = $loc["DropDownFieldName_MyCiteKey"];
+
+			// adjust the width of the table cell holding the drop down:
+			$recordIDCellWidth = "140";
+		}
+		else
+			$recordIDCellWidth = "85";
+
+		$dropDownItems2 = buildSelectMenuOptions($dropDownFieldNameArray, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
+
 		// Start <form> and <table> holding the form elements:
-		echo "\n<form action=\"show.php\" method=\"POST\">";
-		echo "\n<input type=\"hidden\" name=\"formType\" value=\"show\">"
-			. "\n<input type=\"hidden\" name=\"submit\" value=\"Show Record\">" // provide a default value for the 'submit' form tag. Otherwise, some browsers may not recognize the correct output format when a user hits <enter> within a form field (instead of clicking the "Show" button)
-			. "\n<input type=\"hidden\" name=\"showLinks\" value=\"1\">"; // embed '$showLinks=1' so that links get displayed on any 'display details' page
-		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds a form that offers to show a record by its serial number\">"
-				. "\n<tr>\n\t<td width=\"58\" valign=\"top\"><b>Record Serial:</b></td>\n\t<td width=\"10\">&nbsp;</td>"
-				. "\n\t<td><input type=\"text\" name=\"record\" value=\"\" size=\"40\"></td>"
-				. "\n</tr>"
-				. "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>";
+?>
 
-		if (isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_details_view'...
-		// adjust the title string for the show record button
-		{
-			$showRecordButtonLock = "";
-			$showRecordTitle = "display record details for the entered serial number";
-		}
-		else // Note, that disabling the submit button is just a cosmetic thing -- the user can still submit the form by pressing enter or by building the correct URL from scratch!
-		{
-			$showRecordButtonLock = " disabled";
-			$showRecordTitle = "not available since you have no permission to display any record details";
-		}
+<form action="show.php" method="POST">
+<input type="hidden" name="formType" value="show">
+<input type="hidden" name="submit" value="<?php echo $loc["ButtonTitle_ShowRecord"]; ?>">
+<input type="hidden" name="showLinks" value="1">
+<input type="hidden" name="userID" value="<?php echo $loginUserID; // '$loginUserID' is made available globally by the 'start_session()' function ?>">
+<table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds a form that offers to show a record by its serial number, call number or cite key">
+<tr>
+	<td width="58" valign="top"><b><?php echo $loc["Show"] . " " . $loc["Record"]; ?>:</b></td>
+	<td width="10">&nbsp;</td>
+	<td width="<?php echo $recordIDCellWidth; ?>">
+		<select name="recordIDSelector"><?php echo $dropDownItems2; ?>
 
-		echo "\n\t<td><input type=\"submit\" name=\"submit\" value=\"Show Record\"$showRecordButtonLock title=\"$showRecordTitle\"></td>"
-				. "\n</tr>"
-				. "\n<tr>\n\t<td align=\"center\" colspan=\"3\">&nbsp;</td>"
-				. "\n</tr>"
-				. "\n<tr>\n\t<td valign=\"top\"><b>Help:</b></td>\n\t<td>&nbsp;</td>"
-				. "\n\t<td valign=\"top\">This form enables you to directly jump to a particular record and display its record details. Just enter the database serial number for that record and press the 'Show Record' button."
-				. " (In order to view the database serial number of a particular record, click the <img src=\"img/details.gif\" alt=\"show details\" title=\"show details\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\" align=\"top\">"
-				. " icon that's available in any list view next to that record and note the number listed within the 'Serial' field.)</td>"
-				. "\n</tr>"
-				. "\n</table>"
-				. "\n</form>";
+		</select>
+	</td>
+	<td width="122">
+		<select name="recordConditionalSelector"><?php echo $dropDownItems1; ?>
+
+		</select>
+	</td>
+	<td><input type="text" name="serial" value="" size="14"></td>
+</tr>
+<tr>
+	<td>&nbsp;</td>
+	<td>&nbsp;</td>
+	<td>&nbsp;</td>
+	<td>&nbsp;</td>
+	<td><input type="submit" name="submit" value="<?php echo $loc["ButtonTitle_ShowRecord"]; ?>" title="display record details for the entered record identifier"></td>
+</tr>
+<tr>
+	<td align="center" colspan="5">&nbsp;</td>
+</tr>
+<tr>
+	<td valign="top"><b><?php echo $loc["Help"]; ?>:</b></td>
+	<td>&nbsp;</td>
+	<td colspan="3" valign="top">This form enables you to directly jump to a particular record and display its record details. Just enter the database serial number for that record and press the 'Show Record' button. (In order to view the database serial number of a particular record, click the <img src="img/details.gif" alt="show details" title="show details" width="9" height="17" hspace="0" border="0" align="top"> icon that's available in any list view next to that record and note the number listed within the 'Serial' field.)</td>
+</tr>
+</table>
+</form><?php
 
 		// --------------------------------------------------------------------
-	
+
 		// DISPLAY THE HTML FOOTER:
 		// call the 'displayfooter()' function from 'footer.inc.php')
 		displayfooter("");
-	
-		// --------------------------------------------------------------------
 
-		echo "</body>"
-			. "\n</html>\n";
+		// --------------------------------------------------------------------
+?>
+
+</body>
+</html>
+<?php
+
 	}
-	else // the script was called with at least one of the following parameters: 'record', 'date', 'year', 'author'
+
+
+	// -------------------------------------------------------------------------------------------------------------------
+
+
+	else // the script was called with at least one of the following parameters: 'record', 'date', 'year', 'author', 'title', 'keywords', 'abstract', 'area', 'type', 'contribution_id', 'thesis', 'without', 'selected', 'marked', 'cite_key', 'call_number'
 	{
-		// Note: Parameters will be processed in the order "record, date, year, author". That means, if the 'record' parameter is present, it will trigger a search
-		//       for a particular record serial number, no matter what other parameters have been passed to the script! If the 'record' parameter has not been specified
-		//       we'll next look for the 'date' parameter. If it is present, all records created (or modified if "when=edited") on that particular date will be shown.
-		//       If the 'record' and ' date' parameters aren't present, the 'year' parameter will be checked, showing all records that were published in that year.
-		//       Finally, if no parameter but the 'author' parameter is present, we'll display all records that match the specified author.
-	
 		// CONSTRUCT SQL QUERY:
-	
-		// 'record' parameter is present:
-		if (!empty($serial))
+
+		// Note: the 'verifySQLQuery()' function that gets called by 'search.php' to process query data with "$formType = sqlSearch" will add the user specific fields to the 'SELECT' clause
+		// and the 'LEFT JOIN...' part to the 'FROM' clause of the SQL query if a user is logged in. It will also add 'serial', 'file', 'url' & 'doi' columns
+		// as required. Therefore it's sufficient to provide just the plain SQL query here:
+
+		// Build SELECT clause:
+		if ($displayType == "Display") // select all fields required to display record details:
+			$query = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial";
+		//           (the above string MUST end with ", call_number, serial" in order to have the described query completion feature work correctly!
+
+		elseif ($displayType == "Cite") // select all fields required to build proper record citations:
+		{
+			$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi";
+
+			// Note that the if clause below is very weak since it will break if "Text Citation" gets renamed or translated (when localized).
+			// Problem: The above mentioned 'verifySQLQuery()' function requires that 'selected' is the only user-specific field present in the SELECT or WHERE clause of the SQL query.
+			//          If this is not the case (as with 'cite_key' being added below) the passed user ID will be replaced with the ID of the currently logged in user.
+			//          As a result, you won't be able to see your collegues selected publications by using an URL like '../show.php?author=steffens&userID=2&selected=yes&submit=Cite&citeOrder=year'
+			//          On the other hand, if the 'cite_key' field isn't included within the SELECT clause, user-specific cite keys can't be written out instead of serials when citing as "Text Citation".
+			//          Since the latter is of minor importance we'll require $citeStyle == "Text Citation" here:
+			if (($citeStyle == "Text Citation") AND !empty($userID)) // if the selected cite style is "Text Citation" & the 'userID' parameter was specified...
+					$query .= ", cite_key"; // add user-specific fields which are required in Citation view
+
+			$query .= ", serial"; // add 'serial' column
+		}
+
+		else // produce the default columnar output style:
+			$query = "SELECT author, title, year, publication, volume, pages";
+
+
+		// Build FROM clause:
+		// We'll explicitly add the 'LEFT JOIN...' part to the 'FROM' clause of the SQL query if '$userID' isn't empty. This is done since the 'verifySQLQuery()' function
+		// (mentioned above) excludes the 'selected' field from its magic. By that we allow the 'selected' field to be queried by any user (using 'show.php')
+		// (e.g., by URLs of the form: 'show.php?author=...&userID=...&selected=yes').
+		if (!empty($userID)) // the 'userID' parameter was specified -> we include user specific fields
+			$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = $userID"; // add FROM clause (including the 'LEFT JOIN...' part); '$tableRefs' and '$tableUserData' are defined in 'db.inc.php'
+		else
+			$query .= " FROM $tableRefs"; // add FROM clause
+
+
+		// Build WHERE clause:
+		$query .= " WHERE";
+
+		$multipleParameters = false;
+
+		if (!empty($serial)) // if the 'record' parameter is present:
 		{
 			// first, check if the user is allowed to display any record details:
-			if (isset($_SESSION['user_permissions']) AND !ereg("allow_details_view", $_SESSION['user_permissions'])) // no, the 'user_permissions' session variable does NOT contain 'allow_details_view'...
+			if ($displayType == "Display" AND isset($_SESSION['user_permissions']) AND !ereg("allow_details_view", $_SESSION['user_permissions'])) // no, the 'user_permissions' session variable does NOT contain 'allow_details_view'...
 			{
 				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">You have no permission to display any record details!</span></b>";
-	
+				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForDisplayDetails"]."!</span></b>";
+
 				// Write back session variables:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-		
+
 				header("Location: show.php"); // redirect back to 'show.php'
-	
+
 				exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			}
 
-			// Note: the 'verifySQLQuery()' function that gets called by 'search.php' to process query data with "$formType = sqlSearch" will add the user specific fields to the 'SELECT' clause
-			// and the 'LEFT JOIN...' part to the 'FROM' clause of the SQL query if a user is logged in. It will also add 'serial', 'file', 'url' & 'doi' columns
-			// as required. Therefore it's sufficient to provide just the plain SQL query here:
-			$query = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial";
-			//       (the above string MUST end with ", call_number, serial" in order to have the described query completion feature work correctly!
-			$query .= " FROM $tableRefs WHERE serial RLIKE \"^(" . $serial . ")$\""; // add FROM & WHERE clause
-			$query .= " ORDER BY author, year DESC, publication"; // add the default ORDER BY clause
-	
-			// Build the correct query URL:
-			$queryURL = "sqlQuery=" . rawurlencode($query) . "&formType=sqlSearch&submit=Display&showLinks=1&headerMsg=" . rawurlencode($headerMsg); // we skip unnecessary parameters ('search.php' will use it's default values for them)
+			$query .= connectConditionals();
+
+			if ($recordConditionalSelector == "is equal to")
+				$query .= " serial = \"" . $serial . "\""; // add WHERE clause part
+
+			elseif ($recordConditionalSelector == "is within list")
+			{
+				// replace any non-digit chars with "|":
+				$serial = preg_replace("/\D+/", "|", $serial);
+				// strip "|" from beginning/end of string (if any):
+				$serial = preg_replace("/^\|?(.+?)\|?$/", "\\1", $serial);
+
+				$query .= " serial RLIKE \"^(" . $serial . ")$\""; // add WHERE clause part
+			}
+
+			else // $recordConditionalSelector == "contains"
+				$query .= " serial RLIKE \"" . $serial . "\""; // add WHERE clause part
 		}
-		elseif (!empty($date)) // else if 'date' parameter is present:
+
+		if (!empty($date)) // if the 'date' parameter is present:
 		{
-			$query = "SELECT author, title, year, publication, volume, pages";
-	
 			if ($range == "after")
 				$searchOperator = ">"; // return all records whose created/modifed date is after '$date'
 			elseif ($range == "before")
 				$searchOperator = "<"; // return all records whose created/modifed date is before '$date'
 			else
 				$searchOperator = "="; // return all records whose created/modifed date matches exactly '$date'
-	
+
+			$query .= connectConditionals();
+
 			if ($when == "edited")
-				$query .= " FROM $tableRefs WHERE modified_date " . $searchOperator . " \"" . $date . "\""; // add FROM & WHERE clause
+				$query .= " modified_date " . $searchOperator . " \"" . $date . "\""; // add WHERE clause part
 			else
-				$query .= " FROM $tableRefs WHERE created_date " . $searchOperator . " \"" . $date . "\""; // add FROM & WHERE clause
-	
-			$query .= " ORDER BY author, year DESC, publication"; // add the default ORDER BY clause
-	
-			// Build the correct query URL:
-			$queryURL = "sqlQuery=" . rawurlencode($query) . "&formType=sqlSearch&showLinks=1&headerMsg=" . rawurlencode($headerMsg); // we skip unnecessary parameters ('search.php' will use it's default values for them)
+				$query .= " created_date " . $searchOperator . " \"" . $date . "\""; // add WHERE clause part
 		}
-		elseif (!empty($year)) // else if 'year' parameter is present:
+
+		if (!empty($year)) // if the 'year' parameter is present:
 		{
-			$query = "SELECT author, title, year, publication, volume, pages";
-			$query .= " FROM $tableRefs WHERE year = " . $year; // add FROM & WHERE clause
-			$query .= " ORDER BY author, year DESC, publication"; // add the default ORDER BY clause
-	
-			// Build the correct query URL:
-			$queryURL = "sqlQuery=" . rawurlencode($query) . "&formType=sqlSearch&showLinks=1&headerMsg=" . rawurlencode($headerMsg); // we skip unnecessary parameters ('search.php' will use it's default values for them)
+			$query .= connectConditionals();
+
+			$query .= " year RLIKE \"" . $year . "\""; // add WHERE clause part
 		}
-		elseif (!empty($author)) // else if 'author' parameter is present:
+
+		if (!empty($author)) // if the 'author' parameter is present:
 		{
-			$query = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, serial";
-	
-			if (!empty($userID)) // the 'userID' parameter was specified -> we include user specific fields
-				$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = $userID"; // add FROM clause (including the 'LEFT JOIN...' part)
-			else
-				$query .= " FROM $tableRefs"; // add FROM clause
-	
-			$query .= " WHERE author RLIKE \"" . $author . "\""; // add initial WHERE clause
-	
+			$query .= connectConditionals();
+
+			$query .= " author RLIKE \"" . $author . "\""; // add WHERE clause part
+		}
+
+		if (!empty($without)) // if the 'without' parameter is present:
+		{
+			$query .= connectConditionals();
+
 			if ($without == "dups")
-				$query .= " AND (orig_record IS NULL OR orig_record < 0)"; // add additional WHERE clause
-	
-			if ($only == "selected" AND !empty($userID)) // in order to search for user specific fields (like 'selected'), the 'userID' parameter must be given as well!
-				$query .= " AND selected = \"yes\""; // add additional WHERE clause
-	
-			$query .= " ORDER BY year DESC, first_author, author_count, author, title"; // sort records first by year (descending), then in the usual way
-	
-			// Build the correct query URL:
-			$queryURL = "sqlQuery=" . rawurlencode($query) . "&formType=sqlSearch&submit=Cite&showLinks=1&showRows=100&citeOrder=year&citeStyleSelector=" . rawurlencode($defaultCiteStyle) . "&headerMsg=" . rawurlencode($headerMsg); // we skip unnecessary parameters ('search.php' will use it's default values for them)
-			// the variable '$defaultCiteStyle' is defined in 'ini.inc.php'
+				$query .= " (orig_record IS NULL OR orig_record < 0)"; // add WHERE clause part
 		}
-	
+
+		if (!empty($title)) // if the 'title' parameter is present:
+		{
+			$query .= connectConditionals();
+
+			$query .= " title RLIKE \"" . $title . "\""; // add WHERE clause part
+		}
+
+		if (!empty($keywords)) // if the 'keywords' parameter is present:
+		{
+			$query .= connectConditionals();
+
+			$query .= " keywords RLIKE \"" . $keywords . "\""; // add WHERE clause part
+		}
+
+		if (!empty($abstract)) // if the 'abstract' parameter is present:
+		{
+			$query .= connectConditionals();
+
+			$query .= " abstract RLIKE \"" . $abstract . "\""; // add WHERE clause part
+		}
+
+		if (!empty($area)) // if the 'area' parameter is present:
+		{
+			$query .= connectConditionals();
+
+			$query .= " area RLIKE \"" . $area . "\""; // add WHERE clause part
+		}
+
+		if (!empty($type)) // if the 'type' parameter is present:
+		{
+			$query .= connectConditionals();
+
+			$query .= " type RLIKE \"" . $type . "\""; // add WHERE clause part
+		}
+
+		if (!empty($contributionID)) // if the 'contribution_id' parameter is present:
+		{
+			$query .= connectConditionals();
+
+			$query .= " contribution_id RLIKE \"" . $contributionID . "\""; // add WHERE clause part
+		}
+
+		if (!empty($thesis)) // if the 'thesis' parameter is present:
+		{
+			$query .= connectConditionals();
+
+			if ($thesis == "yes")
+				$query .= " thesis RLIKE \".+\""; // add WHERE clause part				
+			elseif ($thesis == "no")
+				$query .= " thesis IS NULL"; // add WHERE clause part
+			else
+				$query .= " thesis RLIKE \"" . $thesis . "\""; // add WHERE clause part
+		}
+
+		if (!empty($selected) AND !empty($userID)) // if the 'selected' parameter is present (in order to search for user specific fields (like 'selected'), the 'userID' parameter must be given as well!):
+		{
+			$query .= connectConditionals();
+
+			$query .= " selected = \"" . $selected . "\""; // add WHERE clause part
+		}
+
+		if (!empty($marked) AND !empty($userID)) // if the 'ismarked' parameter is present (in order to search for user specific fields (like 'marked'), the 'userID' parameter must be given as well!):
+		{
+			$query .= connectConditionals();
+
+			$query .= " marked = \"" . $marked . "\""; // add WHERE clause part
+		}
+
+		if (!empty($citeKey) AND !empty($userID)) // if the 'cite_key' parameter is present (in order to search for user specific fields (like 'cite_key'), the 'userID' parameter must be given as well!):
+		{
+			$query .= connectConditionals();
+
+			if ($recordConditionalSelector == "is equal to")
+				$query .= " cite_key = \"" . $citeKey . "\""; // add WHERE clause part
+
+			elseif ($recordConditionalSelector == "is within list")
+			{
+				$citeKey = preg_quote($citeKey, ""); // escape any meta characters
+				// replace any whitespace characters with "|":
+				$citeKey = preg_replace("/\s+/", "|", $citeKey);
+				// strip "|" from beginning/end of string (if any):
+				$citeKey = preg_replace("/^\|?(.+?)\|?$/", "\\1", $citeKey);
+
+				$query .= " cite_key RLIKE \"^(" . $citeKey . ")$\""; // add WHERE clause part
+			}
+
+			else // $recordConditionalSelector == "contains"
+				$query .= " cite_key RLIKE \"" . $citeKey . "\""; // add WHERE clause part
+		}
+
+		if (!empty($callNumber)) // if the 'call_number' parameter is present:
+		{
+			$query .= connectConditionals();
+
+			// since 'show.php' will only allow a user to query his own call numbers we need to build a complete call number string that's appropriate for this user:
+			// (the session variables '$loginEmail' and '$abbrevInstitution' are made available globally by the 'start_session()' function)
+			$loginEmailArray = split("@", $loginEmail); // split the login email address at '@'
+			$loginEmailUserName = $loginEmailArray[0]; // extract the user name (which is the first element of the array '$loginEmailArray')
+			$callNumberPrefix = $abbrevInstitution . " @ " . $loginEmailUserName; // construct a correct call number prefix, like: 'IP… @ msteffens'
+
+			if ($recordConditionalSelector == "is equal to")
+				$query .= " call_number RLIKE \"(^|.*;) *" . $callNumberPrefix . " @ " . $callNumber . " *(;.*|$)\""; // add WHERE clause part
+
+			elseif ($recordConditionalSelector == "is within list")
+			{
+				$callNumber = preg_quote($callNumber, ""); // escape any meta characters
+				// replace any whitespace characters with "|":
+				$callNumber = preg_replace("/\s+/", "|", $callNumber);
+				// strip "|" from beginning/end of string (if any):
+				$callNumber = preg_replace("/^\|?(.+?)\|?$/", "\\1", $callNumber);
+
+				$query .= " call_number RLIKE \"(^|.*;) *" . $callNumberPrefix . " @ (" . $callNumber . ") *(;.*|$)\""; // add WHERE clause part
+			}
+
+			else // $recordConditionalSelector == "contains"
+				$query .= " call_number RLIKE \"" . $callNumberPrefix . " @ [^@;]*" . $callNumber . "[^@;]*\""; // add WHERE clause part
+		}
+
+
+		// Build ORDER BY clause:
+		if ($citeOrder == "year")
+			$query .= " ORDER BY year DESC, first_author, author_count, author, title"; // sort records first by year (descending), then in the usual way
+		else // if any other or no 'citeOrder' parameter is specified, we supply the default ORDER BY clause:
+			$query .= " ORDER BY author, year DESC, publication";
+
+
+		// Build the correct query URL:
+		// (we skip unnecessary parameters here since 'search.php' will use it's default values for them)
+		$queryURL = "sqlQuery=" . rawurlencode($query) . "&formType=sqlSearch&submit=" . $displayType . "&viewType=" . $viewType . "&showQuery=" . $showQuery . "&showLinks=" . $showLinks . "&showRows=" . $showRows . "&citeOrder=" . $citeOrder . "&citeStyleSelector=" . rawurlencode($citeStyle) . "&headerMsg=" . rawurlencode($headerMsg);
+
 		// call 'search.php' with the correct query URL in order to display record details:
 		header("Location: search.php?$queryURL");
+	}
+
+	
+	// -------------------------------------------------------------------------------------------------------------------
+
+
+	// this function will connect multiple WHERE clause parts with " AND" if required:
+	function connectConditionals()
+	{
+		global $multipleParameters;
+
+		if ($multipleParameters)
+		{
+			$queryConnector = " AND";
+		}
+		else
+		{
+			$queryConnector = "";
+			$multipleParameters = true;
+		}
+
+		return $queryConnector;
 	}
 ?>
