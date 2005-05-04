@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_details.php
 	// Created:    16-Apr-02, 10:55
-	// Modified:   26-Apr-05, 19:10
+	// Modified:   04-May-05, 11:55
 
 	// This script shows the user a user <form>. It can be used both for INSERTing a new user and for UPDATE-ing an existing user.
 	// If the user is logged in, then it is an UPDATE; otherwise, an INSERT. The script also shows error messages above widgets that
@@ -236,117 +236,117 @@
 ?>
 
 <form method="POST" action="user_validation.php">
-<input type="hidden" name="userID" value="<? echo $userID ?>">
-<input type="hidden" name="email" value="<? echo $formVars["email"] ?>">
+<input type="hidden" name="userID" value="<?php echo $userID ?>">
+<input type="hidden" name="email" value="<?php echo $formVars["email"] ?>">
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds a form with user details">
 <tr>
 	<td align="left" width="169">Title:</td>
 	<td>
 		<select name="title">
-			<option <? if ($formVars["title"]=="Mr") echo "selected"; ?>>Mr</option>
-			<option <? if ($formVars["title"]=="Mrs") echo "selected"; ?>>Mrs</option>
-			<option <? if ($formVars["title"]=="Ms") echo "selected"; ?>>Ms</option>
-			<option <? if ($formVars["title"]=="Dr") echo "selected"; ?>>Dr</option>
+			<option <?php if ($formVars["title"]=="Mr") echo "selected"; ?>>Mr</option>
+			<option <?php if ($formVars["title"]=="Mrs") echo "selected"; ?>>Mrs</option>
+			<option <?php if ($formVars["title"]=="Ms") echo "selected"; ?>>Ms</option>
+			<option <?php if ($formVars["title"]=="Dr") echo "selected"; ?>>Dr</option>
 		</select>
 		<br>
 	</td>
 </tr>
 <tr>
 	<td align="left"><b>First Name:</b></td>
-	<td><? echo fieldError("firstName", $errors); ?>
+	<td><?php echo fieldError("firstName", $errors); ?>
 
-		<input type="text" name="firstName" value="<? echo $formVars["firstName"]; ?>" size="50">
+		<input type="text" name="firstName" value="<?php echo $formVars["firstName"]; ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left"><b>Last Name:</b></td>
-	<td><? echo fieldError("lastName", $errors); ?>
+	<td><?php echo fieldError("lastName", $errors); ?>
 
-		<input type="text" name="lastName" value="<? echo $formVars["lastName"]; ?>" size="50">
+		<input type="text" name="lastName" value="<?php echo $formVars["lastName"]; ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">Institution:</td>
-	<td><? echo fieldError("institution", $errors); ?>
+	<td><?php echo fieldError("institution", $errors); ?>
 
-		<input type="text" name="institution" value="<? echo $formVars["institution"]; ?>" size="50">
+		<input type="text" name="institution" value="<?php echo $formVars["institution"]; ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left"><b>Institutional Abbreviation:</b></td>
-	<td><? echo fieldError("abbrevInstitution", $errors); ?>
+	<td><?php echo fieldError("abbrevInstitution", $errors); ?>
 
-		<input type="text" name="abbrevInstitution" value="<? echo $formVars["abbrevInstitution"]; ?>" size="12">
+		<input type="text" name="abbrevInstitution" value="<?php echo $formVars["abbrevInstitution"]; ?>" size="12">
 	</td>
 </tr>
 <tr>
 	<td align="left">Corporate Institution:</td>
-	<td><? echo fieldError("corporateInstitution", $errors); ?>
+	<td><?php echo fieldError("corporateInstitution", $errors); ?>
 
-		<input type="text" name="corporateInstitution" value="<? echo $formVars["corporateInstitution"]; ?>" size="50">
+		<input type="text" name="corporateInstitution" value="<?php echo $formVars["corporateInstitution"]; ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">Work Address:</td>
-	<td><? echo fieldError("address1", $errors); ?>
+	<td><?php echo fieldError("address1", $errors); ?>
 
-		<input type="text" name="address1" value="<? echo $formVars["address1"]; ?>" size="50">
+		<input type="text" name="address1" value="<?php echo $formVars["address1"]; ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left"></td>
-	<td><? echo fieldError("address2", $errors); ?>
+	<td><?php echo fieldError("address2", $errors); ?>
 
-		<input type="text" name="address2" value="<? echo $formVars["address2"]; ?>" size="50">
+		<input type="text" name="address2" value="<?php echo $formVars["address2"]; ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left"></td>
-	<td><? echo fieldError("address3", $errors); ?>
+	<td><?php echo fieldError("address3", $errors); ?>
 
-		<input type="text" name="address3" value="<? echo $formVars["address3"]; ?>" size="50">
+		<input type="text" name="address3" value="<?php echo $formVars["address3"]; ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">Zip Code:</td>
-	<td><? echo fieldError("zipCode", $errors); ?>
+	<td><?php echo fieldError("zipCode", $errors); ?>
 
-		<input type="text" name="zipCode" value="<? echo $formVars["zipCode"]; ?>" size="12">
+		<input type="text" name="zipCode" value="<?php echo $formVars["zipCode"]; ?>" size="12">
 	</td>
 </tr>
 <tr>
 	<td align="left">City:</td>
-	<td><? echo fieldError("city", $errors); ?>
+	<td><?php echo fieldError("city", $errors); ?>
 
-		<input type="text" name="city" value="<? echo $formVars["city"]; ?>" size="50">
+		<input type="text" name="city" value="<?php echo $formVars["city"]; ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">State:</td>
-	<td><? echo fieldError("state", $errors); ?>
+	<td><?php echo fieldError("state", $errors); ?>
 
-		<input type="text" name="state" value="<? echo $formVars["state"]; ?>" size="50">
+		<input type="text" name="state" value="<?php echo $formVars["state"]; ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">Country:</td>
-	<td><? echo fieldError("country", $errors); ?>
+	<td><?php echo fieldError("country", $errors); ?>
 
-		<input type="text" name="country" value="<? echo $formVars["country"]; ?>" size="50">
+		<input type="text" name="country" value="<?php echo $formVars["country"]; ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">Phone:</td>
-	<td><? echo fieldError("phone", $errors); ?>
+	<td><?php echo fieldError("phone", $errors); ?>
 
-		<input type="text" name="phone" value="<? echo $formVars["phone"]; ?>" size="50">
+		<input type="text" name="phone" value="<?php echo $formVars["phone"]; ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">URL:</td>
-	<td><? echo fieldError("url", $errors); ?>
+	<td><?php echo fieldError("url", $errors); ?>
 
-		<input type="text" name="url" value="<? echo $formVars["url"]; ?>" size="50">
+		<input type="text" name="url" value="<?php echo $formVars["url"]; ?>" size="50">
 	</td>
 </tr>
 <?php
@@ -367,23 +367,23 @@
 ?>
 <tr>
 	<td align="left">Keywords:</td>
-	<td><? echo fieldError("keywords", $errors); ?>
+	<td><?php echo fieldError("keywords", $errors); ?>
 
-		<input type="text" name="keywords" value="<? echo $formVars["keywords"]; ?>" size="50">
+		<input type="text" name="keywords" value="<?php echo $formVars["keywords"]; ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">Notes:</td>
-	<td><? echo fieldError("notes", $errors); ?>
+	<td><?php echo fieldError("notes", $errors); ?>
 
-		<input type="text" name="notes" value="<? echo $formVars["notes"]; ?>" size="50">
+		<input type="text" name="notes" value="<?php echo $formVars["notes"]; ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">Marked:</td>
-	<td><? echo fieldError("marked", $errors); ?>
+	<td><?php echo fieldError("marked", $errors); ?>
 
-		<input type="radio" name="marked" value="yes"<? echo $markedRadioYesChecked; ?>>&nbsp;&nbsp;yes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="marked" value="no"<? echo $markedRadioNoChecked; ?>>&nbsp;&nbsp;no
+		<input type="radio" name="marked" value="yes"<?php echo $markedRadioYesChecked; ?>>&nbsp;&nbsp;yes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="marked" value="no"<?php echo $markedRadioNoChecked; ?>>&nbsp;&nbsp;no
 	</td>
 </tr>
 <?php
@@ -395,21 +395,21 @@
 ?>
 <tr>
 	<td align="left"><b>Email:</b></td>
-	<td><? echo fieldError("email", $errors); ?>
+	<td><?php echo fieldError("email", $errors); ?>
 
-		<input type="text" name="email" value="<? echo $formVars["email"]; ?>" size="30">
+		<input type="text" name="email" value="<?php echo $formVars["email"]; ?>" size="30">
 	</td>
 </tr>
 <tr>
 	<td align="left"><b>Password:</b></td>
-	<td><? echo fieldError("loginPassword", $errors); ?>
+	<td><?php echo fieldError("loginPassword", $errors); ?>
 
 		<input type="password" name="loginPassword" value="" size="30">
 	</td>
 </tr>
 <tr>
 	<td align="left"><b>Verify Password:</b></td>
-	<td><? echo fieldError("loginPasswordRetyped", $errors); ?>
+	<td><?php echo fieldError("loginPasswordRetyped", $errors); ?>
 
 		<input type="password" name="loginPasswordRetyped" value="" size="30">
 	</td>
@@ -424,14 +424,14 @@
 ?>
 <tr>
 	<td align="left">New Password:</td>
-	<td><? echo fieldError("loginPassword", $errors); ?>
+	<td><?php echo fieldError("loginPassword", $errors); ?>
 
 		<input type="password" name="loginPassword" value="" size="30">
 	</td>
 </tr>
 <tr>
 	<td align="left">Verify New Password:</td>
-	<td><? echo fieldError("loginPasswordRetyped", $errors); ?>
+	<td><?php echo fieldError("loginPasswordRetyped", $errors); ?>
 
 		<input type="password" name="loginPasswordRetyped" value="" size="30">
 	</td>

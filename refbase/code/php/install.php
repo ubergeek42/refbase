@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./install.php
 	// Created:    07-Jan-04, 22:00
-	// Modified:   26-Apr-05, 19:26
+	// Modified:   04-May-05, 11:52
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -216,8 +216,8 @@
 		<td valign="top"><?php echo fieldError("defaultCharacterSet", $errors); ?>
 
 			<select name="defaultCharacterSet">
-				<option<? echo $latin1CharacterSetSelected; ?>>latin1</option>
-				<option<? echo $unicodeCharacterSetSelected; ?>>utf8</option>
+				<option<?php echo $latin1CharacterSetSelected; ?>>latin1</option>
+				<option<?php echo $unicodeCharacterSetSelected; ?>>utf8</option>
 			</select>
 		</td>
 		<td valign="top">Specify the default character set for the MySQL database used by refbase. Note that 'utf8' (Unicode) requires MySQL 4.1.x or greater, otherwise 'latin1' (i.e., 'ISO-8859-1 West European') will be used by default.</td>

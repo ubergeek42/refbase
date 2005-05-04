@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./footer.inc.php
 	// Created:    28-Jul-02, 11:30
-	// Modified:   16-Feb-05, 20:47
+	// Modified:   04-May-05, 11:49
 
 	// This is the footer include file.
 	// It contains functions that build the footer
@@ -49,9 +49,9 @@
 		// -------------------------------------------------------
 ?>
 
-		<a href="library_search.php" title="search the library of the <? echo encodeHTML($hostInstitutionName); ?>">Library Search</a>
+		<a href="library_search.php" title="search the library of the <?php echo encodeHTML($hostInstitutionName); ?>">Library Search</a>
 	</td>
-	<td class="small" align="right" width="105"><? echo date('D, j M Y'); ?></td>
+	<td class="small" align="right" width="105"><?php echo date('D, j M Y'); ?></td>
 </tr>
 <tr>
 	<td class="small" width="105"><!--<a href="help.php" title="display help">Help</a>--></td>
@@ -63,7 +63,7 @@
 		// ... include a link to 'record.php?recordAction=add...':
 ?>
 
-		<a href="record.php?recordAction=add&amp;oldQuery=<? echo rawurlencode($oldQuery); ?>" title="add a record to the database">Add Record</a>
+		<a href="record.php?recordAction=add&amp;oldQuery=<?php echo rawurlencode($oldQuery); ?>" title="add a record to the database">Add Record</a>
 		&nbsp;|&nbsp;<?php
 		}
 
@@ -100,7 +100,7 @@
 ?>
 
 	</td>
-	<td class="small" align="right" width="105"><? echo date('H:i:s O'); ?></td>
+	<td class="small" align="right" width="105"><?php echo date('H:i:s O'); ?></td>
 </tr>
 </table><?php
 	}

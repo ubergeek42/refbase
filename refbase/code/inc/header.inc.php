@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./header.inc.php
 	// Created:    28-Jul-02, 11:21
-	// Modified:   26-Apr-05, 16:59
+	// Modified:   04-May-05, 11:50
 
 	// This is the header include file.
 	// It contains functions that provide the HTML header
@@ -29,10 +29,10 @@
 		"http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-	<title><? echo $pageTitle; ?></title>
-	<meta name="date" content="<? echo date('d-M-y'); ?>">
-	<meta name="robots" content="<? echo $metaRobots; ?>">
-	<meta name="description" lang="en" content="<? echo $metaDescription; ?>">
+	<title><?php echo $pageTitle; ?></title>
+	<meta name="date" content="<?php echo date('d-M-y'); ?>">
+	<meta name="robots" content="<?php echo $metaRobots; ?>">
+	<meta name="description" lang="en" content="<?php echo $metaDescription; ?>">
 	<meta name="keywords" lang="en" content="science academic literature scientific references search citation web database mysql php"><?php
 
 		if (!empty($additionalMeta))
@@ -40,20 +40,20 @@
 ?>
 
 	<meta http-equiv="content-language" content="en">
-	<meta http-equiv="content-type" content="text/html; charset=<? echo $contentTypeCharset; ?>">
+	<meta http-equiv="content-type" content="text/html; charset=<?php echo $contentTypeCharset; ?>">
 	<meta http-equiv="Content-Style-Type" content="text/css"><?php
 
 		if ($viewType == "Print")
 		{
 ?>
 
-	<link rel="stylesheet" href="<? echo $printStyleSheet; ?>" type="text/css" title="CSS Definition"><?php
+	<link rel="stylesheet" href="<?php echo $printStyleSheet; ?>" type="text/css" title="CSS Definition"><?php
 		}
 		else
 		{
 ?>
 
-	<link rel="stylesheet" href="<? echo $defaultStyleSheet; ?>" type="text/css" title="CSS Definition"><?php
+	<link rel="stylesheet" href="<?php echo $defaultStyleSheet; ?>" type="text/css" title="CSS Definition"><?php
 		}
 
 		if (!empty($rssURLArray) AND isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if some RSS URLs were specified AND the 'user_permissions' session variable contains 'allow_rss_feeds'...
@@ -63,7 +63,7 @@
 			// ...include a link tag pointing to a dynamic RSS feed for the current query:
 ?>
 
-	<link rel="alternate" type="application/rss+xml" href="<? echo $rssURL['href']; ?>" title="<? echo $rssURL['title']; ?>"><?php
+	<link rel="alternate" type="application/rss+xml" href="<?php echo $rssURL['href']; ?>" title="<?php echo $rssURL['title']; ?>"><?php
 			}
 		}
 
@@ -71,7 +71,7 @@
 		{
 ?>
 
-	<script language="JavaScript" type="text/javascript" src="<? echo $includeJavaScriptFile; ?>">
+	<script language="JavaScript" type="text/javascript" src="<?php echo $includeJavaScriptFile; ?>">
 		</script><?php
 		}
 
@@ -110,9 +110,9 @@
 
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This holds the title logo and info">
 <tr>
-	<td valign="middle" rowspan="2" align="left" width="170"><a href="<? echo $hostInstitutionURL; ?>"><img src="img/logo.gif" border="0" alt="<? echo encodeHTML($hostInstitutionAbbrevName); ?> Home" title="<? echo encodeHTML($hostInstitutionName); ?>" width="143" height="107"></a></td>
+	<td valign="middle" rowspan="2" align="left" width="170"><a href="<?php echo $hostInstitutionURL; ?>"><img src="img/logo.gif" border="0" alt="<?php echo encodeHTML($hostInstitutionAbbrevName); ?> Home" title="<?php echo encodeHTML($hostInstitutionName); ?>" width="143" height="107"></a></td>
 	<td>
-		<h2><? echo encodeHTML($officialDatabaseName); ?></h2>
+		<h2><?php echo encodeHTML($officialDatabaseName); ?></h2>
 		<span class="smallup">
 			<a href="index.php" title="goto main page">Home</a>&nbsp;|&nbsp;
 			<a href="simple_search.php" title="search the main fields of the database">Simple Search</a>&nbsp;|&nbsp;
@@ -124,7 +124,7 @@
 		// ... include a link to 'record.php?recordAction=add...':
 ?>
 
-			&nbsp;|&nbsp;<a href="record.php?recordAction=add&amp;oldQuery=<? echo rawurlencode($oldQuery); ?>" title="add a record to the database">Add Record</a><?php
+			&nbsp;|&nbsp;<a href="record.php?recordAction=add&amp;oldQuery=<?php echo rawurlencode($oldQuery); ?>" title="add a record to the database">Add Record</a><?php
 		}
 
 		// -------------------------------------------------------
@@ -142,11 +142,11 @@
 			<!--&nbsp;|&nbsp;<a href="help.php" title="display help">Help</a>-->
 		</span>
 	</td>
-	<td class="small" align="right" valign="middle"><? echo $loginWelcomeMsg; ?><br><? echo $loginStatus; ?></td>
+	<td class="small" align="right" valign="middle"><?php echo $loginWelcomeMsg; ?><br><?php echo $loginStatus; ?></td>
 </tr>
 <tr>
-	<td><? echo $HeaderString; ?></td>
-	<td class="small" align="right" valign="middle"><? echo $loginLinks; ?></td>
+	<td><?php echo $HeaderString; ?></td>
+	<td class="small" align="right" valign="middle"><?php echo $loginLinks; ?></td>
 </tr>
 </table>
 <hr align="center" width="95%"><?php

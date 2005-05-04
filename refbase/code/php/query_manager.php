@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./query_manager.php
 	// Created:    04-Feb-04, 22:29
-	// Modified:   26-Apr-05, 19:13
+	// Modified:   04-May-05, 11:53
 
 	// This script enables you to manage your custom queries.
 	// It offers a form to save the current query or update/delete any of your saved queries.
@@ -344,21 +344,21 @@
 
 <form action="query_modify.php" method="POST">
 <input type="hidden" name="formType" value="saveQuery">
-<input type="hidden" name="submit" value="<? echo $pageTitle; ?>">
-<input type="hidden" name="queryAction" value="<? echo $queryAction; ?>">
-<input type="hidden" name="queryID" value="<? echo $queryID; ?>">
-<input type="hidden" name="displayType" value="<? echo $displayType; ?>">
-<input type="hidden" name="citeStyleSelector" value="<? echo rawurlencode($citeStyle); ?>">
-<input type="hidden" name="citeOrder" value="<? echo $citeOrder; ?>">
-<input type="hidden" name="oldQuery" value="<? echo rawurlencode($oldQuery); ?>">
-<input type="hidden" name="origQueryName" value="<? echo rawurlencode($origQueryName); ?>">
+<input type="hidden" name="submit" value="<?php echo $pageTitle; ?>">
+<input type="hidden" name="queryAction" value="<?php echo $queryAction; ?>">
+<input type="hidden" name="queryID" value="<?php echo $queryID; ?>">
+<input type="hidden" name="displayType" value="<?php echo $displayType; ?>">
+<input type="hidden" name="citeStyleSelector" value="<?php echo rawurlencode($citeStyle); ?>">
+<input type="hidden" name="citeOrder" value="<?php echo $citeOrder; ?>">
+<input type="hidden" name="oldQuery" value="<?php echo rawurlencode($oldQuery); ?>">
+<input type="hidden" name="origQueryName" value="<?php echo rawurlencode($origQueryName); ?>">
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds forms that enable you to manage your custom queries">
 	<tr>
 		<td width="58" valign="top"><b>Query Name:</b></td>
 		<td width="10">&nbsp;</td>
 		<td>
-			<? echo fieldError("queryName", $errors); ?><input type="text" name="queryName" value="<? echo encodeHTML($queryName); ?>" size="33">
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" name="submit" value="<? echo $pageTitle; ?>"><?php
+			<?php echo fieldError("queryName", $errors); ?><input type="text" name="queryName" value="<?php echo encodeHTML($queryName); ?>" size="33">
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" name="submit" value="<?php echo $pageTitle; ?>"><?php
 
 	if ($queryAction == "edit") // add a DELETE button (CAUTION: the delete button must be displayed *AFTER* the edit button, otherwise DELETE will be the default action if the user hits return!!)
 								// (this is since the first displayed submit button represents the default submit action in several browsers!! [like OmniWeb or Mozilla])
@@ -377,20 +377,20 @@
 	<tr>
 		<td width="58" valign="top"><b>SQL Query:</b></td>
 		<td width="10">&nbsp;</td>
-		<td><? echo fieldError("sqlQuery", $errors); ?><textarea name="sqlQuery" rows="6" cols="60"><? echo $sqlQuery; ?></textarea></td>
+		<td><?php echo fieldError("sqlQuery", $errors); ?><textarea name="sqlQuery" rows="6" cols="60"><?php echo $sqlQuery; ?></textarea></td>
 	</tr>
 	<tr>
 		<td valign="top"><b>Display Options:</b></td>
 		<td>&nbsp;</td>
-		<td valign="top"><input type="checkbox" name="showLinks" value="1"<? echo $checkLinks; ?>>&nbsp;&nbsp;&nbsp;Display Links&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Show&nbsp;&nbsp;&nbsp;<input type="text" name="showRows" value="<? echo $showRows; ?>" size="4">&nbsp;&nbsp;&nbsp;records per page</td>
+		<td valign="top"><input type="checkbox" name="showLinks" value="1"<?php echo $checkLinks; ?>>&nbsp;&nbsp;&nbsp;Display Links&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Show&nbsp;&nbsp;&nbsp;<input type="text" name="showRows" value="<?php echo $showRows; ?>" size="4">&nbsp;&nbsp;&nbsp;records per page</td>
 	</tr>
 	<tr>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
-		<td valign="top"><input type="checkbox" name="showQuery" value="1"<? echo $checkQuery; ?>>&nbsp;&nbsp;&nbsp;Display SQL query&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;View type:&nbsp;&nbsp;
+		<td valign="top"><input type="checkbox" name="showQuery" value="1"<?php echo $checkQuery; ?>>&nbsp;&nbsp;&nbsp;Display SQL query&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;View type:&nbsp;&nbsp;
 			<select name="queryViewType">
-				<option<? echo $webViewTypeSelected; ?>>Web</option>
-				<option<? echo $printViewTypeSelected; ?>>Print</option>
+				<option<?php echo $webViewTypeSelected; ?>>Web</option>
+				<option<?php echo $printViewTypeSelected; ?>>Print</option>
 			</select>
 		</td>
 	</tr>
@@ -400,7 +400,7 @@
 	<tr>
 		<td valign="top"><b>Help:</b></td>
 		<td>&nbsp;</td>
-		<td><? echo $helpText; ?></td>
+		<td><?php echo $helpText; ?></td>
 	</tr>
 	<tr>
 		<td valign="top">&nbsp;</td>
