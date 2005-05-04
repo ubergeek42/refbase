@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./update.php
 	// Created:    01-Mar-05, 20:47
-	// Modified:   26-Apr-05, 19:30
+	// Modified:   04-May-05, 11:54
 
 	// This file will update any refbase MySQL database installation from v0.7 to v0.8.
 	// (Note that this script currently doesn't offer any conversion from 'latin1' to 'utf8')
@@ -220,8 +220,8 @@
 		<td valign="top"><?php echo fieldError("defaultCharacterSet", $errors); ?>
 
 			<select name="defaultCharacterSet">
-				<option<? echo $latin1CharacterSetSelected; ?>>latin1</option>
-				<option<? echo $unicodeCharacterSetSelected; ?>>utf8</option>
+				<option<?php echo $latin1CharacterSetSelected; ?>>latin1</option>
+				<option<?php echo $unicodeCharacterSetSelected; ?>>utf8</option>
 			</select>
 		</td>
 		<td valign="top">Specify the default character set for the MySQL database used by refbase. Note that 'utf8' (Unicode) requires MySQL 4.1.x or greater, otherwise 'latin1' (i.e., 'ISO-8859-1 West European') will be used by default.</td>

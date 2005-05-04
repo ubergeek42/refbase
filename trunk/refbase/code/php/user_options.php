@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_options.php
 	// Created:    24-Oct-04, 19:31
-	// Modified:   26-Apr-05, 19:12
+	// Modified:   04-May-05, 11:57
 
 	// This script provides options which are individual for each user.
 	// 
@@ -207,44 +207,44 @@
 ?>
 
 <form method="POST" action="user_options_modify.php" name="userOptions">
-<input type="hidden" name="userID" value="<? echo $userID ?>">
+<input type="hidden" name="userID" value="<?php echo $userID ?>">
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds a form with user options">
 <tr>
 	<td align="left" width="169"><b>Display Options:</b></td>
 	<td align="left" width="169">Use language:</td>
-	<td><? echo fieldError("languageName", $errors); ?>
+	<td><?php echo fieldError("languageName", $errors); ?>
 
-		<select name="languageName"<? echo $languagePopupDisabled; ?>><? echo $languageOptionTags; ?>
-
-		</select>
-	</td>
-</tr>
-<tr>
-	<td align="left"></td>
-	<td align="left" valign="top"><? echo $selectListIdentifier; ?> reference types:</td>
-	<td valign="top"><? echo fieldError("referenceTypeSelector", $errors); ?>
-
-		<select name="referenceTypeSelector[]" multiple><? echo $typeOptionTags; ?>
+		<select name="languageName"<?php echo $languagePopupDisabled; ?>><?php echo $languageOptionTags; ?>
 
 		</select>
 	</td>
 </tr>
 <tr>
 	<td align="left"></td>
-	<td align="left" valign="top"><? echo $selectListIdentifier; ?> citation styles:</td>
-	<td valign="top"><? echo fieldError("citationStyleSelector", $errors); ?>
+	<td align="left" valign="top"><?php echo $selectListIdentifier; ?> reference types:</td>
+	<td valign="top"><?php echo fieldError("referenceTypeSelector", $errors); ?>
 
-		<select name="citationStyleSelector[]" multiple><? echo $styleOptionTags; ?>
+		<select name="referenceTypeSelector[]" multiple><?php echo $typeOptionTags; ?>
 
 		</select>
 	</td>
 </tr>
 <tr>
 	<td align="left"></td>
-	<td align="left" valign="top"><? echo $selectListIdentifier; ?> export formats:</td>
-	<td valign="top"><? echo fieldError("exportFormatSelector", $errors); ?>
+	<td align="left" valign="top"><?php echo $selectListIdentifier; ?> citation styles:</td>
+	<td valign="top"><?php echo fieldError("citationStyleSelector", $errors); ?>
 
-		<select name="exportFormatSelector[]" multiple><? echo $formatOptionTags; ?>
+		<select name="citationStyleSelector[]" multiple><?php echo $styleOptionTags; ?>
+
+		</select>
+	</td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td align="left" valign="top"><?php echo $selectListIdentifier; ?> export formats:</td>
+	<td valign="top"><?php echo fieldError("exportFormatSelector", $errors); ?>
+
+		<select name="exportFormatSelector[]" multiple><?php echo $formatOptionTags; ?>
 
 		</select>
 	</td>
@@ -354,10 +354,10 @@
 <tr>
 	<td align="left"><b>User Permissions:</b></td>
 	<td>
-		<input type="checkbox" name="allow_add" value="yes"<? echo $allowAddChecked; ?>>&nbsp;&nbsp;Add records
+		<input type="checkbox" name="allow_add" value="yes"<?php echo $allowAddChecked; ?>>&nbsp;&nbsp;Add records
 	</td>
 	<td>
-		<input type="checkbox" name="allow_download" value="yes"<? echo $allowDownloadChecked; ?>>&nbsp;&nbsp;File download
+		<input type="checkbox" name="allow_download" value="yes"<?php echo $allowDownloadChecked; ?>>&nbsp;&nbsp;File download
 	</td>
 </tr>
 <tr>
@@ -366,16 +366,16 @@
 		<!--<a href="JavaScript:checkall(false,'allow*')" title="deselect all permission options">Deselect All</a>-->
 	</td>
 	<td>
-		<input type="checkbox" name="allow_edit" value="yes"<? echo $allowEditChecked; ?>>&nbsp;&nbsp;Edit records
+		<input type="checkbox" name="allow_edit" value="yes"<?php echo $allowEditChecked; ?>>&nbsp;&nbsp;Edit records
 	</td>
 	<td>
-		<input type="checkbox" name="allow_upload" value="yes"<? echo $allowUploadChecked; ?>>&nbsp;&nbsp;File upload
+		<input type="checkbox" name="allow_upload" value="yes"<?php echo $allowUploadChecked; ?>>&nbsp;&nbsp;File upload
 	</td>
 </tr>
 <tr>
 	<td align="left"></td>
 	<td>
-		<input type="checkbox" name="allow_delete" value="yes"<? echo $allowDeleteChecked; ?>>&nbsp;&nbsp;Delete records
+		<input type="checkbox" name="allow_delete" value="yes"<?php echo $allowDeleteChecked; ?>>&nbsp;&nbsp;Delete records
 	</td>
 	<td></td>
 </tr>
@@ -386,16 +386,16 @@
 <tr>
 	<td align="left"></td>
 	<td>
-		<input type="checkbox" name="allow_details_view" value="yes"<? echo $allowDetailsViewChecked; ?>>&nbsp;&nbsp;Details view
+		<input type="checkbox" name="allow_details_view" value="yes"<?php echo $allowDetailsViewChecked; ?>>&nbsp;&nbsp;Details view
 	</td>
 	<td>
-		<input type="checkbox" name="allow_sql_search" value="yes"<? echo $allowSQLSearchChecked; ?>>&nbsp;&nbsp;SQL search
+		<input type="checkbox" name="allow_sql_search" value="yes"<?php echo $allowSQLSearchChecked; ?>>&nbsp;&nbsp;SQL search
 	</td>
 </tr>
 <tr>
 	<td align="left"></td>
 	<td>
-		<input type="checkbox" name="allow_print_view" value="yes"<? echo $allowPrintViewChecked; ?>>&nbsp;&nbsp;Print view
+		<input type="checkbox" name="allow_print_view" value="yes"<?php echo $allowPrintViewChecked; ?>>&nbsp;&nbsp;Print view
 	</td>
 	<td></td>
 </tr>
@@ -406,16 +406,16 @@
 <tr>
 	<td align="left"></td>
 	<td>
-		<input type="checkbox" name="allow_user_groups" value="yes"<? echo $allowUserGroupsChecked; ?>>&nbsp;&nbsp;User groups
+		<input type="checkbox" name="allow_user_groups" value="yes"<?php echo $allowUserGroupsChecked; ?>>&nbsp;&nbsp;User groups
 	</td>
 	<td>
-		<input type="checkbox" name="allow_rss_feeds" value="yes"<? echo $allowRSSFeedsChecked; ?>>&nbsp;&nbsp;RSS feeds
+		<input type="checkbox" name="allow_rss_feeds" value="yes"<?php echo $allowRSSFeedsChecked; ?>>&nbsp;&nbsp;RSS feeds
 	</td>
 </tr>
 <tr>
 	<td align="left"></td>
 	<td>
-		<input type="checkbox" name="allow_user_queries" value="yes"<? echo $allowUserQueriesChecked; ?>>&nbsp;&nbsp;User queries
+		<input type="checkbox" name="allow_user_queries" value="yes"<?php echo $allowUserQueriesChecked; ?>>&nbsp;&nbsp;User queries
 	</td>
 	<td></td>
 </tr>
@@ -426,25 +426,25 @@
 <tr>
 	<td align="left"></td>
 	<td>
-		<input type="checkbox" name="allow_import" value="yes"<? echo $allowImportChecked; ?>>&nbsp;&nbsp;Import
+		<input type="checkbox" name="allow_import" value="yes"<?php echo $allowImportChecked; ?>>&nbsp;&nbsp;Import
 	</td>
 	<td>
-		<input type="checkbox" name="allow_batch_import" value="yes"<? echo $allowBatchImportChecked; ?>>&nbsp;&nbsp;Batch import
-	</td>
-</tr>
-<tr>
-	<td align="left"></td>
-	<td>
-		<input type="checkbox" name="allow_export" value="yes"<? echo $allowExportChecked; ?>>&nbsp;&nbsp;Export
-	</td>
-	<td>
-		<input type="checkbox" name="allow_batch_export" value="yes"<? echo $allowBatchExportChecked; ?>>&nbsp;&nbsp;Batch export
+		<input type="checkbox" name="allow_batch_import" value="yes"<?php echo $allowBatchImportChecked; ?>>&nbsp;&nbsp;Batch import
 	</td>
 </tr>
 <tr>
 	<td align="left"></td>
 	<td>
-		<input type="checkbox" name="allow_cite" value="yes"<? echo $allowCiteChecked; ?>>&nbsp;&nbsp;Cite
+		<input type="checkbox" name="allow_export" value="yes"<?php echo $allowExportChecked; ?>>&nbsp;&nbsp;Export
+	</td>
+	<td>
+		<input type="checkbox" name="allow_batch_export" value="yes"<?php echo $allowBatchExportChecked; ?>>&nbsp;&nbsp;Batch export
+	</td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td>
+		<input type="checkbox" name="allow_cite" value="yes"<?php echo $allowCiteChecked; ?>>&nbsp;&nbsp;Cite
 	</td>
 	<td></td>
 </tr>
@@ -455,7 +455,7 @@
 <tr>
 	<td align="left"></td>
 	<td>
-		<input type="checkbox" name="allow_modify_options" value="yes"<? echo $allowChangePersonInfoChecked; ?>>&nbsp;&nbsp;Modify options
+		<input type="checkbox" name="allow_modify_options" value="yes"<?php echo $allowChangePersonInfoChecked; ?>>&nbsp;&nbsp;Modify options
 	</td>
 	<td></td>
 </tr>

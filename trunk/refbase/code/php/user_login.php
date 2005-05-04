@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   26-Apr-05, 19:41
+	// Modified:   04-May-05, 11:56
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -266,7 +266,7 @@
 ?>
 
 <form method="POST" action="user_login.php?referer=<?php echo rawurlencode($referer); ?>">
-<table align="center" border="0" cellpadding="2" cellspacing="5" width="95%" summary="This table holds a login form for the <? echo encodeHTML($officialDatabaseName); ?>">
+<table align="center" border="0" cellpadding="2" cellspacing="5" width="95%" summary="This table holds a login form for the <?php echo encodeHTML($officialDatabaseName); ?>">
 	<tr>
 		<td width="174" valign="bottom">
 			<b>Email Address:</b>

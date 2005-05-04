@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./results_header.inc.php
 	// Created:    07-May-04, 14:38
-	// Modified:   17-Oct-04, 12:57
+	// Modified:   04-May-05, 11:51
 
 	// This is the results header include file.
 	// It contains functions that build the results header
@@ -29,14 +29,14 @@
 
 <table align="center" border="0" cellpadding="0" cellspacing="0" width="94%" summary="This table holds the results header">
 <tr>
-	<td width="<? echo $tdWidthLeftRight; ?>">
-<? echo $formElementsGroup; ?>
+	<td width="<?php echo $tdWidthLeftRight; ?>">
+<?php echo $formElementsGroup; ?>
 	</td>
 	<td align="center">
-<? echo $formElementsRefine; ?>
+<?php echo $formElementsRefine; ?>
 	</td>
-	<td align="right" width="<? echo $tdWidthLeftRight; ?>">
-<? echo $formElementsDisplayOptions; ?>
+	<td align="right" width="<?php echo $tdWidthLeftRight; ?>">
+<?php echo $formElementsDisplayOptions; ?>
 	</td>
 </tr>
 </table><?php
