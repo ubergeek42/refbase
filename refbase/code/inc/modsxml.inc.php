@@ -11,7 +11,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
   //
   // Created:    02-Oct-04, 12:00
-  // Modified:   21-Mar-05, 20:37
+  // Modified:   06-May-05, 00:17
 
   // This include file contains functions that'll export records to MODS XML.
   // Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -655,23 +655,25 @@
           $part->addXMLBranch($detailnumber);
         }
         if (!empty($row['pages'])) {
-          $pages = new XMLBranch("extent");
           if (ereg("[0-9] *- *[0-9]", $row['pages'])) { // if a page range
             // split the page range into start and end pages
             list($pagestart, $pageend) = preg_split('/\s*[-]\s*/', $row['pages']);
             if ($pagestart < $pageend) { // extents MUST span multiple pages
-              $pages->setTagAttribute("unit", "page");
+              $pages = new XMLBranch("extent");
               $pages->setTagContent($pagestart, "extent/start");
               $pages->setTagContent($pageend, "extent/end");
+              $pages->setTagAttribute("unit", "page");
             }
             else {
-              $part->setTagContent($row['pages'], "part/detail/number");
-              $part->setTagAttribute("type", "page", "part/detail");
+              $pages = new XMLBranch("detail");
+              $pages->setTagContent($row['pages'], "detail/number");
+              $pages->setTagAttribute("type", "page");
             }
           }
           else {
-            $part->setTagContent($row['pages'], "part/detail/number");
-            $part->setTagAttribute("type", "page", "part/detail");
+            $pages = new XMLBranch("detail");
+            $pages->setTagContent($row['pages'], "detail/number");
+            $pages->setTagAttribute("type", "page");
           }
           $part->addXMLBranch($pages);
         }
