@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./export/bibutils/export_xml2bib.php
 	// Created:    28-Sep-04, 22:14
-	// Modified:   07-Apr-05, 11:33
+	// Modified:   21-May-05, 17:48
 
 	// This is an export format file (which must reside within the 'export/' sub-directory of your refbase root directory). It contains a version of the
 	// 'exportRecords()' function that outputs records according to the export format used by 'BibTeX', the bibliographic companion to the LaTeX macro package.
@@ -21,7 +21,7 @@
 	//    - bibutils <http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html>
 	//    - ActiveLink PHP XML Package <http://www.active-link.com/software/>
 
-	function exportRecords($result, $exportFormat)
+	function exportRecords($result, $rowOffset, $showRows, $exportStylesheet, $displayType)
 	{
 		// get the absolute path for the bibutils package
 		$bibutilsPath = getExternalUtilityPath("bibutils"); // function 'getExternalUtilityPath()' is defined in 'include.inc.php'
