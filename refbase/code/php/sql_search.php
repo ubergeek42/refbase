@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sql_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   26-Apr-05, 18:57
+	// Modified:   21-May-05, 19:35
 
 	// Search form that offers to specify a custom sql query.
 	// It offers some output options (like how many records to display per page)
@@ -98,7 +98,7 @@
 
 			$checkQuery = "";
 			$checkLinks = " checked";
-			$showRows = "10";
+			$showRows = $defaultNumberOfRecords;
 			$displayType = ""; // ('' will produce the default columnar output style)
 			$citeStyle = "";
 			$citeOrder = "";
