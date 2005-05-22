@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   27-Apr-05, 16:03
+	// Modified:   22-May-05, 03:06
 
 	// This file contains important
 	// functions that are shared
@@ -157,6 +157,70 @@
 			if (!(mysql_close($connection)))
 				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 					showErrorMsg("The following error occurred while trying to disconnect from the database:", $oldQuery);
+	}
+
+	// --------------------------------------------------------------------
+
+	// Find out how many rows are available and (if there were rows found) seek to the current offset:
+	// Note that this function will also (re-)assign values to the variables '$rowOffset', '$showRows',
+	// '$rowsFound', '$previousOffset', '$nextOffset' and '$showMaxRow'.
+	function seekInMySQLResultsToOffset($result, $rowOffset, $showRows, $displayType)
+	{
+		global $defaultNumberOfRecords; // defined in 'ini.inc.php'
+
+		// Find out how many rows are available:
+		$rowsFound = @ mysql_num_rows($result);
+		if ($rowsFound > 0) // If there were rows found ...
+		{
+			// ... setup variables in order to facilitate "previous" & "next" browsing:
+			// a) Set '$rowOffset' to zero if not previously defined, or if a wrong number (<=0) was given
+			if (empty($rowOffset) || ($rowOffset <= 0) || (($displayType != "Export") && ($showRows >= $rowsFound))) // the third condition is only necessary if '$rowOffset' gets embedded within the 'displayOptions' form (see function 'buildDisplayOptionsElements()' in 'include.inc.php')
+				$rowOffset = 0;
+
+			// Adjust the '$showRows' value if not previously defined, or if a wrong number (<=0 or float) was given
+			if (empty($showRows) || ($showRows <= 0) || !ereg("^[0-9]+$", $showRows))
+				$showRows = $defaultNumberOfRecords;
+
+
+			if ($displayType != "Export") // we have to exclude '$displayType=Export' here since, for export, '$rowOffset' must always point to the first row number in the result set that should be returned
+			{
+				// NOTE: The current value of '$rowOffset' is embedded as hidden tag within the 'displayOptions' form. By this, the current row offset can be re-applied
+				//       after the user pressed the 'Show'/'Hide' button within the 'displayOptions' form. But then, to avoid that browse links don't behave as expected,
+				//       we need to adjust the actual value of '$rowOffset' to an exact multiple of '$showRows':
+				$offsetRatio = ($rowOffset / $showRows);
+				if (!is_integer($offsetRatio)) // check whether the value of the '$offsetRatio' variable is not an integer
+				{ // if '$offsetRatio' is a float:
+					$offsetCorrectionFactor = floor($offsetRatio); // get it's next lower integer
+					if ($offsetCorrectionFactor != 0)
+						$rowOffset = ($offsetCorrectionFactor * $showRows); // correct the current row offset to the closest multiple of '$showRows' *below* the current row offset
+					else
+						$rowOffset = 0;
+				}
+			}
+
+			// b) The "Previous" page begins at the current offset LESS the number of rows per page
+			$previousOffset = $rowOffset - $showRows;
+
+			// c) The "Next" page begins at the current offset PLUS the number of rows per page
+			$nextOffset = $rowOffset + $showRows;
+
+			// d) Seek to the current offset
+			mysql_data_seek($result, $rowOffset); // move internal result pointer to the row number given in '$rowOffset'
+		}
+		else // set variables to zero in order to prevent 'Undefined variable...' messages when nothing was found ('$rowsFound = 0'):
+		{
+			$rowOffset = 0;
+			$previousOffset = 0;
+			$nextOffset = 0;
+		}
+
+		// Calculate the maximum result number on each page ('$showMaxRow' is required as parameter to the 'displayDetails()' function)
+		if (($rowOffset + $showRows) < $rowsFound)
+			$showMaxRow = ($rowOffset + $showRows); // maximum result number on each page
+		else
+			$showMaxRow = $rowsFound; // for the last results page, correct the maximum result number if necessary
+
+		return array($result, $rowOffset, $showRows, $rowsFound, $previousOffset, $nextOffset, $showMaxRow);
 	}
 
 	// --------------------------------------------------------------------
@@ -1758,6 +1822,46 @@ EOF;
 
 	// --------------------------------------------------------------------
 
+	// Returns the total number of records in the database:
+	function getNumberOfRecords()
+	{
+		global $tableRefs; // defined in 'db.inc.php'
+
+		connectToMySQLDatabase("");
+
+		// CONSTRUCT SQL QUERY:
+		$query = "SELECT COUNT(serial) FROM $tableRefs"; // query the total number of records
+		
+		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
+
+		$row = mysql_fetch_row($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
+		$numberOfRecords = $row[0]; // extract the contents of the first (and only) row
+
+		return $numberOfRecords;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Returns the date/time information (in format 'YYYY-MM-DD hh-mm-ss') when the database was last modified:
+	function getLastModifiedDateTime()
+	{
+		global $tableRefs; // defined in 'db.inc.php'
+
+		connectToMySQLDatabase("");
+
+		// CONSTRUCT SQL QUERY:
+		$query = "SELECT modified_date, modified_time FROM $tableRefs ORDER BY modified_date DESC, modified_time DESC, created_date DESC, created_time DESC LIMIT 1"; // get date/time info for the record that was added/edited most recently
+		
+		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
+
+		$row = mysql_fetch_row($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
+		$lastModifiedDateTime = $row[0] . " " . $row[1];
+
+		return $lastModifiedDateTime;
+	}
+
+	// --------------------------------------------------------------------
+
 	// Update the specified user permissions for the selected user(s):
 	function updateUserPermissions($recordSerialsString, $userPermissionsArray) // '$userPermissionsArray' must contain one or more key/value elements of the form array('allow_add' => 'yes', 'allow_delete' => 'no') where key is a particular 'allow_*' field name from table 'user_permissions' and value is either 'yes' or 'no'
 	{
@@ -2082,10 +2186,10 @@ EOF;
 	
 			// if we're going to display record details for a logged in user, we have to ensure the display of user specific fields (which may have been deleted from a query due to a previous logout action);
 			// in 'Display Details' view, the 'call_number' and 'serial' fields are the last generic fields before any user specific fields:
-			if (($displayType == "Display") AND (eregi(", call_number, serial FROM $tableRefs",$sqlQuery))) // if the user specific fields are missing from the SELECT statement...
+			if ((eregi("^(Display|Export)$",$displayType)) AND (eregi(", call_number, serial FROM $tableRefs",$sqlQuery))) // if the user specific fields are missing from the SELECT statement...
 				$sqlQuery = eregi_replace(", call_number, serial FROM $tableRefs",", call_number, serial, marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key, related FROM $tableRefs",$sqlQuery); // ...add all user specific fields to the 'SELECT' clause
 	
-			if (($displayType == "Display" OR $displayType == "RSS") AND (!eregi("LEFT JOIN $tableUserData",$sqlQuery))) // if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
+			if ((eregi("^(Display|Export|RSS)$",$displayType)) AND (!eregi("LEFT JOIN $tableUserData",$sqlQuery))) // if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
 				$sqlQuery = eregi_replace(" FROM $tableRefs"," FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = $loginUserID",$sqlQuery); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
 		}
 	
