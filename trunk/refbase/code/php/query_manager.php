@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./query_manager.php
 	// Created:    04-Feb-04, 22:29
-	// Modified:   04-May-05, 11:53
+	// Modified:   21-May-05, 19:44
 
 	// This script enables you to manage your custom queries.
 	// It offers a form to save the current query or update/delete any of your saved queries.
@@ -162,7 +162,7 @@
 		if ($customQuery == "1") // if the script was called with parameters
 			$helpText = "Name your query and click the <em>Add Query</em> button. If you like, you can refine your query or modify any of the display options before saving.";
 		else
-			$helpText = "Enter your query and set the display options to suit your needs. Then, name your query and click the <em>Edit Query</em> button.";
+			$helpText = "Enter your query and set the display options to suit your needs. Then, name your query and click the <em>Add Query</em> button.";
 	}
 
 	// --------------------------------------------------------------------
@@ -260,7 +260,7 @@
 				$sqlQuery = "SELECT author, title, year, created_by, modified_date, modified_time, modified_by FROM $tableRefs WHERE modified_date = CURDATE() ORDER BY modified_date DESC, modified_time DESC";
 				$showQuery = "0";
 				$showLinks = "1";
-				$showRows = "5";
+				$showRows = $defaultNumberOfRecords; // '$defaultNumberOfRecords' is defined in 'ini.inc.php'
 				$citeStyle = "";
 				$citeOrder = "";
 			}			
