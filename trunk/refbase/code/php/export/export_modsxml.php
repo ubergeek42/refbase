@@ -11,7 +11,7 @@
 	// Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
 	//
 	// Created:    02-Oct-04, 12:00
-	// Modified:   12-Oct-04, 23:16
+	// Modified:   21-May-05, 17:48
 
 	// This exports MODS XML. This file must reside in the 'export' directory of the refbase root directory.
 	// It uses functions from include file 'modsxml.inc.php' that requires the ActiveLink PHP XML Package,
@@ -22,7 +22,7 @@
 	// --- BEGIN EXPORT FORMAT ---
 
 	// Export found records as MODS XML:
-	function exportRecords($result, $exportFormat)
+	function exportRecords($result, $rowOffset, $showRows, $exportStylesheet, $displayType)
 	{
 		// Generate and serve a MODS XML file of ALL records:
 		$recordCollection = modsCollection($result); // function 'modsCollection()' is defined in 'modsxml.inc.php'
