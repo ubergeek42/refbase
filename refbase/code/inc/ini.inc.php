@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   27-Apr-05, 16:16
+	// Modified:   23-May-05, 01:36
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -78,6 +78,11 @@
 
 	// The path to the CSS stylesheet which will be used for print view:
 	$printStyleSheet = "css/style_print.css"; // e.g. "css/style_print.css"
+
+
+	// The number of records that's returned by default:
+	// Note that this setting also controls how many records will be returned by default for RSS and SRU queries.
+	$defaultNumberOfRecords = 5;
 
 
 	// Defines the default user permissions when adding new users:
