@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./index.php
 	// Created:    29-Jul-02, 16:45
-	// Modified:   26-Apr-05, 17:31
+	// Modified:   21-May-05, 19:28
 
 	// This script builds the main page.
 	// It provides login and quick search forms
@@ -56,30 +56,20 @@
 
 	if (isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_rss_feeds'...
 	{
-		$rssURLArray[] = array("href" => "rss.php?where=serial%20RLIKE%20%22.%2B%22&amp;showRows=10",
+		$rssURLArray[] = array("href" => "rss.php?where=serial%20RLIKE%20%22.%2B%22&amp;showRows=" . $defaultNumberOfRecords, // '$defaultNumberOfRecords' is defined in 'ini.inc.php'
 								"title" => "records added most recently");
 
-		$rssURLArray[] = array("href" => "rss.php?where=created_date%20%3D%20CURDATE%28%29&amp;showRows=10",
+		$rssURLArray[] = array("href" => "rss.php?where=created_date%20%3D%20CURDATE%28%29&amp;showRows=" . $defaultNumberOfRecords,
 								"title" => "records added today");
 
-		$rssURLArray[] = array("href" => "rss.php?where=modified_date%20%3D%20CURDATE%28%29&amp;showRows=10",
+		$rssURLArray[] = array("href" => "rss.php?where=modified_date%20%3D%20CURDATE%28%29&amp;showRows=" . $defaultNumberOfRecords,
 								"title" => "records edited today");
 	}
 
-	// CONSTRUCT SQL QUERY:
-	$query = "SELECT COUNT(serial) FROM $tableRefs"; // query the total number of records
-
 	// --------------------------------------------------------------------
 
-	// (1) OPEN CONNECTION, (2) SELECT DATABASE
-	connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
-
-	// (3a) RUN the query on the database through the connection:
-	$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
-
-	// (3b) EXTRACT results:
-	$row = mysql_fetch_row($result); //fetch the current row into the array $row (it'll be always *one* row, but anyhow)
-	$recordCount = $row[0]; // extract the contents of the first (and only) row
+	// Get the total number of records:
+	$recordCount = getNumberOfRecords(); // function 'getNumberOfRecords()' is defined in 'include.inc.php'
 
 	// Show the login status:
 	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
