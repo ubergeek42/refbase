@@ -202,6 +202,7 @@
 "QuickSearch"=>"Schnellsuche",
 "RecallMyQuery"=>"Gesicherte Anfrage",
 "Record"=>"Eintrag",
+"Records"=>"Einträge",
 "record"=>"Eintrag",
 "records"=>"Einträge",
 "refbaseDesc"=>'Die technische Implementierung dieser Datenbank basiert auf <a href="http://www.refbase.net">refbase</a>, einer freien Datenbank-Schnittstelle zur Verwaltung wissenschaftlicher Literatur und Artikel.',
