@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   26-Apr-05, 19:46
+	// Modified:   21-May-05, 17:47
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -23,6 +23,7 @@
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
 	include 'includes/modsxml.inc.php'; // include functions that deal with MODS XML
+	include 'includes/srwxml.inc.php'; // include functions that deal with SRW XML
 	include 'initialize/ini.inc.php'; // include common variables
 	include 'includes/locales.inc.php'; // include the locales
 
@@ -47,10 +48,10 @@
 	//  - 'Display' => display details for each of the selected records ('displayDetails()' function)
 	//  - 'Cite' => build a proper citation for each of the selected records ('generateCitations()' function)
 	// Note that the 'submit' parameter can be also one of the following:
-	//   - 'Export' => generate and return an exported file ('generateExport()' function)
-	//   - 'RSS' => these value gets included within the 'track' link (in the page header) and will cause 'search.php' to return results as RSS feed
+	//   - 'Export' => generate and return selected records in the bibliographic format specified by the user ('generateExport()' function)
+	//   - 'RSS' => these value gets included within the 'RSS' link (in the page header) and will cause 'search.php' to return results as RSS feed
 	//   - 'Search', 'Show' or 'Hide' => these values change/refine the search results or their appearance on screen (how many entries & which columns get displayed)
-	//   - 'Add', 'Remove', 'Remember' or 'Forget' => these values will trigger actions that act on the selected records
+	//   - 'Add', 'Remove', 'Remember' or 'Forget' => these values will trigger actions that act on the selected records (NOTE: 'Remember' or 'Forget' are currently disabled!)
 	if (isset($_REQUEST['submit']))
 		$displayType = $_REQUEST['submit'];
 	else
@@ -204,7 +205,7 @@
 													//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
 
 	if (isset($_REQUEST['citeOrder']))
-		$citeOrder = $_REQUEST['citeOrder']; // get information how the data should be sorted (only occurs in 'extract.php'/'sql_search' forms and in query result lists). If this param is set to 'Year', records will be listed in blocks sorted by year.
+		$citeOrder = $_REQUEST['citeOrder']; // get information how the data should be sorted (only occurs in 'extract.php'/'sql_search' forms and in query result lists). If this param is set to 'year', records will be listed in blocks sorted by year.
 	else
 		$citeOrder = "";
 
@@ -218,6 +219,11 @@
 		$exportType = $_REQUEST['exportType'];
 	else
 		$exportType = "";
+
+	if (isset($_REQUEST['exportStylesheet']))
+		$exportStylesheet = $_REQUEST['exportStylesheet']; // extract any stylesheet information that has been specified for XML export formats
+	else
+		$exportStylesheet = "";
 
 	if (isset($_REQUEST['orderBy']))
 		$orderBy = $_REQUEST['orderBy']; // extract the current ORDER BY parameter so that it can be re-applied when displaying details (only occurs in query result lists)
@@ -415,7 +421,7 @@
 	{
 		if (!($nothingChecked)) // some checkboxes were marked
 		{
-			generateExport($result, $exportFormat, $exportType, $viewType); // export records using the export format specified in '$exportFormat'
+			generateExport($result, $rowOffset, $showRows, $exportFormat, $exportType, $exportStylesheet, $displayType, $viewType); // export records using the export format specified in '$exportFormat'
 
 			// NOTE: I disconnect from the database and exit this php file.  This is kind of sloppy, but I want to avoid getting the </BODY></HTML>
 			disconnectFromMySQLDatabase($oldQuery); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
@@ -447,55 +453,7 @@
 	if (!eregi("^SELECT", $query)) // for queries other than SELECT queries (e.g. UPDATE, DELETE or INSERT queries that were executed by the admin via use of 'sql_search.php')
 		$affectedRows = ($result ? mysql_affected_rows ($connection) : 0); // get the number of rows that were modified (or return 0 if an error occurred)
 
-	// Second, find out how many rows are available:
-	$rowsFound = @ mysql_num_rows($result);
-	if ($rowsFound > 0) // If there were rows found ...
-		{
-			// ... setup variables in order to facilitate "previous" & "next" browsing:
-			// a) Set '$rowOffset' to zero if not previously defined, or if a wrong number (<=0) was given
-			if (empty($rowOffset) || ($rowOffset <= 0) || ($showRows >= $rowsFound)) // the third condition is only necessary if '$rowOffset' gets embedded within the 'displayOptions' form (see function 'buildDisplayOptionsElements()' in 'include.inc.php')
-				$rowOffset = 0;
-
-			// Adjust the '$showRows' value if not previously defined, or if a wrong number (<=0 or float) was given
-			if (empty($showRows) || ($showRows <= 0) || !ereg("^[0-9]+$", $showRows))
-				$showRows = 5;
-
-			// NOTE: The current value of '$rowOffset' is embedded as hidden tag within the 'displayOptions' form. By this, the current row offset can be re-applied
-			//       after the user pressed the 'Show'/'Hide' button within the 'displayOptions' form. But then, to avoid that browse links don't behave as expected,
-			//       we need to adjust the actual value of '$rowOffset' to an exact multiple of '$showRows':
-			$offsetRatio = ($rowOffset / $showRows);
-			if (!is_integer($offsetRatio)) // check whether the value of the '$offsetRatio' variable is not an integer
-			{ // if '$offsetRatio' is a float:
-				$offsetCorrectionFactor = floor($offsetRatio); // get it's next lower integer
-				if ($offsetCorrectionFactor != 0)
-					$rowOffset = ($offsetCorrectionFactor * $showRows); // correct the current row offset to the closest multiple of '$showRows' *below* the current row offset
-				else
-					$rowOffset = 0;
-			}
-
-			// b) The "Previous" page begins at the current offset LESS the number of rows per page
-			$previousOffset = $rowOffset - $showRows;
-
-			// c) The "Next" page begins at the current offset PLUS the number of rows per page
-			$nextOffset = $rowOffset + $showRows;
-
-			// d) Seek to the current offset
-			mysql_data_seek($result, $rowOffset);
-		}
-	else // set variables to zero in order to prevent 'Undefined variable...' messages when nothing was found ('$rowsFound = 0'):
-		{
-			$rowOffset = 0;
-			$previousOffset = 0;
-			$nextOffset = 0;
-		}
-
-	// Third, calculate the maximum result number on each page ('$showMaxRow' is required as parameter to the 'displayDetails()' function)
-	if (($rowOffset + $showRows) < $rowsFound)
-		$showMaxRow = ($rowOffset + $showRows); // maximum result number on each page
-	else
-		$showMaxRow = $rowsFound; // for the last results page, correct the maximum result number if necessary
-
-	// Fourth, check if there's some query URL available pointing to a previous search results page
+	// Second, check if there's some query URL available pointing to a previous search results page
 	if ($oldQuery == "")
 		{
 			// If there's no query URL available, we build the *full* query URL for the page currently displayed. The variable '$oldQuery' will get included into every 'browse'/'field title'/'display details'/'edit record'/'add record' link. Plus it will get written into a hidden form tag so that it's available on 'display details' (batch display)
@@ -514,7 +472,12 @@
 			$oldQuery = ereg_replace('(\\\\)+','\\\\',$oldQuery);
 		}
 
-	// Fifth, setup an array of arrays holding URL and title information for all RSS feeds available on this page:
+	// Third, find out how many rows are available and (if there were rows found) seek to the current offset:
+	// Note that the 'seekInMySQLResultsToOffset()' function will also (re-)assign values to the variables
+	// '$rowOffset', '$showRows', '$rowsFound', '$previousOffset', '$nextOffset' and '$showMaxRow'.
+	list($result, $rowOffset, $showRows, $rowsFound, $previousOffset, $nextOffset, $showMaxRow) = seekInMySQLResultsToOffset($result, $rowOffset, $showRows, $displayType); // function 'seekInMySQLResultsToOffset()' is defined in 'include.inc.php'
+
+	// Fourth, setup an array of arrays holding URL and title information for all RSS feeds available on this page:
 	// (appropriate <link...> tags will be included in the HTML header for every URL specified)
 	$rssURLArray = array();
 
@@ -566,7 +529,7 @@
 					// ...we'll show a link to save the current query:
 					$HeaderString .= "<a href=\"query_manager.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;displayType=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;viewType=$viewType&amp;oldQuery=" . rawurlencode($oldQuery) . "\" title=\"save your current query\">save</a>";
 
-					if (isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_rss_feeds', we'll insert a pipe between the 'save' and 'track' links...
+					if (isset($_SESSION['user_permissions']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_rss_feeds', we'll insert a pipe between the 'save' and 'RSS' links...
 						$HeaderString .= " | ";
 				}
 
@@ -1267,7 +1230,7 @@
 	// --------------------------------------------------------------------
 
 	// EXPORT RECORDS using the specified export format
-	function generateExport($result, $exportFormat, $exportType, $viewType)
+	function generateExport($result, $rowOffset, $showRows, $exportFormat, $exportType, $exportStylesheet, $displayType, $viewType)
 	{
 		global $officialDatabaseName; // these variables are defined in 'ini.inc.php'
 		global $markupSearchReplacePatterns;
@@ -1279,7 +1242,7 @@
 		include_once "export/" . $exportFormatFile; // instead of 'include_once' we could also use: 'if ($rowCounter == 0) { include "export/" . $exportFormatFile; }'
 
 		// export found records using the specified export format:
-		$exportText = exportRecords($result, $exportFormat); // function 'exportRecords()' is defined in the export format file given in '$exportFormatFile' (which, in turn, must reside in the 'export' directory of the refbase root directory)
+		$exportText = exportRecords($result, $rowOffset, $showRows, $exportStylesheet, $displayType); // function 'exportRecords()' is defined in the export format file given in '$exportFormatFile' (which, in turn, must reside in the 'export' directory of the refbase root directory)
 
 		// adjust the mime type and return exported data based on the key given in '$exportType':
 		if ($exportType == "text")
@@ -1300,7 +1263,13 @@
 			if (eregi("XML", $exportFormat)) // if the export format name contains 'XML'
 			{
 				$exportContentType = "text/xml";
-				$exportFileName = "mods_export.xml";
+	
+				if (eregi("MODS", $exportFormat)) // if the export format name contains 'MODS'
+					$exportFileName = "mods_export.xml";
+				elseif (eregi("SRW", $exportFormat)) // if the export format name contains 'SRW'
+					$exportFileName = "srw_export.xml";
+				else
+					$exportFileName = "export.xml";
 			}
 
 			elseif (eregi("Endnote|RIS|Bibtex", $exportFormat)) // if the export format name contains either 'Endnote', 'Bibtex' or 'RIS'
@@ -1323,7 +1292,7 @@
 		header('Content-type: ' . $exportContentType . '; charset=' . $contentTypeCharset);
 
 		if ($exportType == "file") // instruct the browser to download the resulting XML file:
-			header('Content-Disposition: attachment; filename="' . $exportFileName . '"'); // Note that this doesn't seem to work with all browsers (notably not with Safari & OmniWeb on MacOSX Panther, but it does work with Mozilla & Camino)
+			header('Content-Disposition: attachment; filename="' . $exportFileName . '"'); // Note that this doesn't seem to work with all browsers (notably not with Safari & OmniWeb on MacOSX Panther, but it does work with Mozilla & Camino as well as Safari on Tiger)
 
 
 		elseif (eregi("^(html|email)$", $exportType)) // output data as HTML, wrapped into <pre>...</pre> tags:
