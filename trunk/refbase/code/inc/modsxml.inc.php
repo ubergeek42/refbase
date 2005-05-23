@@ -11,7 +11,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
   //
   // Created:    02-Oct-04, 12:00
-  // Modified:   06-May-05, 00:17
+	// Modified:   23-May-05, 02:15
 
   // This include file contains functions that'll export records to MODS XML.
   // Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -88,7 +88,7 @@
       if (!empty($series_issue)) {
         $detailnumber = new XMLBranch("detail");
         $detailnumber->setTagContent($series_issue, "detail/number");
-        $detailnumber->setTagAttribute("type", "number");
+        $detailnumber->setTagAttribute("type", "issue");
         $part->addXMLBranch($detailnumber);
       }
       $series->addXMLBranch($part);
@@ -651,7 +651,7 @@
         if (!empty($row['issue'])) {
           $detailnumber = new XMLBranch("detail");
           $detailnumber->setTagContent($row['issue'], "detail/number");
-          $detailnumber->setTagAttribute("type", "number");
+          $detailnumber->setTagAttribute("type", "issue");
           $part->addXMLBranch($detailnumber);
         }
         if (!empty($row['pages'])) {
