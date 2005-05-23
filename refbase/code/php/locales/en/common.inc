@@ -202,6 +202,7 @@
 "QuickSearch"=>"Quick Search",
 "RecallMyQuery"=>"Recall My Query",
 "Record"=>"Record",
+"Records"=>"Records",
 "record"=>"record",
 "records"=>"records",
 "refbaseDesc"=>'The database is powered by <a href="http://www.refbase.net">refbase</a>, an open source database front-end for managing scientific literature &amp; citations.',
