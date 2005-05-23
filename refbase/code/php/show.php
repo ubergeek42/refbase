@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   29-Apr-05, 22:46
+	// Modified:   22-May-05, 20:04
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -37,16 +37,18 @@
 
 	// Extract the type of display requested by the user. Normally, this will be one of the following:
 	//  - '' => if the 'submit' parameter is empty, this will produce the default columnar output style ('displayColumns()' function)
-	//  - 'Display' => display details for each of the selected records ('displayDetails()' function)
-	//  - 'Cite' => build a proper citation for each of the selected records ('generateCitations()' function)
+	//  - 'Display' => display details for all found records ('displayDetails()' function)
+	//  - 'Cite' => build a proper citation for all found records ('generateCitations()' function)
+	//  - 'Export' => generate and return found records in the specified export format ('generateExport()' function)
+	//                NOTE: - if 'submit=Export' the parameters 'exportFormatSelector' & 'exportType' must be specified as well!
 	if (isset($_REQUEST['submit']))
 		$displayType = $_REQUEST['submit'];
 	else
 		$displayType = "";
 
-	// Note that for 'show.php' we don't accept any other display types than '', 'Display' and 'Cite',
+	// Note that for 'show.php' we don't accept any other display types than '', 'Display', 'Cite' and 'Export',
 	// if any other types were specified, we'll use the default columnar output style instead:
-	if (!empty($displayType) AND !eregi("^(Display|Cite)$", $displayType))
+	if (!empty($displayType) AND !eregi("^(Display|Cite|Export)$", $displayType))
 		$displayType = "";		
 
 	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
@@ -80,6 +82,22 @@
 		$citeOrder = $_REQUEST['citeOrder']; // get information how citation data should be sorted (if this parameter is set to 'year', records will be listed in blocks sorted by year)
 	else
 		$citeOrder = "";
+
+	if (isset($_REQUEST['exportFormatSelector']))
+		$exportFormat = $_REQUEST['exportFormatSelector']; // get export format style
+	else
+		$exportFormat = "";
+
+	// for export, get information how exported data shall be returned; possible values:
+	// - 'text' => return data with mime type 'text/plain'
+	// - 'html' => return data with mime type 'text/html
+	// - 'xml' => return data with mime type 'text/xml
+	// - 'file' => return data as downloadable file
+	// - 'email' => send data as email (to the user's login email address)
+	if (isset($_REQUEST['exportType']))
+		$exportType = $_REQUEST['exportType']; // get export type
+	else
+		$exportType = "html";
 
 	if (isset($_REQUEST['headerMsg']))
 		$headerMsg = $_REQUEST['headerMsg']; // we'll accept custom header messages as well
@@ -361,13 +379,19 @@
 		// CONSTRUCT SQL QUERY:
 
 		// Note: the 'verifySQLQuery()' function that gets called by 'search.php' to process query data with "$formType = sqlSearch" will add the user specific fields to the 'SELECT' clause
-		// and the 'LEFT JOIN...' part to the 'FROM' clause of the SQL query if a user is logged in. It will also add 'serial', 'file', 'url' & 'doi' columns
+		// and the 'LEFT JOIN...' part to the 'FROM' clause of the SQL query if a user is logged in. It will also add 'orig_record', 'serial', 'file', 'url' & 'doi' columns
 		// as required. Therefore it's sufficient to provide just the plain SQL query here:
 
 		// Build SELECT clause:
-		if ($displayType == "Display") // select all fields required to display record details:
+		if (eregi("^(Display|Export)$", $displayType)) // select all fields required to display record details or to export a record:
+		{
 			$query = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial";
 		//           (the above string MUST end with ", call_number, serial" in order to have the described query completion feature work correctly!
+
+			if ($displayType == "Export") // for export, we inject some additional fields into the SELECT clause (again, we must add these additional fields *before* ", call_number, serial" in order to have the described query completion feature work correctly!)
+				$query = eregi_replace(', call_number, serial', ', online_publication, online_citation, call_number, serial', $query);
+	
+		}
 
 		elseif ($displayType == "Cite") // select all fields required to build proper record citations:
 		{
@@ -423,7 +447,7 @@
 			$query .= connectConditionals();
 
 			if ($recordConditionalSelector == "is equal to")
-				$query .= " serial = \"" . $serial . "\""; // add WHERE clause part
+				$query .= " serial = \"" . $serial . "\"";
 
 			elseif ($recordConditionalSelector == "is within list")
 			{
@@ -432,11 +456,11 @@
 				// strip "|" from beginning/end of string (if any):
 				$serial = preg_replace("/^\|?(.+?)\|?$/", "\\1", $serial);
 
-				$query .= " serial RLIKE \"^(" . $serial . ")$\""; // add WHERE clause part
+				$query .= " serial RLIKE \"^(" . $serial . ")$\"";
 			}
 
 			else // $recordConditionalSelector == "contains"
-				$query .= " serial RLIKE \"" . $serial . "\""; // add WHERE clause part
+				$query .= " serial RLIKE \"" . $serial . "\"";
 		}
 
 		if (!empty($date)) // if the 'date' parameter is present:
@@ -451,23 +475,23 @@
 			$query .= connectConditionals();
 
 			if ($when == "edited")
-				$query .= " modified_date " . $searchOperator . " \"" . $date . "\""; // add WHERE clause part
+				$query .= " modified_date " . $searchOperator . " \"" . $date . "\"";
 			else
-				$query .= " created_date " . $searchOperator . " \"" . $date . "\""; // add WHERE clause part
+				$query .= " created_date " . $searchOperator . " \"" . $date . "\"";
 		}
 
 		if (!empty($year)) // if the 'year' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " year RLIKE \"" . $year . "\""; // add WHERE clause part
+			$query .= " year RLIKE \"" . $year . "\"";
 		}
 
 		if (!empty($author)) // if the 'author' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " author RLIKE \"" . $author . "\""; // add WHERE clause part
+			$query .= " author RLIKE \"" . $author . "\"";
 		}
 
 		if (!empty($without)) // if the 'without' parameter is present:
@@ -475,49 +499,49 @@
 			$query .= connectConditionals();
 
 			if ($without == "dups")
-				$query .= " (orig_record IS NULL OR orig_record < 0)"; // add WHERE clause part
+				$query .= " (orig_record IS NULL OR orig_record < 0)";
 		}
 
 		if (!empty($title)) // if the 'title' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " title RLIKE \"" . $title . "\""; // add WHERE clause part
+			$query .= " title RLIKE \"" . $title . "\"";
 		}
 
 		if (!empty($keywords)) // if the 'keywords' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " keywords RLIKE \"" . $keywords . "\""; // add WHERE clause part
+			$query .= " keywords RLIKE \"" . $keywords . "\"";
 		}
 
 		if (!empty($abstract)) // if the 'abstract' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " abstract RLIKE \"" . $abstract . "\""; // add WHERE clause part
+			$query .= " abstract RLIKE \"" . $abstract . "\"";
 		}
 
 		if (!empty($area)) // if the 'area' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " area RLIKE \"" . $area . "\""; // add WHERE clause part
+			$query .= " area RLIKE \"" . $area . "\"";
 		}
 
 		if (!empty($type)) // if the 'type' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " type RLIKE \"" . $type . "\""; // add WHERE clause part
+			$query .= " type RLIKE \"" . $type . "\"";
 		}
 
 		if (!empty($contributionID)) // if the 'contribution_id' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " contribution_id RLIKE \"" . $contributionID . "\""; // add WHERE clause part
+			$query .= " contribution_id RLIKE \"" . $contributionID . "\"";
 		}
 
 		if (!empty($thesis)) // if the 'thesis' parameter is present:
@@ -525,25 +549,25 @@
 			$query .= connectConditionals();
 
 			if ($thesis == "yes")
-				$query .= " thesis RLIKE \".+\""; // add WHERE clause part				
+				$query .= " thesis RLIKE \".+\"";				
 			elseif ($thesis == "no")
-				$query .= " thesis IS NULL"; // add WHERE clause part
+				$query .= " thesis IS NULL";
 			else
-				$query .= " thesis RLIKE \"" . $thesis . "\""; // add WHERE clause part
+				$query .= " thesis RLIKE \"" . $thesis . "\"";
 		}
 
 		if (!empty($selected) AND !empty($userID)) // if the 'selected' parameter is present (in order to search for user specific fields (like 'selected'), the 'userID' parameter must be given as well!):
 		{
 			$query .= connectConditionals();
 
-			$query .= " selected = \"" . $selected . "\""; // add WHERE clause part
+			$query .= " selected = \"" . $selected . "\"";
 		}
 
 		if (!empty($marked) AND !empty($userID)) // if the 'ismarked' parameter is present (in order to search for user specific fields (like 'marked'), the 'userID' parameter must be given as well!):
 		{
 			$query .= connectConditionals();
 
-			$query .= " marked = \"" . $marked . "\""; // add WHERE clause part
+			$query .= " marked = \"" . $marked . "\"";
 		}
 
 		if (!empty($citeKey) AND !empty($userID)) // if the 'cite_key' parameter is present (in order to search for user specific fields (like 'cite_key'), the 'userID' parameter must be given as well!):
@@ -551,7 +575,7 @@
 			$query .= connectConditionals();
 
 			if ($recordConditionalSelector == "is equal to")
-				$query .= " cite_key = \"" . $citeKey . "\""; // add WHERE clause part
+				$query .= " cite_key = \"" . $citeKey . "\"";
 
 			elseif ($recordConditionalSelector == "is within list")
 			{
@@ -561,11 +585,11 @@
 				// strip "|" from beginning/end of string (if any):
 				$citeKey = preg_replace("/^\|?(.+?)\|?$/", "\\1", $citeKey);
 
-				$query .= " cite_key RLIKE \"^(" . $citeKey . ")$\""; // add WHERE clause part
+				$query .= " cite_key RLIKE \"^(" . $citeKey . ")$\"";
 			}
 
 			else // $recordConditionalSelector == "contains"
-				$query .= " cite_key RLIKE \"" . $citeKey . "\""; // add WHERE clause part
+				$query .= " cite_key RLIKE \"" . $citeKey . "\"";
 		}
 
 		if (!empty($callNumber)) // if the 'call_number' parameter is present:
@@ -576,10 +600,10 @@
 			// (the session variables '$loginEmail' and '$abbrevInstitution' are made available globally by the 'start_session()' function)
 			$loginEmailArray = split("@", $loginEmail); // split the login email address at '@'
 			$loginEmailUserName = $loginEmailArray[0]; // extract the user name (which is the first element of the array '$loginEmailArray')
-			$callNumberPrefix = $abbrevInstitution . " @ " . $loginEmailUserName; // construct a correct call number prefix, like: 'IP… @ msteffens'
+			$callNumberPrefix = $abbrevInstitution . " @ " . $loginEmailUserName; // construct a correct call number prefix, like: 'IPÖ @ msteffens'
 
 			if ($recordConditionalSelector == "is equal to")
-				$query .= " call_number RLIKE \"(^|.*;) *" . $callNumberPrefix . " @ " . $callNumber . " *(;.*|$)\""; // add WHERE clause part
+				$query .= " call_number RLIKE \"(^|.*;) *" . $callNumberPrefix . " @ " . $callNumber . " *(;.*|$)\"";
 
 			elseif ($recordConditionalSelector == "is within list")
 			{
@@ -589,11 +613,11 @@
 				// strip "|" from beginning/end of string (if any):
 				$callNumber = preg_replace("/^\|?(.+?)\|?$/", "\\1", $callNumber);
 
-				$query .= " call_number RLIKE \"(^|.*;) *" . $callNumberPrefix . " @ (" . $callNumber . ") *(;.*|$)\""; // add WHERE clause part
+				$query .= " call_number RLIKE \"(^|.*;) *" . $callNumberPrefix . " @ (" . $callNumber . ") *(;.*|$)\"";
 			}
 
 			else // $recordConditionalSelector == "contains"
-				$query .= " call_number RLIKE \"" . $callNumberPrefix . " @ [^@;]*" . $callNumber . "[^@;]*\""; // add WHERE clause part
+				$query .= " call_number RLIKE \"" . $callNumberPrefix . " @ [^@;]*" . $callNumber . "[^@;]*\"";
 		}
 
 
@@ -606,7 +630,7 @@
 
 		// Build the correct query URL:
 		// (we skip unnecessary parameters here since 'search.php' will use it's default values for them)
-		$queryURL = "sqlQuery=" . rawurlencode($query) . "&formType=sqlSearch&submit=" . $displayType . "&viewType=" . $viewType . "&showQuery=" . $showQuery . "&showLinks=" . $showLinks . "&showRows=" . $showRows . "&citeOrder=" . $citeOrder . "&citeStyleSelector=" . rawurlencode($citeStyle) . "&headerMsg=" . rawurlencode($headerMsg);
+		$queryURL = "sqlQuery=" . rawurlencode($query) . "&formType=sqlSearch&submit=" . $displayType . "&viewType=" . $viewType . "&showQuery=" . $showQuery . "&showLinks=" . $showLinks . "&showRows=" . $showRows . "&citeOrder=" . $citeOrder . "&citeStyleSelector=" . rawurlencode($citeStyle) . "&exportFormatSelector=" . rawurlencode($exportFormat) . "&exportType=" . $exportType . "&headerMsg=" . rawurlencode($headerMsg);
 
 		// call 'search.php' with the correct query URL in order to display record details:
 		header("Location: search.php?$queryURL");
