@@ -12,7 +12,7 @@
 	//             Richard Karnesky <mailto:karnesky@northwestern.edu>
 	//
 	// Created:    17-May-05, 16:38
-	// Modified:   22-May-05, 19:10
+	// Modified:   7-Jun-05, 23:51
 
 	// This include file contains functions that'll export records to SRW XML.
 	// Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -44,12 +44,10 @@
 		// function 'seekInMySQLResultsToOffset()' is defined in 'include.inc.php'
 		list($result, $rowOffset, $showRows, $rowsFound, $previousOffset, $nextOffset, $showMaxRow) = seekInMySQLResultsToOffset($result, $rowOffset, $showRows, $displayType);
 
-		$srwRowsFoundBranch = new XMLBranch("srw:numberOfRecords");
-		$srwRowsFoundBranch->setTagContent($rowsFound);
-		$srwCollection->addXMLBranch($srwRowsFoundBranch);
+		addNewBranch($srwCollection, "srw:numberOfRecords", array(), $rowsFound);
 
-		// <srw:resultSetId> not supported yet
-		// <srw:resultSetIdleTime> not supported yet
+		// <srw:resultSetId> not supported
+		// <srw:resultSetIdleTime> not supported
 
 		$srwRecordsBranch = new XMLBranch("srw:records");
 	
@@ -105,15 +103,16 @@
 				$srwRecordDataBranch->addXMLasBranch($mods);
 				$srwRecordBranch->addXMLBranch($srwRecordDataBranch);
 	
-				$srwRecordPositionBranch = new XMLBranch("srw:recordPosition");
-				$srwRecordPositionBranch->setTagContent($i);
-				$srwRecordBranch->addXMLBranch($srwRecordPositionBranch);
-	
+				addNewBranch($srwRecordBranch, "srw:recordPosition", array(), $i);
+
 				$srwRecordsBranch->addXMLBranch($srwRecordBranch);
 			}
 		}
 	
 		$srwCollection->addXMLBranch($srwRecordsBranch);
+
+		if (($showRowsOriginal != 0) && ($showMaxRow < $rowsFound)) // show 'nextRecordPosition' if the SRU query did not contain 'maximumRecords=0' and if there are any remaining records to be displayed
+			addNewBranch($srwCollection, "srw:nextRecordPosition", array(), ($showMaxRow + 1));
 
 		$srwCollectionDoc->setXML($srwCollection);
 		$srwCollectionString = $srwCollectionDoc->getXMLString();
@@ -155,7 +154,9 @@
 
 		$srwRecordDataBranch = new XMLBranch("srw:recordData");
 
-		$srwExplainBranch = new XMLBranch("zr:explain");
+		$srwExplainBranch = new XMLBranch("explain");
+		$srwExplainBranch->setTagAttribute("xmlns", "http://explain.z3950.org/dtd/2.0/");
+		$srwExplainBranch->setTagAttribute("xmlns:refb", "http://refbase.net/");
 
 
 		// extract the protocol from the base URL:
@@ -184,20 +185,16 @@
 
 
 		// --- begin server info ------------------------------------
-		$srwServerInfoBranch = new XMLBranch("zr:serverInfo");
+		$srwServerInfoBranch = new XMLBranch("serverInfo");
 		$srwServerInfoBranch->setTagAttribute("protocol", "SRU");
 		$srwServerInfoBranch->setTagAttribute("version", "1.1");
 		if (!empty($databaseProtocol))
 			$srwServerInfoBranch->setTagAttribute("transport", $databaseProtocol);
 
-		$srwServerInfoBranch->setTagContent($databaseHost, "zr:serverInfo/host");
-		$srwServerInfoBranch->setTagContent("80", "zr:serverInfo/port"); // NOTE: this should really be a variable in 'ini.inc.php' or such
+		$srwServerInfoBranch->setTagContent($databaseHost, "serverInfo/host");
+		$srwServerInfoBranch->setTagContent("80", "serverInfo/port"); // NOTE: this should really be a variable in 'ini.inc.php' or such
 
-		$srwServerInfoDatabaseBranch = new XMLBranch("database");
-		$srwServerInfoDatabaseBranch->setTagAttribute("numRecs", $recordCount);
-		$srwServerInfoDatabaseBranch->setTagAttribute("lastUpdate", $lastModified);
-		$srwServerInfoDatabaseBranch->setTagContent($databasePathOnServer . "sru.php");
-		$srwServerInfoBranch->addXMLBranch($srwServerInfoDatabaseBranch);
+		addNewBranch($srwServerInfoBranch, "database", array("numRecs" => $recordCount, "lastUpdate" => $lastModified), $databasePathOnServer . "sru.php");
 
 		// IMPORTANT: if you want to allow remote users who are NOT logged in (userID=0) to query the refbase database
 		//            via 'sru.php' then either the 'Export' or the 'Batch export' user permission needs to be
@@ -226,23 +223,15 @@
 
 
 		// --- begin database info ----------------------------------
-		$srwDatabaseInfoBranch = new XMLBranch("zr:databaseInfo");
+		$srwDatabaseInfoBranch = new XMLBranch("databaseInfo");
 
-		$srwDatabaseTitleBranch = new XMLBranch("title");
-		$srwDatabaseTitleBranch->setTagAttribute("lang", $defaultLanguage);
-		$srwDatabaseTitleBranch->setTagAttribute("primary", "true");
-		$srwDatabaseTitleBranch->setTagContent(encodeHTMLspecialchars($officialDatabaseName));
-		$srwDatabaseInfoBranch->addXMLBranch($srwDatabaseTitleBranch);
+		addNewBranch($srwDatabaseInfoBranch, "title", array("lang" => $defaultLanguage, "primary" => "true"), $officialDatabaseName);
 
-		$srwDatabaseDescriptionBranch = new XMLBranch("description");
-		$srwDatabaseDescriptionBranch->setTagAttribute("lang", $defaultLanguage);
-		$srwDatabaseDescriptionBranch->setTagAttribute("primary", "true");
-		$srwDatabaseDescriptionBranch->setTagContent(encodeHTMLspecialchars($loc["ThisDatabaseAttempts"]));
-		$srwDatabaseInfoBranch->addXMLBranch($srwDatabaseDescriptionBranch);
+		addNewBranch($srwDatabaseInfoBranch, "description", array("lang" => $defaultLanguage, "primary" => "true"), encodeHTMLspecialchars($loc["ThisDatabaseAttempts"]));
 
-		$srwDatabaseInfoBranch->setTagContent(encodeHTMLspecialchars($hostInstitutionName), "zr:databaseInfo/author");
+		$srwDatabaseInfoBranch->setTagContent(encodeHTMLspecialchars($hostInstitutionName), "databaseInfo/author");
 
-		$srwDatabaseInfoBranch->setTagContent(encodeHTMLspecialchars($hostInstitutionName) . " (" . $feedbackEmail . ")", "zr:databaseInfo/contact");
+		$srwDatabaseInfoBranch->setTagContent(encodeHTMLspecialchars($hostInstitutionName) . " (" . $feedbackEmail . ")", "databaseInfo/contact");
 
 		$srwDatabaseImplementationBranch = new XMLBranch("implementation");
 //		$srwDatabaseImplementationBranch->setTagAttribute("version", "0.8.0");
@@ -252,25 +241,10 @@
 
 		$srwDatabaseLinksBranch = new XMLBranch("links");
 
-		$srwDatabaseLinkBranch = new XMLBranch("link");
-		$srwDatabaseLinkBranch->setTagAttribute("type", "www");
-		$srwDatabaseLinkBranch->setTagContent($databaseBaseURL);
-		$srwDatabaseLinksBranch->addXMLBranch($srwDatabaseLinkBranch);
-
-		$srwDatabaseLinkBranch = new XMLBranch("link");
-		$srwDatabaseLinkBranch->setTagAttribute("type", "sru");
-		$srwDatabaseLinkBranch->setTagContent($databaseBaseURL . "sru.php");
-		$srwDatabaseLinksBranch->addXMLBranch($srwDatabaseLinkBranch);
-
-		$srwDatabaseLinkBranch = new XMLBranch("link");
-		$srwDatabaseLinkBranch->setTagAttribute("type", "rss");
-		$srwDatabaseLinkBranch->setTagContent($databaseBaseURL . "rss.php?where=serial%20RLIKE%20%22.%2B%22&amp;showRows=10");
-		$srwDatabaseLinksBranch->addXMLBranch($srwDatabaseLinkBranch);
-
-		$srwDatabaseLinkBranch = new XMLBranch("link");
-		$srwDatabaseLinkBranch->setTagAttribute("type", "icon");
-		$srwDatabaseLinkBranch->setTagContent($databaseBaseURL . "img/logo.gif");
-		$srwDatabaseLinksBranch->addXMLBranch($srwDatabaseLinkBranch);
+		addNewBranch($srwDatabaseLinksBranch, "link", array("type" => "www"), $databaseBaseURL);
+		addNewBranch($srwDatabaseLinksBranch, "link", array("type" => "sru"), $databaseBaseURL . "sru.php");
+		addNewBranch($srwDatabaseLinksBranch, "link", array("type" => "rss"), $databaseBaseURL . "rss.php?where=serial%20RLIKE%20%22.%2B%22&amp;showRows=10");
+		addNewBranch($srwDatabaseLinksBranch, "link", array("type" => "icon"), $databaseBaseURL . "img/logo.gif");
 
 		$srwDatabaseInfoBranch->addXMLBranch($srwDatabaseLinksBranch);
 
@@ -279,41 +253,134 @@
 
 
 		// --- begin index info -------------------------------------
-		$srwIndexInfoBranch = new XMLBranch("zr:indexInfo");
+		$srwIndexInfoBranch = new XMLBranch("indexInfo");
 
-		// although all global refbase fields are searchable we'll only provide
-		// the main/important fields in the explain response:
-		$indexNameArray = array("author" => "Author",
-								"title" => "Publication title",
-								"year" => "Year of publication",
-								"publication" => "Publication or journal name",
-								"abbrev_journal" => "Abbreviated journal name",
-								"volume" => "Publication volume",
-								"issue" => "Publication issue",
-								"pages" => "Range or total number of pages",
-								"editor" => "Editor",
-								"keywords" => "Keywords",
-								"abstract" => "Abstract",
-								"notes" => "Notes",
-								"issn" => "International standard serial number",
-								"isbn" => "International standard book number",
-								"doi" => "Digital object identifier",
-								"url" => "Uniform resource locator",
-								"serial" => "Record Serial Number");
+		addNewBranch($srwIndexInfoBranch, "set", array("identifier" => "info:srw/cql-context-set/1/cql-v1.1", "name" => "cql"), "");
+		addNewBranch($srwIndexInfoBranch, "set", array("identifier" => "info:srw/cql-context-set/1/dc-v1.1", "name" => "dc"), "");
+		addNewBranch($srwIndexInfoBranch, "set", array("identifier" => "http://zing.z3950.org/cql/bath/2.0/", "name" => "bath"), "");
+		addNewBranch($srwIndexInfoBranch, "set", array("identifier" => "info:srw/cql-context-set/2/rec-1.1", "name" => "rec"), "");
 
-		foreach ($indexNameArray as $indexName => $indexTitle)
+		$indexArray = array();
+
+		$indexArray["dc.creator"] = array("_set" => "dc",
+										"_index" => "creator",
+										"_title" => "Author",
+										"_refbaseIndex" => "refbase-author");
+
+		$indexArray["dc.title"] = array("_set" => "dc",
+										"_index" => "title",
+										"_title" => "Publication title",
+										"_refbaseIndex" => "refbase-title");
+
+		$indexArray["dc.date"] = array("_set" => "dc",
+									"_index" => "date",
+									"_title" => "Year of publication",
+									"_refbaseIndex" => "refbase-year");
+
+		$indexArray["dc.language"] = array("_set" => "dc",
+										"_index" => "language",
+										"_title" => "Language",
+										"_refbaseIndex" => "refbase-language");
+
+		$indexArray["dc.description"] = array("_set" => "dc",
+											"_index" => "description",
+											"_title" => "Abstract",
+											"_refbaseIndex" => "refbase-abstract");
+
+		$indexArray["dc.format"] = array("_set" => "dc",
+										"_index" => "format",
+										"_title" => "Format/Type of Material",
+										"_refbaseIndex" => "refbase-medium");
+
+		$indexArray["dc.publisher"] = array("_set" => "dc",
+										"_index" => "publisher",
+										"_title" => "Publisher",
+										"_refbaseIndex" => "refbase-publisher");
+
+		$indexArray["dc.coverage"] = array("_set" => "dc",
+											"_index" => "coverage",
+											"_title" => "Geographic or topographic area of research",
+											"_refbaseIndex" => "refbase-area");
+
+		$indexArray["bath.issn"] = array("_set" => "bath",
+										"_index" => "issn",
+										"_title" => "International standard serial number",
+										"_refbaseIndex" => "refbase-issn");
+
+		$indexArray["bath.corporateName"] = array("_set" => "bath",
+												"_index" => "corporateName",
+												"_title" => "Corporate Author",
+												"_refbaseIndex" => "refbase-corporate_author");
+
+		$indexArray["bath.conferenceName"] = array("_set" => "bath",
+												"_index" => "conferenceName",
+												"_title" => "Conference",
+												"_refbaseIndex" => "refbase-conference");
+
+		$indexArray["rec.identifier"] = array("_set" => "rec",
+										"_index" => "identifier",
+										"_title" => "Database record number",
+										"_refbaseIndex" => "refbase-serial");
+
+		$indexArray["rec.creationDate"] = array("_set" => "rec",
+												"_index" => "creationDate",
+												"_title" => "Date/Time at which the record was created",
+												"_refbaseIndex" => "refbase-created_date-created_time"); // 'sru.php': CQL search term should get splitted into date & time information!
+
+		$indexArray["rec.creationAgentName"] = array("_set" => "rec",
+													"_index" => "creationAgentName",
+													"_title" => "Name of the agent responsible for creation of the record",
+													"_refbaseIndex" => "refbase-created_by");
+
+		$indexArray["rec.lastModificationDate"] = array("_set" => "rec",
+													"_index" => "lastModificationDate",
+													"_title" => "Date/Time at which the record was last modified",
+													"_refbaseIndex" => "refbase-modified_date-modified_time"); // 'sru.php': CQL search term should get splitted into date & time information!
+
+		$indexArray["rec.lastModificationAgentName"] = array("_set" => "rec",
+														"_index" => "lastModificationAgentName",
+														"_title" => "Name of the agent responsible for last modifying the record",
+														"_refbaseIndex" => "refbase-modified_by");
+
+		$indexArray["bib.citekey"] = array("_set" => "bib",
+													"_index" => "citekey",
+													"_title" => "User-specific cite key for the record",
+													"_refbaseIndex" => "refbase-cite_key");
+
+// 								"publication" => "Book title or journal name",
+// 								"abbrev_journal" => "Abbreviated journal name",
+// 								"volume" => "Publication volume",
+// 								"issue" => "Publication issue",
+// 								"pages" => "Range or total number of pages",
+// 								"editor" => "Editor",
+// 								"place" => "Place of publication",
+// 								"series_title" => "Series title",
+// 								"abbrev_series_title" => "Abbreviated series title",
+// 								"series_volume" => "Series volume",
+// 								"series_issue" => "Series issue",
+// 								"keywords" => "Keywords",
+// 								"abstract" => "Abstract",
+// 								"notes" => "Notes",
+// 								"thesis" => "Thesis",
+// 								"isbn" => "International standard book number",
+// 								"doi" => "Digital object identifier",
+// 								"url" => "Uniform resource locator",
+
+		foreach ($indexArray as $indexKey => $index)
 		{
 			$srwIndexBranch = new XMLBranch("index");
 			$srwIndexBranch->setTagAttribute("search", "true");
 			$srwIndexBranch->setTagAttribute("scan", "false");
 			$srwIndexBranch->setTagAttribute("sort", "false");
+			$srwIndexBranch->setTagAttribute("refb:index", $index["_refbaseIndex"]);
 
-			$srwIndexTitleBranch = new XMLBranch("title");
-			$srwIndexTitleBranch->setTagAttribute("lang", "en");
-			$srwIndexTitleBranch->setTagContent($indexTitle);
-			$srwIndexBranch->addXMLBranch($srwIndexTitleBranch);
+			addNewBranch($srwIndexBranch, "title", array("lang" => "en"), $index["_title"]);
 	
-			$srwIndexBranch->setTagContent($indexName, "index/map/name");
+			$srwIndexMapBranch = new XMLBranch("map");
+
+			addNewBranch($srwIndexMapBranch, "name", array("set" => $index["_set"]), $index["_index"]);
+
+			$srwIndexBranch->addXMLBranch($srwIndexMapBranch);
 
 			$srwIndexInfoBranch->addXMLBranch($srwIndexBranch);
 		}
@@ -323,7 +390,7 @@
 
 
 		// --- begin schema info -------------------------------------
-		$srwSchemaInfoBranch = new XMLBranch("zr:schemaInfo");
+		$srwSchemaInfoBranch = new XMLBranch("schemaInfo");
 
 		$srwSchemaBranch = new XMLBranch("schema");
 		$srwSchemaBranch->setTagAttribute("identifier", "http://www.loc.gov/mods/v3");
@@ -332,10 +399,7 @@
 		$srwSchemaBranch->setTagAttribute("retrieve", "true");
 		$srwSchemaBranch->setTagAttribute("name", "mods");
 
-		$srwSchemaTitleBranch = new XMLBranch("title");
-		$srwSchemaTitleBranch->setTagAttribute("lang", "en");
-		$srwSchemaTitleBranch->setTagContent("Metadata Object Description Schema (MODS)");
-		$srwSchemaBranch->addXMLBranch($srwSchemaTitleBranch);
+		addNewBranch($srwSchemaBranch, "title", array("lang" => "en"), "Metadata Object Description Schema (MODS) v3");
 
 		$srwSchemaInfoBranch->addXMLBranch($srwSchemaBranch);
 
@@ -344,46 +408,31 @@
 
 
 		// --- begin config info -------------------------------------
-		$srwConfigInfoBranch = new XMLBranch("zr:configInfo");
+		$srwConfigInfoBranch = new XMLBranch("configInfo");
 
-		$srwConfigDefaultBranch = new XMLBranch("default");
-		$srwConfigDefaultBranch->setTagAttribute("type", "numberOfRecords");
-		$srwConfigDefaultBranch->setTagContent($defaultNumberOfRecords);
-		$srwConfigInfoBranch->addXMLBranch($srwConfigDefaultBranch);
+		// default:
+		addNewBranch($srwConfigInfoBranch, "default", array("type" => "numberOfRecords"), $defaultNumberOfRecords);
+		addNewBranch($srwConfigInfoBranch, "default", array("type" => "stylesheet"), $databaseBaseURL . "srwmods2html.xsl");
+		addNewBranch($srwConfigInfoBranch, "default", array("type" => "contextSet"), "cql");
+		addNewBranch($srwConfigInfoBranch, "default", array("type" => "index"), "identifier");
+		addNewBranch($srwConfigInfoBranch, "default", array("type" => "relation"), "any");
 
-		$srwConfigDefaultBranch = new XMLBranch("default");
-		$srwConfigDefaultBranch->setTagAttribute("type", "stylesheet");
-		$srwConfigDefaultBranch->setTagContent($databaseBaseURL . "srwmods2html.xsl");
-		$srwConfigInfoBranch->addXMLBranch($srwConfigDefaultBranch);
+		// setting:
+		addNewBranch($srwConfigInfoBranch, "setting", array("type" => "sortSchema"), "identifier");
+		addNewBranch($srwConfigInfoBranch, "setting", array("type" => "retrieveSchema"), "mods");
+		addNewBranch($srwConfigInfoBranch, "setting", array("type" => "recordPacking"), "xml");
 
-		$srwConfigDefaultBranch = new XMLBranch("default");
-		$srwConfigDefaultBranch->setTagAttribute("type", "index");
-		$srwConfigDefaultBranch->setTagContent("serial");
-		$srwConfigInfoBranch->addXMLBranch($srwConfigDefaultBranch);
-
-		$srwConfigDefaultBranch = new XMLBranch("default");
-		$srwConfigDefaultBranch->setTagAttribute("type", "relation");
-		$srwConfigDefaultBranch->setTagContent("any");
-		$srwConfigInfoBranch->addXMLBranch($srwConfigDefaultBranch);
-
-		$srwConfigSettingBranch = new XMLBranch("setting");
-		$srwConfigSettingBranch->setTagAttribute("type", "sortSchema");
-		$srwConfigSettingBranch->setTagContent("serial");
-		$srwConfigInfoBranch->addXMLBranch($srwConfigSettingBranch);
-
-		$srwConfigSettingBranch = new XMLBranch("setting");
-		$srwConfigSettingBranch->setTagAttribute("type", "retrieveSchema");
-		$srwConfigSettingBranch->setTagContent("mods");
-		$srwConfigInfoBranch->addXMLBranch($srwConfigSettingBranch);
-
-		$srwConfigSettingBranch = new XMLBranch("setting");
-		$srwConfigSettingBranch->setTagAttribute("type", "recordPacking");
-		$srwConfigSettingBranch->setTagContent("xml");
-		$srwConfigInfoBranch->addXMLBranch($srwConfigSettingBranch);
-
-		$srwConfigSupportsBranch = new XMLBranch("supports");
-		$srwConfigSupportsBranch->setTagAttribute("type", "emptyTerm");
-		$srwConfigInfoBranch->addXMLBranch($srwConfigSupportsBranch);
+		// supports:
+		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "proximity"), "false");
+		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "resultSets"), "false");
+		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "relationModifier"), "false");
+		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "booleanModifier"), "false");
+		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "sort"), "false");
+		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "maskingCharacter"), "false");
+		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "anchoring"), "true");
+		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "emptyTerm"), "false");
+		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "recordXPath"), "false");
+		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "scan"), "false");
 
 		$srwExplainBranch->addXMLBranch($srwConfigInfoBranch);
 		// --- end config info ---------------------------------------
@@ -418,6 +467,10 @@
 								8 => "Unsupported Parameter", // Details: Name of the unsupported parameter
 
 								10 => "Query syntax error",
+								15 => "Unsupported context set", // Details: URI or short name of context set
+								16 => "Unsupported index", // Details: Name of index
+								24 => "Unsupported combination of relation and term",
+								36 => "Term in invalid format for index or relation",
 								39 => "Proximity not supported",
 
 								50 => "Result sets not supported",
@@ -425,7 +478,7 @@
 								61 => "First record position out of range",
 								64 => "Record temporarily unavailable",
 								65 => "Record does not exist",
-								66 => "Unknown schema for retrieval", // Details: Schema URI or short name
+								66 => "Unknown schema for retrieval", // Details: Schema URI or short name (of the unsupported one)
 								67 => "Record not available in this schema", // Details: Schema URI or short name
 								68 => "Not authorised to send record",
 								69 => "Not authorised to send record in this schema",
@@ -477,14 +530,12 @@
 			$srwCollection->setTagAttribute("xmlns:xcql", "http://www.loc.gov/zing/cql/xcql/");
 			$srwCollection->setTagAttribute("xmlns:mods", "http://www.loc.gov/mods/v3");
 		}
-		elseif ($srwOperation == "explainResponse")
-		{
-			$srwCollection->setTagAttribute("xmlns:zr", "http://explain.z3950.org/dtd/2.0/");
-		}
+	//	elseif ($srwOperation == "explainResponse")
+	//	{
+	//		$srwCollection->setTagAttribute("xmlns:zr", "http://explain.z3950.org/dtd/2.0/");
+	//	}
 
-		$srwVersionBranch = new XMLBranch("srw:version");
-		$srwVersionBranch->setTagContent("1.1");
-		$srwCollection->addXMLBranch($srwVersionBranch);
+		addNewBranch($srwCollection, "srw:version", array(), "1.1");
 
 		return $srwCollection;
 	}
@@ -508,13 +559,26 @@
 							"server-choice" => "info:srw/schema/1/server-choice",
 							"xpath" => "info:srw/schema/1/xpath-1.0");
 
-		$srwRecordPackingBranch = new XMLBranch("srw:recordPacking");
-		$srwRecordPackingBranch->setTagContent($srwPacking);
-		$thisObject->addXMLBranch($srwRecordPackingBranch);
+		addNewBranch($thisObject, "srw:recordPacking", array(), $srwPacking);
+		addNewBranch($thisObject, "srw:recordSchema", array(), $srwSchemas[$srwSchema]);
+	}
 
-		$srwRecordSchemaBranch = new XMLBranch("srw:recordSchema");
-		$srwRecordSchemaBranch->setTagContent($srwSchemas[$srwSchema]);
-		$thisObject->addXMLBranch($srwRecordSchemaBranch);
+	// --------------------------------------------------------------------
+
+	// Add a new branch, optionally with a type attribute and tag content:
+	// (NOTE: this function should also accept arrays to add multiple content tags)
+	function addNewBranch(&$thisBranch, $elementName, $elementTypeArray, $elementValue)
+	{
+		$newBranch = new XMLBranch($elementName);
+
+		if (!empty($elementTypeArray))
+			foreach ($elementTypeArray as $elementTypeKey => $elementTypeValue)
+				$newBranch->setTagAttribute($elementTypeKey, $elementTypeValue);
+
+		if (!empty($elementValue))
+			$newBranch->setTagContent($elementValue);
+
+		$thisBranch->addXMLBranch($newBranch);
 	}
 
 	// --------------------------------------------------------------------
