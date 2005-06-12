@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   22-May-05, 03:06
+	// Modified:   12-Jun-05, 14:03
 
 	// This file contains important
 	// functions that are shared
@@ -355,16 +355,15 @@
 
 	// --------------------------------------------------------------------
 
-	// Get the 'user_id' for the record entry in table 'auth' whose email matches that in 'loginEmail':
-	function getUserID($loginEmail)
+	// Get the 'user_id' for the record entry in table 'auth' whose email matches that in '$emailAddress':
+	function getUserID($emailAddress)
 	{
 		global $tableAuth; // defined in 'db.inc.php'
 
 		connectToMySQLDatabase("");
 
 		// CONSTRUCT SQL QUERY:
-		// We find the user_id through the 'users' table, using the session variable holding their 'loginEmail'.
-		$query = "SELECT user_id FROM $tableAuth WHERE email = '$loginEmail'";
+		$query = "SELECT user_id FROM $tableAuth WHERE email = '$emailAddress'";
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 		$row = mysql_fetch_array($result);
@@ -1030,7 +1029,7 @@ EOF;
 		// the following changes to the SQL query are performed for both forms ("Search within Results" and "Display Options"):
 		if ($queryTable == $tableRefs) // 'search.php':
 		{
-			// if the chosen field is one of the user specific fields from table 'user_data': 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related'
+			// if the chosen field is one of the user-specific fields from table 'user_data': 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related'
 			if (ereg("^(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)$", $fieldSelector))
 				if (!eregi("LEFT JOIN $tableUserData", $query)) // ...and if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
 					$query = eregi_replace(" FROM $tableRefs"," FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = $userID",$query); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
@@ -1226,7 +1225,7 @@ EOF;
 	// --------------------------------------------------------------------
 
 	// BUILD RELATED RECORDS LINK
-	// (this function generates a proper SQL query string from the contents of the user specific 'related' field (table 'user_data') and returns a HTML link;
+	// (this function generates a proper SQL query string from the contents of the user-specific 'related' field (table 'user_data') and returns a HTML link;
 	//  clicking this link will show all records that match the serials or partial queries that were specified within the 'related' field)
 	function buildRelatedRecordsLink($relatedFieldString, $userID)
 	{
@@ -1273,7 +1272,7 @@ EOF;
 		// build the full SQL query:
 		$relatedQuery = "SELECT author, title, year, publication, volume, pages";
 
-		// if any of the user specific fields are present in the contents of the 'related' field, we'll add the 'LEFT JOIN...' part to the 'FROM' clause:
+		// if any of the user-specific fields are present in the contents of the 'related' field, we'll add the 'LEFT JOIN...' part to the 'FROM' clause:
 		if (ereg("marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related",$queriesString))
 			$relatedQuery .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = $userID";
 		else // we skip the 'LEFT JOIN...' part of the 'FROM' clause:
@@ -2062,6 +2061,14 @@ EOF;
 
 	// --------------------------------------------------------------------
 
+	// Sets the mimetype & character encoding in the header:
+	function setHeaderContentType($contentType, $contentTypeCharset)
+	{
+		header('Content-type: ' . $contentType . '; charset=' . $contentTypeCharset);
+	}
+
+	// --------------------------------------------------------------------
+
 	// Encode HTML entities:
 	// (this custom function is provided so that it'll be easier to change the way how entities are HTML encoded later on)
 	function encodeHTML($sourceString)
@@ -2124,46 +2131,49 @@ EOF;
 		global $loginUserID;
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
-		// handle the display & querying of user specific fields:
+		// handle the display & querying of user-specific fields:
 		if (!isset($_SESSION['loginEmail'])) // if NO user is logged in...
 		{
-			// ... and any user specific fields are part of the SELECT or ORDER BY statement...
-			if (eregi("(SELECT|ORDER BY|,) (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)",$sqlQuery))
+			// ... and any user-specific fields are part of the SELECT or ORDER BY statement...
+			if ((eregi(".+search.php",$referer)) AND (eregi("(SELECT|ORDER BY|,) (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)",$sqlQuery))) // if the calling script ends with 'search.php' (i.e., is NOT 'show.php' or 'sru.php', see note below!) AND any user-specific fields are part of the SELECT or ORDER BY clause
 			{
-				// if the 'SELECT' clause contains any user specific fields:
+				// if the 'SELECT' clause contains any user-specific fields:
 				if (preg_match("/SELECT(.(?!FROM))+?(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)/i",$sqlQuery))
 				{
 					// save an appropriate error message:
-					$HeaderString = "<b><span class=\"warning\">Display of user specific fields was ommitted!</span></b>";
-					// note: we don't write out any error message if the user specific fields do only occur within the 'ORDER' clause (but not within the 'SELECT' clause)
+					$HeaderString = "<b><span class=\"warning\">Display of user-specific fields was ommitted!</span></b>";
+					// note: we don't write out any error message if the user-specific fields do only occur within the 'ORDER' clause (but not within the 'SELECT' clause)
 	
 					// Write back session variable:
 					saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 				}
 	
-				$sqlQuery = eregi_replace("(SELECT|ORDER BY) (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)( DESC)?", "\\1 ", $sqlQuery); // ...delete any user specific fields from beginning of 'SELECT' or 'ORDER BY' clause
-				$sqlQuery = eregi_replace(", (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)( DESC)?", "", $sqlQuery); // ...delete any remaining user specific fields from 'SELECT' or 'ORDER BY' clause
+				$sqlQuery = eregi_replace("(SELECT|ORDER BY) (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)( DESC)?", "\\1 ", $sqlQuery); // ...delete any user-specific fields from beginning of 'SELECT' or 'ORDER BY' clause
+				$sqlQuery = eregi_replace(", (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)( DESC)?", "", $sqlQuery); // ...delete any remaining user-specific fields from 'SELECT' or 'ORDER BY' clause
 				$sqlQuery = eregi_replace("(SELECT|ORDER BY) *, *", "\\1 ", $sqlQuery); // ...remove any field delimiters that directly follow the 'SELECT' or 'ORDER BY' terms
 	
-				$sqlQuery = preg_replace("/SELECT *(?=FROM)/i", "SELECT author, title, year, publication, volume, pages ", $sqlQuery); // ...supply generic 'SELECT' clause if it did ONLY contain user specific fields
-				$sqlQuery = preg_replace("/ORDER BY *(?=LIMIT|GROUP BY|HAVING|PROCEDURE|FOR UPDATE|LOCK IN|$)/i", "ORDER BY author, year DESC, publication", $sqlQuery); // ...supply generic 'ORDER BY' clause if it did ONLY contain user specific fields
+				$sqlQuery = preg_replace("/SELECT *(?=FROM)/i", "SELECT author, title, year, publication, volume, pages ", $sqlQuery); // ...supply generic 'SELECT' clause if it did ONLY contain user-specific fields
+				$sqlQuery = preg_replace("/ORDER BY *(?=LIMIT|GROUP BY|HAVING|PROCEDURE|FOR UPDATE|LOCK IN|$)/i", "ORDER BY author, year DESC, publication", $sqlQuery); // ...supply generic 'ORDER BY' clause if it did ONLY contain user-specific fields
 			}
 	
-			if ((eregi(".+search.php",$referer)) AND (eregi("LEFT JOIN $tableUserData",$sqlQuery))) // if the calling script ends with 'search.php' (i.e., is NOT 'show.php', see note below!) AND the 'LEFT JOIN...' statement is part of the 'FROM' clause...
+			// ... and the 'LEFT JOIN...' statement is part of the 'FROM' clause...
+			if ((eregi(".+search.php",$referer)) AND (eregi("LEFT JOIN $tableUserData",$sqlQuery))) // if the calling script ends with 'search.php' (i.e., is NOT 'show.php' or 'sru.php', see note below!) AND the 'LEFT JOIN...' statement is part of the 'FROM' clause...
 				$sqlQuery = eregi_replace("FROM $tableRefs LEFT JOIN.+WHERE","FROM $tableRefs WHERE",$sqlQuery); // ...delete 'LEFT JOIN...' part from 'FROM' clause
 	
-			if ((eregi(".+search.php",$referer) OR $displayType == "RSS") AND (eregi("WHERE.+(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)",$sqlQuery))) // if a user who's NOT logged in tries to query user specific fields (by use of 'sql_search.php')...
-			// Note that the script 'show.php' may query the user specific field 'selected' (e.g., by URLs of the form: 'show.php?author=...&userID=...&only=selected')
-			// but since (in that case) the '$referer' variable is either empty or does not end with 'search.php' this if clause will not apply (which is ok since we want to allow 'show.php' to query the 'selected' field)
+			// ... and any user-specific fields are part of the WHERE clause...
+			if ((eregi(".+search.php",$referer) OR $displayType == "RSS") AND (eregi("WHERE.+(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)",$sqlQuery))) // if a user who's NOT logged in tries to query user-specific fields (by use of 'sql_search.php')...
+			// Note that the script 'show.php' may query the user-specific field 'selected' (e.g., by URLs of the form: 'show.php?author=...&userID=...&only=selected')
+			// but since (in that case) the '$referer' variable is either empty or does not end with 'search.php' this if clause will not apply (which is ok since we want to allow 'show.php' to query the 'selected' field).
+			// The same applies in the case of 'sru.php' which may query the user-specific field 'cite_key' (e.g., by URLs like: 'sru.php?version=1.1&query=bib.citekey=...&x-info-2-auth1.0-authenticationToken=email=...')
 			{
-				// ...delete 'LEFT JOIN...' part from 'FROM' clause -> this is already accomplished by the code above!
-				$sqlQuery = preg_replace("/WHERE (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related).+?(?= AND| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","WHERE",$sqlQuery); // ...delete any user specific fields from 'WHERE' clause
-				$sqlQuery = preg_replace("/( AND)? (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related).+?(?= AND| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","",$sqlQuery); // ...delete any user specific fields from 'WHERE' clause
-				$sqlQuery = eregi_replace("WHERE AND","WHERE",$sqlQuery); // ...delete any superfluous 'AND' that wasn't removed properly by the two regex patterns above
-				$sqlQuery = preg_replace("/WHERE(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","WHERE serial RLIKE \".+\"",$sqlQuery); // ...supply generic 'WHERE' clause if it did ONLY contain user specific fields
-	
+				// Note: in the patterns below we'll attempt to account for parentheses but this won't catch all cases!
+				$sqlQuery = preg_replace("/WHERE( *\( *?)* *(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related).+?(?= AND| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","WHERE\\1",$sqlQuery); // ...delete any user-specific fields from 'WHERE' clause
+				$sqlQuery = preg_replace("/( *\( *?)*( *AND)? *(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related).+?(?=( *\) *?)* +(AND|ORDER BY|LIMIT|GROUP BY|HAVING|PROCEDURE|FOR UPDATE|LOCK IN|$))/i","\\1",$sqlQuery); // ...delete any user-specific fields from 'WHERE' clause
+				$sqlQuery = preg_replace("/WHERE( *\( *?)* *AND/i","WHERE\\1",$sqlQuery); // ...delete any superfluous 'AND' that wasn't removed properly by the two regex patterns above
+				$sqlQuery = preg_replace("/WHERE( *\( *?)*(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","WHERE serial RLIKE \".+\"",$sqlQuery); // ...supply generic 'WHERE' clause if it did ONLY contain user-specific fields
+
 				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">Querying of user specific fields was ommitted!</span></b>"; // save an appropriate error message
+				$HeaderString = "<b><span class=\"warning\">Querying of user-specific fields was ommitted!</span></b>"; // save an appropriate error message
 	
 				// Write back session variable:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -2174,20 +2184,21 @@ EOF;
 		{
 			if (eregi("LEFT JOIN $tableUserData",$sqlQuery)) // if the 'LEFT JOIN...' statement is part of the 'FROM' clause...
 			{
-				// ...and any user specific fields other(!) than just the 'selected' field are part of the 'SELECT' or 'WHERE' clause...
-				// Note that we exclude the 'selected' field here (although it is user specific). By that we allow the 'selected' field to be queried by every user that's logged in.
-				// This is done to support the 'show.php' script which may query the user specific field 'selected' (e.g., by URLs of the form: 'show.php?author=...&userID=...&only=selected')
-				if (eregi(", (marked|copy|user_keys|user_notes|user_file|user_groups|cite_key|related)",$sqlQuery) OR eregi("WHERE.+(marked|copy|user_keys|user_notes|user_file|user_groups|cite_key|related)",$sqlQuery))
+				// ...and any user-specific fields other(!) than the 'selected' or 'cite_key' field are part of the 'SELECT' or 'WHERE' clause...
+				// Note that we exclude the 'selected' field here (although it is user-specific). By that we allow the 'selected' field to be queried by every user who's logged in.
+				// This is done to support the 'show.php' script which may query the user-specific field 'selected' (e.g., by URLs of the form: 'show.php?author=...&userID=...&only=selected')
+				// Similarly, we exclude 'cite_key' here to allow every user to query other user's 'cite_key' fields using 'sru.php' (e.g., by URLs like: 'sru.php?version=1.1&query=bib.citekey=...&x-info-2-auth1.0-authenticationToken=email=...')
+				if (eregi(", (marked|copy|user_keys|user_notes|user_file|user_groups|related)",$sqlQuery) OR eregi("WHERE.+(marked|copy|user_keys|user_notes|user_file|user_groups|related)",$sqlQuery))
 				{
 					$sqlQuery = eregi_replace("user_id *= *[0-9]+","user_id = $loginUserID",$sqlQuery); // ...replace any other user ID with the ID of the currently logged in user
 					$sqlQuery = eregi_replace("location RLIKE [^ ]+","location RLIKE \"$loginEmail\"",$sqlQuery); // ...replace any other user email address with the login email address of the currently logged in user
 				}
 			}
 	
-			// if we're going to display record details for a logged in user, we have to ensure the display of user specific fields (which may have been deleted from a query due to a previous logout action);
-			// in 'Display Details' view, the 'call_number' and 'serial' fields are the last generic fields before any user specific fields:
-			if ((eregi("^(Display|Export)$",$displayType)) AND (eregi(", call_number, serial FROM $tableRefs",$sqlQuery))) // if the user specific fields are missing from the SELECT statement...
-				$sqlQuery = eregi_replace(", call_number, serial FROM $tableRefs",", call_number, serial, marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key, related FROM $tableRefs",$sqlQuery); // ...add all user specific fields to the 'SELECT' clause
+			// if we're going to display record details for a logged in user, we have to ensure the display of user-specific fields (which may have been deleted from a query due to a previous logout action);
+			// in 'Display Details' view, the 'call_number' and 'serial' fields are the last generic fields before any user-specific fields:
+			if ((eregi("^(Display|Export)$",$displayType)) AND (eregi(", call_number, serial FROM $tableRefs",$sqlQuery))) // if the user-specific fields are missing from the SELECT statement...
+				$sqlQuery = eregi_replace(", call_number, serial FROM $tableRefs",", call_number, serial, marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key, related FROM $tableRefs",$sqlQuery); // ...add all user-specific fields to the 'SELECT' clause
 	
 			if ((eregi("^(Display|Export|RSS)$",$displayType)) AND (!eregi("LEFT JOIN $tableUserData",$sqlQuery))) // if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
 				$sqlQuery = eregi_replace(" FROM $tableRefs"," FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = $loginUserID",$sqlQuery); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
