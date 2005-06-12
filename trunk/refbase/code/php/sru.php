@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sru.php
 	// Created:    17-May-05, 16:22
-	// Modified:   12-Jun-05, 14:59
+	// Modified:   13-Jun-05, 00:25
 
 	// This script serves as a (faceless) routing page which takes a SRU query
 	// and converts the query into a native refbase query
@@ -126,8 +126,13 @@
 	else
 		$exportStylesheet = "srwmods2html.xsl"; // we provide a default stylesheet if no stylesheet was specified in the query
 
-	if (isset($_REQUEST['x-info-2-auth1-0-authenticationToken'])) // the dot in 'x-info-2-auth1.0-authenticationToken' seems to pose problems!
-		$authenticationToken = $_REQUEST['x-info-2-auth1-0-authenticationToken'];
+	// Note that PHP will translate dots ('.') in parameter names into substrings ('_'). This is so that the
+	// import_request_variables function can generate legitimate variable names (and a . is not permissable
+	// in variable names in PHP). See the section labelled "Dots in incoming variable names" on this page:
+	// <http://uk.php.net/variables.external>. So "$_REQUEST['x-info-2-auth1_0-authenticationToken']" will catch
+	// the 'x-info-2-auth1.0-authenticationToken' parameter (thanks to Matthew J. Dovey for pointinmg this out!).
+	if (isset($_REQUEST['x-info-2-auth1_0-authenticationToken'])) // PHP converts the dot in 'x-info-2-auth1.0-authenticationToken' into a substring!
+		$authenticationToken = $_REQUEST['x-info-2-auth1_0-authenticationToken'];
 	else
 		$authenticationToken = "";
 
@@ -173,7 +178,7 @@
 	// return diagnostic if no authentication token was given while querying a user-specific index:
 	if (empty($authenticationToken) AND $userSpecificIndex)
 	{
-		returnDiagnostic(3, "Querying of user-specific fields requires the 'x-info-2-auth1-0-authenticationToken' parameter (format: 'email=<email_address>'"); // authentication error: 'x-...authenticationToken' parameter is missing but required
+		returnDiagnostic(3, "Querying of user-specific fields requires the 'x-info-2-auth1.0-authenticationToken' parameter (format: 'email=<email_address>'"); // authentication error: 'x-...authenticationToken' parameter is missing but required
 		exit;
 	}
 	else if (!empty($authenticationToken)) // extract any authentication information that was passed with the query:
@@ -201,7 +206,7 @@
 	// -------------------------------------------------------------------------------------------------------------------
 
 	// Check for operation and that mandatory parameters have been passed:
-	if ($sruOperation == "explain" OR (!isset($_REQUEST['query']) AND !isset($_REQUEST['version']) AND !isset($_REQUEST['operation']) AND !isset($_REQUEST['recordSchema']) AND !isset($_REQUEST['recordPacking']) AND !isset($_REQUEST['maximumRecords']) AND !isset($_REQUEST['startRecord']) AND !isset($_REQUEST['sortKeys']) AND !isset($_REQUEST['recordXPath']) AND !isset($_REQUEST['stylesheet']) AND !isset($_REQUEST['x-info-2-auth1-0-authenticationToken'])))
+	if ($sruOperation == "explain" OR (!isset($_REQUEST['query']) AND !isset($_REQUEST['version']) AND !isset($_REQUEST['operation']) AND !isset($_REQUEST['recordSchema']) AND !isset($_REQUEST['recordPacking']) AND !isset($_REQUEST['maximumRecords']) AND !isset($_REQUEST['startRecord']) AND !isset($_REQUEST['sortKeys']) AND !isset($_REQUEST['recordXPath']) AND !isset($_REQUEST['stylesheet']) AND !isset($_REQUEST['x-info-2-auth1_0-authenticationToken'])))
 	{
 		// if 'sru.php' was called with 'operation=explain' -OR- without any recognized parameters, we'll return an appropriate 'explainResponse':
 
