@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   21-May-05, 17:47
+	// Modified:   24-May-05, 20:45
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -182,6 +182,8 @@
 		//       Therefore, we'll trap this case here:
 		if (($formType != "queryResults") OR ($formType == "queryResults" AND !ereg("^(Display|Cite)$", $displayType)))
 			$rowOffset = $_REQUEST['rowOffset'];
+		else // if ($formType == "queryResults" AND ereg("^(Display|Cite)$", $displayType))
+			$rowOffset = 0;
 	}
 	else
 		$rowOffset = 0;
@@ -1289,7 +1291,7 @@
 		}
 
 		// set the appropriate mimetype & set the character encoding to the one given in '$contentTypeCharset' (which is defined in 'ini.inc.php'):
-		header('Content-type: ' . $exportContentType . '; charset=' . $contentTypeCharset);
+		setHeaderContentType($exportContentType, $contentTypeCharset); // function 'setHeaderContentType()' is defined in 'include.inc.php'
 
 		if ($exportType == "file") // instruct the browser to download the resulting XML file:
 			header('Content-Disposition: attachment; filename="' . $exportFileName . '"'); // Note that this doesn't seem to work with all browsers (notably not with Safari & OmniWeb on MacOSX Panther, but it does work with Mozilla & Camino as well as Safari on Tiger)
