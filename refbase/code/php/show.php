@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   22-May-05, 20:04
+	// Modified:   11-Jun-05, 19:18
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -410,7 +410,7 @@
 		}
 
 		else // produce the default columnar output style:
-			$query = "SELECT author, title, year, publication, volume, pages";
+			$query = "SELECT author, title, year, publication, volume, pages, " . $recordIDSelector;
 
 
 		// Build FROM clause:
@@ -623,9 +623,9 @@
 
 		// Build ORDER BY clause:
 		if ($citeOrder == "year")
-			$query .= " ORDER BY year DESC, first_author, author_count, author, title"; // sort records first by year (descending), then in the usual way
+			$query .= " ORDER BY " . $recordIDSelector . ", year DESC, first_author, author_count, author, title"; // sort records first by year (descending), then in the usual way
 		else // if any other or no 'citeOrder' parameter is specified, we supply the default ORDER BY clause:
-			$query .= " ORDER BY author, year DESC, publication";
+			$query .= " ORDER BY " . $recordIDSelector . ", author, year DESC, publication";
 
 
 		// Build the correct query URL:
