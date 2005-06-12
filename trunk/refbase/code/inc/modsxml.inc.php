@@ -11,7 +11,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
   //
   // Created:    02-Oct-04, 12:00
-	// Modified:   23-May-05, 02:15
+  // Modified:   12-Jun-05, 18:58
 
   // This include file contains functions that'll export records to MODS XML.
   // Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -468,29 +468,31 @@
       $genre = new XMLBranch("genre");
       $genremarc->setTagAttribute("authority", "marc");
 
-      if ($row['type'] == "Book Whole") {
-        $genremarc->setTagContent("book");
+      if (empty($row['thesis'])) { // theses will get their own genre (see below)
+        if ($row['type'] == "Book Whole") {
+          $genremarc->setTagContent("book");
+        }
+        else if ($row['type'] == "Journal") {
+          $genremarc->setTagContent("periodical");
+          $genre->setTagContent("academic journal");
+        }
+        else if ($row['type'] == "Manuscript") {
+          $genremarc->setTagContent("loose-leaf");
+          $genre->setTagContent("manuscript");
+        }
+        else if ($row['type'] == "Map") {
+          $genremarc->setTagContent("map");
+        }
+        else if (!empty($row['type'])) { // catch-all: don't use a MARC genre
+          $genre->setTagContent($row['type']);
+        }
+        if ($genremarc->hasLeaf())
+          $record->addXMLBranch($genremarc);
+        if ($genre->hasLeaf())
+          $record->addXMLBranch($genre);
       }
-      else if ($row['type'] == "Journal") {
-        $genremarc->setTagContent("periodical");
-        $genre->setTagContent("academic journal");
-      }
-      else if ($row['type'] == "Manuscript") {
-        $genremarc->setTagContent("loose-leaf");
-        $genre->setTagContent("manuscript");
-      }
-      else if ($row['type'] == "Map") {
-        $genremarc->setTagContent("map");
-      }
-      else if (!empty($row['type'])) { // catch-all: don't use a MARC genre
-        $genre->setTagContent($row['type']);
-      }
-      if ($genremarc->hasLeaf())
-        $record->addXMLBranch($genremarc);
-      if ($genre->hasLeaf())
-        $record->addXMLBranch($genre);
       //   thesis
-      if (!empty($row['thesis'])) {
+      else { // if (!empty($row['thesis']))
         $thesismarc = new XMLBranch("genre");
         $thesis = new XMLBranch("genre");
 
@@ -585,6 +587,18 @@
         $related->addXMLBranch($titleabbrev);
       }
 
+      // name
+      //   editor
+      if (!empty($row['editor'])) {
+        $editor=$row['editor'];
+        if (ereg(" *\(eds?\)$", $editor))
+          $editor = ereg_replace("[ \r\n]*\(eds?\)", "", $editor);
+        $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $editor,
+                                   "personal", "editor");
+        foreach ($nameArray as $singleName)
+          $related->addXMLBranch($singleName);
+      }
+
       // originInfo
       $relorigin = new XMLBranch("originInfo");
       // dateIssued
@@ -605,26 +619,29 @@
       if ($relorigin->hasBranch())
         $related->addXMLBranch($relorigin);
 
-      if ($row['type'] == "Journal Article") {
-        $related->setTagContent("continuing",
-                                "relatedItem/originInfo/issuance");
-        $genremarc = new XMLBranch("genre");
-        $genre = new XMLBranch("genre");
-      
-        $genremarc->setTagContent("periodical");
-        $genremarc->setTagAttribute("authority", "marc");
+      // genre (and originInfo/issuance)
+      if (empty($row['thesis'])) { // theses will get their own genre (see below)
+        if ($row['type'] == "Journal Article") {
+          $related->setTagContent("continuing",
+                                  "relatedItem/originInfo/issuance");
+          $genremarc = new XMLBranch("genre");
+          $genre = new XMLBranch("genre");
 
-        $genre->setTagContent("academic journal");
+          $genremarc->setTagContent("periodical");
+          $genremarc->setTagAttribute("authority", "marc");
 
-        $related->addXMLBranch($genremarc);
-        $related->addXMLBranch($genre);
-      }
-      else { //if ($row['type'] == "Book Chapter")
-        $related->setTagContent("book", "relatedItem/genre");
-        $related->setTagAttribute("authority", "marc", "relatedItem/genre");
+          $genre->setTagContent("academic journal");
+
+          $related->addXMLBranch($genremarc);
+          $related->addXMLBranch($genre);
+        }
+        else { //if ($row['type'] == "Book Chapter")
+          $related->setTagContent("book", "relatedItem/genre");
+          $related->setTagAttribute("authority", "marc", "relatedItem/genre");
+        }
       }
       //   thesis
-      if (!empty($row['thesis'])) {
+      else { // if (!empty($row['thesis']))
         $thesismarc = new XMLBranch("genre");
         $thesis = new XMLBranch("genre");
 
@@ -694,17 +711,6 @@
         $identifier->setTagContent($row['issn']);
         $identifier->setTagAttribute("type", "issn");
         $related->addXMLBranch($identifier);
-      }
-      // name
-      //   editor
-      if (!empty($row['editor'])) {
-        $editor=$row['editor'];
-        if (ereg(" *\(eds?\)$", $editor))
-          $editor = ereg_replace("[ \r\n]*\(eds?\)", "", $editor);
-        $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $editor,
-                                   "personal", "editor");
-        foreach ($nameArray as $singleName)
-          $record->addXMLBranch($singleName);
       }
 
       // series
