@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sru.php
 	// Created:    17-May-05, 16:22
-	// Modified:   13-Jun-05, 00:25
+	// Modified:   13-Jun-05, 13:51
 
 	// This script serves as a (faceless) routing page which takes a SRU query
 	// and converts the query into a native refbase query
@@ -421,14 +421,34 @@
 			// remove any runs of leading or trailing whitespace:
 			$mainRelation = trim($mainRelation);
 
+			// ----------------
+
 			// extract the search term:
 			$searchTerm = preg_replace('/^[^\" <>=]+(?: +(?:all|any|exact|within) +| *(?:<>|<=|>=|<|>|=) *)(.*)/', '\\1', $sruQuery);
+
 			// remove any leading or trailing quotes from the search term:
 			// (note that multiple query parts connected with boolean operators aren't supported yet!)
 			$searchTerm = preg_replace('/^\\\"/', '', $searchTerm);
 			$searchTerm = preg_replace('/\\\"$/', '', $searchTerm);
+
+			// escape meta characters (including '/' that is used as delimiter for the PCRE replace functions below and which gets passed as second argument):
+			$searchTerm = preg_quote($searchTerm, "/"); // escape special regular expression characters: . \ + * ? [ ^ ] $ ( ) { } = ! < > | :
+
+			// account for CQL anchoring ('^') and masking ('*' and '?') characters:
+			// NOTE: in the code block above we quote everything to escape possible meta characters,
+			//       so all special chars in the block below have to be matched in their escaped form!
+			//       (The expression '\\\\' in the patterns below describes only *one* backslash! -> '\'.
+			//        The reason for this is that before the regex engine can interpret the \\ into \, PHP interprets it.
+			//        Thus, you have to escape your backslashes twice: once for PHP, and once for the regex engine.)
+
+			// recognize any anchor at the beginning of a search term (like '^foo'):
+			$searchTerm = preg_replace('/(^| )\\\\\^/', '\\1^', $searchTerm);
+
 			// convert any anchor at the end of a search term (like 'foo^') to the correct MySQL variant ('foo$'):
-			$searchTerm = preg_replace('/\^( |$)/', '$\\1', $searchTerm);
+			$searchTerm = preg_replace('/\\\\\^( |$)/', '$\\1', $searchTerm);
+
+			// recognize any masking ('*' and '?') characters:
+			// (NOT DONE YET)
 
 			// ----------------
 
