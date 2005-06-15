@@ -11,7 +11,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
   //
   // Created:    02-Oct-04, 12:00
-  // Modified:   12-Jun-05, 18:58
+  // Modified:   15-Jun-05, 15:25
 
   // This include file contains functions that'll export records to MODS XML.
   // Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -470,6 +470,8 @@
 
       if (empty($row['thesis'])) { // theses will get their own genre (see below)
         if ($row['type'] == "Book Whole") {
+          $record->setTagContent("monographic",
+                                 "mods/originInfo/issuance");
           $genremarc->setTagContent("book");
         }
         else if ($row['type'] == "Journal") {
@@ -493,6 +495,8 @@
       }
       //   thesis
       else { // if (!empty($row['thesis']))
+        $record->setTagContent("monographic",
+                               "mods/originInfo/issuance");
         $thesismarc = new XMLBranch("genre");
         $thesis = new XMLBranch("genre");
 
@@ -636,6 +640,8 @@
           $related->addXMLBranch($genre);
         }
         else { //if ($row['type'] == "Book Chapter")
+          $related->setTagContent("monographic",
+                                  "relatedItem/originInfo/issuance");
           $related->setTagContent("book", "relatedItem/genre");
           $related->setTagAttribute("authority", "marc", "relatedItem/genre");
         }
