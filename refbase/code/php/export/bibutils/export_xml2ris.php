@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./export/bibutils/export_xml2ris.php
 	// Created:    28-Sep-04, 22:14
-	// Modified:   21-May-05, 17:48
+	// Modified:   15-Jun-05, 23:25
 
 	// This is an export format file (which must reside within the 'export/' sub-directory of your refbase root directory). It contains a version of the
 	// 'exportRecords()' function that outputs records according to the standard export format used e.g. by commercial bibliographic packages like 'Reference Manager' (http://www.refman.com).
@@ -23,19 +23,22 @@
 
 	function exportRecords($result, $rowOffset, $showRows, $exportStylesheet, $displayType)
 	{
-		// get the absolute path for the bibutils package
+		// Get the absolute path for the bibutils package
 		$bibutilsPath = getExternalUtilityPath("bibutils"); // function 'getExternalUtilityPath()' is defined in 'include.inc.php'
 
 		// Generate and serve a MODS XML file of ALL records:
 		$recordCollection = modsCollection($result); // function 'modsCollection()' is defined in 'modsxml.inc.php'
 
-		// write the MODS XML data to a temporary file:
+		// Write the MODS XML data to a temporary file:
 		$tempFile = tempnam("/tmp", "refbase-"); // Note: currently, we simply write to '/tmp' since I don't know how to dynamically query the current temp directory! ?:-/
 		$tempFileHandle = fopen($tempFile, "w"); // open temp file with write permission
 		fwrite($tempFileHandle, $recordCollection); // save data to temp file
 		fclose($tempFileHandle); // close temp file
 
-		// pass this temp file to the bibutils 'xml2ris' utility for conversion:
+		// Pass this temp file to the bibutils 'xml2ris' utility for conversion:
+		// Note: Since 'xml2ris' is called using the exec() function, export to RIS may not work correctly if
+		//       'safe_mode' is set to 'On' in your 'php.ini' file. If you need or want to keep 'safe_mode=ON' then
+		//       you'll need to put the bibutils programs within the directory that's specified in 'safe_mode_exec_dir'.
 		exec($bibutilsPath . "xml2ris " . $tempFile, $resultArray);
 
 		$resultString = ""; // initialize variable
@@ -48,7 +51,7 @@
 				$resultString .= "\n" . trim($val); // append each of the array elements to a string
 		}
 
-		// return record data in RIS format:
+		// Return record data in RIS format:
 		return $resultString;
 	}
 
