@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   11-Jun-05, 19:18
+	// Modified:   07-Jul-05, 14:14
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -116,7 +116,7 @@
 	//
 	//       show.php?contribution_id=AWI&author=steffens&year=2005
 	//
-	//       which will find all records where:  'contribution_id' contains 'AWI'  -AND-  'author' contains 'steffens'  -AND-  'year' equals '2005'
+	//       which will find all records where:  'contribution_id' contains 'AWI'  -AND-  'author' contains 'steffens'  -AND-  'year' contains '2005'
 
 	if (isset($_REQUEST['serial']))
 		$serial = $_REQUEST['serial']; // get the record serial number that was entered by a user in the 'show.php' web form
@@ -129,7 +129,7 @@
 	if (isset($_REQUEST['recordIDSelector']))
 		$recordIDSelector = $_REQUEST['recordIDSelector']; // get the value returned from the 'recordIDSelector' drop down menu (returned value is either 'serial', 'call_number' or 'cite_key')
 	else
-		$recordIDSelector = "serial"; // use record serial numbers by default
+		$recordIDSelector = "";
 
 	if (isset($_REQUEST['recordConditionalSelector']))
 		$recordConditionalSelector = $_REQUEST['recordConditionalSelector']; // get the value returned from the 'recordConditionalSelector' drop down menu (returned value is either 'is equal to', 'contains' or 'is within list')
@@ -410,7 +410,12 @@
 		}
 
 		else // produce the default columnar output style:
-			$query = "SELECT author, title, year, publication, volume, pages, " . $recordIDSelector;
+		{
+			$query = "SELECT author, title, year, publication, volume, pages";
+
+			if (!empty($recordIDSelector)) // if a record identifier (either 'serial', 'call_number' or 'cite_key') was entered via the 'show.php' web form
+				$query .= ", " . $recordIDSelector; // display the appropriate column
+		}
 
 
 		// Build FROM clause:
@@ -623,9 +628,16 @@
 
 		// Build ORDER BY clause:
 		if ($citeOrder == "year")
-			$query .= " ORDER BY " . $recordIDSelector . ", year DESC, first_author, author_count, author, title"; // sort records first by year (descending), then in the usual way
-		else // if any other or no 'citeOrder' parameter is specified, we supply the default ORDER BY clause:
-			$query .= " ORDER BY " . $recordIDSelector . ", author, year DESC, publication";
+			$query .= " ORDER BY year DESC, first_author, author_count, author, title"; // sort records first by year (descending), then in the usual way
+
+		else // if any other or no 'citeOrder' parameter is specified
+		{
+			if (!empty($recordIDSelector)) // if a record identifier (either 'serial', 'call_number' or 'cite_key') was entered via the 'show.php' web form
+				$query .= " ORDER BY " . $recordIDSelector . ", author, year DESC, publication"; // sort by the appropriate column
+
+			else // supply the default ORDER BY clause:
+				$query .= " ORDER BY author, year DESC, publication";
+		}
 
 
 		// Build the correct query URL:
