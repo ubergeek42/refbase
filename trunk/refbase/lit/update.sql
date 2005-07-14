@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./update.sql
 # Created:    01-Mar-05, 16:54
-# Modified:   24-Mar-05, 12:40
+# Modified:   14-Jul-05, 13:47
 
 # This MySQL database structure file will update any refbase v0.7 database to v0.8
 
@@ -63,7 +63,7 @@ CREATE TABLE `formats` (
   `depends_id` mediumint(8) unsigned NOT NULL default '0',
   PRIMARY KEY  (`format_id`),
   KEY `format_name` (`format_name`)
-) TYPE=MyISAM AUTO_INCREMENT=12 ;
+) TYPE=MyISAM AUTO_INCREMENT=13 ;
 
 #
 # data for table `formats`
@@ -79,7 +79,8 @@ INSERT INTO `formats` VALUES (1, 'MODS XML','import', 'true', 'import_modsxml.ph
 (8, 'Pubmed XML','import', 'true', 'bibutils/import_med2xml.php', '5', 2),
 (9, 'RIS', 'import','true', 'bibutils/import_ris2xml.php', '3', 2),
 (10, 'RIS', 'export','true', 'bibutils/export_xml2ris.php', '3', 2),
-(11, 'RIS (ISI)','import', 'true', 'bibutils/import_isi2xml.php', '4', 2);
+(11, 'RIS (ISI)','import', 'true', 'bibutils/import_isi2xml.php', '4', 2),
+(12, 'SRW XML','export', 'true', 'export_srwxml.php', '8', 1);
 
 # --------------------------------------------------------
 
