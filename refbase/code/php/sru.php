@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sru.php
 	// Created:    17-May-05, 16:22
-	// Modified:   13-Jun-05, 13:51
+	// Modified:   14-Jul-05, 13:35
 
 	// This script serves as a (faceless) routing page which takes a SRU query
 	// and converts the query into a native refbase query
@@ -178,7 +178,7 @@
 	// return diagnostic if no authentication token was given while querying a user-specific index:
 	if (empty($authenticationToken) AND $userSpecificIndex)
 	{
-		returnDiagnostic(3, "Querying of user-specific fields requires the 'x-info-2-auth1.0-authenticationToken' parameter (format: 'email=<email_address>'"); // authentication error: 'x-...authenticationToken' parameter is missing but required
+		returnDiagnostic(3, "Querying of user-specific fields requires the 'x-info-2-auth1.0-authenticationToken' parameter (format: 'email=<email_address>')"); // authentication error: 'x-...authenticationToken' parameter is missing but required
 		exit;
 	}
 	else if (!empty($authenticationToken)) // extract any authentication information that was passed with the query:
