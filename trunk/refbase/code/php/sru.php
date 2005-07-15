@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sru.php
 	// Created:    17-May-05, 16:22
-	// Modified:   14-Jul-05, 13:35
+	// Modified:   15-Jul-05, 20:44
 
 	// This script serves as a (faceless) routing page which takes a SRU query
 	// and converts the query into a native refbase query
@@ -370,7 +370,6 @@
 		if (preg_match('/^[^\" <>=]+( +(all|any|exact|within) +| *(<>|<=|>=|<|>|=) *)/', $sruQuery))
 		{
 			// extract the context set:
-			// (note that context sets aren't supported yet!)
 			if (preg_match('/^([^\" <>=.]+)\./', $sruQuery))
 				$contextSet = preg_replace('/^([^\" <>=.]+)\..*/', '\\1', $sruQuery);
 			else
@@ -426,10 +425,12 @@
 			// extract the search term:
 			$searchTerm = preg_replace('/^[^\" <>=]+(?: +(?:all|any|exact|within) +| *(?:<>|<=|>=|<|>|=) *)(.*)/', '\\1', $sruQuery);
 
+			$searchTerm = stripSlashesIfMagicQuotes($searchTerm); // remove slashes from search term if 'magic_quotes_gpc = On' (function 'stripSlashes()' is defined in 'include.inc.php')
+
 			// remove any leading or trailing quotes from the search term:
 			// (note that multiple query parts connected with boolean operators aren't supported yet!)
-			$searchTerm = preg_replace('/^\\\"/', '', $searchTerm);
-			$searchTerm = preg_replace('/\\\"$/', '', $searchTerm);
+			$searchTerm = preg_replace('/^\"/', '', $searchTerm);
+			$searchTerm = preg_replace('/\"$/', '', $searchTerm);
 
 			// escape meta characters (including '/' that is used as delimiter for the PCRE replace functions below and which gets passed as second argument):
 			$searchTerm = preg_quote($searchTerm, "/"); // escape special regular expression characters: . \ + * ? [ ^ ] $ ( ) { } = ! < > | :
