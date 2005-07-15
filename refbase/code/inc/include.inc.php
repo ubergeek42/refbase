@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   12-Jun-05, 14:03
+	// Modified:   15-Jul-05, 20:42
 
 	// This file contains important
 	// functions that are shared
@@ -2042,6 +2042,19 @@ EOF;
 			$sourceString = ereg_replace($removePattern . "$", "", $sourceString); // remove text pattern from end of source string
 
 		return $sourceString; // return the trimmed source string
+	}
+
+	// --------------------------------------------------------------------
+
+	// Removes slashes from the input string if 'magic_quotes_gpc = On'
+	function stripSlashesIfMagicQuotes($sourceString)
+	{
+		$magicQuotes = ini_get("magic_quotes_gpc"); // check the value of the 'magic_quotes_gpc' directive in 'php.ini'
+
+		if ($magicQuotes) // magic_quotes_gpc = On
+			$sourceString = stripslashes($sourceString);
+
+		return $sourceString;
 	}
 
 	// --------------------------------------------------------------------
