@@ -11,7 +11,3 @@ We are aware of the following problems, bugs and/or limitations:
   form open for a long period of time.
 
 - The 'allow_edit_call_number' permission setting isn't honoured yet.
-
-- refbase does currently not attempt to rename uploaded files.  Uploading a file
-  with the same name as a file already on the server will overwrite it.  This
-  will be addressed in the future by implementing a standard renaming scheme.
