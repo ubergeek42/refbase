@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   23-May-05, 01:36
+	// Modified:   25-Aug-05, 14:33
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -69,7 +69,7 @@
 	//                    chosen on install for your refbase MySQL database & tables!
 	//                  - plus, the character encoding of this file ('ini.inc.php') must match the
 	//                    encoding type specified here:
-	$contentTypeCharset = "ISO-8859-1"; // e.g. "ISO-8859-1" or "UTF-8"
+	$contentTypeCharset = "ISO-8859-1"; // possible values: "ISO-8859-1", "UTF-8"
 
 
 	// The path to the default CSS stylesheet which will be used for all page views except print view:
@@ -177,6 +177,7 @@
 	// example, if you're using the Apache web server on a unix machine and if your default file
 	// directory (named "files") is located on the root level of your refbase script directory (named
 	// "refs") the path spec could be something like: "/usr/local/httpd/htdocs/refs/files/"
+	// (IMPORTANT: if given, the base dir MUST end with a slash!)
 	$filesBaseDir = "PATH_TO_FILES_BASE_DIRECTORY"; // e.g. "/usr/local/httpd/htdocs/refs/files/"
 
 
@@ -192,6 +193,98 @@
 	// keep it empty: '$filesBaseURL = "";'
 	// (IMPORTANT: if given, the base url MUST end with a slash!)
 	$filesBaseURL = "URL_TO_FILES_BASE_DIRECTORY"; // e.g. "files/"
+
+
+	// Specify if files should be moved into sub-directories:
+	// (where sub-directory names will be made of the record's lowercased abbreviated journal name
+	// sans any non-alphabetic characters)
+  	//   - "never": files will always be copied to the root files dir (i.e. don't use any sub-directories)
+  	//   - "always": auto-generate new sub-directories if required
+  	//   - "existing": only copy files into sub-directories if the sub-directory already exists
+	$moveFilesIntoSubDirectories = "always"; // possible values: "never", "always", "existing"
+
+
+	// Specify whether refbase shall rename uploaded files:
+	$renameUploadedFiles = "yes"; // possible values: "yes", "no"
+
+
+	// Specify how to rename uploaded files:
+	// Supported placeholders:
+	// <:serial:>, <:authors:>, <:firstAuthor:>, <:secondAuthor:>, <:title:>, <:year:>, <:publication:>,
+	// <:abbrevJournal:>, <:volume:>, <:issue:>, <:pages:>, <:startPage:>, <:endPage:>, <:keywords:>,
+	// <:issn_isbn:>, <:area:>, <:notes:>, <:userKeys:>, <:citeKey:>, <:doi:>
+	// Notes: - some of these placeholders offer options (e.g. how many words/items shall be extracted
+	//          from the given field), please see the refbase online documentation for more info about
+	//          placeholders and their syntax
+	//        - existing file extensions will be kept untouched by this naming scheme
+	//        - you're allowed to use any characters between (or within) placeholders except the delimiters
+	//          '<', '>' and ':'
+	//        - handling of any non-ASCII chars will be controlled by '$handleNonASCIIChars' and unwanted
+	//          characters can be excluded with the help of '$allowedFileNameCharacters' (see below)
+	//        - it is strongly recommended to always include the '<:serial:>' placeholder in order to ensure
+	//          truly unique file names, otherwise you'll risk files already on the server getting overwritten
+	//          by newly uploaded files (that got assigned the same name)
+	$fileNamingScheme = "<:serial:>_<:authors:><:year:>"; // e.g. "<:serial:>_<:authors:><:year:>"
+
+
+	// Specify how non-ASCII characters shall be treated in file names:
+  	//   - "strip": removes any non-ASCII characters
+  	//   - "keep": keeps any non-ASCII characters (which, depending on your file system, may cause problems!)
+  	//   - "transliterate": attempts to transliterate most of the non-ASCII characters and strips all non-ASCII
+  	//                      chars that can't be converted into ASCII equivalents (this is the recommended option)
+	$handleNonASCIIChars = "transliterate"; // possible values: "strip", "keep", "transliterate"
+
+
+	// Specify all characters that will be allowed in file names:
+	// In addition to the character conversion invoked by '$handleNonASCIIChars' (see above), this variable
+	// allows you to further restrict generation of file names to a particular set of characters.
+	// If '$renameUploadedFiles' is set to "no" uploaded files will be blocked if they contain any other
+	// characters than specified here.
+	// (given expression must be specified as contents of a perl-style regular expression character class -> see
+	// note at the end of this file; you can simply specify an empty string if you don't want any further character
+	// conversion: '$allowedFileNameCharacters = "";')
+	$allowedFileNameCharacters = "a-zA-Z0-9+_.-"; // e.g. "a-zA-Z0-9+_.-"
+
+
+	// Default options for placeholders used by the file name (and cite key) auto-generation features:
+	// Notes: - please see the refbase online documentation for more info about placeholders and
+	//          their syntax
+	//
+	// Default options for '<:authors:>':
+	// syntax: "[USE_MAX_NUMBER_OF_AUTHORS|AUTHOR_CONNECTOR|ET_AL_IDENTIFIER]"
+	$extractDetailsAuthorsDefault = "[2|+|_etal]"; // e.g. "[2|+|_etal]"
+
+	// Default options for '<:title:>':
+	// syntax: "[NUMBER_OF_WORDS_FROM_TITLE_FIELD]"
+	$extractDetailsTitleDefault = "[1]"; // e.g. "[1]"
+
+	// Default options for '<:year:>':
+	// syntax: "[DIGIT_FORMAT]"
+	$extractDetailsYearDefault = "[4]"; // possible values: "[2]", "[4]"
+
+	// Default options for '<:publication:>':
+	// syntax: "[NUMBER_OF_WORDS_FROM_PUBLICATION_FIELD]"
+	$extractDetailsPublicationDefault = "[2]"; // e.g. "[2]"
+
+	// Default options for '<:abbrevJournal:>':
+	// syntax: "[NUMBER_OF_WORDS_FROM_ABBREVJOURNAL_FIELD]"
+	$extractDetailsAbbrevJournalDefault = "[2]"; // e.g. "[2]"
+
+	// Default options for '<:keywords:>':
+	// syntax: "[NUMBER_OF_ITEMS_FROM_KEYWORDS_FIELD]"
+	$extractDetailsKeywordsDefault = "[1]"; // e.g. "[1]"
+
+	// Default options for '<:area:>':
+	// syntax: "[NUMBER_OF_ITEMS_FROM_AREA_FIELD]"
+	$extractDetailsAreaDefault = "[1]"; // e.g. "[1]"
+
+	// Default options for '<:notes:>':
+	// syntax: "[NUMBER_OF_WORDS_FROM_NOTES_FIELD]"
+	$extractDetailsNotesDefault = "[1]"; // e.g. "[1]"
+
+	// Default options for '<:userKeys:>':
+	// syntax: "[NUMBER_OF_ITEMS_FROM_USERKEYS_FIELD]"
+	$extractDetailsUserKeysDefault = "[1]"; // e.g. "[1]"
 
 
 	// If your institution has access to particular databases of the "Cambridge Scientific Abstracts"
