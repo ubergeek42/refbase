@@ -42,7 +42,8 @@ Requirements
 ------------
   refbase requires:
   - a web server (like the Apache HTTP Server <http://httpd.apache.org/>)
-  - PHP <http://www.php.net/> (version 4.1.0 or greater)
+  - PHP <http://www.php.net/> (version 4.1.0 or greater) with enabled
+    session support
   - MySQL <http://www.mysql.com/> (version 4.1.x or greater required for
     Unicode support)
   
