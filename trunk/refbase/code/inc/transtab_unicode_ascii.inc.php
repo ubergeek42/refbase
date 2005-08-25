@@ -5,11 +5,11 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/transtab_unicode_ascii.inc.php
 	// Created:    24-Aug-05, 20:11
-	// Modified:   24-Aug-05, 21:40
+	// Modified:   25-Aug-05, 17:09
 
 	// This is a transliteration table for a best-effort conversion from Unicode to ASCII. It contains a comprehensive list of substitution strings for Unicode characters,
 	// comparable to the fallback notations that people use commonly in email and on typewriters to represent unavailable characters. Adopted from 'transtab' by Markus Kuhn
-	// ($Id$); see <http://www.cl.cam.ac.uk/~mgk25/unicode.html> for more info about Unicode and transtab.
+	// (transtab.utf v1.8 2000-10-12 11:01:28+01 mgk25 Exp); see <http://www.cl.cam.ac.uk/~mgk25/unicode.html> for more info about Unicode and transtab.
 
 	$transtab_unicode_ascii = array(
 
