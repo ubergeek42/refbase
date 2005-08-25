@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 00:25
-	// Modified:   26-Apr-05, 19:11
+	// Modified:   21-Aug-05, 22:24
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -407,6 +407,8 @@
 
 					if (ereg("^email$", $orig_fieldname))
 						echo "\n\t<td valign=\"top\"><a href=\"mailto:" . $row["email"] . "\">" . $row["email"] . "</a></td>";
+					elseif (ereg("^url$", $orig_fieldname) AND !empty($row["url"]))
+						echo "\n\t<td valign=\"top\"><a href=\"" . $row["url"] . "\">" . $row["url"] . "</a></td>";
 					else
 						echo "\n\t<td valign=\"top\">" . encodeHTML($row[$i]) . "</td>";
 				}
