@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   15-Jul-05, 20:42
+	// Modified:   25-Aug-05, 16:37
 
 	// This file contains important
 	// functions that are shared
@@ -19,6 +19,12 @@
 	// Incorporate some include files:
 	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
 	include 'initialize/ini.inc.php'; // include common variables
+
+	// include appropriate transliteration table:
+	if ($contentTypeCharset == "UTF-8") // variable '$contentTypeCharset' is defined in 'ini.inc.php'
+		include 'includes/transtab_unicode_ascii.inc.php'; // include unicode -> ascii transliteration table
+	else // we assume "ISO-8859-1" by default
+		include 'includes/transtab_latin1_ascii.inc.php'; // include latin1 -> ascii transliteration table
 
 	// --------------------------------------------------------------------
 
@@ -1056,7 +1062,7 @@ EOF;
 	// --------------------------------------------------------------------
 
 	// SPLIT AND MERGE AGAIN
-	// (this function takes a string and splits it on $splitDelim into an array, then re-joins the pieces inserting $joinDelim as separator)
+	// (this function takes a string and splits it on '$splitDelim' into an array, then re-joins the pieces inserting '$joinDelim' as separator)
 	function splitAndMerge($splitDelim, $joinDelim, $sourceString)
 	{
 		// split the string on the specified delimiter (which is interpreted as regular expression!):
@@ -1064,6 +1070,34 @@ EOF;
 
 		// re-join the array with the specified separator:
 		$newString = implode($joinDelim, $piecesArray);
+
+		return $newString;
+	}
+
+	// --------------------------------------------------------------------
+
+	// EXTRACT PARTS FROM STRING
+	// this function takes a '$sourceString', splits it on '$splitDelim' and returns x parts from the
+	// beginning (if x > 0) or the end (if x < 0) of the string (x must be given in '$returnParts');
+	// parts will be returned as a merged string using '$joinDelim' as delimiter
+	function extractPartsFromString($sourceString, $splitDelim, $joinDelim, $returnParts)
+	{
+		// split the string on the specified delimiter (which is interpreted as regular expression!):
+		$piecesArray = split($splitDelim, $sourceString);
+
+		if ($returnParts > 0)
+			$spliceFromElementNo = 0; // splice from beginning of array
+		else // ($returnParts < 0)
+		{
+			$spliceFromElementNo = $returnParts; // splice from end of array
+			$returnParts = abs($returnParts);
+		}
+
+		// extracts parts from array:
+		$extractedPiecesArray = array_splice($piecesArray, $spliceFromElementNo, $returnParts); // 'array_splice()' returns array with extracted elements
+
+		// re-join the array with the specified separator:
+		$newString = implode($joinDelim, $extractedPiecesArray);
 
 		return $newString;
 	}
@@ -1145,8 +1179,13 @@ EOF;
 	// this function takes the contents of the author field and will extract the last name of a particular author (specified by position)
 	// (e.g., setting '$authorPosition' to "1" will return the 1st author's last name)
 	//  Note: this function assumes that:
-	//			1. within one author object, there's only *one* delimiter separating author name & initials!
-	//			2. author objects are stored in the db as "<author_name><author_initials_delimiter><author_initials>", i.e., initials follow *after* the author's name!
+	//        1. within one author object, there's only *one* delimiter separating author name & initials!
+	//        2. author objects are stored in the db as "<author_name><author_initials_delimiter><author_initials>", i.e., initials follow *after* the author's name!
+	//  Required Parameters:
+	//        1. pattern describing delimiter that separates different authors
+	//        2. pattern describing delimiter that separates author name & initials (within one author)
+	//        3. position of the author whose last name shall be extracted (e.g., "1" will return the 1st author's last name)
+	//        4. contents of the author field
 	function extractAuthorsLastName($oldBetweenAuthorsDelim, $oldAuthorsInitialsDelim, $authorPosition, $authorContents)
 	{
 		$authorsArray = split($oldBetweenAuthorsDelim, $authorContents); // get a list of all authors for this record
@@ -1157,6 +1196,425 @@ EOF;
 		$singleAuthorsLastName = $singleAuthorArray[0]; // extract this author's last name into a new variable
 
 		return $singleAuthorsLastName;
+	}
+
+	// --------------------------------------------------------------------
+
+	// PARSE PLACEHOLDER STRING
+	// this function will parse a given placeholder string into its indiviual placeholders and replaces
+	// them with content from the given record
+	function parsePlaceholderString($formVars, $placeholderString)
+	{
+		$placeholderPartsArray = split("[<>]", $placeholderString); // split placeholder string into its individual components
+
+		$convertedPlaceholderArray = array(); // initialize array variable which will hold the transformed placeholder parts
+
+		foreach($placeholderPartsArray as $placeholderPart)
+		{
+			if (!empty($placeholderPart))
+			{
+				if (ereg(":", $placeholderPart)) // if the part contains a colon (":") the part is assumed to be a placeholder
+				{
+					// extract any custom options given within a placeholder:
+					if (preg_match("/:\w+\[[^][]+\]:/i", $placeholderPart)) // the placeholder contains custom options
+						$options = preg_replace("/.*:\w+(\[[^][]+\]):.*/i", "\\1", $placeholderPart);
+					else
+						$options = "";
+
+					// extract any prefix given within a placeholder:
+					if (preg_match("/^[^:]+:\w+(\[[^][]*\])?:/i", $placeholderPart)) // the placeholder contains a prefix
+						$prefix = preg_replace("/^([^:]+):\w+(\[[^][]*\])?:.*/i", "\\1", $placeholderPart);
+					else
+						$prefix = "";
+
+					// extract any suffix given within a placeholder:
+					if (preg_match("/:\w+(\[[^][]*\])?:[^:]+$/i", $placeholderPart)) // the placeholder contains a suffix
+						$suffix = preg_replace("/.*:\w+(?:\[[^][]*\])?:([^:]+)$/i", "\\1", $placeholderPart);
+					else
+						$suffix = "";
+
+					// call dedicated functions for the different placeholders (if required):
+
+					// '<:serial:>' placeholder:
+					if (preg_match("/:serial:/i", $placeholderPart))
+						$convertedPlaceholderArray[] = $prefix . $formVars['serialNo'] . $suffix;
+
+					// '<:firstAuthor:>' placeholder:
+					elseif (preg_match("/:firstAuthor:/i", $placeholderPart))
+					{
+						if (!empty($formVars['authorName'])) // if the 'author' field isn't empty
+						{
+							$firstAuthor = $prefix;
+							// Call the 'extractAuthorsLastName()' function to extract the last name of a particular author (specified by position):
+							// (see function header for description of required parameters)
+							$firstAuthor .= extractAuthorsLastName(" *; *",
+																	" *, *",
+																	1,
+																	$formVars['authorName']);
+							$firstAuthor .= $suffix;
+							$convertedPlaceholderArray[] = $firstAuthor;
+						}
+					}
+
+					// '<:secondAuthor:>' placeholder:
+					elseif (preg_match("/:secondAuthor:/i", $placeholderPart))
+					{
+						if (ereg(";", $formVars['authorName'])) // if the 'author' field does contain at least one ';' => at least two authors
+						{
+							$secondAuthor = $prefix;
+							// Call the 'extractAuthorsLastName()' function to extract the last name of a particular author (specified by position):
+							// (see function header for description of required parameters)
+							$secondAuthor .= extractAuthorsLastName(" *; *",
+																	" *, *",
+																	2,
+																	$formVars['authorName']);
+							$secondAuthor .= $suffix;
+							$convertedPlaceholderArray[] = $secondAuthor;
+						}
+					}
+
+					// '<:authors:>' placeholder:
+					elseif (preg_match("/:authors(\[[^][]*\])?:/i", $placeholderPart))
+					{
+						if (!empty($formVars['authorName'])) // if the 'author' field isn't empty
+						{
+							$authors = $prefix;
+							$authors .= extractDetailsFromAuthors($formVars['authorName'], $options);
+							$authors .= $suffix;
+							$convertedPlaceholderArray[] = $authors;
+						}
+					}
+
+					// '<:title:>' placeholder:
+					elseif (preg_match("/:title(\[[^][]*\])?:/i", $placeholderPart))
+					{
+						if (!empty($formVars['titleName'])) // if the 'title' field isn't empty
+						{
+							$title = $prefix;
+							$title .= extractDetailsFromField("title", $formVars['titleName'], " +", $options);
+							$title .= $suffix;
+							$convertedPlaceholderArray[] = $title;
+						}
+					}
+
+					// '<:year:>' placeholder:
+					elseif (preg_match("/:year(\[[^][]*\])?:/i", $placeholderPart))
+					{
+						if (preg_match("/\d+/i", $formVars['yearNo'])) // if the 'year' field contains a number
+						{
+							$year = $prefix;
+							$year .= extractDetailsFromYear($formVars['yearNo'], $options);
+							$year .= $suffix;
+							$convertedPlaceholderArray[] = $year;
+						}
+					}
+
+					// '<:publication:>' placeholder:
+					elseif (preg_match("/:publication(\[[^][]*\])?:/i", $placeholderPart))
+					{
+						if (!empty($formVars['publicationName'])) // if the 'publication' field isn't empty
+						{
+							$publication = $prefix;
+							$publication .= extractDetailsFromField("publication", $formVars['publicationName'], " +", $options);
+							$publication .= $suffix;
+							$convertedPlaceholderArray[] = $publication;
+						}
+					}
+
+					// '<:abbrevJournal:>' placeholder:
+					elseif (preg_match("/:abbrevJournal(\[[^][]*\])?:/i", $placeholderPart))
+					{
+						if (!empty($formVars['abbrevJournalName'])) // if the 'abbrev_journal' field isn't empty
+						{
+							$abbrevJournal = $prefix;
+							$abbrevJournal .= extractDetailsFromField("abbrev_journal", $formVars['abbrevJournalName'], "\.? +|\.", $options);
+							$abbrevJournal .= $suffix;
+							$convertedPlaceholderArray[] = $abbrevJournal;
+						}
+					}
+
+					// '<:volume:>' placeholder:
+					elseif (preg_match("/:volume:/i", $placeholderPart))
+					{
+						if (!empty($formVars['volumeNo'])) // if the 'volume' field isn't empty
+							$convertedPlaceholderArray[] = $prefix . $formVars['volumeNo'] . $suffix;
+					}
+
+					// '<:issue:>' placeholder:
+					elseif (preg_match("/:issue:/i", $placeholderPart))
+					{
+						if (!empty($formVars['issueNo'])) // if the 'issue' field isn't empty
+							$convertedPlaceholderArray[] = $prefix . $formVars['issueNo'] . $suffix;
+					}
+
+					// '<:pages:>' placeholder:
+					elseif (preg_match("/:pages:/i", $placeholderPart))
+					{
+						if (!empty($formVars['pagesNo'])) // if the 'pages' field isn't empty
+							$convertedPlaceholderArray[] = $prefix . $formVars['pagesNo'] . $suffix;
+					}
+
+					// '<:startPage:>' placeholder:
+					elseif (preg_match("/:startPage:/i", $placeholderPart))
+					{
+						if (preg_match("/\d+/i", $formVars['pagesNo'])) // if the 'pages' field contains a number
+						{
+							$startPage = $prefix;
+							$startPage .= preg_replace("/^\D*(\d+).*/i", "\\1", $formVars['pagesNo']);
+							$startPage .= $suffix;
+							$convertedPlaceholderArray[] = $startPage;
+						}
+					}
+
+					// '<:endPage:>' placeholder:
+					elseif (preg_match("/:endPage:/i", $placeholderPart))
+					{
+						if (preg_match("/\d+/i", $formVars['pagesNo'])) // if the 'pages' field contains a number
+						{
+							$pages = preg_replace("/^\D*(\d+)( *[-–]+ *\d+)?.*/i", "\\1\\2", $formVars['pagesNo']);
+							$endPage = $prefix;
+							$endPage .= extractDetailsFromField("pages", $pages, "[^0-9]+", "[-1]"); // we'll use this function instead of just grabbing a matched regex pattern since it'll also work when just a number but no range is given (e.g. when startPage = endPage)
+							$endPage .= $suffix;
+							$convertedPlaceholderArray[] = $endPage;
+						}
+					}
+
+					// '<:keywords:>' placeholder:
+					elseif (preg_match("/:keywords(\[[^][]*\])?:/i", $placeholderPart))
+					{
+						if (!empty($formVars['keywordsName'])) // if the 'keywords' field isn't empty
+						{
+							$keywords = $prefix;
+							$keywords .= extractDetailsFromField("keywords", $formVars['keywordsName'], " *[;,] *", $options);
+							$keywords .= $suffix;
+							$convertedPlaceholderArray[] = $keywords;
+						}
+					}
+
+					// '<:issn_isbn:>' placeholder:
+					elseif (preg_match("/:issn_isbn:/i", $placeholderPart))
+					{
+						if (!empty($formVars['issnName'])) // if both, an ISSN and ISBN number are present, the ISSN number will be preferred
+							$convertedPlaceholderArray[] = $prefix . $formVars['issnName'] . $suffix;
+						elseif (!empty($formVars['isbnName']))
+							$convertedPlaceholderArray[] = $prefix . $formVars['isbnName'] . $suffix;
+					}
+
+					// '<:area:>' placeholder:
+					elseif (preg_match("/:area(\[[^][]*\])?:/i", $placeholderPart))
+					{
+						if (!empty($formVars['areaName'])) // if the 'area' field isn't empty
+						{
+							$area = $prefix;
+							$area .= extractDetailsFromField("area", $formVars['areaName'], " *[;,] *", $options);
+							$area .= $suffix;
+							$convertedPlaceholderArray[] = $area;
+						}
+					}
+
+					// '<:notes:>' placeholder:
+					elseif (preg_match("/:notes(\[[^][]*\])?:/i", $placeholderPart))
+					{
+						if (!empty($formVars['notesName'])) // if the 'notes' field isn't empty
+						{
+							$notes = $prefix;
+							$notes .= extractDetailsFromField("notes", $formVars['notesName'], " +", $options);
+							$notes .= $suffix;
+							$convertedPlaceholderArray[] = $notes;
+						}
+					}
+
+					// '<:userKeys:>' placeholder:
+					elseif (preg_match("/:userKeys(\[[^][]*\])?:/i", $placeholderPart))
+					{
+						if (!empty($formVars['userKeysName'])) // if the 'user_keys' field isn't empty
+						{
+							$userKeys = $prefix;
+							$userKeys .= extractDetailsFromField("user_keys", $formVars['userKeysName'], " *[;,] *", $options);
+							$userKeys .= $suffix;
+							$convertedPlaceholderArray[] = $userKeys;
+						}
+					}
+
+					// '<:citeKey:>' placeholder:
+					elseif (preg_match("/:citeKey:/i", $placeholderPart))
+					{
+						if (!empty($formVars['citeKeyName'])) // if the 'cite_key' field isn't empty
+							$convertedPlaceholderArray[] = $prefix . $formVars['citeKeyName'] . $suffix;
+					}
+
+					// '<:doi:>' placeholder:
+					elseif (preg_match("/:doi:/i", $placeholderPart))
+					{
+						if (!empty($formVars['doiName'])) // if the 'doi' field isn't empty
+							$convertedPlaceholderArray[] = $prefix . $formVars['doiName'] . $suffix;
+					}
+
+					// else: un-recognized placeholders will be ignored
+				}
+
+				else // the part is assumed to be a literal string
+				{
+					$convertedPlaceholderArray[] = $placeholderPart; // add part as is to array of transformed placeholder parts
+				}
+			}
+		}
+
+		$convertedPlaceholderString = implode("", $convertedPlaceholderArray); // merge transformed placeholder parts
+
+		return $convertedPlaceholderString;
+	}
+
+	// --------------------------------------------------------------------
+
+	// EXTRACT AUTHOR NAMES AND GENERATE IDENTIFIER STRING
+	// this function takes the contents of the author field and generates an author identifier string (see comments below for
+	// some examples) which is used by the file name (and cite key) auto-generation feature when replacing the <:authors:> placeholder
+	function extractDetailsFromAuthors($authorString, $options)
+	{
+		global $extractDetailsAuthorsDefault; // defined in 'ini.inc.php'
+
+		if (empty($options)) // if '$options' is empty
+			$options = $extractDetailsAuthorsDefault; // load the default options
+
+		if (preg_match("/^\[\d+\|[^][|]*\|[^][|]*\]$/i", $options)) // if the '$options' variable contains a recognized syntax
+		{
+			// extract the individual options:
+			$useMaxNoOfAuthors = preg_replace("/\[(\d+)\|[^][|]*\|[^][|]*\]/i", "\\1", $options); // regex note: to include a literal closing bracket (']') in a negated character class ('[^...]') it must be positioned right after the caret character ('^') such as in: '[^]...]'
+			if ($useMaxNoOfAuthors < 1)
+				$useMaxNoOfAuthors = 1;
+
+			$authorConnectorString = preg_replace("/\[\d+\|([^][|]*)\|[^][|]*\]/i", "\\1", $options);
+
+			$etalIdentifierString = preg_replace("/\[\d+\|[^][|]*\|([^][|]*)\]/i", "\\1", $options);
+		}
+		else // use yet another fallback if the given options contain a buggy syntax
+		{
+			$useMaxNoOfAuthors = 2;
+			$authorConnectorString = "+";
+			$etalIdentifierString = "_etal";
+		}
+
+		$authorDetails = ""; // initialize variable which will hold the author identifier string
+
+		// Add first author (plus additional authors if available up to the number of authors specified in '$useMaxNoOfAuthors');
+		// but if more authors are present as in '$useMaxNoOfAuthors', add the contents of '$etalIdentifierString' after the first(!) author ignoring all other authors.
+		// Example with '$extractDetailsAuthorsDefault = "[2|+|_etal]"':
+		//   $authorString = "Steffens, M"                            -> $authorDetails = "Steffens"
+		//   $authorString = "Steffens, M; Thomas, D"                 -> $authorDetails = "Steffens+Thomas"
+		//   $authorString = "Steffens, M; Thomas, D; Dieckmann, GS"  -> $authorDetails = "Steffens_etal"
+		// Example with '$extractDetailsAuthorsDefault = "[1|+|++]"':
+		//   $authorString = "Steffens, M"                            -> $authorDetails = "Steffens"
+		//   $authorString = "Steffens, M; Thomas, D"                 -> $authorDetails = "Steffens++"
+		//   $authorString = "Steffens, M; Thomas, D; Dieckmann, GS"  -> $authorDetails = "Steffens++"
+		for ($i=1; $i <= ($useMaxNoOfAuthors + 1); $i++)
+		{
+			if (preg_match("/^[^;]+(;[^;]+){" . ($i - 1) . "}/", $authorString)) // if the 'author' field does contain (at least) as many authors as specified in '$i'
+			{
+
+				if ($i>1)
+				{
+					if (preg_match("/^[^;]+(;[^;]+){" . $useMaxNoOfAuthors . "}/", $authorString)) // if the 'author' field does contain more authors as specified in '$useMaxNoOfAuthors'
+					{
+						$authorDetails .= $etalIdentifierString;
+						break;
+					}
+					else
+						$authorDetails .= $authorConnectorString;
+				}
+
+				// Call the 'extractAuthorsLastName()' function to extract the last name of a particular author (specified by position):
+				// (see function header for description of required parameters)
+				$authorDetails .= extractAuthorsLastName(" *; *",
+														" *, *",
+														$i,
+														$authorString);
+			}
+			else
+				break;
+		}
+
+		return $authorDetails;
+	}
+
+	// --------------------------------------------------------------------
+
+	// EXTRACT YEAR
+	// this function takes the contents of the year field and returns the year in two-digit
+	// or four-digit format (depending on the given '$option' which must be either "[2]" or "[4]")
+	function extractDetailsFromYear($yearString, $options)
+	{
+		global $extractDetailsYearDefault; // defined in 'ini.inc.php'
+
+		if (empty($options)) // if '$options' is empty
+			$options = $extractDetailsYearDefault; // load the default option
+
+		if (preg_match("/^\[[24]\]$/i", $options)) // if the '$options' variable contains a recognized syntax
+			$yearDigitFormat = preg_replace("/^\[([24])\]$/i", "\\1", $options); // extract the individual option
+		else // use yet another fallback if the given option contains a buggy syntax
+			$yearDigitFormat = 4;
+
+		if (preg_match("/^\D*\d{4}/i", $yearString))
+		{
+			if ($yearDigitFormat == 2)
+				$yearDetails = preg_replace("/^\D*\d{2}(\d{2}).*/i", "\\1", $yearString);
+			else
+				$yearDetails = preg_replace("/^\D*(\d{4}).*/i", "\\1", $yearString);
+		}
+		else
+			$yearDetails = $yearString; // fallback
+
+		return $yearDetails;
+	}
+
+	// --------------------------------------------------------------------
+
+	// EXTRACT DETAILS FROM FIELD
+	// this function takes the contents of the title/publication/abbrev_journal/pages/keywords/area/notes/user_keys field
+	// and returns x words/items from the beginning (or end) of the string (depending on the given '$option' which must be
+	// of the form "[x]" where x is a number indicating how many words/items shall be returned; positive number: return x
+	// words/items from beginning of string, negative number: return x words/items from end of string)
+	function extractDetailsFromField($fieldName, $sourceString, $splitDelim, $options)
+	{
+		global $extractDetailsTitleDefault; // these variables are defined in 'ini.inc.php'
+		global $extractDetailsPublicationDefault;
+		global $extractDetailsAbbrevJournalDefault;
+		global $extractDetailsKeywordsDefault;
+		global $extractDetailsAreaDefault;
+		global $extractDetailsNotesDefault;
+		global $extractDetailsUserKeysDefault;
+
+		if (empty($options)) // if '$options' is empty load the default option
+		{
+			if ($fieldName == "title")
+				$options = $extractDetailsTitleDefault;
+			elseif ($fieldName == "publication")
+				$options = $extractDetailsPublicationDefault;
+			elseif ($fieldName == "abbrev_journal")
+				$options = $extractDetailsAbbrevJournalDefault;
+			elseif ($fieldName == "pages")
+				$options = "[1]";
+			elseif ($fieldName == "keywords")
+				$options = $extractDetailsKeywordsDefault;
+			elseif ($fieldName == "area")
+				$options = $extractDetailsAreaDefault;
+			elseif ($fieldName == "notes")
+				$options = $extractDetailsNotesDefault;
+			elseif ($fieldName == "user_keys")
+				$options = $extractDetailsUserKeysDefault;
+		}
+
+		if (preg_match("/^\[-?\d+\]$/i", $options)) // if the '$options' variable contains a recognized syntax
+			$extractNumberOfWords = preg_replace("/^\[(-?\d+)\]$/i", "\\1", $options); // extract the individual option
+		else // use yet another fallback if the given option contains a buggy syntax
+			$extractNumberOfWords = 1;
+
+		if (ereg($splitDelim, $sourceString))
+			$sourceStringDetails = extractPartsFromString($sourceString, $splitDelim, "", $extractNumberOfWords);
+		else
+			$sourceStringDetails = $sourceString; // fallback
+
+		return $sourceStringDetails;
 	}
 
 	// --------------------------------------------------------------------
@@ -2060,7 +2518,6 @@ EOF;
 	// --------------------------------------------------------------------
 
 	// Perform search & replace actions on the given text input:
-	// (the array '$markupSearchReplacePatterns' in 'ini.inc.php' defines which search & replace actions will be employed)
 	function searchReplaceText($searchReplaceActionsArray, $sourceString)
 	{
 		// apply the search & replace actions defined in '$searchReplaceActionsArray' to the text passed in '$sourceString':
@@ -2078,6 +2535,47 @@ EOF;
 	function setHeaderContentType($contentType, $contentTypeCharset)
 	{
 		header('Content-type: ' . $contentType . '; charset=' . $contentTypeCharset);
+	}
+
+	// --------------------------------------------------------------------
+
+	// Convert to character encoding:
+	// This function converts text that's represented in the refbase database encoding
+	// (which is indicated in '$contentTypeCharset') into the character encoding given
+	// in '$targetCharset'. '$transliteration' must be either "TRANSLIT" or "IGNORE"
+	// causing characters which are unrecognized by the target charset to get either
+	// transliterated or ignored, respectively.
+	function convertToCharacterEncoding($targetCharset, $transliteration, $sourceString)
+	{
+		global $contentTypeCharset; // defined in 'ini.inc.php'
+		global $transtab_latin1_ascii; // defined in 'transtab_latin1_ascii.inc.php'
+		global $transtab_unicode_ascii; // defined in 'transtab_unicode_ascii.inc.php'
+
+		// in case of ISO-8859-1/UTF-8 to ASCII conversion we attempt to transliterate non-ASCII chars,
+		// comparable to the fallback notations that people use commonly in email and on typewriters to
+		// represent unavailable characters:
+		if (($targetCharset == "ASCII") AND ($transliteration == "TRANSLIT"))
+		{
+			if ($contentTypeCharset == "UTF-8")
+				$convertedString = searchReplaceText($transtab_unicode_ascii, $sourceString);
+			else // we assume "ISO-8859-1" by default
+				$convertedString = searchReplaceText($transtab_latin1_ascii, $sourceString);
+
+			// strip any additional non-ASCII characters which we weren't able to transliterate:
+			$convertedString = iconv($contentTypeCharset, "ASCII//IGNORE", $convertedString);
+
+			// Notes from <http://www.php.net/manual/en/function.iconv.php> regarding "TRANSLIT" and "IGNORE":
+			// - If you append the string //TRANSLIT to out_charset transliteration is activated.
+			//   This means that when a character can't be represented in the target charset, it can
+			//   be approximated through one or several similarly looking characters. If you append
+			//   the string //IGNORE, characters that cannot be represented in the target charset
+			//   are silently discarded. Otherwise, str is cut from the first illegal character.
+		}
+
+		else
+			$convertedString = iconv($contentTypeCharset, "$targetCharset//$transliteration", $sourceString);
+
+		return $convertedString;
 	}
 
 	// --------------------------------------------------------------------
