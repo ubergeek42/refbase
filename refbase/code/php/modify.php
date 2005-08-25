@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./modify.php
 	// Created:    18-Dec-02, 23:08
-	// Modified:   22-Mar-05, 20:30
+	// Modified:   25-Aug-05, 14:33
 
 	// This php script will perform adding, editing & deleting of records.
 	// It then calls 'receipt.php' which displays links to the modified/added record
@@ -301,9 +301,13 @@
 				if (eregi("\.(exe|com|bat|zip|php|phps|php3|cgi)$", $uploadFile["name"])) // file name has an invalid file name extension (adjust the regex pattern if you want more relaxed file name validation)
 					$errors["uploadFile"] = "You cannot upload this type of file!"; // file name must not end with .exe, .com, .bat, .zip, .php, .phps, .php3 or .cgi
 
-				// check for invalid file name characters:
-				if (!ereg("^[a-zA-Z0-9+_.-]+$", $uploadFile["name"])) // file name has invalid characters in its name (adjust the regex pattern if you want more relaxed file name validation)
-					$errors["uploadFile"] = "File name characters can only be alphanumeric ('a-zA-Z0-9'), plus ('+'), minus ('-'), substring ('_') or a dot ('.'):"; // characters of file name must be within [a-zA-Z0-9+_.-]
+				if ($renameUploadedFiles != "yes") // if we do NOT rename files according to a standard naming scheme (variable '$renameUploadedFiles' is defined in 'ini.inc.php')
+				{
+					// check for invalid file name characters:
+					if (!preg_match("/^[" . $allowedFileNameCharacters . "]+$/", $uploadFile["name"])) // file name contains invalid characters (variable '$allowedFileNameCharacters' is defined in 'ini.inc.php')
+						$errors["uploadFile"] = "File name characters can only be within " . $allowedFileNameCharacters; // characters of file name must be within range given in '$allowedFileNameCharacters'
+						// previous error message was a bit more user-friendly: "File name characters can only be alphanumeric ('a-zA-Z0-9'), plus ('+'), minus ('-'), substring ('_') or a dot ('.'):"
+				}
 			}
 		}
 		else
@@ -330,7 +334,7 @@
 			}
 		}
 	}
-	
+
 
 
 	// CAUTION: validation of other fields is currently disabled, since, IMHO, there are too many open questions how to implement this properly
@@ -569,42 +573,14 @@
 	}
 
 
-	// process information of any file that was uploaded:
-	if (!empty($uploadFile) && !empty($uploadFile["tmp_name"])) // if there was a file uploaded successfully
+	// handle file uploads:
+	if (ereg("^(edit|delet)$", $recordAction)) // we exclude '$recordAction = "add"' here, since file name generation needs to be done *after* the record has been created and a serial number is available
 	{
-		$tmpFilePath = $uploadFile["tmp_name"];
-		$newFileName = $uploadFile["name"];
-		
-		if (!empty($abbrevJournalName))
-		{
-			$abbrevJournalDIR = ereg_replace("[^a-zA-Z]", "", $abbrevJournalName); // strip everything but letters from the abbreviated journal name
-			$abbrevJournalDIR = strtolower($abbrevJournalDIR) . "/"; // convert string to lowercase & append a slash
-		}
-		else
-			$abbrevJournalDIR = "";
-		
-		// if there's an existing sub-directory (within the default files directory '$filesBaseDir') whose name equals '$abbrevJournalDIR'
-		// we'll copy the new file into that sub-directory (in an attempt to group files together which belong to the same journal),
-		// otherwise we just copy the file to the root-level of '$filesBaseDir':
-		if (!empty($abbrevJournalDIR) && is_dir($filesBaseDir . $abbrevJournalDIR)) // ('$filesBaseDir' is specified in 'ini.inc.php')
-		{
-			$destFilePath = $filesBaseDir . $abbrevJournalDIR . $newFileName; // new file will be copied into sub-directory within '$filesBaseDir'...
-
-			// copy the new subdir name & file name to the 'file' field variable:
-			// Note: if a user uploads a file and there was already a file specified within the 'file' field, the old file will NOT get removed
-			//       from the files directory! Automatic file removal is ommitted on purpose since it's way more difficult to recover an
-			//       inadvertently deleted file than to delete it manually.
-			$fileName = $abbrevJournalDIR . $newFileName;
-		}
-		else
-		{
-			$destFilePath = $filesBaseDir . $newFileName; // new file will be copied to root-level of '$filesBaseDir'...
-			$fileName = $newFileName; // copy the new file name to the 'file' field variable (see note above!)
-		}
-
-		// copy uploaded file from temporary location to the default file directory specified in '$filesBaseDir':
-		move_uploaded_file($tmpFilePath, $destFilePath);
+		if (!empty($uploadFile) && !empty($uploadFile["tmp_name"])) // if there was a file uploaded successfully
+			// process information of any file that was uploaded, auto-generate a file name if required and move the file to the appropriate directory:
+			$fileName = handleFileUploads($uploadFile, $formVars, $abbrevJournalName);
 	}
+
 
 	// check if we need to set the 'contribution_id' field:
 	// (we'll make use of the session variable '$abbrevInstitution' here)
@@ -628,11 +604,13 @@
 		}
 	}
 
+
 	// check if we need to set the 'online_publication' field:
 	if ($onlinePublicationCheckBox == "1") // the user did mark the "Online publication" checkbox
 		$onlinePublication = "yes";
 	else
 		$onlinePublication = "no";
+
 
 	// remove any meaningless delimiter(s) from the beginning or end of a field string:
 	// Note:  - this cleanup is only done for fields that may contain sub-elements, which are the fields:
@@ -852,7 +830,7 @@
 					. "location = \"$locationName\", "
 					. "call_number = \"$callNumberName\", "
 					. "approved = \"$approvedRadio\", "
-					. "file = \"$fileName\", "
+					. "file = \"$fileName\", " // for new records the 'file' field will be updated once more after record creation, since the serial number of the newly created record may be required when generating a file name for any uploaded file
 					. "serial = NULL, " // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
 					. "type = \"$typeName\", "
 					. "thesis = \"$thesisName\", "
@@ -920,6 +898,20 @@
 		// Get the record id that was created
 		$serialNo = @ mysql_insert_id($connection); // find out the unique ID number of the newly created record (Note: this function should be called immediately after the
 													// SQL INSERT statement! After any subsequent query it won't be possible to retrieve the auto_increment identifier value for THIS record!)
+
+		$formVars['serialNo'] = $serialNo; // for '$recordAction = "add"' we update the original '$formVars' array element to ensure a correct serial number when generating the file name via the 'parsePlaceholderString()' function
+
+		// handle file uploads:
+		// for '$recordAction = "add"' file name generation needs to be done *after* the record has been created and a serial number is available
+		if (!empty($uploadFile) && !empty($uploadFile["tmp_name"])) // if there was a file uploaded successfully
+		{
+			// process information of any file that was uploaded, auto-generate a file name if required and move the file to the appropriate directory:
+			$fileName = handleFileUploads($uploadFile, $formVars, $abbrevJournalName);
+
+			$queryRefsUpdateFileName = "UPDATE $tableRefs SET file = \"$fileName\" WHERE serial = $serialNo";
+
+			$result = queryMySQLDatabase($queryRefsUpdateFileName, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+		}
 
 		$queryUserData = "INSERT INTO $tableUserData SET "
 				. "marked = \"$markedRadio\", "
@@ -1015,6 +1007,93 @@
 
 	// (5) CLOSE the database connection:
 	disconnectFromMySQLDatabase($oldQuery); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
+
+	// --------------------------------------------------------------------
+
+	// Handle file uploads:
+	// process information of any file that was uploaded, auto-generate a file name if required
+	// and move the file to the appropriate directory
+	function handleFileUploads($uploadFile, $formVars, $abbrevJournalName)
+	{
+		global $renameUploadedFiles; // these variables are defined in 'ini.inc.php'
+		global $fileNamingScheme;
+		global $handleNonASCIIChars;
+		global $allowedFileNameCharacters;
+		global $moveFilesIntoSubDirectories;
+		global $filesBaseDir;
+
+		$tmpFilePath = $uploadFile["tmp_name"];
+
+		if ($renameUploadedFiles == "yes") // rename file according to a standard naming scheme
+		{
+			if (preg_match("/.+\.[^.]+$/i", $uploadFile["name"])) // preserve any existing file name extension
+				$fileNameExtension = preg_replace("/.+(\.[^.]+)$/i", "\\1", $uploadFile["name"]);
+			else
+				$fileNameExtension = "";
+
+			// auto-generate a file name according to the file naming scheme given in '$fileNamingScheme':
+			$newFileName = parsePlaceholderString($formVars, $fileNamingScheme); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
+
+			// we treat non-ASCII characters in file names depending on the setting of variable '$handleNonASCIIChars':
+			if ($handleNonASCIIChars == "strip")
+				$newFileName = convertToCharacterEncoding("ASCII", "IGNORE", $newFileName); // remove any non-ASCII characters
+
+			elseif ($handleNonASCIIChars == "transliterate")
+				$newFileName = convertToCharacterEncoding("ASCII", "TRANSLIT", $newFileName); // transliterate most of the non-ASCII characters and strip all
+																							// other non-ASCII chars that can't be converted into ASCII equivalents
+
+			// else if '$handleNonASCIIChars = "keep"' we don't attempt to strip/transliterate any non-ASCII chars in the generated file name
+
+			// in addition, we remove all characters from the generated file name which are not listed in variable '$allowedFileNameCharacters':
+			if (!empty($allowedFileNameCharacters))
+				$newFileName = preg_replace("/[^" . $allowedFileNameCharacters . "]+/", "", $newFileName);
+
+			$newFileName .= $fileNameExtension; // add original file name extension
+		}
+		else // take the file name as given by the user:
+			$newFileName = $uploadFile["name"];
+		
+		if (($moveFilesIntoSubDirectories != "never") AND !empty($abbrevJournalName))
+		{
+			$abbrevJournalDIR = ereg_replace("[^a-zA-Z]", "", $abbrevJournalName); // strip everything but letters from the abbreviated journal name
+			$abbrevJournalDIR = strtolower($abbrevJournalDIR) . "/"; // convert string to lowercase & append a slash
+		}
+		else
+			$abbrevJournalDIR = "";
+		
+		// - if '$moveFilesIntoSubDirectories = "existing"' and there's an existing sub-directory (within the default files directory '$filesBaseDir')
+		//   whose name equals '$abbrevJournalDIR' we'll copy the new file into that sub-directory (in an attempt to group files together which belong to
+		//   the same journal).
+		// - if '$moveFilesIntoSubDirectories = "always"' and '$abbrevJournalDIR' isn't empty, we'll generate an appropriately named sub-directory if it
+		//   doesn't exist yet.
+		// - otherwise we just copy the file to the root-level of '$filesBaseDir':
+		if (!empty($abbrevJournalDIR) && (($moveFilesIntoSubDirectories == "existing" AND is_dir($filesBaseDir . $abbrevJournalDIR)) OR ($moveFilesIntoSubDirectories == "always")))
+		{
+			$destFilePath = $filesBaseDir . $abbrevJournalDIR . $newFileName; // new file will be copied into sub-directory within '$filesBaseDir'...
+
+			// copy the new subdir name & file name to the 'file' field variable:
+			// Note: if a user uploads a file and there was already a file specified within the 'file' field, the old file will NOT get removed
+			//       from the files directory! Automatic file removal is ommitted on purpose since it's way more difficult to recover an
+			//       inadvertently deleted file than to delete it manually. However, future versions should introduce a smarter way of handling
+			//       orphaned files...
+			$fileName = $abbrevJournalDIR . $newFileName;
+
+			if ($moveFilesIntoSubDirectories == "always" AND !is_dir($filesBaseDir . $abbrevJournalDIR))
+				// make sure the directory we're moving the file to exists before proceeding:
+				mkdir($filesBaseDir . $abbrevJournalDIR, 0770);
+		}
+		else
+		{
+			$destFilePath = $filesBaseDir . $newFileName; // new file will be copied to root-level of '$filesBaseDir'...
+			$fileName = $newFileName; // copy the new file name to the 'file' field variable (see note above!)
+		}
+
+		// copy uploaded file from temporary location to the default file directory specified in '$filesBaseDir':
+		// (for more on PHP file uploads see <http://www.php.net/manual/en/features.file-upload.php>)
+		move_uploaded_file($tmpFilePath, $destFilePath);
+
+		return $fileName;
+	}
 
 	// --------------------------------------------------------------------
 ?>
