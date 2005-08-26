@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   25-Aug-05, 16:37
+	// Modified:   26-Aug-05, 14:09
 
 	// This file contains important
 	// functions that are shared
@@ -1205,6 +1205,9 @@ EOF;
 	// them with content from the given record
 	function parsePlaceholderString($formVars, $placeholderString)
 	{
+		if (empty($placeholderString))
+			$placeholderString = "<:serial:>"; // fallback to the serial number if, for some odd reason, an empty placeholder string was given
+
 		$placeholderPartsArray = split("[<>]", $placeholderString); // split placeholder string into its individual components
 
 		$convertedPlaceholderArray = array(); // initialize array variable which will hold the transformed placeholder parts
