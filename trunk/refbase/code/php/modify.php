@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./modify.php
 	// Created:    18-Dec-02, 23:08
-	// Modified:   25-Aug-05, 14:33
+	// Modified:   26-Aug-05, 14:02
 
 	// This php script will perform adding, editing & deleting of records.
 	// It then calls 'receipt.php' which displays links to the modified/added record
@@ -1038,11 +1038,12 @@
 			if ($handleNonASCIIChars == "strip")
 				$newFileName = convertToCharacterEncoding("ASCII", "IGNORE", $newFileName); // remove any non-ASCII characters
 
-			elseif ($handleNonASCIIChars == "transliterate")
-				$newFileName = convertToCharacterEncoding("ASCII", "TRANSLIT", $newFileName); // transliterate most of the non-ASCII characters and strip all
-																							// other non-ASCII chars that can't be converted into ASCII equivalents
+			elseif ($handleNonASCIIChars != "keep")
+				// i.e., if '$handleNonASCIIChars = "keep"' we don't attempt to strip/transliterate any non-ASCII chars in the generated file name;
+				// otherwise if '$handleNonASCIIChars = "transliterate"' (or when '$handleNonASCIIChars' contains an unrecognized/empty string)
+				// we'll transliterate most of the non-ASCII characters and strip all other non-ASCII chars that can't be converted into ASCII equivalents:
+				$newFileName = convertToCharacterEncoding("ASCII", "TRANSLIT", $newFileName);
 
-			// else if '$handleNonASCIIChars = "keep"' we don't attempt to strip/transliterate any non-ASCII chars in the generated file name
 
 			// in addition, we remove all characters from the generated file name which are not listed in variable '$allowedFileNameCharacters':
 			if (!empty($allowedFileNameCharacters))
