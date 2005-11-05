@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/db.inc.php
 	// Created:    15-Oct-02, 19:11
-	// Modified:   01-Mar-05, 22:16
+	// Modified:   29-Oct-05, 16:56
 
 	// This file holds crucial
 	// database access information.
@@ -67,6 +67,7 @@
 	$tableTypes = "types"; // -> 'types'
 	$tableUserData = "user_data"; // -> 'user_data'
 	$tableUserFormats = "user_formats"; // -> 'user_formats'
+	$tableUserOptions = "user_options"; // -> 'user_options'
 	$tableUserPermissions = "user_permissions"; // -> 'user_permissions'
 	$tableUserStyles = "user_styles"; // -> 'user_styles'
 	$tableUserTypes = "user_types"; // -> 'user_types'
