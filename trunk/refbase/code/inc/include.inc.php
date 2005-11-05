@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   26-Aug-05, 14:09
+	// Modified:   05-Nov-05, 23:01
 
 	// This file contains important
 	// functions that are shared
@@ -742,7 +742,7 @@
 
 	//	BUILD REFINE SEARCH ELEMENTS
 	// (i.e., provide options to refine the search results)
-	function buildRefineSearchElements($href, $queryURL, $showQuery, $showLinks, $showRows, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected)
+	function buildRefineSearchElements($href, $queryURL, $showQuery, $showLinks, $showRows, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected, $displayType)
 	{
 		// adjust button spacing according to the calling script (which is either 'search.php' or 'users.php')
 		if ($href == "users.php")
@@ -754,6 +754,7 @@
 		<form action="$href" method="POST" name="refineSearch">
 			<input type="hidden" name="formType" value="refineSearch">
 			<input type="hidden" name="submit" value="Search">
+			<input type="hidden" name="originalDisplayType" value="$displayType">
 			<input type="hidden" name="sqlQuery" value="$queryURL">
 			<input type="hidden" name="showQuery" value="$showQuery">
 			<input type="hidden" name="showLinks" value="$showLinks">
@@ -806,7 +807,7 @@ EOF;
 	// Note: this function serves two purposes (which must not be confused!):
 	// 		 - if "$href = search.php", it will modify the values of the 'user_groups' field of the 'user_data' table (where a user can assign one or more groups to particular *references*)
 	//       - if "$href = users.php", this function will modify the values of the 'user_groups' field of the 'users' table (where the admin can assign one or more groups to particular *users*)
-	function buildGroupSearchElements($href, $queryURL, $query, $showQuery, $showLinks, $showRows)
+	function buildGroupSearchElements($href, $queryURL, $query, $showQuery, $showLinks, $showRows, $displayType)
 	{
 		if (preg_match("/.+user_groups RLIKE \"[()|^.;* ]+[^;]+?[()|$.;* ]+\"/i", $query)) // if the query does contain a 'WHERE' clause that searches for a particular user group
 			$currentGroup = preg_replace("/.+user_groups RLIKE \"[()|^.;* ]+([^;]+?)[()|$.;* ]+\".*/i", "\\1", $query); // extract the particular group name
@@ -842,6 +843,7 @@ EOF;
 			$groupSearchForm = <<<EOF
 		<form action="$href" method="POST" name="groupSearch">
 			<input type="hidden" name="formType" value="groupSearch">
+			<input type="hidden" name="originalDisplayType" value="$displayType">
 			<input type="hidden" name="sqlQuery" value="$queryURL">
 			<input type="hidden" name="showQuery" value="$showQuery">
 			<input type="hidden" name="showLinks" value="$showLinks">
@@ -898,12 +900,24 @@ EOF;
 
 	//	BUILD DISPLAY OPTIONS FORM ELEMENTS
 	// (i.e., provide options to show/hide columns or change the number of records displayed per page)
-	function buildDisplayOptionsElements($href, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $displayOptionsSelectorElements1, $displayOptionsSelectorElements2, $displayOptionsSelectorElementSelected, $fieldsToDisplay)
+	function buildDisplayOptionsElements($href, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $displayOptionsSelectorElements1, $displayOptionsSelectorElements2, $displayOptionsSelectorElementSelected, $fieldsToDisplay, $displayType)
 	{
+		if ($displayType == "Browse")
+		{
+			$submitValue = "Browse";
+			$recordsOrItems = "items";
+		}
+		else
+		{
+			$submitValue = "Show";
+			$recordsOrItems = "records";
+		}
+
 		$displayOptionsForm = <<<EOF
 		<form action="$href" method="POST" name="displayOptions">
 			<input type="hidden" name="formType" value="displayOptions">
-			<input type="hidden" name="submit" value="Show">
+			<input type="hidden" name="submit" value="$submitValue">
+			<input type="hidden" name="originalDisplayType" value="$displayType">
 			<input type="hidden" name="sqlQuery" value="$queryURL">
 			<input type="hidden" name="showQuery" value="$showQuery">
 			<input type="hidden" name="showLinks" value="$showLinks">
@@ -917,11 +931,15 @@ EOF;
 				</tr>
 				<tr>
 					<td valign="top">
-						<select name="displayOptionsSelector" title="choose the field you want to show or hide">
 EOF;
 
-	// NOTE: we embed the current value of '$rowOffset' as hidden tag within the 'displayOptions' form. By this, the current row offset can be re-applied after the user pressed the 'Show'/'Hide' button within the 'displayOptions' form.
-	//       To avoid that browse links don't behave as expected, the actual value of '$rowOffset' will be adjusted in 'search.php' to an exact multiple of '$showRows'!
+		if ($displayType == "Browse")
+			$displayOptionsForm .= "\n\t\t\t\t\t\t<select name=\"displayOptionsSelector\" title=\"choose the field you want to browse\">";
+		else
+			$displayOptionsForm .= "\n\t\t\t\t\t\t<select name=\"displayOptionsSelector\" title=\"choose the field you want to show or hide\">";
+
+		// NOTE: we embed the current value of '$rowOffset' as hidden tag within the 'displayOptions' form. By this, the current row offset can be re-applied after the user pressed the 'Show'/'Hide' button within the 'displayOptions' form.
+		//       To avoid that browse links don't behave as expected, the actual value of '$rowOffset' will be adjusted in 'search.php' to an exact multiple of '$showRows'!
 	
 		$optionTags = buildSelectMenuOptions($displayOptionsSelectorElements1, " *, *", "\t\t\t\t\t\t\t", false); // build correct option tags from the column items provided
 
@@ -944,16 +962,25 @@ EOF;
 			$hideButtonTitle = "hide the specified field";
 		}
 
+			$displayOptionsForm .= "\n\t\t\t\t\t\t</select>&nbsp;";
+
+		if ($displayType == "Browse")
+		{
+			$displayOptionsForm .= "\n\t\t\t\t\t\t<input type=\"submit\" name=\"submit\" value=\"Browse\" title=\"browse the current result set by the specified field\">&nbsp;";
+		}
+		else
+		{
+			$displayOptionsForm .= "\n\t\t\t\t\t\t<input type=\"submit\" name=\"submit\" value=\"Show\" title=\"show the specified field\">&nbsp;";
+			$displayOptionsForm .= "\n\t\t\t\t\t\t<input type=\"submit\" name=\"submit\" value=\"Hide\" title=\"$hideButtonTitle\"$hideButtonDisabled>";
+		}
+
 		$displayOptionsForm .= <<<EOF
 
-						</select>&nbsp;
-						<input type="submit" name="submit" value="Show" title="show the specified field">&nbsp;
-						<input type="submit" name="submit" value="Hide" title="$hideButtonTitle"$hideButtonDisabled>
 					</td>
 				</tr>
 				<tr>
 					<td valign="top">
-						<input type="text" name="showRows" value="$showRows" size="4" title="specify how many records shall be displayed per page">&nbsp;&nbsp;records per page
+						<input type="text" name="showRows" value="$showRows" size="4" title="specify how many $recordsOrItems shall be displayed per page">&nbsp;&nbsp;$recordsOrItems per page
 					</td>
 				</tr>
 			</table>
@@ -983,11 +1010,13 @@ EOF;
 				$refineSearchActionCheckbox = "0"; // the user did NOT mark the checkbox next to "Exclude matches"
 		}
 
-		elseif ($displayType == "Show" OR $displayType == "Hide") // the user clicked either the 'Show' or the 'Hide' button of the "Display Options" form
-		// (hitting <enter> within the 'ShowRows' text entry field of the "Display Options" form will act as if the user clicked the 'Show' button)
+		elseif (ereg("^(Show|Hide|Browse)$", $displayType)) // the user clicked either the 'Browse' or 'Show'/'Hide' buttons of the "Display Options" form
+		// (hitting <enter> within the 'ShowRows' text entry field of the "Display Options" form will act as if the user clicked the 'Browse'/'Show' button)
 		{
 			$fieldSelector = $_POST['displayOptionsSelector']; // extract field name chosen by the user
 		}
+
+		$originalDisplayType = $_POST['originalDisplayType']; // extract the original value of the '$displayType' variable (which was included as a hidden form tag so that we can re-apply its value)
 
 
 		if ($displayType == "Search")
@@ -1032,22 +1061,45 @@ EOF;
 				}
 		}
 
+		elseif ($displayType == "Browse") // if the user clicked the 'Browse' button within the "Display Options" form...
+		{
+			$previousField = preg_replace("/^SELECT (\w+).+/i","\\1",$query); // extract the field that was previously used in Browse view
+
+			if (!eregi("^" . $fieldSelector . "$", $previousField)) // if the user did choose another field in Browse view...
+			{
+				// ...modify the SQL query to show a summary for the new field that was chosen by the user:
+				// (NOTE: these replace patterns aren't 100% safe and may fail if the user has modified the query using 'sql_search.php'!)
+				$query = preg_replace("/^SELECT $previousField/i","SELECT $fieldSelector",$query); // use the field that was chosen by the user for Browse view
+				$query = preg_replace("/GROUP BY $previousField/i","GROUP BY $fieldSelector",$query); // group data by the field that was chosen by the user
+				$query = preg_replace("/ORDER BY( records( DESC)?,)? $previousField/i","ORDER BY\\1 $fieldSelector",$query); // order data by the field that was chosen by the user
+			}
+		}
+
+
+		// re-establish the original display type:
+		// (while this wouldn't be really necessary for List view, resetting '$displayType' to its original value is required for Browse view)
+		$displayType = $originalDisplayType;
+
+
 		// the following changes to the SQL query are performed for both forms ("Search within Results" and "Display Options"):
 		if ($queryTable == $tableRefs) // 'search.php':
 		{
 			// if the chosen field is one of the user-specific fields from table 'user_data': 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related'
-			if (ereg("^(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)$", $fieldSelector))
+			if (eregi("^(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)$",$fieldSelector))
 				if (!eregi("LEFT JOIN $tableUserData", $query)) // ...and if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
 					$query = eregi_replace(" FROM $tableRefs"," FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = $userID",$query); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
 
-			$query = eregi_replace(" FROM $tableRefs",", orig_record FROM $tableRefs",$query); // add 'orig_record' column (although it won't be visible the 'orig_record' column gets included in every search query)
-																					// (which is required in order to present visual feedback on duplicate records)
+			if ($displayType != "Browse")
+			{
+				$query = eregi_replace(" FROM $tableRefs",", orig_record FROM $tableRefs",$query); // add 'orig_record' column (although it won't be visible the 'orig_record' column gets included in every search query)
+																						// (which is required in order to present visual feedback on duplicate records)
+		
+				$query = eregi_replace(" FROM $tableRefs",", serial FROM $tableRefs",$query); // add 'serial' column (although it won't be visible the 'serial' column gets included in every search query)
+																				// (which is required in order to obtain unique checkbox names)
 	
-			$query = eregi_replace(" FROM $tableRefs",", serial FROM $tableRefs",$query); // add 'serial' column (although it won't be visible the 'serial' column gets included in every search query)
-																			// (which is required in order to obtain unique checkbox names)
-
-			if ($showLinks == "1")
-				$query = eregi_replace(" FROM $tableRefs",", file, url, doi FROM $tableRefs",$query); // add 'file', 'url' & 'doi' columns
+				if ($showLinks == "1")
+					$query = eregi_replace(" FROM $tableRefs",", file, url, doi, isbn FROM $tableRefs",$query); // add 'file', 'url', 'doi' & 'isbn' columns
+			}
 		}
 		elseif ($queryTable == $tableUsers) // 'users.php':
 		{
@@ -1056,7 +1108,7 @@ EOF;
 		}
 
 
-		return $query;
+		return array($query, $displayType);
 	}
 
 	// --------------------------------------------------------------------
@@ -1119,7 +1171,7 @@ EOF;
 	//  Note: this function assumes that:
 	//			1. within one author object, there's only *one* delimiter separating author name & initials!
 	//			2. author objects are stored in the db as "<author_name><author_initials_delimiter><author_initials>", i.e., initials follow *after* the author's name!
-	function reArrangeAuthorContents($oldBetweenAuthorsDelim, $newBetweenAuthorsDelim, $oldAuthorsInitialsDelim, $newAuthorsInitialsDelim, $betweenInitialsDelim, $initialsBeforeAuthor, $authorContents)
+	function reArrangeAuthorContents($oldBetweenAuthorsDelim, $newBetweenAuthorsDelimStandard, $newBetweenAuthorsDelimLastAuthor, $oldAuthorsInitialsDelim, $newAuthorsInitialsDelimFirstAuthor, $newAuthorsInitialsDelimStandard, $betweenInitialsDelim, $initialsBeforeAuthorFirstAuthor, $initialsBeforeAuthorStandard, $authorContents)
 	{
 		// Note: I haven't figured out how to *successfully* enable locale support, so that e.g. '[[:upper:]]' would also match 'ÿ' etc.
 		//       Therefore, as a workaround, high ascii chars are specified literally below
@@ -1130,42 +1182,53 @@ EOF;
 
 		$authorsArray = split($oldBetweenAuthorsDelim, $authorContents); // get a list of all authors for this record
 		
-		$newAuthorsArray = array(); // initialize array variable
-		foreach ($authorsArray as $singleAuthor)
-			{
-				$singleAuthorArray = split($oldAuthorsInitialsDelim, $singleAuthor); // for each author, extract author name & initials to separate list items
+		$authorCount = count($authorsArray); // check how many authors we have to deal with
+		$newAuthorContents = ""; // this variable will hold the final author string
+
+		for ($i=0; $i < $authorCount; $i++)
+		{
+			$singleAuthorArray = split($oldAuthorsInitialsDelim, $authorsArray[$i]); // for each author, extract author name & initials to separate list items
 
 
-				// within initials, reduce all full first names (-> defined by a starting uppercase character, followed by one ore more lowercase characters)
-				// to initials, i.e., only retain their first character
-				// (as of the 2. assumption outlined in this functions header, the second element must be the author's initials)
-				$singleAuthorArray[1] = preg_replace("/([[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])[[:lower:]‰Â·‡‚„ÁÈËÍÎÒˆ¯ÛÚÙı¸˙˘˚ÌÏÓÔÊˇﬂ]+/", "\\1", $singleAuthorArray[1]);
+			// within initials, reduce all full first names (-> defined by a starting uppercase character, followed by one ore more lowercase characters)
+			// to initials, i.e., only retain their first character
+			// (as of the 2. assumption outlined in this functions header, the second element must be the author's initials)
+			$singleAuthorArray[1] = preg_replace("/([[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])[[:lower:]‰Â·‡‚„ÁÈËÍÎÒˆ¯ÛÚÙı¸˙˘˚ÌÏÓÔÊˇﬂ]+/", "\\1", $singleAuthorArray[1]);
 
-				// within initials, remove any dots:
-				$singleAuthorArray[1] = preg_replace("/([[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])\.+/", "\\1", $singleAuthorArray[1]);
+			// within initials, remove any dots:
+			$singleAuthorArray[1] = preg_replace("/([[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])\.+/", "\\1", $singleAuthorArray[1]);
 
-				// within initials, remove any spaces *between* initials:
-				$singleAuthorArray[1] = preg_replace("/(?<=[-[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆]) +(?=[-[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])/", "", $singleAuthorArray[1]);
+			// within initials, remove any spaces *between* initials:
+			$singleAuthorArray[1] = preg_replace("/(?<=[-[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆]) +(?=[-[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])/", "", $singleAuthorArray[1]);
 
-				// within initials, add a space after a hyphen, but only if ...
-				if (ereg(" $", $betweenInitialsDelim)) // ... the delimiter that separates initials ends with a space
-					$singleAuthorArray[1] = preg_replace("/-(?=[[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])/", "- ", $singleAuthorArray[1]);
+			// within initials, add a space after a hyphen, but only if ...
+			if (ereg(" $", $betweenInitialsDelim)) // ... the delimiter that separates initials ends with a space
+				$singleAuthorArray[1] = preg_replace("/-(?=[[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])/", "- ", $singleAuthorArray[1]);
 
-				// then, separate initials with the specified delimiter:
-				$singleAuthorArray[1] = preg_replace("/([[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])/", "\\1$betweenInitialsDelim", $singleAuthorArray[1]);
+			// then, separate initials with the specified delimiter:
+			$singleAuthorArray[1] = preg_replace("/([[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])/", "\\1$betweenInitialsDelim", $singleAuthorArray[1]);
 
-	
-				if ($initialsBeforeAuthor) // put array elements in reverse order:
-					$singleAuthorArray = array_reverse($singleAuthorArray); // (Note: this only works, if the array has only *two* elements, i.e., one containing the author's name and one holding the initials!)
-					
-	
-				$newAuthorsArray[] = implode($newAuthorsInitialsDelim, $singleAuthorArray); // re-join author name & initials, using the specified delimiter, and copy the string to the end of an array
-			}
 
-		$newAuthorContents = implode($newBetweenAuthorsDelim, $newAuthorsArray); // re-join authors, using the specified delimiter
+			if ((($i == 0) AND $initialsBeforeAuthorFirstAuthor) OR (($i > 0) AND $initialsBeforeAuthorStandard)) // put array elements in reverse order:
+				$singleAuthorArray = array_reverse($singleAuthorArray); // (Note: this only works, if the array has only *two* elements, i.e., one containing the author's name and one holding the initials!)
+				
+			// re-join author name & initials, using the specified delimiter, and copy the string to the end of an array:
+			if ($i == 0) // -> first author
+				$singleAuthorString = implode($newAuthorsInitialsDelimFirstAuthor, $singleAuthorArray);
+			else // $i > 0 // -> all authors except the first one
+				$singleAuthorString = implode($newAuthorsInitialsDelimStandard, $singleAuthorArray);
+
+			// append this author to the final author string:
+			if ($i == 0) // -> first author
+				$newAuthorContents .= $singleAuthorString;
+			elseif (($authorCount > 1) AND (($i + 1) == $authorCount)) // -> last author
+				$newAuthorContents .= $newBetweenAuthorsDelimLastAuthor . $singleAuthorString;
+			else // -> all authors except the first or the last one
+				$newAuthorContents .= $newBetweenAuthorsDelimStandard . $singleAuthorString;
+		}
 
 		// do some final clean up:
-		$newAuthorContents = preg_replace("/  +/", " ", $newAuthorContents); // remove double spaces (which occur e.g., when both, $betweenInitialsDelim & $newAuthorsInitialsDelim, end with a space)
+		$newAuthorContents = preg_replace("/  +/", " ", $newAuthorContents); // remove double spaces (which occur e.g., when both, $betweenInitialsDelim & $newAuthorsInitialsDelim..., end with a space)
 		$newAuthorContents = preg_replace("/ +([,.;:?!])/", "\\1", $newAuthorContents); // remove spaces before [,.;:?!]
 		
 		$newAuthorContents = encodeHTML($newAuthorContents); // HTML encode higher ASCII characters within the newly arranged author contents
@@ -1203,10 +1266,10 @@ EOF;
 	// PARSE PLACEHOLDER STRING
 	// this function will parse a given placeholder string into its indiviual placeholders and replaces
 	// them with content from the given record
-	function parsePlaceholderString($formVars, $placeholderString)
+	function parsePlaceholderString($formVars, $placeholderString, $fallbackPlaceholderString)
 	{
 		if (empty($placeholderString))
-			$placeholderString = "<:serial:>"; // fallback to the serial number if, for some odd reason, an empty placeholder string was given
+			$placeholderString = $fallbackPlaceholderString; // if, for some odd reason, an empty placeholder string was given, we'll use the placeholder(s) given in '$fallbackPlaceholderString'
 
 		$placeholderPartsArray = split("[<>]", $placeholderString); // split placeholder string into its individual components
 
@@ -1216,7 +1279,7 @@ EOF;
 		{
 			if (!empty($placeholderPart))
 			{
-				if (ereg(":", $placeholderPart)) // if the part contains a colon (":") the part is assumed to be a placeholder
+				if (preg_match("/:\w+/", $placeholderPart)) // if the part contains a colon (":") followed by one or more word characters the part is assumed to be a placeholder (this will e.g. exclude "http://" strings)
 				{
 					// extract any custom options given within a placeholder:
 					if (preg_match("/:\w+\[[^][]+\]:/i", $placeholderPart)) // the placeholder contains custom options
@@ -1262,7 +1325,7 @@ EOF;
 					// '<:secondAuthor:>' placeholder:
 					elseif (preg_match("/:secondAuthor:/i", $placeholderPart))
 					{
-						if (ereg(";", $formVars['authorName'])) // if the 'author' field does contain at least one ';' => at least two authors
+						if (!empty($formVars['authorName']) AND ereg(";", $formVars['authorName'])) // if the 'author' field does contain at least one ';' => at least two authors
 						{
 							$secondAuthor = $prefix;
 							// Call the 'extractAuthorsLastName()' function to extract the last name of a particular author (specified by position):
@@ -1303,7 +1366,7 @@ EOF;
 					// '<:year:>' placeholder:
 					elseif (preg_match("/:year(\[[^][]*\])?:/i", $placeholderPart))
 					{
-						if (preg_match("/\d+/i", $formVars['yearNo'])) // if the 'year' field contains a number
+						if (!empty($formVars['yearNo']) AND preg_match("/\d+/i", $formVars['yearNo'])) // if the 'year' field contains a number
 						{
 							$year = $prefix;
 							$year .= extractDetailsFromYear($formVars['yearNo'], $options);
@@ -1360,7 +1423,7 @@ EOF;
 					// '<:startPage:>' placeholder:
 					elseif (preg_match("/:startPage:/i", $placeholderPart))
 					{
-						if (preg_match("/\d+/i", $formVars['pagesNo'])) // if the 'pages' field contains a number
+						if (!empty($formVars['pagesNo']) AND preg_match("/\d+/i", $formVars['pagesNo'])) // if the 'pages' field contains a number
 						{
 							$startPage = $prefix;
 							$startPage .= preg_replace("/^\D*(\d+).*/i", "\\1", $formVars['pagesNo']);
@@ -1372,9 +1435,9 @@ EOF;
 					// '<:endPage:>' placeholder:
 					elseif (preg_match("/:endPage:/i", $placeholderPart))
 					{
-						if (preg_match("/\d+/i", $formVars['pagesNo'])) // if the 'pages' field contains a number
+						if (!empty($formVars['pagesNo']) AND preg_match("/\d+/i", $formVars['pagesNo'])) // if the 'pages' field contains a number
 						{
-							$pages = preg_replace("/^\D*(\d+)( *[-ñ]+ *\d+)?.*/i", "\\1\\2", $formVars['pagesNo']);
+							$pages = preg_replace("/^\D*(\d+)( *[-ñ]+ *\d+)?.*/i", "\\1\\2", $formVars['pagesNo']);
 							$endPage = $prefix;
 							$endPage .= extractDetailsFromField("pages", $pages, "[^0-9]+", "[-1]"); // we'll use this function instead of just grabbing a matched regex pattern since it'll also work when just a number but no range is given (e.g. when startPage = endPage)
 							$endPage .= $suffix;
@@ -1392,6 +1455,20 @@ EOF;
 							$keywords .= $suffix;
 							$convertedPlaceholderArray[] = $keywords;
 						}
+					}
+
+					// '<:issn:>' placeholder:
+					elseif (preg_match("/:issn:/i", $placeholderPart))
+					{
+						if (!empty($formVars['issnName']))
+							$convertedPlaceholderArray[] = $prefix . $formVars['issnName'] . $suffix;
+					}
+
+					// '<:isbn:>' placeholder:
+					elseif (preg_match("/:isbn:/i", $placeholderPart))
+					{
+						if (!empty($formVars['isbnName']))
+							$convertedPlaceholderArray[] = $prefix . $formVars['isbnName'] . $suffix;
 					}
 
 					// '<:issn_isbn:>' placeholder:
@@ -1453,6 +1530,24 @@ EOF;
 							$convertedPlaceholderArray[] = $prefix . $formVars['doiName'] . $suffix;
 					}
 
+					// '<:recordIdentifier:>' placeholder:
+					elseif (preg_match("/:recordIdentifier:/i", $placeholderPart))
+					{
+						if (!empty($formVars['citeKeyName'])) // if the 'cite_key' field isn't empty
+							$convertedPlaceholderArray[] = $prefix . $formVars['citeKeyName'] . $suffix; // if available, we prefer the user-specific cite key as unique record identifier
+						else
+							$convertedPlaceholderArray[] = $prefix . $formVars['serialNo'] . $suffix; // otherwise we'll use the record's serial number
+					}
+
+					// '<:randomNumber:>' placeholder:
+					elseif (preg_match("/:randomNumber(\[[^][]*\])?:/i", $placeholderPart))
+					{
+						$randomString = $prefix;
+						$randomString .= generateRandomNumber($options);
+						$randomString .= $suffix;
+						$convertedPlaceholderArray[] = $randomString;
+					}
+
 					// else: un-recognized placeholders will be ignored
 				}
 
@@ -1477,19 +1572,31 @@ EOF;
 	{
 		global $extractDetailsAuthorsDefault; // defined in 'ini.inc.php'
 
+		$returnRawAuthorString = false;
+
 		if (empty($options)) // if '$options' is empty
 			$options = $extractDetailsAuthorsDefault; // load the default options
 
-		if (preg_match("/^\[\d+\|[^][|]*\|[^][|]*\]$/i", $options)) // if the '$options' variable contains a recognized syntax
+		if (preg_match("/^\[-?\d*\|[^][|]*\|[^][|]*\]$/i", $options)) // if the '$options' variable contains a recognized syntax (minimum spec must be: "[||]", i.e., second and third option delimiters are not optional but must be specified!)
 		{
 			// extract the individual options:
-			$useMaxNoOfAuthors = preg_replace("/\[(\d+)\|[^][|]*\|[^][|]*\]/i", "\\1", $options); // regex note: to include a literal closing bracket (']') in a negated character class ('[^...]') it must be positioned right after the caret character ('^') such as in: '[^]...]'
-			if ($useMaxNoOfAuthors < 1)
-				$useMaxNoOfAuthors = 1;
+			if (preg_match("/^\[-?\d+\|/i", $options)) // if the first option contains a number
+			{
+				$useMaxNoOfAuthors = preg_replace("/\[(-?\d+)\|[^][|]*\|[^][|]*\]/i", "\\1", $options); // regex note: to include a literal closing bracket (']') in a negated character class ('[^...]') it must be positioned right after the caret character ('^') such as in: '[^]...]'
+	
+				if ($useMaxNoOfAuthors == 0) // the special number '0' indicates that all authors shall be retrieved
+					$useMaxNoOfAuthors = 250; // by assigning a very high number to '$useMaxNoOfAuthors' we should be pretty safe to catch all authors from the author field (extremely high values may choke the regular expression engine, though)
+	
+				elseif ($useMaxNoOfAuthors < 0) // negative numbers have currently no meaning and will be treated as if the corresponding positive number was given
+					$useMaxNoOfAuthors = abs($useMaxNoOfAuthors);
+			}
 
-			$authorConnectorString = preg_replace("/\[\d+\|([^][|]*)\|[^][|]*\]/i", "\\1", $options);
+			elseif (preg_match("/^\[\|/i", $options)) // if the first option was left empty we assume that the raw author string shall be returned without any modification
+				$returnRawAuthorString = true;
 
-			$etalIdentifierString = preg_replace("/\[\d+\|[^][|]*\|([^][|]*)\]/i", "\\1", $options);
+			$authorConnectorString = preg_replace("/\[-?\d*\|([^][|]*)\|[^][|]*\]/i", "\\1", $options);
+
+			$etalIdentifierString = preg_replace("/\[-?\d*\|[^][|]*\|([^][|]*)\]/i", "\\1", $options);
 		}
 		else // use yet another fallback if the given options contain a buggy syntax
 		{
@@ -1498,43 +1605,48 @@ EOF;
 			$etalIdentifierString = "_etal";
 		}
 
-		$authorDetails = ""; // initialize variable which will hold the author identifier string
-
-		// Add first author (plus additional authors if available up to the number of authors specified in '$useMaxNoOfAuthors');
-		// but if more authors are present as in '$useMaxNoOfAuthors', add the contents of '$etalIdentifierString' after the first(!) author ignoring all other authors.
-		// Example with '$extractDetailsAuthorsDefault = "[2|+|_etal]"':
-		//   $authorString = "Steffens, M"                            -> $authorDetails = "Steffens"
-		//   $authorString = "Steffens, M; Thomas, D"                 -> $authorDetails = "Steffens+Thomas"
-		//   $authorString = "Steffens, M; Thomas, D; Dieckmann, GS"  -> $authorDetails = "Steffens_etal"
-		// Example with '$extractDetailsAuthorsDefault = "[1|+|++]"':
-		//   $authorString = "Steffens, M"                            -> $authorDetails = "Steffens"
-		//   $authorString = "Steffens, M; Thomas, D"                 -> $authorDetails = "Steffens++"
-		//   $authorString = "Steffens, M; Thomas, D; Dieckmann, GS"  -> $authorDetails = "Steffens++"
-		for ($i=1; $i <= ($useMaxNoOfAuthors + 1); $i++)
+		if ($returnRawAuthorString)
+			$authorDetails = $authorString; // return the raw author string without any modification
+		else
 		{
-			if (preg_match("/^[^;]+(;[^;]+){" . ($i - 1) . "}/", $authorString)) // if the 'author' field does contain (at least) as many authors as specified in '$i'
+			$authorDetails = ""; // initialize variable which will hold the author identifier string
+	
+			// Add first author (plus additional authors if available up to the number of authors specified in '$useMaxNoOfAuthors');
+			// but if more authors are present as in '$useMaxNoOfAuthors', add the contents of '$etalIdentifierString' after the first(!) author ignoring all other authors.
+			// Example with '$extractDetailsAuthorsDefault = "[2|+|_etal]"':
+			//   $authorString = "Steffens, M"                            -> $authorDetails = "Steffens"
+			//   $authorString = "Steffens, M; Thomas, D"                 -> $authorDetails = "Steffens+Thomas"
+			//   $authorString = "Steffens, M; Thomas, D; Dieckmann, GS"  -> $authorDetails = "Steffens_etal"
+			// Example with '$extractDetailsAuthorsDefault = "[1|+|++]"':
+			//   $authorString = "Steffens, M"                            -> $authorDetails = "Steffens"
+			//   $authorString = "Steffens, M; Thomas, D"                 -> $authorDetails = "Steffens++"
+			//   $authorString = "Steffens, M; Thomas, D; Dieckmann, GS"  -> $authorDetails = "Steffens++"
+			for ($i=1; $i <= ($useMaxNoOfAuthors + 1); $i++)
 			{
-
-				if ($i>1)
+				if (preg_match("/^[^;]+(;[^;]+){" . ($i - 1) . "}/", $authorString)) // if the 'author' field does contain (at least) as many authors as specified in '$i'
 				{
-					if (preg_match("/^[^;]+(;[^;]+){" . $useMaxNoOfAuthors . "}/", $authorString)) // if the 'author' field does contain more authors as specified in '$useMaxNoOfAuthors'
+	
+					if ($i>1)
 					{
-						$authorDetails .= $etalIdentifierString;
-						break;
+						if (preg_match("/^[^;]+(;[^;]+){" . $useMaxNoOfAuthors . "}/", $authorString)) // if the 'author' field does contain more authors as specified in '$useMaxNoOfAuthors'
+						{
+							$authorDetails .= $etalIdentifierString;
+							break;
+						}
+						else
+							$authorDetails .= $authorConnectorString;
 					}
-					else
-						$authorDetails .= $authorConnectorString;
+	
+					// Call the 'extractAuthorsLastName()' function to extract the last name of a particular author (specified by position):
+					// (see function header for description of required parameters)
+					$authorDetails .= extractAuthorsLastName(" *; *",
+															" *, *",
+															$i,
+															$authorString);
 				}
-
-				// Call the 'extractAuthorsLastName()' function to extract the last name of a particular author (specified by position):
-				// (see function header for description of required parameters)
-				$authorDetails .= extractAuthorsLastName(" *; *",
-														" *, *",
-														$i,
-														$authorString);
+				else
+					break;
 			}
-			else
-				break;
 		}
 
 		return $authorDetails;
@@ -1587,6 +1699,8 @@ EOF;
 		global $extractDetailsNotesDefault;
 		global $extractDetailsUserKeysDefault;
 
+		$returnRawSourceString = false;
+
 		if (empty($options)) // if '$options' is empty load the default option
 		{
 			if ($fieldName == "title")
@@ -1607,17 +1721,67 @@ EOF;
 				$options = $extractDetailsUserKeysDefault;
 		}
 
-		if (preg_match("/^\[-?\d+\]$/i", $options)) // if the '$options' variable contains a recognized syntax
-			$extractNumberOfWords = preg_replace("/^\[(-?\d+)\]$/i", "\\1", $options); // extract the individual option
-		else // use yet another fallback if the given option contains a buggy syntax
-			$extractNumberOfWords = 1;
+		if (preg_match("/^\[(-?\d+(\|[^][|]*)?|-?\d*\|[^][|]*)\]$/i", $options)) // if the '$options' variable contains a recognized syntax
+		{
+			// extract the individual options:
+			if (preg_match("/^\[-?\d+/i", $options)) // if the first option contains a number
+			{
+				$extractNumberOfWords = preg_replace("/^\[(-?\d+)(\|[^][|]*)?\]$/i", "\\1", $options);
 
-		if (ereg($splitDelim, $sourceString))
-			$sourceStringDetails = extractPartsFromString($sourceString, $splitDelim, "", $extractNumberOfWords);
+				if ($extractNumberOfWords == 0) // the special number '0' indicates that all field items shall be retrieved
+					$extractNumberOfWords = 999; // by assigning a very high number to '$extractNumberOfWords' we should be pretty safe to catch all words/items from the given field (extremely high values may choke the regular expression engine, though)
+			}
+
+			elseif (preg_match("/^\[\|/i", $options)) // if the first option was left empty we assume that the raw source string shall be returned without any modification
+				$returnRawSourceString = true;
+
+			if (preg_match("/^\[-?\d*\|[^][|]+\]$/i", $options)) // if the second option contains some content
+				$joinDelim = preg_replace("/^\[-?\d*\|([^][|]+)\]$/i", "\\1", $options);
+			else
+				$joinDelim = "";
+		}
+		else // use yet another fallback if the given option contains a buggy syntax
+		{
+			$extractNumberOfWords = 1;
+			$joinDelim = "";
+		}
+
+		if (!($returnRawSourceString) AND ereg($splitDelim, $sourceString))
+			$sourceStringDetails = extractPartsFromString($sourceString, $splitDelim, $joinDelim, $extractNumberOfWords);
 		else
 			$sourceStringDetails = $sourceString; // fallback
 
 		return $sourceStringDetails;
+	}
+
+	// --------------------------------------------------------------------
+
+	// GENERATE RANDOM NUMBER
+	// this function generates a random number taken from the range which is defined in '$options' (format: "[min|max]", e.g. "[0|9999]"),
+	// if '$options' is empty the maximum possible range will be used
+	function generateRandomNumber($options)
+	{
+		global $extractDetailsRandomNumberDefault; // defined in 'ini.inc.php'
+
+		if (empty($options)) // if '$options' is empty
+			$options = $extractDetailsRandomNumberDefault; // load the default options
+
+		if (preg_match("/^\[\d+\|\d+\]$/i", $options)) // if the '$options' variable contains a recognized syntax
+		{
+			// extract the individual options:
+			$minRandomNumber = preg_replace("/\[(\d+)\|.+/i", "\\1", $options); // extract first option which defines the minimum random number
+			$maxRandomNumber = preg_replace("/\[\d+\|(\d+)\]/i", "\\1", $options); // extract second option which defines the maximum random number				
+
+			// generate random number:
+			$randomNumber = mt_rand($minRandomNumber, $maxRandomNumber);
+		}
+		else // no (or unrecognized) options
+		{
+			// generate random number:
+			$randomNumber = mt_rand(); // if called without the optional min, max arguments 'mt_rand()' returns a pseudo-random value between 0 and RAND_MAX
+		}
+
+		return $randomNumber;
 	}
 
 	// --------------------------------------------------------------------
@@ -1761,6 +1925,7 @@ EOF;
 
 		connectToMySQLDatabase("");
 
+// 		// CAUTION: this commented code is highly experimental and exposes probably too much power and/or possible side effects!
 // 		// Check whether the contents of the '$userGroup' variable shall be interpreted as regular expression:
 // 		// Note: We assume the variable contents to be a (perl-style!) regular expression if the following conditions are true:
 // 		//       - the user checked the radio button next to the group text entry field ('userGroupName')
@@ -1773,7 +1938,7 @@ EOF;
 // 			// This, in turn, would cause the pattern to match beyond the group delimiter (semicolon), causing severe damage to the user's
 // 			// other group names!
 // 
-// 			// to assure that the regular pattern specifed by the user doesn't match beyond our group delimiter ';' (semicolon),
+// 			// to assure that the regular pattern specified by the user doesn't match beyond our group delimiter ';' (semicolon),
 // 			// we'll need to convert any greedy regex quantifiers to non-greedy ones:
 // 			$userGroup = preg_replace("/(?<![?+*]|[\d,]})([?+*]|\{\d+(, *\d*)?\})(?!\?)/", "\\1?", $userGroup);
 // 		}
@@ -2201,7 +2366,7 @@ EOF;
 
 		// CONSTRUCT SQL QUERY:
 		// Fetch all permission settings from the 'user_permissions' (or 'group_permissions') table for the current user:
-		$query = "SELECT allow_add, allow_edit, allow_delete, allow_download, allow_upload, allow_details_view, allow_print_view, allow_sql_search, allow_user_groups, allow_user_queries, allow_rss_feeds, allow_import, allow_export, allow_cite, allow_batch_import, allow_batch_export, allow_modify_options FROM " . $permissionType . "_permissions WHERE " . $permissionType . "_id = '$user_OR_groupID'";
+		$query = "SELECT allow_add, allow_edit, allow_delete, allow_download, allow_upload, allow_details_view, allow_print_view, allow_browse_view, allow_sql_search, allow_user_groups, allow_user_queries, allow_rss_feeds, allow_import, allow_export, allow_cite, allow_batch_import, allow_batch_export, allow_modify_options FROM " . $permissionType . "_permissions WHERE " . $permissionType . "_id = '$user_OR_groupID'";
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 
@@ -2282,6 +2447,34 @@ EOF;
 
 	// --------------------------------------------------------------------
 
+	// Get all user options for the current user:
+	function getUserOptions($userID)
+	{
+		global $tableUserOptions; // defined in 'db.inc.php'
+
+		connectToMySQLDatabase("");
+
+		if (empty($userID))
+			$userID = 0;
+
+		// CONSTRUCT SQL QUERY:
+		// Fetch all options from table 'user_options' for the user with the user ID given in '$userID':
+		$query = "SELECT * FROM $tableUserOptions WHERE user_id = '" . $userID . "'";
+
+
+		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
+
+		$userOptionsArray = array(); // initialize array variable
+
+		$rowsFound = @ mysql_num_rows($result);
+		if ($rowsFound == 1) // Interpret query result: Do we have exactly one row?
+			$userOptionsArray = @ mysql_fetch_array($result); // fetch the one row into the array '$userOptionsArray'
+
+		return $userOptionsArray;
+	}
+
+	// --------------------------------------------------------------------
+
 	// Returns the total number of records in the database:
 	function getNumberOfRecords()
 	{
@@ -2340,6 +2533,269 @@ EOF;
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 	}
 
+	// --------------------------------------------------------------------
+
+	// Generate or extract the cite key for the given record:
+	function generateCiteKey($formVars)
+	{
+		global $defaultCiteKeyFormat; // defined in 'ini.inc.php'
+		global $handleNonASCIICharsInCiteKeysDefault;
+		global $userOptionsArray; // '$userOptionsArray' is made globally available by function 'generateExport()' in 'search.php'
+		global $citeKeysArray; // '$citeKeysArray' is made globally available by function 'modsCollection()' in 'modsxml.inc.php'
+
+		// by default, we use any record-specific cite key that was entered manually by the user:
+		if (isset($formVars['citeKeyName']))
+			$citeKey = $formVars['citeKeyName'];
+		else
+			$citeKey = "";
+
+
+		// check if the user's options for auto-generation of cite keys command us to replace the manually entered cite key:
+		if (!empty($userOptionsArray))
+		{
+			if ($userOptionsArray['export_cite_keys'] == "yes") // if this user wants to include cite keys on export
+			{
+				if ($userOptionsArray['autogenerate_cite_keys'] == "yes") // if cite keys shall be auto-generated on export
+				{
+					if (empty($citeKey) OR ($userOptionsArray['prefer_autogenerated_cite_keys'] == "yes")) // if there's no manually entered cite key -OR- if the auto-generated cite key shall overwrite contents from the 'cite_key' field on export
+					{
+						if ($userOptionsArray['use_custom_cite_key_format'] == "yes") // if the user wants to use a custom cite key format
+							$citeKeyFormat = $userOptionsArray['cite_key_format'];
+	
+						else // use the default cite key format that was specified by the admin in 'ini.inc.php'
+							$citeKeyFormat = $defaultCiteKeyFormat;
+	
+						// auto-generate a cite key according to the given naming scheme:
+						$citeKey = parsePlaceholderString($formVars, $citeKeyFormat, "<:authors:><:year:>"); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
+					}
+				}
+			}
+			else
+				$citeKey = ""; // by ommitting a cite key bibutils will take care of generation of cite keys for its export formats (BibTeX, Endnote, RIS)
+		}
+
+
+		// check how to handle non-ASCII characters:
+		if (!empty($userOptionsArray) AND !empty($userOptionsArray['nonascii_chars_in_cite_keys'])) // use the user's own setting
+			$handleNonASCIIChars = $userOptionsArray['nonascii_chars_in_cite_keys'];
+		else
+			$handleNonASCIIChars = $handleNonASCIICharsInCiteKeysDefault; // use the default setting that was specified by the admin in 'ini.inc.php'
+
+		if (!empty($citeKey))
+			$citeKey = handleNonASCIIAndUnwantedCharacters($citeKey, "\S", $handleNonASCIIChars); // in addition to the handling of non-ASCII chars (given in '$handleNonASCIIChars') we'll only strip whitespace from the generated cite keys
+
+
+		// ensure that each cite key is unique:
+		if (!empty($userOptionsArray) AND ($userOptionsArray['export_cite_keys'] == "yes") AND ($userOptionsArray['uniquify_duplicate_cite_keys'] == "yes"))
+		{
+			if (!isset($citeKeysArray[$citeKey])) // this cite key has not been seen so far
+				$citeKeysArray[$citeKey] = 1; // append the current cite key (together with its number of occurrence) to the array of known cite keys
+
+			else // we've encountered the current site key already before
+			{
+				$citeKeyOccurrence = $citeKeysArray[$citeKey] + 1; // increment the number of occurrence for the current cite key
+				$citeKeysArray[$citeKey] = $citeKeyOccurrence; // update the array of known cite keys accordingly
+				$citeKey = $citeKey . "_" . $citeKeyOccurrence; // append the current number of occurrence to this cite key
+			}
+		}
+
+		return $citeKey;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Handle non-ASCII and unwanted characters:
+	// this function controls the handling of any non-ASCII chars and
+	// unwanted characters in file/directory names and cite keys
+	function handleNonASCIIAndUnwantedCharacters($fileDirCitekeyName, $allowedFileDirCitekeyNameCharacters, $handleNonASCIIChars)
+	{
+		// we treat non-ASCII characters in file/directory names and cite keys depending on the setting of variable '$handleNonASCIIChars':
+		if ($handleNonASCIIChars == "strip")
+			$fileDirCitekeyName = convertToCharacterEncoding("ASCII", "IGNORE", $fileDirCitekeyName); // remove any non-ASCII characters
+
+		elseif ($handleNonASCIIChars != "keep")
+			// i.e., if '$handleNonASCIIChars = "keep"' we don't attempt to strip/transliterate any non-ASCII chars in the generated file/directory name or cite key;
+			// otherwise if '$handleNonASCIIChars = "transliterate"' (or when '$handleNonASCIIChars' contains an unrecognized/empty string)
+			// we'll transliterate most of the non-ASCII characters and strip all other non-ASCII chars that can't be converted into ASCII equivalents:
+			$fileDirCitekeyName = convertToCharacterEncoding("ASCII", "TRANSLIT", $fileDirCitekeyName);
+
+
+		// in addition, we remove all characters from the generated file/directory name or cite key which are not listed in variable '$allowedFileDirCitekeyNameCharacters':
+		if (!empty($allowedFileDirCitekeyNameCharacters))
+			$fileDirCitekeyName = preg_replace("/[^" . $allowedFileDirCitekeyNameCharacters . "]+/", "", $fileDirCitekeyName);
+
+		return $fileDirCitekeyName;
+	}
+
+	// --------------------------------------------------------------------
+
+	// this is a stupid hack that maps the names of the '$row' array keys to those used
+	// by the '$formVars' array (which is required by function 'generateCiteKey()')
+	// (eventually, the '$formVars' array should use the MySQL field names as names for its array keys)
+	function buildFormVarsArray($row)
+	{
+		$formVars = array(); // initialize array variable
+
+		if(isset($row['author']))
+			$formVars['authorName'] = $row['author'];
+
+		if(isset($row['title']))
+			$formVars['titleName'] = $row['title'];
+
+		if(isset($row['type']))
+			$formVars['typeName'] = $row['type'];
+
+		if(isset($row['year']))
+			$formVars['yearNo'] = $row['year'];
+
+		if(isset($row['publication']))
+			$formVars['publicationName'] = $row['publication'];
+
+		if(isset($row['abbrev_journal']))
+			$formVars['abbrevJournalName'] = $row['abbrev_journal'];
+
+		if(isset($row['volume']))
+			$formVars['volumeNo'] = $row['volume'];
+
+		if(isset($row['issue']))
+			$formVars['issueNo'] = $row['issue'];
+
+		if(isset($row['pages']))
+			$formVars['pagesNo'] = $row['pages'];
+
+		if(isset($row['corporate_author']))
+			$formVars['corporateAuthorName'] = $row['corporate_author'];
+
+		if(isset($row['thesis']))
+			$formVars['thesisName'] = $row['thesis'];
+
+		if(isset($row['address']))
+			$formVars['addressName'] = $row['address'];
+
+		if(isset($row['keywords']))
+			$formVars['keywordsName'] = $row['keywords'];
+
+		if(isset($row['abstract']))
+			$formVars['abstractName'] = $row['abstract'];
+
+		if(isset($row['publisher']))
+			$formVars['publisherName'] = $row['publisher'];
+
+		if(isset($row['place']))
+			$formVars['placeName'] = $row['place'];
+
+		if(isset($row['editor']))
+			$formVars['editorName'] = $row['editor'];
+
+		if(isset($row['language']))
+			$formVars['languageName'] = $row['language'];
+
+		if(isset($row['summary_language']))
+			$formVars['summaryLanguageName'] = $row['summary_language'];
+
+		if(isset($row['orig_title']))
+			$formVars['origTitleName'] = $row['orig_title'];
+
+		if(isset($row['series_editor']))
+			$formVars['seriesEditorName'] = $row['series_editor'];
+
+		if(isset($row['series_title']))
+			$formVars['seriesTitleName'] = $row['series_title'];
+
+		if(isset($row['abbrev_series_title']))
+			$formVars['abbrevSeriesTitleName'] = $row['abbrev_series_title'];
+
+		if(isset($row['series_volume']))
+			$formVars['seriesVolumeNo'] = $row['series_volume'];
+
+		if(isset($row['series_issue']))
+			$formVars['seriesIssueNo'] = $row['series_issue'];
+
+		if(isset($row['edition']))
+			$formVars['editionNo'] = $row['edition'];
+
+		if(isset($row['issn']))
+			$formVars['issnName'] = $row['issn'];
+
+		if(isset($row['isbn']))
+			$formVars['isbnName'] = $row['isbn'];
+
+		if(isset($row['medium']))
+			$formVars['mediumName'] = $row['medium'];
+
+		if(isset($row['area']))
+			$formVars['areaName'] = $row['area'];
+
+		if(isset($row['expedition']))
+			$formVars['expeditionName'] = $row['expedition'];
+
+		if(isset($row['conference']))
+			$formVars['conferenceName'] = $row['conference'];
+
+		if(isset($row['notes']))
+			$formVars['notesName'] = $row['notes'];
+
+		if(isset($row['approved']))
+			$formVars['approvedRadio'] = $row['approved'];
+
+		if(isset($row['location']))
+			$formVars['locationName'] = $row['location'];
+
+		if(isset($row['call_number']))
+			$formVars['callNumberName'] = $row['call_number'];
+
+		if(isset($row['serial']))
+			$formVars['serialNo'] = $row['serial'];
+
+		if(isset($row['online_publication']))
+			$formVars['onlinePublicationCheckBox'] = $row['online_publication'];
+
+		if(isset($row['online_citation']))
+			$formVars['onlineCitationName'] = $row['online_citation'];
+
+		if(isset($row['marked']))
+			$formVars['markedRadio'] = $row['marked'];
+
+		if(isset($row['copy']))
+			$formVars['copyName'] = $row['copy'];
+
+		if(isset($row['selected']))
+			$formVars['selectedRadio'] = $row['selected'];
+
+		if(isset($row['user_keys']))
+			$formVars['userKeysName'] = $row['user_keys'];
+
+		if(isset($row['user_notes']))
+			$formVars['userNotesName'] = $row['user_notes'];
+
+		if(isset($row['user_file']))
+			$formVars['userFileName'] = $row['user_file'];
+
+		if(isset($row['user_groups']))
+			$formVars['userGroupsName'] = $row['user_groups'];
+
+		if(isset($row['cite_key']))
+			$formVars['citeKeyName'] = $row['cite_key'];
+
+		if(isset($row['related']))
+			$formVars['relatedName'] = $row['related'];
+
+		if(isset($row['orig_record']))
+			$formVars['origRecord'] = $row['orig_record'];
+
+		if(isset($row['file']))
+			$formVars['fileName'] = $row['file'];
+
+		if(isset($row['url']))
+			$formVars['urlName'] = $row['url'];
+
+		if(isset($row['doi']))
+			$formVars['doiName'] = $row['doi'];
+
+
+		return $formVars;
+	}
+	
 	// --------------------------------------------------------------------
 
 	// Build properly formatted <option> tag elements from items listed within an array or string (and which -- in the case of strings -- are delimited by '$splitDelim').
@@ -2520,6 +2976,19 @@ EOF;
 
 	// --------------------------------------------------------------------
 
+	// Add slashes to the input string if 'magic_quotes_gpc = Off'
+	function addSlashesIfNotMagicQuotes($sourceString)
+	{
+		$magicQuotes = ini_get("magic_quotes_gpc"); // check the value of the 'magic_quotes_gpc' directive in 'php.ini'
+
+		if (!($magicQuotes)) // magic_quotes_gpc = Off
+			$sourceString = addslashes($sourceString);
+
+		return $sourceString;
+	}
+
+	// --------------------------------------------------------------------
+
 	// Perform search & replace actions on the given text input:
 	function searchReplaceText($searchReplaceActionsArray, $sourceString)
 	{
@@ -2527,6 +2996,22 @@ EOF;
 		foreach ($searchReplaceActionsArray as $searchString => $replaceString)
 			if (preg_match("/" . $searchString . "/", $sourceString))
 				$sourceString = preg_replace("/" . $searchString . "/", $replaceString, $sourceString);
+
+
+		return $sourceString;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Perform case transformations on the given text input:
+	// ('$transformation' must be either 'lower' or 'upper')
+	function changeCase($transformation, $sourceString)
+	{
+		if (eregi("lower", $transformation)) // change source text to lower case
+			$sourceString = strtolower($sourceString);
+
+		elseif (eregi("upper", $transformation)) // change source text to upper case
+			$sourceString = strtoupper($sourceString);
 
 
 		return $sourceString;
@@ -2643,13 +3128,62 @@ EOF;
 	{
 		global $loginEmail;
 		global $loginUserID;
+		global $fileVisibility; // defined in 'ini.inc.php'
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
+
+		// note that, if several errors occur, only the last error message will be displayed
+
+		// disallow display/querying of the 'file' field if NONE of the following conditions are met:
+		// - the variable '$fileVisibility' (defined in 'ini.inc.php') is set to 'everyone'
+		// - the variable '$fileVisibility' is set to 'login' AND the user is logged in
+		// - the variable '$fileVisibility' is set to 'user-specific' AND the 'user_permissions' session variable contains 'allow_download'
+		if (!($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND ereg("allow_download", $_SESSION['user_permissions'])))))
+		{
+			// if the 'file' field is part of the SELECT or ORDER BY statement...
+			if (eregi("(SELECT |ORDER BY |, *)file",$sqlQuery))
+			{
+				// if the 'SELECT' clause contains the 'file' field:
+				if (preg_match("/SELECT(.(?!FROM))+?file/i",$sqlQuery))
+				{
+					// save an appropriate error message:
+					$HeaderString = "<b><span class=\"warning\">Display of file field was ommitted!</span></b>";
+					// note: we don't write out any error message if the file field does only occur within the 'ORDER' clause (but not within the 'SELECT' clause)
+	
+					// Write back session variable:
+					saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+				}
+	
+				$sqlQuery = eregi_replace("(SELECT|ORDER BY) file( DESC)?", "\\1 ", $sqlQuery); // ...delete 'file' field from beginning of 'SELECT' or 'ORDER BY' clause
+				$sqlQuery = eregi_replace(", *file( DESC)?", "", $sqlQuery); // ...delete any other occurrences of the 'file' field from 'SELECT' or 'ORDER BY' clause
+				$sqlQuery = eregi_replace("(SELECT|ORDER BY) *, *", "\\1 ", $sqlQuery); // ...remove any field delimiters that directly follow the 'SELECT' or 'ORDER BY' terms
+	
+				$sqlQuery = preg_replace("/SELECT *(?=FROM)/i", "SELECT author, title, year, publication, volume, pages ", $sqlQuery); // ...supply generic 'SELECT' clause if it did ONLY contain the 'file' field
+				$sqlQuery = preg_replace("/ORDER BY *(?=LIMIT|GROUP BY|HAVING|PROCEDURE|FOR UPDATE|LOCK IN|$)/i", "ORDER BY author, year DESC, publication", $sqlQuery); // ...supply generic 'ORDER BY' clause if it did ONLY contain the 'file' field
+			}
+
+			// if the 'file' field is part of the WHERE clause...
+			if (eregi("WHERE.+file",$sqlQuery)) // this simple pattern works since we have already stripped any file field(s) from the ORDER BY clause
+			{
+				// Note: in the patterns below we'll attempt to account for parentheses but this won't catch all cases!
+				$sqlQuery = preg_replace("/WHERE( *\( *?)* *file.+?(?= AND| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","WHERE\\1",$sqlQuery); // ...delete the 'file' field from 'WHERE' clause
+				$sqlQuery = preg_replace("/( *\( *?)*( *AND)? *file.+?(?=( *\) *?)* +(AND|ORDER BY|LIMIT|GROUP BY|HAVING|PROCEDURE|FOR UPDATE|LOCK IN|$))/i","\\1",$sqlQuery); // ...delete the 'file' field from 'WHERE' clause
+				$sqlQuery = preg_replace("/WHERE( *\( *?)* *AND/i","WHERE\\1",$sqlQuery); // ...delete any superfluous 'AND' that wasn't removed properly by the two regex patterns above
+				$sqlQuery = preg_replace("/WHERE( *\( *?)*(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","WHERE serial RLIKE \".+\"",$sqlQuery); // ...supply generic 'WHERE' clause if it did ONLY contain the 'file' field
+
+				// save an appropriate error message:
+				$HeaderString = "<b><span class=\"warning\">Querying of file field was ommitted!</span></b>"; // save an appropriate error message
+	
+				// Write back session variable:
+				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+			}
+		}
+	
 
 		// handle the display & querying of user-specific fields:
 		if (!isset($_SESSION['loginEmail'])) // if NO user is logged in...
 		{
 			// ... and any user-specific fields are part of the SELECT or ORDER BY statement...
-			if ((eregi(".+search.php",$referer)) AND (eregi("(SELECT|ORDER BY|,) (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)",$sqlQuery))) // if the calling script ends with 'search.php' (i.e., is NOT 'show.php' or 'sru.php', see note below!) AND any user-specific fields are part of the SELECT or ORDER BY clause
+			if ((empty($referer) OR eregi(".+search.php",$referer)) AND (eregi("(SELECT |ORDER BY |, *)(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)",$sqlQuery))) // if the calling script ends with 'search.php' (i.e., is NOT 'show.php' or 'sru.php', see note below!) AND any user-specific fields are part of the SELECT or ORDER BY clause
 			{
 				// if the 'SELECT' clause contains any user-specific fields:
 				if (preg_match("/SELECT(.(?!FROM))+?(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)/i",$sqlQuery))
@@ -2663,7 +3197,7 @@ EOF;
 				}
 	
 				$sqlQuery = eregi_replace("(SELECT|ORDER BY) (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)( DESC)?", "\\1 ", $sqlQuery); // ...delete any user-specific fields from beginning of 'SELECT' or 'ORDER BY' clause
-				$sqlQuery = eregi_replace(", (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)( DESC)?", "", $sqlQuery); // ...delete any remaining user-specific fields from 'SELECT' or 'ORDER BY' clause
+				$sqlQuery = eregi_replace(", *(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)( DESC)?", "", $sqlQuery); // ...delete any remaining user-specific fields from 'SELECT' or 'ORDER BY' clause
 				$sqlQuery = eregi_replace("(SELECT|ORDER BY) *, *", "\\1 ", $sqlQuery); // ...remove any field delimiters that directly follow the 'SELECT' or 'ORDER BY' terms
 	
 				$sqlQuery = preg_replace("/SELECT *(?=FROM)/i", "SELECT author, title, year, publication, volume, pages ", $sqlQuery); // ...supply generic 'SELECT' clause if it did ONLY contain user-specific fields
@@ -2679,6 +3213,7 @@ EOF;
 			// Note that the script 'show.php' may query the user-specific field 'selected' (e.g., by URLs of the form: 'show.php?author=...&userID=...&only=selected')
 			// but since (in that case) the '$referer' variable is either empty or does not end with 'search.php' this if clause will not apply (which is ok since we want to allow 'show.php' to query the 'selected' field).
 			// The same applies in the case of 'sru.php' which may query the user-specific field 'cite_key' (e.g., by URLs like: 'sru.php?version=1.1&query=bib.citekey=...&x-info-2-auth1.0-authenticationToken=email=...')
+			// Note that this also implies that a user who's not logged in might perform a query such as: 'http://localhost/refs/show.php?cite_key=...&userID=...'
 			{
 				// Note: in the patterns below we'll attempt to account for parentheses but this won't catch all cases!
 				$sqlQuery = preg_replace("/WHERE( *\( *?)* *(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related).+?(?= AND| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","WHERE\\1",$sqlQuery); // ...delete any user-specific fields from 'WHERE' clause
@@ -2717,14 +3252,17 @@ EOF;
 			if ((eregi("^(Display|Export|RSS)$",$displayType)) AND (!eregi("LEFT JOIN $tableUserData",$sqlQuery))) // if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
 				$sqlQuery = eregi_replace(" FROM $tableRefs"," FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = $loginUserID",$sqlQuery); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
 		}
-	
-		if (eregi("^SELECT",$sqlQuery)) // restrict adding of columns to SELECT queries (so that 'DELETE FROM refs ...' statements won't get modified as well):
+
+
+		// restrict adding of columns to SELECT queries (so that 'DELETE FROM refs ...' statements won't get modified as well);
+		// we'll also exclude the Browse view since these links aren't needed (and would cause problems) in this view
+		if (eregi("^SELECT",$sqlQuery) AND ($displayType != "Browse"))
 		{
 			$sqlQuery = eregi_replace(" FROM $tableRefs",", orig_record FROM $tableRefs",$sqlQuery); // add 'orig_record' column (which is required in order to present visual feedback on duplicate records)
 			$sqlQuery = eregi_replace(" FROM $tableRefs",", serial FROM $tableRefs",$sqlQuery); // add 'serial' column (which is required in order to obtain unique checkbox names)
 	
 			if ($showLinks == "1")
-				$sqlQuery = eregi_replace(" FROM $tableRefs",", file, url, doi FROM $tableRefs",$sqlQuery); // add 'file', 'url' & 'doi' columns
+				$sqlQuery = eregi_replace(" FROM $tableRefs",", file, url, doi, isbn FROM $tableRefs",$sqlQuery); // add 'file', 'url', 'doi' & 'isbn' columns
 		}
 	
 		// fix escape sequences within the SQL query:
@@ -2785,7 +3323,9 @@ EOF;
 		$sqlSearchReplacePatterns = array(" != "                         =>  " is not equal to ",
 										" = "                            =>  " is equal to ",
 										" > "                            =>  " is greater than ",
+										" >= "                           =>  " is equal to or greater than ",
 										" < "                            =>  " is less than ",
+										" <= "                           =>  " is equal to or less than ",
 										"NOT RLIKE \"\\^([^\"]+?)\\$\""  =>  "is not equal to '\\1'",
 										"NOT RLIKE \"\\^"                =>  "does not start with '",
 										"NOT RLIKE \"([^\"]+?)\\$\""     =>  "does not end with '\\1'",
@@ -2911,6 +3451,108 @@ EOF;
 
 
 		return $rssData;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Create new table with parsed table data
+	// this function will create a new table with separate rows for all sub-items (which are
+	// delimited by '$delim') from the given '$field' (from table 'refs' or 'user_data').
+	// This is done to support the Browse view feature for fields that contain a string of
+	// multiple values separated by a delimiter.
+	// (for each of the multi-item fields this function is executed only once by 'update.php',
+	// thereafter 'modify.php' will keep these 'ref_...' tables in sync with the main tables)
+	function createNewTableWithParsedTableData($fieldName, $delim)
+	{
+		global $loginUserID; // saved as session variable on login
+		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
+
+		if (ereg("^(user_keys|user_notes|user_file|user_groups)$", $fieldName)) // for all user-specific fields that can contain multiple items (we ignore the 'related' field here since it won't get used for Browse view)
+		{
+			$query = "SELECT $fieldName, record_id, user_id FROM $tableUserData"; // WHERE user_id = " . $loginUserID
+			$userIDTableSpec = "ref_user_id MEDIUMINT UNSIGNED NOT NULL, ";
+		}
+		else
+		{
+			$query = "SELECT $fieldName, serial FROM $tableRefs";
+			$userIDTableSpec = "";
+		}
+
+		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+
+		$fieldValuesArray = array(); // initialize array variable which will hold the splitted sub-items
+
+		// split field values on the given delimiter:
+		for ($i=0; $row = @ mysql_fetch_array($result); $i++)
+		{
+			$fieldSubValuesArray = split($delim, $row[$fieldName]); // split field contents on '$delim'
+			foreach ($fieldSubValuesArray as $fieldSubValue)
+			{
+//				// NOTE: we include empty values so that any Browse view query will also display the number of records where the given field is empty
+//				if (!empty($fieldSubValue))
+//				{
+					$fieldSubValue = trim($fieldSubValue);
+
+					if ($fieldName == "author")
+						$fieldSubValue = trimTextPattern($fieldSubValue, " *\(eds?\)", false, true); // remove any existing editor info from the 'author' string, i.e., kill any trailing " (ed)" or " (eds)"
+
+					// copy the individual item (as string, ready for database insertion) to the array:
+					if (ereg("^(user_keys|user_notes|user_file|user_groups)$", $fieldName))
+						$fieldValuesArray[] = "(NULL, \"". addslashes($fieldSubValue) . "\", $row[record_id], $row[user_id])";
+					else
+						$fieldValuesArray[] = "(NULL, \"". addslashes($fieldSubValue) . "\", $row[serial])";
+//				}
+			}
+		}
+
+		// build correct 'ref_...' table and field names:
+		list($tableName, $fieldName) = buildRefTableAndFieldNames($fieldName);
+
+		// NOTE: the below query will only work if the current MySQL user is allowed to CREATE tables ('Create_priv = Y')
+		//       therefore, the CREATE statements should be moved to 'update.sql'!
+		$queryArray[] = "CREATE TABLE " . $tableName . " ("
+						. $fieldName . "_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+						. $fieldName . " VARCHAR(255), "
+						. "ref_id MEDIUMINT UNSIGNED NOT NULL, "
+						. $userIDTableSpec
+						. "INDEX (" . $fieldName . "_id, " . $fieldName . ", ref_id))";
+
+		foreach ($fieldValuesArray as $fieldValue)
+			$queryArray[] = "INSERT INTO " . $tableName . " VALUES " . $fieldValue;
+
+// inserting all values at once may cause 'URL too long' server errors:
+//		$fieldValuesString = implode(", ", $fieldValuesArray); // merge array
+//		$queryArray[] = "INSERT INTO " . $tableName . " VALUES " . $fieldValuesString;
+
+		// RUN the queries on the database through the connection:
+		foreach($queryArray as $query)
+			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+
+		return $tableName;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Build correct 'ref_...' table and field names:
+	function buildRefTableAndFieldNames($fieldName)
+	{
+		if ($fieldName == "address")
+		{
+			$tableName = "ref_addresses";
+			$fieldName = "ref_address";
+		}
+		elseif (!eregi("s$", $fieldName)) // field name does NOT end with an 's' (such as in 'author')
+		{
+			$tableName = "ref_" . $fieldName . "s"; // e.g. 'ref_authors'
+			$fieldName = "ref_" . $fieldName; // e.g. 'ref_author'
+		}
+		else // field name ends with an 's' (such as in 'keywords')
+		{
+			$tableName = "ref_" . $fieldName; // e.g. 'ref_keywords'
+			$fieldName = "ref_" . preg_replace("/^(\w+)s$/i", "\\1", $fieldName); // strip 's' from end of field name -> produces e.g. 'ref_keyword'
+		}
+
+		return array($tableName, $fieldName);
 	}
 
 	// --------------------------------------------------------------------
