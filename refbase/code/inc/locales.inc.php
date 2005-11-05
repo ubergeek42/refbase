@@ -11,13 +11,20 @@
 	// Author:     Jochen Wendebaum <mailto:wendebaum@users.sourceforge.net>
 	//
 	// Created:    12-Oct-04, 12:00
-	// Modified:   02-Apr-05, 13:41
+	// Modified:   31-Oct-05, 16:09
 
 	// This is the locales include file.
-	// It contains functions that read the locales depending on the personal settings
-	// of the user or the default language, if no personal information can be found.
+	// It will read the locales depending on the personal settings of the currently
+	// logged in user or the default language, if no personal information can be found.
 
-	$locale = $defaultLanguage; // todo: get the personal language information
+	if (isset($_SESSION['loginEmail'])) // if a user is logged in
+	{
+		// get the preferred language for the current user:
+		$userLanguage = getLanguages($loginUserID); // function 'getLanguages()' is defined in 'include.inc.php' and '$loginUserID' is provided as session variable
+		$locale = $userLanguage[0];
+	}
+	else // NO user logged in
+		$locale = $defaultLanguage; // use the default language (defined in 'ini.inc.php')
 
 	include 'locales/core.php'; // include the locales
 ?>
