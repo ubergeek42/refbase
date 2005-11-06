@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./advanced_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   21-May-05, 19:36
+	// Modified:   04-Nov-05, 16:56
 
 	// Search form providing access to all fields of the database.
 	// It offers some output options (like how many records to display per page)
@@ -22,13 +22,18 @@
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
 	include 'initialize/ini.inc.php'; // include common variables
-	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
 	// START A SESSION:
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
 	start_session(true);
+
+	// --------------------------------------------------------------------
+
+	// Initialize preferred display language:
+	// (note that 'locales.inc.php' has to be included *after* the call to the 'start_session()' function)
+	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
@@ -42,7 +47,7 @@
 
 	// If there's no stored message available:
 	if (!isset($_SESSION['HeaderString']))
-		$HeaderString = "Search all fields of the database:"; // Provide the default message
+		$HeaderString = $loc["Search"]." ".$loc["SearchAll"].":"; // Provide the default message
 	else
 	{
 		$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
@@ -78,7 +83,9 @@
 
 
 	$dropDownConditionals2Array = array("is greater than" => $loc["is greater than"],
-										"is less than" => $loc["is less than"]);
+										"is less than" => $loc["is less than"],
+										"is within range" => $loc["is within range"],
+										"is within list" => $loc["is within list"]);
 
 	$dropDownItems2 = buildSelectMenuOptions($dropDownConditionals2Array, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
 
@@ -1102,7 +1109,16 @@
 		</select>
 	</td>
 	<td><input type="text" name="urlName" size="42"></td>
-</tr>
+</tr><?php
+
+	// show a text entry form to search for any files if one of the following conditions is met:
+	// - the variable '$fileVisibility' (defined in 'ini.inc.php') is set to 'everyone'
+	// - the variable '$fileVisibility' is set to 'login' AND the user is logged in
+	// - the variable '$fileVisibility' is set to 'user-specific' AND the 'user_permissions' session variable contains 'allow_download'
+	if ($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND ereg("allow_download", $_SESSION['user_permissions']))))
+	{
+?>
+
 <tr>
 	<td valign="middle"><input type="checkbox" name="showFile" value="1"></td>
 	<td><b><?php echo $loc["File"]; ?>:</b></td>
@@ -1113,7 +1129,10 @@
 		</select>
 	</td>
 	<td><input type="text" name="fileName" size="42"></td>
-</tr>
+</tr><?php
+	}
+?>
+
 <tr>
 	<td>&nbsp;</td>
 	<td>&nbsp;</td>
@@ -1219,7 +1238,6 @@
 	<td>
 		<select name="serialSelector"><?php echo $dropDownItems1 . $dropDownItems2; ?>
 
-			<option value="is within list"><?php echo $loc["is within list"]; ?></option>
 		</select>
 	</td>
 	<td><input type="text" name="serialNo" size="42"></td>
