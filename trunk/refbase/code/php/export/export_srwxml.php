@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./export/export_srwxml.php
 	// Created:    17-May-05, 16:31
-	// Modified:   21-May-05, 20:41
+	// Modified:   29-Oct-05, 17:16
 
 	// This exports SRW XML. This file must reside in the 'export' directory of the refbase root directory.
 	// It uses functions from include files 'srwxml.inc.php' and 'modsxml.inc.php' that require the ActiveLink PHP XML Package,
@@ -38,7 +38,7 @@
 		return $recordCollection;
 	}
 
-	// --- BEGIN EXPORT FORMAT ---
+	// --- END EXPORT FORMAT ---
 
 	// --------------------------------------------------------------------
 ?>
