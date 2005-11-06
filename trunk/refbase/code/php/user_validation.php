@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   27-Feb-05, 22:27
+	// Modified:   30-Oct-05, 16:54
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -445,6 +445,7 @@
 						. "email = '" . $formVars["email"] . "', "
 						. "password = '" . $stored_password . "'";
 
+
 		// Insert a row for this new user into the 'user_permissions' table:
 		$defaultUserPermissionsString = implode("\", \"", $defaultUserPermissions); // '$defaultUserPermissions' is defined in 'ini.inc.php'
 		$queryArray[] = "INSERT INTO $tableUserPermissions VALUES (NULL, " . $userID . ", \"" . $defaultUserPermissionsString . "\")";
@@ -485,6 +486,12 @@
 			// Insert a row with the found type ID for this new user into the 'user_types' table:
 			$queryArray[] = "INSERT INTO $tableUserTypes VALUES (NULL, " . $row["type_id"] . ", " . $userID . ", \"true\")";
 		}
+
+
+		// Insert a row for this new user into the 'user_options' table:
+		$defaultUserOptionsString = implode("\", \"", $defaultUserOptions); // '$defaultUserOptions' is defined in 'ini.inc.php'
+		$queryArray[] = "INSERT INTO $tableUserOptions VALUES (NULL, " . $userID . ", \"" . $defaultUserOptionsString . "\")";
+
 
 		// RUN the queries on the database through the connection:
 		foreach($queryArray as $query)
