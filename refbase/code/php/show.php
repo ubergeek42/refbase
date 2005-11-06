@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   07-Jul-05, 14:14
+	// Modified:   05-Nov-05, 12:09
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -22,13 +22,18 @@
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
 	include 'initialize/ini.inc.php'; // include common variables
-	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
 	// START A SESSION:
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
 	start_session(true);
+
+	// --------------------------------------------------------------------
+
+	// Initialize preferred display language:
+	// (note that 'locales.inc.php' has to be included *after* the call to the 'start_session()' function)
+	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
@@ -40,16 +45,20 @@
 	//  - 'Display' => display details for all found records ('displayDetails()' function)
 	//  - 'Cite' => build a proper citation for all found records ('generateCitations()' function)
 	//  - 'Export' => generate and return found records in the specified export format ('generateExport()' function)
-	//                NOTE: - if 'submit=Export' the parameters 'exportFormatSelector' & 'exportType' must be specified as well!
 	if (isset($_REQUEST['submit']))
 		$displayType = $_REQUEST['submit'];
 	else
 		$displayType = "";
 
-	// Note that for 'show.php' we don't accept any other display types than '', 'Display', 'Cite' and 'Export',
+	// Note that for 'show.php' we don't accept any other display types than '', 'Display', 'Cite', 'Export' and 'Browse',
 	// if any other types were specified, we'll use the default columnar output style instead:
-	if (!empty($displayType) AND !eregi("^(Display|Cite|Export)$", $displayType))
-		$displayType = "";		
+	if (!empty($displayType) AND !eregi("^(Display|Cite|Export|Browse)$", $displayType))
+		$displayType = "";
+
+	// If 'submit=Export' the 'exportFormat' parameter must be specified as well,
+	// otherwise we'll use the default columnar output style:
+	elseif ($displayType == "Export" AND !isset($_REQUEST['exportFormat']))
+		$displayType = "";
 
 	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
 	// ('' will produce the default 'Web' output style)
@@ -73,8 +82,8 @@
 	else
 		$showRows = 0; // assigning 0 will cause 'search.php' to use the default number
 
-	if (isset($_REQUEST['citeStyleSelector']))
-		$citeStyle = $_REQUEST['citeStyleSelector']; // get cite style
+	if (isset($_REQUEST['citeStyle'])) // NOTE: while this parameter is normally called 'citeStyleSelector' (e.g. in 'search.php') we call it just 'citeStyle' here in an attempt to ease legibility of 'show.php' URLs
+		$citeStyle = $_REQUEST['citeStyle']; // get cite style
 	else
 		$citeStyle = $defaultCiteStyle; // if no cite style was given, we'll use the default cite style which is defined by the '$defaultCiteStyle' variable in 'ini.inc.php'
 
@@ -83,8 +92,8 @@
 	else
 		$citeOrder = "";
 
-	if (isset($_REQUEST['exportFormatSelector']))
-		$exportFormat = $_REQUEST['exportFormatSelector']; // get export format style
+	if (isset($_REQUEST['exportFormat'])) // NOTE: while this parameter is normally called 'exportFormatSelector' (e.g. in 'search.php') we call it just 'exportFormat' here in an attempt to ease legibility of 'show.php' URLs
+		$exportFormat = $_REQUEST['exportFormat']; // get export format style
 	else
 		$exportFormat = "";
 
@@ -139,6 +148,18 @@
 			$recordConditionalSelector = "is equal to"; // ...if 'show.php' was called from a RSS/Email announcement URL (like '.../show.php?record=12345') we'll have to make sure that the serial field will be matched fully and not only partly
 		else
 			$recordConditionalSelector = "";
+	}
+
+	// If the 'records' parameter is present and contains 'all' as value, it will override any given 'serial' or 'record' parameters.
+	// This param was introduced to provide an easy 'Show All' link ('.../show.php?records=all') which will display all records in the database
+	if (isset($_REQUEST['records']))
+	{
+		if (eregi("^all$", $_REQUEST['records'])) // if given only 'all' is recognized as value
+		{
+			// '.../show.php?records=all' is effectively a more nice looking variant of 'show.php?serial=%2E%2B&recordConditionalSelector=contains':
+			$serial = ".+"; // show all records
+			$recordConditionalSelector = "contains";
+		}
 	}
 
 	if (isset($_REQUEST['date']))
@@ -238,6 +259,11 @@
 	else							// "show.php?author=...&selected=yes&userID=2" will show every record where the user who's identified by user ID "2" has set the selected bit to "yes".
 		$userID = "";
 
+	if (isset($_REQUEST['by']))
+		$browseByField = $_REQUEST['by']; // get 'by' parameter
+	else
+		$browseByField = "";
+
 
 	// normally, 'show.php' requires that parameters must be specified explicitly to gain any view that's different from the default view
 	// (which is columnar output as web view, display 5 records per page, show links but don't show query)
@@ -265,7 +291,7 @@
 
 
 	// Check the correct parameters have been passed:
-	if (empty($serial) AND empty($date) AND empty($year) AND empty($author) AND empty($title) AND empty($keywords) AND empty($abstract) AND empty($area) AND empty($type) AND empty($contributionID) AND empty($thesis) AND empty($without) AND (empty($selected) OR (!empty($selected) AND empty($userID))) AND (empty($marked) OR (!empty($marked) AND empty($userID))) AND (empty($citeKey) OR (!empty($citeKey) AND empty($userID))) AND empty($callNumber))
+	if (empty($serial) AND empty($date) AND empty($year) AND empty($author) AND empty($title) AND empty($keywords) AND empty($abstract) AND empty($area) AND empty($type) AND empty($contributionID) AND empty($thesis) AND empty($without) AND (empty($selected) OR (!empty($selected) AND empty($userID))) AND (empty($marked) OR (!empty($marked) AND empty($userID))) AND (empty($citeKey) OR (!empty($citeKey) AND empty($userID))) AND empty($callNumber) AND (empty($browseByField) OR (!empty($browseByField) AND $displayType != "Browse")))
 	{
 		// if 'show.php' was called without any valid parameters, we'll present a form where a user can input a record serial number.
 		// Currently, this form will not present form elements for other supported options (like searching by date, year or author),
@@ -374,16 +400,16 @@
 	// -------------------------------------------------------------------------------------------------------------------
 
 
-	else // the script was called with at least one of the following parameters: 'record', 'date', 'year', 'author', 'title', 'keywords', 'abstract', 'area', 'type', 'contribution_id', 'thesis', 'without', 'selected', 'marked', 'cite_key', 'call_number'
+	else // the script was called with at least one of the following parameters: 'record', 'date', 'year', 'author', 'title', 'keywords', 'abstract', 'area', 'type', 'contribution_id', 'thesis', 'without', 'selected', 'marked', 'cite_key', 'call_number', 'by'
 	{
 		// CONSTRUCT SQL QUERY:
 
 		// Note: the 'verifySQLQuery()' function that gets called by 'search.php' to process query data with "$formType = sqlSearch" will add the user specific fields to the 'SELECT' clause
-		// and the 'LEFT JOIN...' part to the 'FROM' clause of the SQL query if a user is logged in. It will also add 'orig_record', 'serial', 'file', 'url' & 'doi' columns
+		// and the 'LEFT JOIN...' part to the 'FROM' clause of the SQL query if a user is logged in. It will also add 'orig_record', 'serial', 'file', 'url', 'doi' & 'isbn' columns
 		// as required. Therefore it's sufficient to provide just the plain SQL query here:
 
 		// Build SELECT clause:
-		if (eregi("^(Display|Export)$", $displayType)) // select all fields required to display record details or to export a record:
+		if (ereg("^(Display|Export)$", $displayType)) // select all fields required to display record details or to export a record:
 		{
 			$query = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial";
 		//           (the above string MUST end with ", call_number, serial" in order to have the described query completion feature work correctly!
@@ -407,6 +433,11 @@
 					$query .= ", cite_key"; // add user-specific fields which are required in Citation view
 
 			$query .= ", serial"; // add 'serial' column
+		}
+
+		elseif ($displayType == "Browse")
+		{
+			$query = "SELECT $browseByField, COUNT(*) AS records";
 		}
 
 		else // produce the default columnar output style:
@@ -625,20 +656,39 @@
 				$query .= " call_number RLIKE \"" . $callNumberPrefix . " @ [^@;]*" . $callNumber . "[^@;]*\"";
 		}
 
+		// If, for some odd reason, 'records=all' was passed together with other parameters (such as in '.../show.php?records=all&author=steffens') we'll remove again
+		// the generic WHERE clause part (i.e. ' serial RLIKE ".+"') from the query since its superfluous and would confuse other features (such as the "Seach within Results" functionality):
+		if (eregi('WHERE serial RLIKE "\.\+" AND', $query))
+			$query = eregi_replace('WHERE serial RLIKE "\.\+" AND', 'WHERE', $query); // remove superfluous generic WHERE clause
+
+		elseif (eregi("WHERE$", $query)) // if still no WHERE clause was added (which is the case for URLs like 'show.php?submit=Browse&by=author')
+			$query .= " serial RLIKE \".+\""; // add generic WHERE clause
+
+
+		// Build GROUP BY clause:
+		if ($displayType == "Browse")
+			$query .= " GROUP BY $browseByField"; // for Browse view, group records by the chosen field
+
 
 		// Build ORDER BY clause:
-		if ($citeOrder == "year")
-			$query .= " ORDER BY year DESC, first_author, author_count, author, title"; // sort records first by year (descending), then in the usual way
-
-		else // if any other or no 'citeOrder' parameter is specified
+		if ($displayType == "Browse")
 		{
-			if (!empty($recordIDSelector)) // if a record identifier (either 'serial', 'call_number' or 'cite_key') was entered via the 'show.php' web form
-				$query .= " ORDER BY " . $recordIDSelector . ", author, year DESC, publication"; // sort by the appropriate column
-
-			else // supply the default ORDER BY clause:
-				$query .= " ORDER BY author, year DESC, publication";
+			$query .= " ORDER BY records DESC, $browseByField";
 		}
-
+		else
+		{
+			if ($citeOrder == "year")
+				$query .= " ORDER BY year DESC, first_author, author_count, author, title"; // sort records first by year (descending), then in the usual way
+	
+			else // if any other or no 'citeOrder' parameter is specified
+			{
+				if (!empty($recordIDSelector)) // if a record identifier (either 'serial', 'call_number' or 'cite_key') was entered via the 'show.php' web form
+					$query .= " ORDER BY " . $recordIDSelector . ", author, year DESC, publication"; // sort by the appropriate column
+	
+				else // supply the default ORDER BY clause:
+					$query .= " ORDER BY author, year DESC, publication";
+			}
+		}
 
 		// Build the correct query URL:
 		// (we skip unnecessary parameters here since 'search.php' will use it's default values for them)
