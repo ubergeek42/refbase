@@ -5,11 +5,11 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./cite/cite_TextCitation.php
 	// Created:    28-Sep-04, 23:46
-	// Modified:   24-Feb-05, 14:46
+	// Modified:   05-Nov-05, 20:14
 
 	// This is a citation style file (which must reside within the 'cite/' sub-directory of your refbase root directory). It contains a
-	// version of the 'citeRecord()' function that outputs a reference list from selected records according to the citation style used
-	// *within the text* by journals like "Polar Biology" (Springer-Verlag, springeronline.com) and others. Includes record IDs in curly brackets.
+	// version of the 'citeRecord()' function that outputs a reference list from selected records according to the citation style defined
+	// by a user's custom text citation format (or by the default format given in '$defaultTextCitationFormat' in 'ini.inc.php').
 
 	/*
 	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
@@ -23,86 +23,31 @@
 
 	function citeRecord($row, $citeStyle)
 	{
-		global $preferCiteKeyInTextCitation; // defined in 'ini.inc.php'
+		global $defaultTextCitationFormat; // defined in 'ini.inc.php'
+		global $userOptionsArray; // '$userOptionsArray' is made globally available by function 'generateCitations()' in 'search.php'
 
-		// output records suitable for citation within a text, like: "Ambrose 1991 {3735}", "Ambrose & Renaud 1995 {3243}" or "Ambrose et al. 2001 {4774}"
-
-		// currently the following parameters are not available via the GUI but are provided as fixed values here:
-		$authorConnector = " & "; // string that connects first and second author (if author_count = 2)
-		$etalPrintItalic = true; // specifies if "et al" should be either printed in italic (true) or as regular text (false)
-		$etalWithDot = true; // specifies whether "et al" is followed by a dot (true) or not (false)
-		$yearWithBrackets = false; // specifies whether the year is enclosed by a brackets (true) or not (false)
-		$recordIDStartDelimiter = "{"; // specifies the string that prefixes the record id
-		$recordIDEndDelimiter = "}"; // specifies the string that suffixes the record id
-		
-
-		// Call the 'extractAuthorsLastName()' function (defined in 'include.inc.php') to extract the last name of a particular author (specified by position). Required Parameters:
-		//   1. pattern describing delimiter that separates different authors
-		//   2. pattern describing delimiter that separates author name & initials (within one author)
-		//   3. position of the author whose last name shall be extracted (e.g., "1" will return the 1st author's last name)
-		//   4. contents of the author field
-		$record = extractAuthorsLastName(" *; *",
-											" *, *",
-											1,
-											$row['author']);
+		// output records suitable for citation within a text, e.g., like: "Ambrose 1991 {3735}", "Ambrose & Renaud 1995 {3243}" or "Ambrose et al. 2001 {4774}"
 
 
-		// assign the correct record identifier:
-		if (($preferCiteKeyInTextCitation == "yes") && (!empty($row['cite_key'])))
-			$recordIdentifier = $row['cite_key'];
-		else
-			$recordIdentifier = $row['serial'];
+		if (!empty($userOptionsArray) AND ($userOptionsArray['use_custom_text_citation_format'] == "yes")) // if the user wants to use a custom text citation format
+			$textCitationFormat = $userOptionsArray['text_citation_format'];
+
+		else // use the default text citation format that was specified by the admin in 'ini.inc.php'
+			$textCitationFormat = $defaultTextCitationFormat;
+
+		// this is a stupid hack that maps the names of the '$row' array keys to those used
+		// by the '$formVars' array (which is required by function 'parsePlaceholderString()')
+		// (eventually, the '$formVars' array should use the MySQL field names as names for its array keys)
+		$formVars = buildFormVarsArray($row); // function 'buildFormVarsArray()' is defined in 'include.inc.php'
+
+		// generate a text citation according to the given naming scheme:
+		$record = parsePlaceholderString($formVars, $textCitationFormat, "<:authors[2| & | et al.]:>< :year:>< {:recordIdentifier:}>"); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
 
 
-		// output text citation:
-		if ($row['author_count'] == "1") // one author, like: "Ambrose 1991 {3735}"
-			if ($yearWithBrackets)
-				$record .= " (" . $row['year'] . ") " . $recordIDStartDelimiter . $recordIdentifier . $recordIDEndDelimiter;
-			else
-				$record .= " " . $row['year'] . " " . $recordIDStartDelimiter . $recordIdentifier . $recordIDEndDelimiter;
+		// Perform search & replace actions on the text:
+		$searchReplaceActionsArray = array('(et +al\.)' => '<i>\\1</i>'); // print 'et al.' in italic
 
-
-		elseif ($row['author_count'] == "2") // two authors, like "Ambrose & Renaud 1995 {3243}"
-		{
-			$record .= $authorConnector;
-
-			// Call the 'extractAuthorsLastName()' function (defined in 'include.inc.php') extract the last name of a particular author (specified by position). Required Parameters:
-			//   1. pattern describing delimiter that separates different authors
-			//   2. pattern describing delimiter that separates author name & initials (within one author)
-			//   3. position of the author whose last name shall be extracted (e.g., "1" will return the 1st author's last name)
-			//   4. contents of the author field
-			$record .= extractAuthorsLastName(" *; *",
-												" *, *",
-												2,
-												$row['author']);
-
-			if ($yearWithBrackets)
-				$record .= " (" . $row['year'] . ") " . $recordIDStartDelimiter . $recordIdentifier . $recordIDEndDelimiter;
-			else
-				$record .= " " . $row['year'] . " " . $recordIDStartDelimiter . $recordIdentifier . $recordIDEndDelimiter;
-		}
-
-
-		elseif ($row['author_count'] == "3") // three or more authors, like "Ambrose et al. 2001 {4774}"
-		{
-			$record .= " ";
-
-			if ($etalPrintItalic)
-				$record .= "<i>";
-
-			$record .= "et al";
-
-			if ($etalWithDot)
-				$record .= ".";
-
-			if ($etalPrintItalic)
-				$record .= "</i>";
-
-			if ($yearWithBrackets)
-				$record .= " (" . $row['year'] . ") " . $recordIDStartDelimiter . $recordIdentifier . $recordIDEndDelimiter;
-			else
-				$record .= " " . $row['year'] . " " . $recordIDStartDelimiter . $recordIdentifier . $recordIDEndDelimiter;
-		}
+		$record = searchReplaceText($searchReplaceActionsArray, $record); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
 
 		return $record;
