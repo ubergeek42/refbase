@@ -12,7 +12,7 @@
 	//             Richard Karnesky <mailto:karnesky@northwestern.edu>
 	//
 	// Created:    17-May-05, 16:38
-	// Modified:   7-Jun-05, 23:51
+	// Modified:   09-Sep-05, 01:49
 
 	// This include file contains functions that'll export records to SRW XML.
 	// Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -200,7 +200,7 @@
 		//            via 'sru.php' then either the 'Export' or the 'Batch export' user permission needs to be
 		//            enabled at 'user_options.php?userID=0'. This will allow export of XML records via 'sru.php'
 		//            but won't allow a user who isn't logged in to export records via the web interface. However, you
-		//            should be aware that a direct GET query like 'show.php?author=miller&submit=Export&exportFormatSelector=MODS%20XML'
+		//            should be aware that a direct GET query like 'show.php?author=miller&submit=Export&exportFormat=MODS%20XML'
 		//            will be also allowed then!
 
 		// As an alternative, you can provide explicit login information within the 'serverInfo/authentication' tag
