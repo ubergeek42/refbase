@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./queries.php
 	// Created:    16-May-04, 22:03
-	// Modified:   28-Mar-05, 20:40
+	// Modified:   05-Nov-05, 20:26
 
 	// This script takes a user query name (which was passed to the script by use of the 'Recall My Query' form on the main page 'index.php')
 	// and extracts all saved settings for this particular query from the 'queries' MySQL table. It will then build an appropriate query URL
@@ -20,13 +20,18 @@
 	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
 	include 'includes/include.inc.php'; // include common functions
 	include 'initialize/ini.inc.php'; // include common variables
-	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
 	// START A SESSION:
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
 	start_session(true);
+
+	// --------------------------------------------------------------------
+
+	// Initialize preferred display language:
+	// (note that 'locales.inc.php' has to be included *after* the call to the 'start_session()' function)
+	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
