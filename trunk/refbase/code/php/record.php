@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./record.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   26-Apr-05, 18:55
+	// Modified:   04-Nov-05, 19:55
 
 	// Form that offers to add
 	// records or edit/delete
@@ -295,7 +295,15 @@
 				else
 					$relatedName = "";
 
-				$fileName = encodeHTML($row['file']);
+				// show the contents of the 'file' field if one of the following conditions is met:
+				// - the variable '$fileVisibility' (defined in 'ini.inc.php') is set to 'everyone'
+				// - the variable '$fileVisibility' is set to 'login' AND the user is logged in
+				// - the variable '$fileVisibility' is set to 'user-specific' AND the 'user_permissions' session variable contains 'allow_download'
+				if ($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND ereg("allow_download", $_SESSION['user_permissions']))))
+					$fileName = encodeHTML($row['file']);
+				else // if the user has no permission to download (and hence view) any files, 'modify.php' will take care that the empty form value won't overwrite any existing contents of the 'file' field
+					$fileName = "";
+
 				$urlName = encodeHTML($row['url']);
 				$doiName = encodeHTML($row['doi']);
 				$contributionID = $row['contribution_id'];
