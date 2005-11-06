@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   24-May-05, 20:45
+	// Modified:   06-Nov-05, 00:05
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -25,13 +25,18 @@
 	include 'includes/modsxml.inc.php'; // include functions that deal with MODS XML
 	include 'includes/srwxml.inc.php'; // include functions that deal with SRW XML
 	include 'initialize/ini.inc.php'; // include common variables
-	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
 	// START A SESSION:
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
 	start_session(true);
+
+	// --------------------------------------------------------------------
+
+	// Initialize preferred display language:
+	// (note that 'locales.inc.php' has to be included *after* the call to the 'start_session()' function)
+	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
@@ -47,6 +52,7 @@
 	//  - '' => if the 'submit' parameter is empty, this will produce the default columnar output style ('displayColumns()' function)
 	//  - 'Display' => display details for each of the selected records ('displayDetails()' function)
 	//  - 'Cite' => build a proper citation for each of the selected records ('generateCitations()' function)
+	//  - 'Browse' => browse unique values from a given database field ('displayColumns()' function)
 	// Note that the 'submit' parameter can be also one of the following:
 	//   - 'Export' => generate and return selected records in the bibliographic format specified by the user ('generateExport()' function)
 	//   - 'RSS' => these value gets included within the 'RSS' link (in the page header) and will cause 'search.php' to return results as RSS feed
@@ -367,7 +373,7 @@
 	// --- Form within 'search.php': ---------------
 	elseif ($formType == "refineSearch" OR $formType == "displayOptions") // the user used the "Search within Results" (or "Display Options") form above the query results list (that was produced by 'search.php')
 		{
-			$query = extractFormElementsRefineDisplay($tableRefs, $displayType, $sqlQuery, $showLinks, $userID); // function 'extractFormElementsRefineDisplay()' is defined in 'include.inc.php' since it's also used by 'users.php'
+			list($query, $displayType) = extractFormElementsRefineDisplay($tableRefs, $displayType, $sqlQuery, $showLinks, $userID); // function 'extractFormElementsRefineDisplay()' is defined in 'include.inc.php' since it's also used by 'users.php'
 		}
 
 	// --- Form within 'search.php': ---------------
@@ -394,18 +400,24 @@
 			$query = extractFormElementsQuick($showLinks);
 		}
 
+	// --- Browse My Refs Form within 'index.php': -------------------
+	elseif ($formType == "myRefsBrowse") // the user used the 'Browse My Refs' form on the main page ('index.php') for searching...
+		{
+			$query = extractFormElementsBrowseMyRefs($showLinks, $loginEmail, $userID);
+		}
+
 	// --- My Groups Search Form within 'index.php': ---------------------
 	elseif ($formType == "groupSearch") // the user used the 'Show My Group' form on the main page ('index.php') or above the query results list (that was produced by 'search.php')
 		{
-			$query = extractFormElementsGroup($sqlQuery, $showLinks, $userID);
+			$query = extractFormElementsGroup($sqlQuery, $showLinks, $userID, $displayType);
 		}
 
 	// --------------------------------------------------------------------
 
 	// this is to support the '$fileVisibilityException' feature from 'ini.inc.php':
-	if (!empty($fileVisibilityException) AND !preg_match("/SELECT.+$fileVisibilityException[0].+FROM/i", $query))
+	if (eregi("^SELECT", $query) AND ($displayType != "Browse") AND !empty($fileVisibilityException) AND !preg_match("/SELECT.+$fileVisibilityException[0].+FROM/i", $query)) // restrict adding of columns to SELECT queries (so that 'DELETE FROM refs ...' statements won't get modified as well);
 	{
-		$query = eregi_replace("(, orig_record)?(, serial)?(, file, url, doi)? FROM $tableRefs", ", $fileVisibilityException[0]\\1\\2\\3 FROM $tableRefs",$query); // add column that's given in '$fileVisibilityException'
+		$query = eregi_replace("(, orig_record)?(, serial)?(, file, url, doi, isbn)? FROM $tableRefs", ", $fileVisibilityException[0]\\1\\2\\3 FROM $tableRefs",$query); // add column that's given in '$fileVisibilityException'
 		$addCounterMax = 1; // this will ensure that the added column won't get displayed within the 'displayColumns()' function
 	}
 	else
@@ -423,7 +435,7 @@
 	{
 		if (!($nothingChecked)) // some checkboxes were marked
 		{
-			generateExport($result, $rowOffset, $showRows, $exportFormat, $exportType, $exportStylesheet, $displayType, $viewType); // export records using the export format specified in '$exportFormat'
+			generateExport($result, $rowOffset, $showRows, $exportFormat, $exportType, $exportStylesheet, $displayType, $viewType, $userID); // export records using the export format specified in '$exportFormat'
 
 			// NOTE: I disconnect from the database and exit this php file.  This is kind of sloppy, but I want to avoid getting the </BODY></HTML>
 			disconnectFromMySQLDatabase($oldQuery); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
@@ -438,7 +450,7 @@
 	// (4a) DISPLAY header:
 	// First, build the appropriate SQL query in order to embed it into the 'your query' URL:
 	if ($showLinks == "1")
-		$query = eregi_replace(", file, url, doi FROM $tableRefs"," FROM $tableRefs",$query); // strip 'file', 'url' & 'doi' columns from SQL query
+		$query = eregi_replace(", file, url, doi, isbn FROM $tableRefs"," FROM $tableRefs",$query); // strip 'file', 'url', 'doi' & 'isbn' columns from SQL query
 
 	$query = eregi_replace(", serial FROM $tableRefs"," FROM $tableRefs",$query); // strip 'serial' column from SQL query
 
@@ -511,9 +523,19 @@
 			if (eregi("^SELECT", $query)) // for SELECT queries:
 			{
 				if ($rowsFound == 1)
-					$HeaderStringPart = " record ";
+				{
+					if ($displayType == "Browse")
+						$HeaderStringPart = " item ";
+					else
+						$HeaderStringPart = " record ";
+				}
 				else
-					$HeaderStringPart = " records ";
+				{
+					if ($displayType == "Browse")
+						$HeaderStringPart = " items ";
+					else
+						$HeaderStringPart = " records ";
+				}
 
 				$HeaderStringPart .= "found matching ";
 
@@ -607,10 +629,8 @@
 	function displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $addCounterMax)
 	{
 		global $oldQuery; // This is required since the 'add record' link gets constructed outside this function, otherwise it would still contain the older query URL!)
-		global $filesBaseURL; // defined in 'ini.inc.php'
 		global $markupSearchReplacePatterns; // defined in 'ini.inc.php'
-		global $fileVisibility; // defined in 'ini.inc.php'
-		global $fileVisibilityException; // defined in 'ini.inc.php'
+		global $showLinkTypesInListView; // defined in 'ini.inc.php'
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
 		if (eregi(".+LIMIT *[0-9]+",$query)) // query does contain the 'LIMIT' parameter
@@ -625,16 +645,21 @@
 		{
 			// BEGIN RESULTS HEADER --------------------
 			// 1) First, initialize some variables that we'll need later on
-			if ($showLinks == "1")
-				$CounterMax = 3; // When displaying a 'Links' column truncate the last three columns (i.e., hide the 'file', 'url' and 'doi' columns)
+			if ($showLinks == "1" AND $displayType != "Browse") // we exclude the Browse view since it has a special type of 'Links' column and the 'file', 'url', 'doi' & 'isbn' columns weren't included in the query
+				$CounterMax = 4; // When displaying a 'Links' column truncate the last four columns (i.e., hide the 'file', 'url', 'doi' & 'isbn' columns)
 			else
 				$CounterMax = 0; // Otherwise don't hide any columns
 
 			// count the number of fields
 			$fieldsFound = mysql_num_fields($result);
-			// hide those last columns that were added by the script and not by the user
-			$fieldsToDisplay = $fieldsFound-(2+$CounterMax+$addCounterMax); // (2+$CounterMax) -> $CounterMax is increased by 2 in order to hide the 'orig_record' & 'serial' columns (which were added to make checkboxes & dup warning work)
-																			// $addCounterMax is set to 1 when the field given in '$fileVisibilityException[0]' (defined in 'ini.inc.php') was added to the query, otherwise '$addCounterMax = 0'
+			if ($displayType != "Browse")
+			{
+				// hide those last columns that were added by the script and not by the user
+				$fieldsToDisplay = $fieldsFound-(2+$CounterMax+$addCounterMax); // (2+$CounterMax) -> $CounterMax is increased by 2 in order to hide the 'orig_record' & 'serial' columns (which were added to make checkboxes & dup warning work)
+																				// $addCounterMax is set to 1 when the field given in '$fileVisibilityException[0]' (defined in 'ini.inc.php') was added to the query, otherwise '$addCounterMax = 0'
+			}
+			else // for Browse view the 'orig_record' & 'serial' columns weren't included in the query
+				$fieldsToDisplay = $fieldsFound;
 
 			// Calculate the number of all visible columns (which is needed as colspan value inside some TD tags)
 			if ($showLinks == "1")
@@ -650,26 +675,31 @@
 			// Note: we ommit the 'Search Within Results' form in print view! ('viewType=Print')
 			if ($viewType != "Print")
 			{
+				if ($displayType == "Browse")
+					$selectedField = preg_replace("/^SELECT (\w+).*/i","\\1",$query); // extract the field that's currently used in Browse view (so that we can re-select it in the drop-downs of the 'refineSearch' and 'displayOptions' forms)
+				else
+					$selectedField = "author"; // otherwise we'll always selected the 'author' field by default
+
 				// 2) Build a TABLE with forms containing options to show the user's groups, refine the search results or change the displayed columns:
 
 				//    2a) Build a FORM with a popup containing the user's groups:
-				$formElementsGroup = buildGroupSearchElements("search.php", $queryURL, $query, $showQuery, $showLinks, $showRows); // function 'buildGroupSearchElements()' is defined in 'include.inc.php'
+				$formElementsGroup = buildGroupSearchElements("search.php", $queryURL, $query, $showQuery, $showLinks, $showRows, $displayType); // function 'buildGroupSearchElements()' is defined in 'include.inc.php'
 
 				//    2b) Build a FORM containing options to refine the search results:
 				//        First, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
-				$refineSearchSelectorElements1 = "author, title, year, keywords, abstract, type, publication, abbrev_journal, volume, issue, pages, thesis, publisher, place, editor, series_title, area, notes, location, call_number"; // these columns will be always visible (no matter whether the user is logged in or not)
+				$refineSearchSelectorElements1 = "author, title, year, keywords, abstract, type, publication, abbrev_journal, volume, issue, pages, thesis, publisher, place, editor, series_title, language, area, notes, location, call_number, serial"; // these columns will be always visible (no matter whether the user is logged in or not)
 				$refineSearchSelectorElements2 = "marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key"; // these columns will be only visible to logged in users (in this case: the user specific fields from table 'user_data')
-				$refineSearchSelectorElementSelected = "author"; // this column will be selected by default
+				$refineSearchSelectorElementSelected = $selectedField; // this column will be selected by default
 				//        Call the 'buildRefineSearchElements()' function (defined in 'include.inc.php') which does the actual work:
-				$formElementsRefine = buildRefineSearchElements("search.php", $queryURL, $showQuery, $showLinks, $showRows, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected);
+				$formElementsRefine = buildRefineSearchElements("search.php", $queryURL, $showQuery, $showLinks, $showRows, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected, $displayType);
 
 				//    2c) Build a FORM containing display options (show/hide columns or change the number of records displayed per page):
 				//        Again, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
-				$displayOptionsSelectorElements1 = "author, title, year, keywords, abstract, type, publication, abbrev_journal, volume, issue, pages, thesis, publisher, place, editor, series_title, area, notes, location, call_number"; // these columns will be always visible (no matter whether the user is logged in or not)
+				$displayOptionsSelectorElements1 = "author, title, year, keywords, abstract, type, publication, abbrev_journal, volume, issue, pages, thesis, publisher, place, editor, series_title, language, area, notes, location, call_number, serial"; // these columns will be always visible (no matter whether the user is logged in or not)
 				$displayOptionsSelectorElements2 = "marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key"; // these columns will be only visible to logged in users (in this case: the user specific fields from table 'user_data')
-				$displayOptionsSelectorElementSelected = "author"; // this column will be selected by default
+				$displayOptionsSelectorElementSelected = $selectedField; // this column will be selected by default
 				//        Call the 'buildDisplayOptionsElements()' function (defined in 'include.inc.php') which does the actual work:
-				$formElementsDisplayOptions = buildDisplayOptionsElements("search.php", $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $displayOptionsSelectorElements1, $displayOptionsSelectorElements2, $displayOptionsSelectorElementSelected, $fieldsToDisplay);
+				$formElementsDisplayOptions = buildDisplayOptionsElements("search.php", $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $displayOptionsSelectorElements1, $displayOptionsSelectorElements2, $displayOptionsSelectorElementSelected, $fieldsToDisplay, $displayType);
 
 				echo displayResultsHeader("search.php", $formElementsGroup, $formElementsRefine, $formElementsDisplayOptions); // function 'displayResultsHeader()' is defined in 'results_header.inc.php'
 			}
@@ -681,7 +711,7 @@
 
 			// 3) Build a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages
 			//    call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
-			$BrowseLinks = buildBrowseLinks("search.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "", $citeStyle, $citeOrder, $orderBy, $headerMsg, $viewType);
+			$BrowseLinks = buildBrowseLinks("search.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", $displayType, $citeStyle, $citeOrder, $orderBy, $headerMsg, $viewType);
 			echo $BrowseLinks;
 
 
@@ -718,25 +748,32 @@
 				$HTMLafterLink = "</th>"; // close the table header tag
 				// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
 				// as well as the URL encoded query with the appropriate ORDER clause:
-				$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "", "", "", $viewType);
+				$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", $displayType, "", "", $viewType);
 				echo $tableHeaderLink; // print the attribute name as link
 			 }
 
-			if ($showLinks == "1")
-				{
-					$newORDER = ("ORDER BY url DESC, doi DESC"); // Build the appropriate ORDER BY clause to facilitate sorting by Links column
+			if (($showLinks == "1") AND ($displayType != "Browse"))
+			{
+				$newORDER = ("ORDER BY url DESC, doi DESC"); // Build the appropriate ORDER BY clause to facilitate sorting by Links column
 
-					$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
-					$HTMLafterLink = "</th>"; // close the table header tag
-					// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
-					// as well as the URL encoded query with the appropriate ORDER clause:
-					$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "", "Links", "url", $viewType);
-					echo $tableHeaderLink; // print the attribute name as link
-				}
+				$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
+				$HTMLafterLink = "</th>"; // close the table header tag
+				// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
+				// as well as the URL encoded query with the appropriate ORDER clause:
+				$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", $displayType, "Links", "url", $viewType);
+				echo $tableHeaderLink; // print the attribute name as link
+			}
+			elseif (($showLinks == "1") AND ($displayType == "Browse"))
+			{
+				echo "\n\t<th align=\"left\" valign=\"top\">" // start the table header tag
+					. "Show" // in Browse view we simply provide a static column header
+					. "</th>"; // close the table header tag
+			}
 
 			// Finish the row
 			echo "\n</tr>";
 			// END RESULTS HEADER ----------------------
+
 
 			// BEGIN RESULTS DATA COLUMNS --------------
 			// Fetch one page of results (or less if on the last page)
@@ -749,7 +786,12 @@
 				// ... print a column with a checkbox
 				if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
 				{
-					echo "\n\t<td align=\"center\" valign=\"top\" width=\"10\">\n\t\t<input type=\"checkbox\" name=\"marked[]\" value=\"" . $row["serial"] . "\" title=\"select this record\">";
+					echo "\n\t<td align=\"center\" valign=\"top\" width=\"10\">\n\t\t<input type=\"checkbox\" name=\"marked[]\" value=\"";
+					if ($displayType == "Browse")
+						echo $row[0];
+					else
+						echo $row["serial"];
+					echo "\" title=\"select this record\">";
 
 					if (!empty($row["orig_record"]))
 					{
@@ -767,99 +809,78 @@
 				// in that row as a separate TD (Table Data)
 				for ($i=0; $i<$fieldsToDisplay; $i++)
 				{
-					$row[$i] = encodeHTML($row[$i]); // HTML encode higher ASCII characters
+					$encodedRowAttribute = encodeHTML($row[$i]); // HTML encode higher ASCII characters (we write the data into a new variable since we still need unencoded data when including them into a link for Browse view)
 
 					// the following two lines will fetch the current attribute name:
 					$info = mysql_fetch_field ($result, $i); // get the meta-data for the attribute
 					$orig_fieldname = $info->name; // get the attribute name
 
+					if (($displayType == "Browse") AND ($i == 0)) // in Browse view we save the first field name to yet another variable (since it'll be needed when generating correct queries in the Links column)
+						$browseFieldName = $orig_fieldname;
+
 					// Perform search & replace actions on the text of the 'title', 'address', 'keywords' and 'abstract' fields:
 					// (the array '$markupSearchReplacePatterns' in 'ini.inc.php' defines which search & replace actions will be employed)
 					if (ereg("^(title|address|keywords|abstract)$", $orig_fieldname)) // apply the defined search & replace actions to the 'title', 'address', 'keywords' and 'abstract' fields:
-						$row[$i] = searchReplaceText($markupSearchReplacePatterns, $row[$i]); // function 'searchReplaceText()' is defined in 'include.inc.php'
+						$encodedRowAttribute = searchReplaceText($markupSearchReplacePatterns, $encodedRowAttribute); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
-					echo "\n\t<td valign=\"top\">" . $row[$i] . "</td>";
+					echo "\n\t<td valign=\"top\">" . $encodedRowAttribute . "</td>";
 				}
 
 				// embed appropriate links (if available):
-				if ($showLinks == "1")
+				if (($showLinks == "1") AND ($displayType != "Browse")) // we exclude Browse view since it will need a different type of link query (see below)
 				{
 					echo "\n\t<td valign=\"top\">";
 
-					if (isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_details_view'...
-					{
-						// ... display a link that opens the 'details view' for this record:
-						if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
-							echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20cite_key%2C%20related%20"
-								. "FROM%20" . $tableRefs . "%20LEFT%20JOIN%20" . $tableUserData . "%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
-						else // if NO user logged in, don't display any user specific fields:
-							echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%20"
-								. "FROM%20" . $tableRefs . "%20";
-
-						echo "WHERE%20serial%20RLIKE%20%22%5E%28" . $row["serial"]
-							. "%29%24%22%20ORDER%20BY%20" . rawurlencode($orderBy)
-							. "&amp;showQuery=" . $showQuery
-							. "&amp;showLinks=" . $showLinks
-							. "&amp;formType=sqlSearch"
-							. "&amp;viewType=" . $viewType
-							. "&amp;submit=Display"
-							. "&amp;oldQuery=" . rawurlencode($oldQuery)
-							. "\"><img src=\"img/details.gif\" alt=\"details\" title=\"show details\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
-					}
-
-					if (isset($_SESSION['user_permissions']) AND ereg("allow_edit", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_edit'...
-						// ... display a link that opens the edit form for this record:
-						echo "\n\t\t<a href=\"record.php?serialNo=" . $row["serial"] . "&amp;recordAction=edit"
-							. "&amp;oldQuery=" . rawurlencode($oldQuery)
-							. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit record\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
-
-					if ((!empty($row["file"])) OR (!empty($row["doi"])) OR (!empty($row["url"])))
-						echo "\n\t\t<br>";
-
-					// show a link to any corresponding file if one of the following conditions is met:
-					// - the variable '$fileVisibility' (defined in 'ini.inc.php') is set to 'everyone'
-					// - the variable '$fileVisibility' is set to 'login' AND the user is logged in
-					// - the variable '$fileVisibility' is set to 'user-specific' AND the 'user_permissions' session variable contains 'allow_download'
-					// - the array variable '$fileVisibilityException' (defined in 'ini.inc.php') contains a pattern (in array element 1) that matches the contents of the field given (in array element 0)
-					if ($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND ereg("allow_download", $_SESSION['user_permissions']))) OR (!empty($fileVisibilityException) AND preg_match($fileVisibilityException[1], $row[$fileVisibilityException[0]])))
-					{
-						if (!empty($row["file"]))// if the 'file' field is NOT empty
-						{
-							if (ereg("^(http|ftp)://", $row["file"])) // if the 'file' field contains a full URL (starting with "http://" or "ftp://")
-								$URLprefix = ""; // we don't alter the URL given in the 'file' field
-							else // if the 'file' field contains only a partial path (like 'polarbiol/10240001.pdf') or just a file name (like '10240001.pdf')
-								$URLprefix = $filesBaseURL; // use the base URL of the standard files directory as prefix ('$filesBaseURL' is defined in 'ini.inc.php')
-
-							if (ereg("\.pdf$", $row["file"])) // if the 'file' field contains a link to a PDF file
-								echo "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file_PDF.gif\" alt=\"pdf\" title=\"download PDF file\" width=\"17\" height=\"17\" hspace=\"0\" border=\"0\"></a>"; // display a PDF file icon as download link
-							else
-								echo "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file.gif\" alt=\"file\" title=\"download file\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link
-						}
-					}
-
-					// if a DOI number exists for this record, we'll prefer it as link, otherwise we use the URL (if available):
-					// (note, that in column view, we'll use the same icon, no matter if the DOI or the URL is used for the link)
-					if (!empty($row["doi"]))
-						echo "\n\t\t<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/link.gif\" alt=\"doi\" title=\"goto web page (via DOI)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
-					elseif (!empty($row["url"])) // 'htmlentities()' is used to convert any '&' into '&amp;'
-						echo "\n\t\t<a href=\"" . encodeHTML($row["url"]) . "\"><img src=\"img/link.gif\" alt=\"url\" title=\"goto web page\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
-
-	// 				// as an alternative, print out DOI and URL links individually:
-	//
-	//				if ((!empty($row["file"])) AND ((!empty($row["doi"])) OR (!empty($row["url"]))))
-	//					echo "&nbsp;&nbsp;"; // add some whitespace
-	//
-	//				if (!empty($row["doi"]))
-	//					echo "\n\t\t<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/doi.gif\" alt=\"doi\" title=\"goto web page (via DOI)\" width=\"20\" height=\"10\" hspace=\"0\" border=\"0\"></a>";
-	//
-	//				if (!empty($row["doi"]) AND (!empty($row["url"])))
-	//					echo "&nbsp;&nbsp;"; // add some whitespace
-	//
-	//				if (!empty($row["url"]))
-	//					echo "\n\t\t<a href=\"" . $row["url"] . "\"><img src=\"img/link.gif\" alt=\"url\" title=\"goto web page\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+					// print out available links:
+					// for List view, we'll use the '$showLinkTypesInListView' array that's defined in 'ini.inc.php'
+					// to specify which links shall be displayed (if available and if 'showLinks == 1')
+					// (for links of type DOI/URL/ISBN/XREF, only one link will be printed; order of preference: DOI, URL, ISBN, XREF)
+					printLinks($showLinkTypesInListView, $row, $showQuery, $showLinks, $userID, $viewType, $orderBy);
 
 					echo "\n\t</td>";
 				}
+
+				// for Browse view we'll incorporate links that will show all records whose field (given in '$orig_fieldname') matches the current value (given in '$row[0]'):
+				elseif (($showLinks == "1") AND ($displayType == "Browse"))
+				{
+					// ...extract the 'WHERE' clause from the SQL query to include it within the link URL:
+					$queryWhereClause = extractWhereClause($query); // function 'extractWhereClause()' is defined in 'include.inc.php'
+					$queryWhereClause = eregi_replace('^serial RLIKE "\.\+"','',$queryWhereClause); // strip generic WHERE clause if present
+
+					echo "\n\t<td valign=\"top\">";
+
+					echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20year%2C%20publication%2C%20volume%2C%20pages%20";
+
+					if (isset($_SESSION['loginEmail']) AND eregi("^(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)$", $browseFieldName)) // if a user is logged in and a user specific field is used in Browse view, we add the 'LEFT JOIN...' part to the 'FROM' clause:
+						echo "FROM%20" . $tableRefs . "%20LEFT%20JOIN%20" . $tableUserData . "%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
+					else
+						echo "FROM%20" . $tableRefs . "%20";
+
+					echo "WHERE%20";
+
+					if (!empty($queryWhereClause))
+						echo rawurlencode($queryWhereClause) . "%20AND%20";
+
+					echo $browseFieldName . "%20";
+
+					if (!empty($row[0]))
+						echo "=%20%22" . rawurlencode($row[0]) . "%22%20";
+					else
+						echo "IS%20NULL%20";
+
+					echo  "ORDER%20BY%20author%2C%20year%20DESC%2C%20publication" // use the default ORDER BY clause
+						. "&amp;showQuery=" . $showQuery
+						. "&amp;showLinks=" . $showLinks
+						. "&amp;showRows=" . $showRows
+						. "&amp;formType=sqlSearch"
+						. "&amp;viewType=" . $viewType
+						. "&amp;submit="
+						. "&amp;oldQuery=" . rawurlencode($oldQuery)
+						. "\"><img src=\"img/details.gif\" alt=\"records\" title=\"show records\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
+
+					echo "\n\t</td>";
+				}
+
 				// Finish the row
 				echo "\n</tr>";
 			}
@@ -909,11 +930,13 @@
 	// SHOW THE RESULTS IN AN HTML <TABLE> (horizontal layout)
 	function displayDetails($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $showMaxRow, $headerMsg, $userID, $viewType, $selectedRecordsArray)
 	{
-		global $filesBaseURL; // defined in 'ini.inc.php'
-		global $markupSearchReplacePatterns; // defined in 'ini.inc.php'
-		global $databaseBaseURL; // defined in 'ini.inc.php'
-		global $fileVisibility;  // defined in 'ini.inc.php'
-		global $fileVisibilityException; // defined in 'ini.inc.php'
+		global $filesBaseURL; // these variables are defined in 'ini.inc.php'
+		global $markupSearchReplacePatterns;
+		global $databaseBaseURL;
+		global $fileVisibility;
+		global $fileVisibilityException;
+		global $openURLFormat;
+		global $isbnURLFormat;
 
 	// If the query has results ...
 	if ($rowsFound > 0)
@@ -921,7 +944,7 @@
 		// BEGIN RESULTS HEADER --------------------
 		// 1) First, initialize some variables that we'll need later on
 		if ($showLinks == "1")
-			$CounterMax = 3; // When displaying a 'Links' column truncate the last three columns (i.e., hide the 'file', 'url' and 'doi' columns)
+			$CounterMax = 4; // When displaying a 'Links' column truncate the last four columns (i.e., hide the 'file', 'url', 'doi' & 'isbn' columns)
 		else
 			$CounterMax = 0; // Otherwise don't hide any columns
 
@@ -932,7 +955,7 @@
 		$fieldsFound = mysql_num_fields($result);
 		// hide those last columns that were added by the script and not by the user
 		$fieldsToDisplay = $fieldsFound-(2+$CounterMax); // (2+$CounterMax) -> $CounterMax is increased by 2 in order to hide the 'orig_record' & 'serial' columns (which were added to make checkboxes & dup warning work)
-		// In summary, when displaying a 'Links' column and with a user being logged in, we hide the following fields: 'related, orig_record, serial, file, url, doi' (i.e., truncate the last six columns)
+		// In summary, when displaying a 'Links' column and with a user being logged in, we hide the following fields: 'related, orig_record, serial, file, url, doi, isbn' (i.e., truncate the last seven columns)
 
 		// Calculate the number of all visible columns (which is needed as colspan value inside some TD tags)
 		if ($showLinks == "1") // in 'display details' layout, we simply set it to a fixed no of columns:
@@ -1095,36 +1118,17 @@
 									// ...embed appropriate links (if available):
 									if ($i == 0) // ... print a column with links if it's the first row of attribute data:
 									{
-										// count the number of available link elements:
-										$linkElementCounterLoggedOut = 0;
-
-										if (!empty($row["url"]))
-											$linkElementCounterLoggedOut = ($linkElementCounterLoggedOut + 1);
-
-										if (!empty($row["doi"]))
-											$linkElementCounterLoggedOut = ($linkElementCounterLoggedOut + 1);
-
-										$linkElementCounterLoggedIn = $linkElementCounterLoggedOut;
-
-										if (isset($_SESSION['loginEmail']) AND !empty($row["file"]))
-											$linkElementCounterLoggedIn = ($linkElementCounterLoggedIn + 1);
-
-										if (isset($_SESSION['loginEmail']) AND !empty($row["related"]))
-											$linkElementCounterLoggedIn = ($linkElementCounterLoggedIn + 1);
-
-
 										$recordData .= "\n\t<td valign=\"top\" width=\"50\" rowspan=\"2\">"; // note that this table cell spans the next row!
+
+										$linkArray = array(); // initialize array variable that will hold all available links
 
 										if (isset($_SESSION['user_permissions']) AND ereg("allow_edit", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_edit'...
 											// ... display a link that opens the edit form for this record:
-											$recordData .= "\n\t\t<a href=\"record.php?serialNo=" . $row["serial"] . "&amp;recordAction=edit"
-														. "&amp;oldQuery=" . rawurlencode($oldQuery)
-														. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit record\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
+											$linkArray[] = "\n\t\t<a href=\"record.php?serialNo=" . $row["serial"] . "&amp;recordAction=edit"
+															. "&amp;oldQuery=" . rawurlencode($oldQuery)
+															. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit record\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
 
-										if (($linkElementCounterLoggedOut > 0) OR (isset($_SESSION['loginEmail']) AND $linkElementCounterLoggedIn > 0))
-											$recordData .= "&nbsp;&nbsp;";
-
-										// show a link to any corresponding file if one of the following conditions is met:
+										// show a link to any corresponding FILE if one of the following conditions is met:
 										// - the variable '$fileVisibility' (defined in 'ini.inc.php') is set to 'everyone'
 										// - the variable '$fileVisibility' is set to 'login' AND the user is logged in
 										// - the variable '$fileVisibility' is set to 'user-specific' AND the 'user_permissions' session variable contains 'allow_download'
@@ -1133,45 +1137,83 @@
 										{
 											if (!empty($row["file"]))// if the 'file' field is NOT empty
 											{
+												if (isset($_SESSION['user_permissions']) AND ereg("allow_edit", $_SESSION['user_permissions']))
+													$prefix = "&nbsp;";
+												else
+													$prefix = "";
+
 												if (ereg("^(http|ftp)://", $row["file"])) // if the 'file' field contains a full URL (starting with "http://" or "ftp://")
 													$URLprefix = ""; // we don't alter the URL given in the 'file' field
 												else // if the 'file' field contains only a partial path (like 'polarbiol/10240001.pdf') or just a file name (like '10240001.pdf')
 													$URLprefix = $filesBaseURL; // use the base URL of the standard files directory as prefix ('$filesBaseURL' is defined in 'ini.inc.php')
 
-												if (ereg("\.pdf$", $row["file"])) // if the 'file' field contains a link to a PDF file
-													$recordData .= "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file_PDF.gif\" alt=\"pdf\" title=\"download PDF file\" width=\"17\" height=\"17\" hspace=\"0\" border=\"0\"></a>"; // display a PDF file icon as download link
+												if (eregi("\.pdf$", $row["file"])) // if the 'file' field contains a link to a PDF file
+													$linkArray[] = $prefix . "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file_PDF.gif\" alt=\"pdf\" title=\"download PDF file\" width=\"17\" height=\"17\" hspace=\"0\" border=\"0\"></a>"; // display a PDF file icon as download link
 												else
-													$recordData .= "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file.gif\" alt=\"file\" title=\"download file\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link
+													$linkArray[] = $prefix . "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file.gif\" alt=\"file\" title=\"download file\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link
 											}
 										}
 
-										if ((($linkElementCounterLoggedOut > 1) OR (isset($_SESSION['loginEmail']) AND $linkElementCounterLoggedIn > 1)) AND !empty($row["file"]))
-											$recordData .= "<br>";
-
+										// generate a link from the URL field:
 										if (!empty($row["url"])) // 'htmlentities()' is used to convert any '&' into '&amp;'
-											$recordData .= "\n\t\t<a href=\"" . encodeHTML($row["url"]) . "\"><img src=\"img/www.gif\" alt=\"url\" title=\"goto web page\" width=\"17\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
+											$linkArray[] = "\n\t\t<a href=\"" . encodeHTML($row["url"]) . "\"><img src=\"img/www.gif\" alt=\"url\" title=\"goto web page\" width=\"17\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
 
-										if ((($linkElementCounterLoggedOut > 2) OR (isset($_SESSION['loginEmail']) AND $linkElementCounterLoggedIn > 2)) AND !empty($row["url"]))
-											$recordData .= "&nbsp;";
-
+										// generate a link from the DOI field:
 										if (!empty($row["doi"]))
-											$recordData .= "\n\t\t<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/doi.gif\" alt=\"doi\" title=\"goto web page (via DOI)\" width=\"17\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
+											$linkArray[] = "\n\t\t<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/doi.gif\" alt=\"doi\" title=\"goto web page (via DOI)\" width=\"17\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
 
-										if (($linkElementCounterLoggedOut > 3) OR (isset($_SESSION['loginEmail']) AND $linkElementCounterLoggedIn > 3))
-											$recordData .= "<br>";
-
+										// generate a link from the RELATED field:
 										if (isset($_SESSION['loginEmail'])) // if a user is logged in, show a link to any related records (if available):
 										{
 											if (!empty($row["related"]))
 											{
 												$relatedRecordsLink = buildRelatedRecordsLink($row["related"], $userID);
 
-												$recordData .= "\n\t\t<a href=\"" . $relatedRecordsLink . "\"><img src=\"img/related.gif\" alt=\"related\" title=\"display related records\" width=\"19\" height=\"16\" hspace=\"0\" border=\"0\"></a>";
+												$linkArray[] = "\n\t\t<a href=\"" . $relatedRecordsLink . "\"><img src=\"img/related.gif\" alt=\"related\" title=\"display related records\" width=\"19\" height=\"16\" hspace=\"0\" border=\"0\"></a>";
 											}
 										}
 
+										// if an ISBN number exists for the current record, provide a link to an ISBN resolver:
+										if (!empty($isbnURLFormat) AND !empty($row["isbn"]))
+										{
+											// this is a stupid hack that maps the names of the '$row' array keys to those used
+											// by the '$formVars' array (which is required by function 'parsePlaceholderString()')
+											// (eventually, the '$formVars' array should use the MySQL field names as names for its array keys)
+											$formVars = buildFormVarsArray($row); // function 'buildFormVarsArray()' is defined in 'include.inc.php'
+
+											// auto-generate an ISBN link according to the naming scheme given in '$isbnURLFormat' (in 'ini.inc.php'):
+											$isbnURL = parsePlaceholderString($formVars, $isbnURLFormat, ""); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
+
+											$encodedURL = encodeHTML($isbnURL); // 'htmlentities()' is used to convert higher ASCII chars into its entities and any '&' into '&amp;'
+											$encodedURL = str_replace(" ", "%20", $encodedURL); // ensure that any spaces are also properly urlencoded
+
+											if (!empty($isbnURL))
+												$linkArray[] = "\n\t\t<a href=\"" . $encodedURL . "\"><img src=\"img/isbn.gif\" alt=\"isbn\" title=\"find book details (via ISBN)\" width=\"17\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
+										}
+
+										// provide a link to an OpenURL resolver:
+										// auto-generated OpenURL links are only included if the main bibliographic data (author/year/publication/volume/pages) are present
+										if (!empty($openURLFormat) AND !empty($row["author"]) AND !empty($row["year"]) AND !empty($row["publication"]) AND !empty($row["volume"]) AND !empty($row["pages"]))
+										{
+											if (!isset($formVars))// again, the stupid hack (see note above)
+												$formVars = buildFormVarsArray($row); // function 'buildFormVarsArray()' is defined in 'include.inc.php'
+
+											// auto-generate an OpenURL according to the naming scheme given in '$openURLFormat' (in 'ini.inc.php'):
+											$openURL = parsePlaceholderString($formVars, $openURLFormat, ""); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
+
+											$encodedURL = encodeHTML($openURL); // 'htmlentities()' is used to convert higher ASCII chars into its entities and any '&' into '&amp;'
+											$encodedURL = str_replace(" ", "%20", $encodedURL); // ensure that any spaces are also properly urlencoded
+
+											if (!empty($openURL))
+												$linkArray[] = "\n\t\t<a href=\"" . $encodedURL . "\"><img src=\"img/xref.gif\" alt=\"openurl\" title=\"find record details (via OpenURL)\" width=\"18\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
+										}
+
+										// merge links with delimiters appropriate for display in the Links column:
+										$recordData .=  mergeLinks($linkArray);
+
 										$recordData .= "\n\t</td>";
 									}
+
 									// ... for the second row (which consists of the second and third field), we don't print any table column tag at all since the links (printed in the first row) span this second row!
 									elseif ($i > 3) // ... for the third row up to the last row, simply print an empty TD tag:
 										$recordData .= "\n\t<td valign=\"top\" width=\"50\">&nbsp;</td>";
@@ -1182,9 +1224,9 @@
 				}
 
 			// Print out an URL that links directly to this record:
-//			$recordData .= "\n<tr>" // start a new TR (Table Row)
-//						. "\n\t<td colspan=\"$NoColumns\" align=\"center\" class=\"footer\">Link to this record:&nbsp;&nbsp;" . $databaseBaseURL . "show.php?record=" . $row["serial"] . "</td>"
-//						. "\n</tr>";
+			$recordData .= "\n<tr>" // start a new TR (Table Row)
+						. "\n\t<td colspan=\"$NoColumns\" align=\"center\" class=\"smaller\"><a href=\"" . $databaseBaseURL . "show.php?record=" . $row["serial"] . "\" title=\"copy this URL to directly link to this record\">Permanent link to this record</a></td>"
+						. "\n</tr>";
 
 			if ((($rowCounter+1) < $showRows) && (($rowCounter+1) < $rowsFound)) // append a divider line if it's not the last (or only) record on the page
 				if (!(($showMaxRow == $rowsFound) && (($rowCounter+1) == ($showMaxRow-$rowOffset)))) // if we're NOT on the *last* page processing the *last* record... ('$showMaxRow-$rowOffset' gives the number of displayed records for a particular page)
@@ -1232,11 +1274,16 @@
 	// --------------------------------------------------------------------
 
 	// EXPORT RECORDS using the specified export format
-	function generateExport($result, $rowOffset, $showRows, $exportFormat, $exportType, $exportStylesheet, $displayType, $viewType)
+	function generateExport($result, $rowOffset, $showRows, $exportFormat, $exportType, $exportStylesheet, $displayType, $viewType, $userID)
 	{
 		global $officialDatabaseName; // these variables are defined in 'ini.inc.php'
 		global $markupSearchReplacePatterns;
 		global $contentTypeCharset;
+		global $userOptionsArray;
+
+		// get all user options for the current user:
+		// (note that '$userOptionsArray' is made globally available)
+		$userOptionsArray = getUserOptions($userID); // function 'getUserOptions()' is defined in 'include.inc.php'
 
 		$exportFormatFile = getFormatFile($exportFormat, "export"); // fetch the path/name of the export format file that's associated with the export format given in '$exportFormat'
 
@@ -1324,7 +1371,7 @@
 		}
 
 		// we'll present the output within the _same_ browser window:
-		// (note that we don't use a popup window here, since this may be blocked by particular browsers, and I think it's safe to assume that the users knows how to use the back button of his browser...)
+		// (note that we don't use a popup window here, since this may be blocked by particular browsers, and I think it's safe to assume that the user knows how to use the back button of his browser...)
 		echo $exportText;
 	}
 
@@ -1334,7 +1381,13 @@
 	function generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $headerMsg, $userID, $viewType, $selectedRecordsArray)
 	{
 		global $markupSearchReplacePatterns; // defined in 'ini.inc.php'
+		global $showLinkTypesInCitationView; // defined in 'ini.inc.php'
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
+		global $userOptionsArray;
+
+		// get all user options for the current user:
+		// (note that '$userOptionsArray' is made globally available)
+		$userOptionsArray = getUserOptions($userID); // function 'getUserOptions()' is defined in 'include.inc.php'
 
 		// If the query has results ...
 		if ($rowsFound > 0)
@@ -1402,30 +1455,15 @@
 					echo "\n<tr>";
 					echo "\n\t<td valign=\"top\">" . $record . "</td>"; // print out the record
 
-					if ($showLinks == "1") // display a 'display details' link:
+					if ($showLinks == "1") // display links:
 					{
-						echo "\n\t<td valign=\"top\">";
+						echo "\n\t<td valign=\"top\" width=\"38\">";
 
-						if (isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_details_view'...
-						{
-							// ... display a link that opens the 'details view' for this record:
-							if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
-								echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20cite_key%2C%20related%20"
-									. "FROM%20" . $tableRefs . "%20LEFT%20JOIN%20" . $tableUserData . "%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
-							else // if NO user logged in, don't display any user specific fields:
-								echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%20"
-									. "FROM%20" . $tableRefs . "%20";
-
-							echo "WHERE%20serial%20RLIKE%20%22%5E%28" . $row['serial']
-								. "%29%24%22%20ORDER%20BY%20" . rawurlencode($orderBy)
-								. "&amp;showQuery=" . $showQuery
-								. "&amp;showLinks=" . $showLinks
-								. "&amp;formType=sqlSearch"
-								. "&amp;viewType=" . $viewType
-								. "&amp;submit=Display"
-								. "&amp;oldQuery=" . rawurlencode($oldQuery)
-								. "\"><img src=\"img/details.gif\" alt=\"details\" title=\"show details\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
-						}
+						// print out available links:
+						// for Citation view, we'll use the '$showLinkTypesInCitationView' array that's defined in 'ini.inc.php'
+						// to specify which links shall be displayed (if available and if 'showLinks == 1')
+						// (for links of type DOI/URL/ISBN/XREF, only one link will be printed; order of preference: DOI, URL, ISBN, XREF)
+						printLinks($showLinkTypesInCitationView, $row, $showQuery, $showLinks, $userID, $viewType, $orderBy);
 
 						echo "\n\t</td>";
 					}
@@ -1711,7 +1749,7 @@
 				$query .= ", pages"; // add 'pages' column
 		}
 
-		// ... we still have to trap the case that the (silly!) user hasn't checked any of the column checkboxes above:
+		// ... we still have to trap the case that the user hasn't checked any of the column checkboxes above:
 		if ($query == "SELECT")
 			$query .= " author"; // force add 'author' column if the user hasn't checked any of the column checkboxes
 
@@ -1722,7 +1760,7 @@
 							//  (which is required in order to obtain unique checkbox names)
 
 		if ($showLinks == "1")
-			$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
+			$query .= ", file, url, doi, isbn"; // add 'file', 'url', 'doi' & 'isbn' columns
 
 		// Finally, fix the wrong syntax where its says "SELECT, author, title, ..." instead of "SELECT author, title, ..."
 		$query = eregi_replace("SELECT, ","SELECT ",$query);
@@ -1791,6 +1829,32 @@
 					$query .= " AND year > \"$yearNo\"";
 				elseif ($yearSelector == "is less than")
 					$query .= " AND year < \"$yearNo\"";
+				elseif ($yearSelector == "is within range")
+					{
+						if (preg_match("/\d+/", $yearNo)) // if '$yearNo' does contain at least one number
+						{
+							// extract first number:
+							$yearNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $yearNo);
+							$query .= " AND year >= \"$yearNoStart\"";
+
+							if (preg_match("/^\D*\d+\D+\d+/", $yearNo)) // if '$yearNo' does contain at least two numbers (which are separated by one or more non-digit characters)
+							{
+								// extract the second number:
+								$yearNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $yearNo);
+								$query .= " AND year <= \"$yearNoEnd\"";
+							}
+						}
+						else // fallback if no number is given:
+							$query .= " AND year RLIKE \"$yearNo\"";
+					}
+				elseif ($yearSelector == "is within list")
+					{
+						// replace any non-digit chars with "|":
+						$yearNo = preg_replace("/\D+/", "|", $yearNo);
+						// strip "|" from beginning/end of string (if any):
+						$yearNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $yearNo);
+						$query .= " AND year RLIKE \"^($yearNo)$\"";
+					}
 			}
 
 		// ... if the user has specified a publication, add the value of '$publicationName' as an AND clause:
@@ -1854,9 +1918,35 @@
 				elseif ($volumeSelector == "ends with")
 					$query .= " AND volume RLIKE \"$volumeNo$\"";
 				elseif ($volumeSelector == "is greater than")
-					$query .= " AND volume > \"$volumeNo\"";
+					$query .= " AND volume_numeric > \"$volumeNo\"";
 				elseif ($volumeSelector == "is less than")
-					$query .= " AND volume < \"$volumeNo\"";
+					$query .= " AND volume_numeric < \"$volumeNo\"";
+				elseif ($volumeSelector == "is within range")
+					{
+						if (preg_match("/\d+/", $volumeNo)) // if '$volumeNo' does contain at least one number
+						{
+							// extract first number:
+							$volumeNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $volumeNo);
+							$query .= " AND volume_numeric >= \"$volumeNoStart\"";
+
+							if (preg_match("/^\D*\d+\D+\d+/", $volumeNo)) // if '$volumeNo' does contain at least two numbers (which are separated by one or more non-digit characters)
+							{
+								// extract the second number:
+								$volumeNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $volumeNo);
+								$query .= " AND volume_numeric <= \"$volumeNoEnd\"";
+							}
+						}
+						else // fallback if no number is given:
+							$query .= " AND volume RLIKE \"$volumeNo\"";
+					}
+				elseif ($volumeSelector == "is within list")
+					{
+						// replace any non-digit chars with "|":
+						$volumeNo = preg_replace("/\D+/", "|", $volumeNo);
+						// strip "|" from beginning/end of string (if any):
+						$volumeNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $volumeNo);
+						$query .= " AND volume RLIKE \"^($volumeNo)$\"";
+					}
 			}
 
 		// ... if the user has specified some pages, add the value of '$pagesNo' as an AND clause:
@@ -2023,7 +2113,7 @@
 				$query .= ", notes"; // add 'notes' column
 		}
 
-		// ... we still have to trap the case that the (silly!) user hasn't checked any of the column checkboxes above:
+		// ... we still have to trap the case that the user hasn't checked any of the column checkboxes above:
 		if ($query == "SELECT")
 			$query .= " author"; // force add 'author' column if the user hasn't checked any of the column checkboxes
 
@@ -2034,7 +2124,7 @@
 							//  (which is required in order to obtain unique checkbox names)
 
 		if ($showLinks == "1")
-			$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
+			$query .= ", file, url, doi, isbn"; // add 'file', 'url', 'doi' & 'isbn' columns
 
 		// Finally, fix the wrong syntax where its says "SELECT, author, title, ..." instead of "SELECT author, title, ..."
 		$query = eregi_replace("SELECT, ","SELECT ",$query);
@@ -2105,6 +2195,32 @@
 					$query .= " AND year > \"$yearNo\"";
 				elseif ($yearSelector == "is less than")
 					$query .= " AND year < \"$yearNo\"";
+				elseif ($yearSelector == "is within range")
+					{
+						if (preg_match("/\d+/", $yearNo)) // if '$yearNo' does contain at least one number
+						{
+							// extract first number:
+							$yearNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $yearNo);
+							$query .= " AND year >= \"$yearNoStart\"";
+
+							if (preg_match("/^\D*\d+\D+\d+/", $yearNo)) // if '$yearNo' does contain at least two numbers (which are separated by one or more non-digit characters)
+							{
+								// extract the second number:
+								$yearNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $yearNo);
+								$query .= " AND year <= \"$yearNoEnd\"";
+							}
+						}
+						else // fallback if no number is given:
+							$query .= " AND year RLIKE \"$yearNo\"";
+					}
+				elseif ($yearSelector == "is within list")
+					{
+						// replace any non-digit chars with "|":
+						$yearNo = preg_replace("/\D+/", "|", $yearNo);
+						// strip "|" from beginning/end of string (if any):
+						$yearNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $yearNo);
+						$query .= " AND year RLIKE \"^($yearNo)$\"";
+					}
 			}
 
 		// ... if the user has specified an editor, add the value of '$editorName' as an AND clause:
@@ -2187,9 +2303,35 @@
 				elseif ($volumeSelector == "ends with")
 					$query .= " AND series_volume RLIKE \"$volumeNo$\"";
 				elseif ($volumeSelector == "is greater than")
-					$query .= " AND series_volume > \"$volumeNo\"";
+					$query .= " AND series_volume_numeric > \"$volumeNo\"";
 				elseif ($volumeSelector == "is less than")
-					$query .= " AND series_volume < \"$volumeNo\"";
+					$query .= " AND series_volume_numeric < \"$volumeNo\"";
+				elseif ($volumeSelector == "is within range")
+					{
+						if (preg_match("/\d+/", $volumeNo)) // if '$volumeNo' does contain at least one number
+						{
+							// extract first number:
+							$volumeNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $volumeNo);
+							$query .= " AND series_volume_numeric >= \"$volumeNoStart\"";
+
+							if (preg_match("/^\D*\d+\D+\d+/", $volumeNo)) // if '$volumeNo' does contain at least two numbers (which are separated by one or more non-digit characters)
+							{
+								// extract the second number:
+								$volumeNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $volumeNo);
+								$query .= " AND series_volume_numeric <= \"$volumeNoEnd\"";
+							}
+						}
+						else // fallback if no number is given:
+							$query .= " AND series_volume RLIKE \"$volumeNo\"";
+					}
+				elseif ($volumeSelector == "is within list")
+					{
+						// replace any non-digit chars with "|":
+						$volumeNo = preg_replace("/\D+/", "|", $volumeNo);
+						// strip "|" from beginning/end of string (if any):
+						$volumeNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $volumeNo);
+						$query .= " AND series_volume RLIKE \"^($volumeNo)$\"";
+					}
 			}
 
 		// ... if the user has specified some pages, add the value of '$pagesNo' as an AND clause:
@@ -2786,7 +2928,7 @@
 				$query .= ", modified_by"; // add 'modified_by' column
 		}
 
-		// ... we still have to trap the case that the (silly!) user hasn't checked any of the column checkboxes above:
+		// ... we still have to trap the case that the user hasn't checked any of the column checkboxes above:
 		if ($query == "SELECT")
 			$query .= " author"; // force add 'author' column if the user hasn't checked any of the column checkboxes
 
@@ -2797,7 +2939,7 @@
 							//  (which is required in order to obtain unique checkbox names)
 
 		if ($showLinks == "1")
-			$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
+			$query .= ", file, url, doi, isbn"; // add 'file', 'url', 'doi' & 'isbn' columns
 
 		// Finally, fix the wrong syntax where its says "SELECT, author, title, ..." instead of "SELECT author, title, ..."
 		$query = eregi_replace("SELECT, ","SELECT ",$query);
@@ -2968,6 +3110,32 @@
 					$query .= " AND year > \"$yearNo\"";
 				elseif ($yearSelector == "is less than")
 					$query .= " AND year < \"$yearNo\"";
+				elseif ($yearSelector == "is within range")
+					{
+						if (preg_match("/\d+/", $yearNo)) // if '$yearNo' does contain at least one number
+						{
+							// extract first number:
+							$yearNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $yearNo);
+							$query .= " AND year >= \"$yearNoStart\"";
+
+							if (preg_match("/^\D*\d+\D+\d+/", $yearNo)) // if '$yearNo' does contain at least two numbers (which are separated by one or more non-digit characters)
+							{
+								// extract the second number:
+								$yearNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $yearNo);
+								$query .= " AND year <= \"$yearNoEnd\"";
+							}
+						}
+						else // fallback if no number is given:
+							$query .= " AND year RLIKE \"$yearNo\"";
+					}
+				elseif ($yearSelector == "is within list")
+					{
+						// replace any non-digit chars with "|":
+						$yearNo = preg_replace("/\D+/", "|", $yearNo);
+						// strip "|" from beginning/end of string (if any):
+						$yearNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $yearNo);
+						$query .= " AND year RLIKE \"^($yearNo)$\"";
+					}
 			}
 
 		// ... if the user has specified a publication, add the value of '$publicationName' as an AND clause:
@@ -3093,9 +3261,35 @@
 				elseif ($volumeSelector == "ends with")
 					$query .= " AND volume RLIKE \"$volumeNo$\"";
 				elseif ($volumeSelector == "is greater than")
-					$query .= " AND volume > \"$volumeNo\"";
+					$query .= " AND volume_numeric > \"$volumeNo\"";
 				elseif ($volumeSelector == "is less than")
-					$query .= " AND volume < \"$volumeNo\"";
+					$query .= " AND volume_numeric < \"$volumeNo\"";
+				elseif ($volumeSelector == "is within range")
+					{
+						if (preg_match("/\d+/", $volumeNo)) // if '$volumeNo' does contain at least one number
+						{
+							// extract first number:
+							$volumeNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $volumeNo);
+							$query .= " AND volume_numeric >= \"$volumeNoStart\"";
+
+							if (preg_match("/^\D*\d+\D+\d+/", $volumeNo)) // if '$volumeNo' does contain at least two numbers (which are separated by one or more non-digit characters)
+							{
+								// extract the second number:
+								$volumeNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $volumeNo);
+								$query .= " AND volume_numeric <= \"$volumeNoEnd\"";
+							}
+						}
+						else // fallback if no number is given:
+							$query .= " AND volume RLIKE \"$volumeNo\"";
+					}
+				elseif ($volumeSelector == "is within list")
+					{
+						// replace any non-digit chars with "|":
+						$volumeNo = preg_replace("/\D+/", "|", $volumeNo);
+						// strip "|" from beginning/end of string (if any):
+						$volumeNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $volumeNo);
+						$query .= " AND volume RLIKE \"^($volumeNo)$\"";
+					}
 			}
 
 		// ... if the user has specified an issue, add the value of '$issueNo' as an AND clause:
@@ -3115,10 +3309,6 @@
 					$query .= " AND issue RLIKE \"^$issueNo\"";
 				elseif ($issueSelector == "ends with")
 					$query .= " AND issue RLIKE \"$issueNo$\"";
-				elseif ($issueSelector == "is greater than")
-					$query .= " AND issue > \"$issueNo\"";
-				elseif ($issueSelector == "is less than")
-					$query .= " AND issue < \"$issueNo\"";
 			}
 
 		// ... if the user has specified some pages, add the value of '$pagesNo' as an AND clause:
@@ -3265,9 +3455,35 @@
 				elseif ($seriesVolumeSelector == "ends with")
 					$query .= " AND series_volume RLIKE \"$seriesVolumeNo$\"";
 				elseif ($seriesVolumeSelector == "is greater than")
-					$query .= " AND series_volume > \"$seriesVolumeNo\"";
+					$query .= " AND series_volume_numeric > \"$seriesVolumeNo\"";
 				elseif ($seriesVolumeSelector == "is less than")
-					$query .= " AND series_volume < \"$seriesVolumeNo\"";
+					$query .= " AND series_volume_numeric < \"$seriesVolumeNo\"";
+				elseif ($seriesVolumeSelector == "is within range")
+					{
+						if (preg_match("/\d+/", $seriesVolumeNo)) // if '$seriesVolumeNo' does contain at least one number
+						{
+							// extract first number:
+							$seriesVolumeNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $seriesVolumeNo);
+							$query .= " AND series_volume_numeric >= \"$seriesVolumeNoStart\"";
+
+							if (preg_match("/^\D*\d+\D+\d+/", $seriesVolumeNo)) // if '$seriesVolumeNo' does contain at least two numbers (which are separated by one or more non-digit characters)
+							{
+								// extract the second number:
+								$seriesVolumeNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $seriesVolumeNo);
+								$query .= " AND series_volume_numeric <= \"$seriesVolumeNoEnd\"";
+							}
+						}
+						else // fallback if no number is given:
+							$query .= " AND series_volume RLIKE \"$seriesVolumeNo\"";
+					}
+				elseif ($seriesVolumeSelector == "is within list")
+					{
+						// replace any non-digit chars with "|":
+						$seriesVolumeNo = preg_replace("/\D+/", "|", $seriesVolumeNo);
+						// strip "|" from beginning/end of string (if any):
+						$seriesVolumeNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $seriesVolumeNo);
+						$query .= " AND series_volume RLIKE \"^($seriesVolumeNo)$\"";
+					}
 			}
 
 		// ... if the user has specified a series issue, add the value of '$seriesIssueNo' as an AND clause:
@@ -3287,10 +3503,6 @@
 					$query .= " AND series_issue RLIKE \"^$seriesIssueNo\"";
 				elseif ($seriesIssueSelector == "ends with")
 					$query .= " AND series_issue RLIKE \"$seriesIssueNo$\"";
-				elseif ($seriesIssueSelector == "is greater than")
-					$query .= " AND series_issue > \"$seriesIssueNo\"";
-				elseif ($seriesIssueSelector == "is less than")
-					$query .= " AND series_issue < \"$seriesIssueNo\"";
 			}
 
 		// ... if the user has specified a publisher, add the value of '$publisherName' as an AND clause:
@@ -3400,6 +3612,32 @@
 					$query .= " AND edition > \"$editionNo\"";
 				elseif ($editionSelector == "is less than")
 					$query .= " AND edition < \"$editionNo\"";
+				elseif ($editionSelector == "is within range")
+					{
+						if (preg_match("/\d+/", $editionNo)) // if '$editionNo' does contain at least one number
+						{
+							// extract first number:
+							$editionNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $editionNo);
+							$query .= " AND edition >= \"$editionNoStart\"";
+
+							if (preg_match("/^\D*\d+\D+\d+/", $editionNo)) // if '$editionNo' does contain at least two numbers (which are separated by one or more non-digit characters)
+							{
+								// extract the second number:
+								$editionNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $editionNo);
+								$query .= " AND edition <= \"$editionNoEnd\"";
+							}
+						}
+						else // fallback if no number is given:
+							$query .= " AND edition RLIKE \"$editionNo\"";
+					}
+				elseif ($editionSelector == "is within list")
+					{
+						// replace any non-digit chars with "|":
+						$editionNo = preg_replace("/\D+/", "|", $editionNo);
+						// strip "|" from beginning/end of string (if any):
+						$editionNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $editionNo);
+						$query .= " AND edition RLIKE \"^($editionNo)$\"";
+					}
 			}
 
 		// ... if the user has specified a medium, add the value of '$mediumName' as an AND clause:
@@ -3987,6 +4225,24 @@
 					$query .= " AND serial > \"$serialNo\"";
 				elseif ($serialSelector == "is less than")
 					$query .= " AND serial < \"$serialNo\"";
+				elseif ($serialSelector == "is within range")
+					{
+						if (preg_match("/\d+/", $serialNo)) // if '$serialNo' does contain at least one number
+						{
+							// extract first number:
+							$serialNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $serialNo);
+							$query .= " AND serial >= \"$serialNoStart\"";
+
+							if (preg_match("/^\D*\d+\D+\d+/", $serialNo)) // if '$serialNo' does contain at least two numbers (which are separated by one or more non-digit characters)
+							{
+								// extract the second number:
+								$serialNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $serialNo);
+								$query .= " AND serial <= \"$serialNoEnd\"";
+							}
+						}
+						else // fallback if no number is given:
+							$query .= " AND serial RLIKE \"$serialNo\""; // this will never produce any results since serial is always numeric but we keep it here for reasons of consistency
+					}
 				elseif ($serialSelector == "is within list")
 					{
 						// replace any non-digit chars with "|":
@@ -4094,6 +4350,32 @@
 					$query .= " AND created_date > \"$createdDateNo\"";
 				elseif ($createdDateSelector == "is less than")
 					$query .= " AND created_date < \"$createdDateNo\"";
+				elseif ($createdDateSelector == "is within range")
+					{
+						if (preg_match("/\d{4}/", $createdDateNo)) // if '$createdDateNo' does contain at least one date spec (which, as a minimum, is defined by a four-digit year)
+						{
+							// extract first date spec:
+							$createdDateNoStart = preg_replace("/^[^\d-]*(\d{4}(?:-\d{2})?(?:-\d{2})?).*/", "\\1", $createdDateNo); // extracts e.g. "2005-10-27", "2005-10" or just "2005" (in that order)
+							$query .= " AND created_date >= \"$createdDateNoStart\"";
+
+							if (preg_match("/^[^\d-]*\d{4}(?:-\d{2})?(?:-\d{2})?[^\d-]+\d{4}(?:-\d{2})?(?:-\d{2})?/", $createdDateNo)) // if '$createdDateNo' does contain at least two date specs (which are separated by one or more non-digit/non-hyphen characters)
+							{
+								// extract the second date spec:
+								$createdDateNoEnd = preg_replace("/^[^\d-]*\d{4}(?:-\d{2})?(?:-\d{2})?[^\d-]+(\d{4}(?:-\d{2})?(?:-\d{2})?).*/", "\\1", $createdDateNo);
+								$query .= " AND created_date <= \"$createdDateNoEnd\"";
+							}
+						}
+						else // fallback if no recognized date spec is given:
+							$query .= " AND created_date RLIKE \"$createdDateNo\"";
+					}
+				elseif ($createdDateSelector == "is within list")
+					{
+						// replace any non-digit/non-hyphen chars with "|":
+						$createdDateNo = preg_replace("/[^\d-]+/", "|", $createdDateNo);
+						// strip "|" from beginning/end of string (if any):
+						$createdDateNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $createdDateNo);
+						$query .= " AND created_date RLIKE \"^($createdDateNo)$\"";
+					}
 			}
 
 		// ... if the user has specified a created time, add the value of '$createdTimeNo' as an AND clause:
@@ -4117,6 +4399,32 @@
 					$query .= " AND created_time > \"$createdTimeNo\"";
 				elseif ($createdTimeSelector == "is less than")
 					$query .= " AND created_time < \"$createdTimeNo\"";
+				elseif ($createdTimeSelector == "is within range")
+					{
+						if (preg_match("/\d{2}:\d{2}/", $createdTimeNo)) // if '$createdTimeNo' does contain at least one time spec (which, as a minimum, is defined by a HH:MM)
+						{
+							// extract first time spec:
+							$createdTimeNoStart = preg_replace("/^[^\d:]*(\d{2}:\d{2}(?::\d{2})?).*/", "\\1", $createdTimeNo); // extracts e.g. "23:59:59" or just "23:59" (in that order)
+							$query .= " AND created_time >= \"$createdTimeNoStart\"";
+
+							if (preg_match("/^[^\d:]*\d{2}:\d{2}(?::\d{2})?[^\d:]+\d{2}:\d{2}(?::\d{2})?/", $createdTimeNo)) // if '$createdTimeNo' does contain at least two date specs (which are separated by one or more non-digit/non-colon characters)
+							{
+								// extract the second time spec:
+								$createdTimeNoEnd = preg_replace("/^[^\d:]*\d{2}:\d{2}(?::\d{2})?[^\d:]+(\d{2}:\d{2}(?::\d{2})?).*/", "\\1", $createdTimeNo);
+								$query .= " AND created_time <= \"$createdTimeNoEnd\"";
+							}
+						}
+						else // fallback if no recognized time spec is given:
+							$query .= " AND created_time RLIKE \"$createdTimeNo\"";
+					}
+				elseif ($createdTimeSelector == "is within list")
+					{
+						// replace any non-digit/non-colon chars with "|":
+						$createdTimeNo = preg_replace("/[^\d:]+/", "|", $createdTimeNo);
+						// strip "|" from beginning/end of string (if any):
+						$createdTimeNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $createdTimeNo);
+						$query .= " AND created_time RLIKE \"^($createdTimeNo)$\"";
+					}
 			}
 
 		// ... if the user has specified a created by, add the value of '$createdByName' as an AND clause:
@@ -4183,6 +4491,32 @@
 					$query .= " AND modified_date > \"$modifiedDateNo\"";
 				elseif ($modifiedDateSelector == "is less than")
 					$query .= " AND modified_date < \"$modifiedDateNo\"";
+				elseif ($modifiedDateSelector == "is within range")
+					{
+						if (preg_match("/\d{4}/", $modifiedDateNo)) // if '$modifiedDateNo' does contain at least one date spec (which, as a minimum, is defined by a four-digit year)
+						{
+							// extract first date spec:
+							$modifiedDateNoStart = preg_replace("/^[^\d-]*(\d{4}(?:-\d{2})?(?:-\d{2})?).*/", "\\1", $modifiedDateNo); // extracts e.g. "2005-10-27", "2005-10" or just "2005" (in that order)
+							$query .= " AND modified_date >= \"$modifiedDateNoStart\"";
+
+							if (preg_match("/^[^\d-]*\d{4}(?:-\d{2})?(?:-\d{2})?[^\d-]+\d{4}(?:-\d{2})?(?:-\d{2})?/", $modifiedDateNo)) // if '$modifiedDateNo' does contain at least two date specs (which are separated by one or more non-digit/non-hyphen characters)
+							{
+								// extract the second date spec:
+								$modifiedDateNoEnd = preg_replace("/^[^\d-]*\d{4}(?:-\d{2})?(?:-\d{2})?[^\d-]+(\d{4}(?:-\d{2})?(?:-\d{2})?).*/", "\\1", $modifiedDateNo);
+								$query .= " AND modified_date <= \"$modifiedDateNoEnd\"";
+							}
+						}
+						else // fallback if no recognized date spec is given:
+							$query .= " AND modified_date RLIKE \"$modifiedDateNo\"";
+					}
+				elseif ($modifiedDateSelector == "is within list")
+					{
+						// replace any non-digit/non-hyphen chars with "|":
+						$modifiedDateNo = preg_replace("/[^\d-]+/", "|", $modifiedDateNo);
+						// strip "|" from beginning/end of string (if any):
+						$modifiedDateNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $modifiedDateNo);
+						$query .= " AND modified_date RLIKE \"^($modifiedDateNo)$\"";
+					}
 			}
 
 		// ... if the user has specified a modified time, add the value of '$modifiedTimeNo' as an AND clause:
@@ -4206,6 +4540,32 @@
 					$query .= " AND modified_time > \"$modifiedTimeNo\"";
 				elseif ($modifiedTimeSelector == "is less than")
 					$query .= " AND modified_time < \"$modifiedTimeNo\"";
+				elseif ($modifiedTimeSelector == "is within range")
+					{
+						if (preg_match("/\d{2}:\d{2}/", $modifiedTimeNo)) // if '$modifiedTimeNo' does contain at least one time spec (which, as a minimum, is defined by a HH:MM)
+						{
+							// extract first time spec:
+							$modifiedTimeNoStart = preg_replace("/^[^\d:]*(\d{2}:\d{2}(?::\d{2})?).*/", "\\1", $modifiedTimeNo); // extracts e.g. "23:59:59" or just "23:59" (in that order)
+							$query .= " AND modified_time >= \"$modifiedTimeNoStart\"";
+
+							if (preg_match("/^[^\d:]*\d{2}:\d{2}(?::\d{2})?[^\d:]+\d{2}:\d{2}(?::\d{2})?/", $modifiedTimeNo)) // if '$modifiedTimeNo' does contain at least two date specs (which are separated by one or more non-digit/non-colon characters)
+							{
+								// extract the second time spec:
+								$modifiedTimeNoEnd = preg_replace("/^[^\d:]*\d{2}:\d{2}(?::\d{2})?[^\d:]+(\d{2}:\d{2}(?::\d{2})?).*/", "\\1", $modifiedTimeNo);
+								$query .= " AND modified_time <= \"$modifiedTimeNoEnd\"";
+							}
+						}
+						else // fallback if no recognized time spec is given:
+							$query .= " AND modified_time RLIKE \"$modifiedTimeNo\"";
+					}
+				elseif ($modifiedTimeSelector == "is within list")
+					{
+						// replace any non-digit/non-colon chars with "|":
+						$modifiedTimeNo = preg_replace("/[^\d:]+/", "|", $modifiedTimeNo);
+						// strip "|" from beginning/end of string (if any):
+						$modifiedTimeNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $modifiedTimeNo);
+						$query .= " AND modified_time RLIKE \"^($modifiedTimeNo)$\"";
+					}
 			}
 
 		// ... if the user has specified a modified by, add the value of '$modifiedByName' as an AND clause:
@@ -4362,6 +4722,9 @@
 
 				$query .= ", serial"; // add 'serial' column
 
+				if ($showLinks == "1")
+					$query .= ", file, url, doi, isbn"; // add 'file', 'url', 'doi' & 'isbn' columns
+
 				if (isset($_SESSION['loginEmail'])) // if a user is logged in...
 					$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID . " WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\"";
 				else // NO user logged in
@@ -4388,7 +4751,7 @@
 				$query .= ", orig_record, serial"; // add 'orig_record' and 'serial' columns
 
 				if ($showLinks == "1" OR $displayType == "Export")
-					$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
+					$query .= ", file, url, doi, isbn"; // add 'file', 'url', 'doi' & 'isbn' columns
 
 				if (isset($_SESSION['loginEmail'])) // if a user is logged in...
 					$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID . " WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY $orderBy";
@@ -4412,7 +4775,7 @@
 				$query = eregi_replace(" FROM $tableRefs",", serial FROM $tableRefs",$query); // add 'serial' column (which is required in order to obtain unique checkbox names)
 
 				if ($showLinks == "1")
-					$query = eregi_replace(" FROM $tableRefs",", file, url, doi FROM $tableRefs",$query); // add 'file', 'url' & 'doi' columns
+					$query = eregi_replace(" FROM $tableRefs",", file, url, doi, isbn FROM $tableRefs",$query); // add 'file', 'url', 'doi' & 'isbn' columns
 			}
 
 		return $query;
@@ -4531,7 +4894,7 @@
 							//  (which is required in order to obtain unique checkbox names)
 
 		if ($showLinks == "1")
-			$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
+			$query .= ", file, url, doi, isbn"; // add 'file', 'url', 'doi' & 'isbn' columns
 
 		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
 		$query .= " FROM $tableRefs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
@@ -4548,11 +4911,18 @@
 	// --------------------------------------------------------------------
 
 	// Build the database query from user input provided by the "Show My Group" form on the main page ('index.php') or above the query results list (that was produced by 'search.php'):
-	function extractFormElementsGroup($sqlQuery, $showLinks, $userID)
+	function extractFormElementsGroup($sqlQuery, $showLinks, $userID, $displayType)
 	{
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
-		if (!empty($sqlQuery)) // if there's a previous SQL query available (as is the case if the group search originated from a search results page - and not from the main page 'index.php')
+		$groupSearchSelector = $_POST['groupSearchSelector']; // extract the user group chosen by the user
+
+		if (isset($_POST['originalDisplayType']))
+			$originalDisplayType = $_POST['originalDisplayType']; // extract the original value of the '$displayType' variable (which was included as a hidden form tag within the 'groupSearch' form of a search results page)
+		else
+			$originalDisplayType = "";
+
+		if (($originalDisplayType != "Browse") AND (!empty($sqlQuery))) // if we're not in Browse view and there's a previous SQL query available (as is the case if the group search originated from a search results page - and not from the main page 'index.php')
 		{
 			$query = preg_replace("/(SELECT .+?) FROM $tableRefs.+/i", "\\1", $sqlQuery); // use the custom set of colums chosen by the user
 			$queryOrderBy = preg_replace("/.+( ORDER BY .+?)(?=LIMIT.*|GROUP BY.*|HAVING.*|PROCEDURE.*|FOR UPDATE.*|LOCK IN.*|$)/i", "\\1", $sqlQuery); // user the custom ORDER BY clause chosen by the user
@@ -4563,8 +4933,6 @@
 			$queryOrderBy = " ORDER BY author, year DESC, publication"; // add the default ORDER BY clause
 		}
 
-		$groupSearchSelector = $_POST['groupSearchSelector']; // extract the user group chosen by the user
-
 		$query .= ", orig_record"; // add 'orig_record' column (although it won't be visible the 'orig_record' column gets included in every search query)
 								//  (which is required in order to present visual feedback on duplicate records)
 
@@ -4572,7 +4940,7 @@
 							//  (which is required in order to obtain unique checkbox names)
 
 		if ($showLinks == "1")
-			$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
+			$query .= ", file, url, doi, isbn"; // add 'file', 'url', 'doi' & 'isbn' columns
 
 		$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID; // add FROM clause
 
@@ -4693,7 +5061,7 @@
 							//  (which is required in order to obtain unique checkbox names)
 
 		if ($showLinks == "1")
-			$query .= ", file, url, doi"; // add 'file', 'url' & 'doi' columns
+			$query .= ", file, url, doi, isbn"; // add 'file', 'url', 'doi' & 'isbn' columns
 
 		$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID . " WHERE location RLIKE \"$loginEmail\""; // add FROM & (initial) WHERE clause
 
@@ -4750,6 +5118,58 @@
 
 	// --------------------------------------------------------------------
 
+	// Build the database query from user input provided by the "Browse My Refs" form on the
+	// main page ('index.php') which lets the user browse a particular field:
+	function extractFormElementsBrowseMyRefs($showLinks, $loginEmail, $userID)
+	{
+		// IMPORTANT NOTE: Browse functionality is NOT fully implemented yet!!
+
+		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
+
+		$browseFieldSelector = $_POST['browseFieldSelector']; // extract field name chosen by the user
+
+		// construct the SQL query:
+
+		// if the chosen field can contain multiple items...
+		// IMPORTANT NOTE TO SELF: we really should check here if the corresponding 'ref_...' table exists!
+		if (eregi("^(author|keywords|editor|language|summary_language|area|location|user_keys|user_groups)$", $browseFieldSelector))
+		{
+			list($refTableName, $browseFieldName) = buildRefTableAndFieldNames($browseFieldSelector); // get correct table name and field name for the 'ref_...' table that matches the chosen field
+
+			$browseFieldColumnName = " AS " . preg_replace("/^ref_(\w+)$/i", "\\1", $browseFieldName); // strip the 'ref_' prefix for the column name
+
+			$queryRefTableLeftJoinPart = " LEFT JOIN $refTableName ON serial = ref_id"; // ...add the appropriate 'LEFT JOIN...' part to the 'FROM' clause
+			if (eregi("^(user_keys|user_groups)$", $browseFieldSelector))
+				$queryRefTableLeftJoinPart .= " AND ref_user_id = " . $userID; // add the user's user_id as additional condition to this 'LEFT JOIN...' part
+		}
+		else
+		{
+			$browseFieldName = $browseFieldSelector;
+			$browseFieldColumnName = "";
+			$queryRefTableLeftJoinPart = "";
+		}
+
+		$query = "SELECT " . $browseFieldName . $browseFieldColumnName . ", COUNT(*) AS records";
+
+		// if a user specific field was chosen...
+		if (eregi("^(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)$", $browseFieldSelector))
+			$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID; // add FROM clause and the appropriate 'LEFT JOIN...' part
+		else
+			$query .= " FROM $tableRefs"; // add FROM clause
+
+		$query .= $queryRefTableLeftJoinPart; // add additional 'LEFT JOIN...' part (if required)
+
+		$query .= " WHERE location RLIKE \"$loginEmail\""; // add (initial) WHERE clause
+
+		$query .= " GROUP BY $browseFieldName"; // add the GROUP BY clause
+
+		$query .= " ORDER BY records DESC, $browseFieldName"; // add the default ORDER BY clause
+
+		return $query;
+	}
+
+	// --------------------------------------------------------------------
+
 	// NOTHING FOUND
 	// informs the user that no results were found for the current query/action
 	function nothingFound($nothingChecked)
@@ -4767,6 +5187,194 @@
 
 
 		return $nothingFoundFeedback;
+	}
+
+	// --------------------------------------------------------------------
+
+	// PRINT LINKS
+	// this function prints out available links in List view and Citation view
+	// (for links of type DOI/URL/ISBN/XREF, only one link will be printed; order of preference: DOI, URL, ISBN, XREF)
+	function printLinks($showLinkTypes, $row, $showQuery, $showLinks, $userID, $viewType, $orderBy)
+	{
+		global $oldQuery;
+		global $filesBaseURL; // these variables are defined in 'ini.inc.php'
+		global $fileVisibility;
+		global $fileVisibilityException;
+		global $openURLFormat;
+		global $isbnURLFormat;
+		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
+
+		// Note: for proper placement of links within the Links column we don't use the 'mergeLinks()' function here (as is done for Details view),
+		//       since spacing before links is handled individually for each link type
+
+		// count the number of available link elements:
+		$linkElementCounterLoggedOut = 0;
+
+		// if the 'user_permissions' session variable contains 'allow_details_view'...
+		if (in_array("details", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions']))
+			$linkElementCounterLoggedOut = ($linkElementCounterLoggedOut + 1);
+
+		// if the 'user_permissions' session variable contains 'allow_edit'...
+		if (in_array("edit", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_edit", $_SESSION['user_permissions']))
+			$linkElementCounterLoggedOut = ($linkElementCounterLoggedOut + 1);
+
+		// if either the URL or the DOI field contain something
+		if ((in_array("url", $showLinkTypes) AND !empty($row["url"])) OR (in_array("doi", $showLinkTypes) AND !empty($row["doi"])))
+			$linkElementCounterLoggedOut = ($linkElementCounterLoggedOut + 1);
+
+		// in case an ISBN number was given
+		elseif (in_array("isbn", $showLinkTypes) AND !empty($isbnURLFormat) AND !empty($row["isbn"])) // provide a link to an ISBN resolver
+			$linkElementCounterLoggedOut = ($linkElementCounterLoggedOut + 1);
+
+		// auto-generated OpenURL links are only included if the main bibliographic data (author/year/publication/volume/pages) are present
+		elseif (in_array("xref", $showLinkTypes) AND !empty($openURLFormat) AND !empty($row["author"]) AND !empty($row["year"]) AND !empty($row["publication"]) AND !empty($row["volume"]) AND !empty($row["pages"])) // provide a link to an OpenURL resolver
+			$linkElementCounterLoggedOut = ($linkElementCounterLoggedOut + 1);
+
+		$linkElementCounterLoggedIn = $linkElementCounterLoggedOut;
+
+		// if a user is logged in and a FILE is associated with the current record
+		if (in_array("file", $showLinkTypes) AND ($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND ereg("allow_download", $_SESSION['user_permissions']))) OR (!empty($fileVisibilityException) AND preg_match($fileVisibilityException[1], $row[$fileVisibilityException[0]]))))
+			if (!empty($row["file"]))// if the 'file' field is NOT empty
+				$linkElementCounterLoggedIn = ($linkElementCounterLoggedIn + 1);
+
+
+		if (in_array("details", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_details_view'...
+		{
+			// ... display a link that opens the 'details view' for this record:
+			if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
+				echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20cite_key%2C%20related%20"
+					. "FROM%20" . $tableRefs . "%20LEFT%20JOIN%20" . $tableUserData . "%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
+			else // if NO user logged in, don't display any user specific fields:
+				echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%20"
+					. "FROM%20" . $tableRefs . "%20";
+
+			echo "WHERE%20serial%20RLIKE%20%22%5E%28" . $row["serial"]
+				. "%29%24%22%20ORDER%20BY%20" . rawurlencode($orderBy)
+				. "&amp;showQuery=" . $showQuery
+				. "&amp;showLinks=" . $showLinks
+				. "&amp;formType=sqlSearch"
+				. "&amp;viewType=" . $viewType
+				. "&amp;submit=Display"
+				. "&amp;oldQuery=" . rawurlencode($oldQuery)
+				. "\"><img src=\"img/details.gif\" alt=\"details\" title=\"show details\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
+		}
+
+		if ((($linkElementCounterLoggedOut > 0) OR (isset($_SESSION['loginEmail']) AND $linkElementCounterLoggedIn > 0)) AND (in_array("details", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])))
+			echo "&nbsp;&nbsp;";
+
+		if (in_array("edit", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_edit", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_edit'...
+			// ... display a link that opens the edit form for this record:
+			echo "\n\t\t<a href=\"record.php?serialNo=" . $row["serial"] . "&amp;recordAction=edit"
+				. "&amp;oldQuery=" . rawurlencode($oldQuery)
+				. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit record\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
+
+		if ((($linkElementCounterLoggedOut > 1) OR (isset($_SESSION['loginEmail']) AND $linkElementCounterLoggedIn > 1)) AND (in_array("edit", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_edit", $_SESSION['user_permissions'])))
+		{
+			if (in_array("details", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions']))
+				echo "\n\t\t<br>";
+			else
+				echo "&nbsp;&nbsp;";
+		}
+
+		// show a link to any corresponding file if one of the following conditions is met:
+		// - the variable '$fileVisibility' (defined in 'ini.inc.php') is set to 'everyone'
+		// - the variable '$fileVisibility' is set to 'login' AND the user is logged in
+		// - the variable '$fileVisibility' is set to 'user-specific' AND the 'user_permissions' session variable contains 'allow_download'
+		// - the array variable '$fileVisibilityException' (defined in 'ini.inc.php') contains a pattern (in array element 1) that matches the contents of the field given (in array element 0)
+		if (in_array("file", $showLinkTypes) AND ($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND ereg("allow_download", $_SESSION['user_permissions']))) OR (!empty($fileVisibilityException) AND preg_match($fileVisibilityException[1], $row[$fileVisibilityException[0]]))))
+		{
+			if (!empty($row["file"]))// if the 'file' field is NOT empty
+			{
+				if (ereg("^(http|ftp)://", $row["file"])) // if the 'file' field contains a full URL (starting with "http://" or "ftp://")
+					$URLprefix = ""; // we don't alter the URL given in the 'file' field
+				else // if the 'file' field contains only a partial path (like 'polarbiol/10240001.pdf') or just a file name (like '10240001.pdf')
+					$URLprefix = $filesBaseURL; // use the base URL of the standard files directory as prefix ('$filesBaseURL' is defined in 'ini.inc.php')
+
+				if (eregi("\.pdf$", $row["file"])) // if the 'file' field contains a link to a PDF file
+					echo "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file_PDF.gif\" alt=\"pdf\" title=\"download PDF file\" width=\"17\" height=\"17\" hspace=\"0\" border=\"0\"></a>"; // display a PDF file icon as download link
+				else
+					echo "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file.gif\" alt=\"file\" title=\"download file\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link
+			}
+		}
+
+		// if a DOI number exists for this record, we'll prefer it as link, otherwise we use the URL (if available):
+		// (note, that in List view, we'll use the same icon, no matter if the DOI or the URL is used for the link)
+		if (in_array("doi", $showLinkTypes) AND !empty($row["doi"]))
+			echo "\n\t\t<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/link.gif\" alt=\"doi\" title=\"goto web page (via DOI)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+
+		elseif (in_array("url", $showLinkTypes) AND !empty($row["url"])) // 'htmlentities()' is used to convert any '&' into '&amp;'
+			echo "\n\t\t<a href=\"" . encodeHTML($row["url"]) . "\"><img src=\"img/link.gif\" alt=\"url\" title=\"goto web page\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+
+		// if an ISBN number exists for the current record, provide a link to an ISBN resolver:
+		elseif (in_array("isbn", $showLinkTypes) AND !empty($isbnURLFormat) AND !empty($row["isbn"]))
+		{
+			// this is a stupid hack that maps the names of the '$row' array keys to those used
+			// by the '$formVars' array (which is required by function 'parsePlaceholderString()')
+			// (eventually, the '$formVars' array should use the MySQL field names as names for its array keys)
+			$formVars = buildFormVarsArray($row); // function 'buildFormVarsArray()' is defined in 'include.inc.php'
+
+			// auto-generate an ISBN link according to the naming scheme given in '$isbnURLFormat' (in 'ini.inc.php'):
+			$isbnURL = parsePlaceholderString($formVars, $isbnURLFormat, ""); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
+
+			$encodedURL = encodeHTML($isbnURL); // 'htmlentities()' is used to convert higher ASCII chars into its entities and any '&' into '&amp;'
+			$encodedURL = str_replace(" ", "%20", $encodedURL); // ensure that any spaces are also properly urlencoded
+
+			if (!empty($isbnURL))
+				echo "\n\t\t<a href=\"" . $encodedURL . "\"><img src=\"img/resolve.gif\" alt=\"isbn\" title=\"find book details (via ISBN)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+		}
+
+		// if still no link was generated and the main bibliographic data do exist for the current record, we'll provide a link to an OpenURL resolver:
+		// currently, auto-generated OpenURL links are only included in List view if the main bibliographic fields (author/year/publication/volume/pages) are displayed;
+		// the reason is that, currently, these fields are only provided within the '$row' array when they are actually displayed by the user as a visible column.
+		elseif (in_array("xref", $showLinkTypes) AND !empty($openURLFormat) AND !empty($row["author"]) AND !empty($row["year"]) AND !empty($row["publication"]) AND !empty($row["volume"]) AND !empty($row["pages"]))
+		{
+			// again, the stupid hack (see note above)
+			$formVars = buildFormVarsArray($row); // function 'buildFormVarsArray()' is defined in 'include.inc.php'
+
+			// auto-generate an OpenURL according to the naming scheme given in '$openURLFormat' (in 'ini.inc.php'):
+			$openURL = parsePlaceholderString($formVars, $openURLFormat, ""); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
+
+			$encodedURL = encodeHTML($openURL); // 'htmlentities()' is used to convert higher ASCII chars into its entities and any '&' into '&amp;'
+			$encodedURL = str_replace(" ", "%20", $encodedURL); // ensure that any spaces are also properly urlencoded
+
+			if (!empty($openURL))
+				echo "\n\t\t<a href=\"" . $encodedURL . "\"><img src=\"img/resolve.gif\" alt=\"openurl\" title=\"find record details (via OpenURL)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+		}
+	}
+
+	// --------------------------------------------------------------------
+
+	// MERGE LINKS
+	// this function will merge links with delimiters appropriate for display in the Links column
+	function mergeLinks($linkArray)
+	{
+		$totalLinkCount = count($linkArray); // check how many links we're dealing with
+
+		if (!empty($linkArray)) // if some links are present
+		{
+			if ($totalLinkCount == 1) // only one link
+			{
+				$linkString = "&nbsp;&nbsp;" . $linkArray[0];
+			}
+			else // multiple links
+			{
+				$linkString = "";
+
+				for ($linkCounter=0; $linkCounter < ($totalLinkCount - 1); $linkCounter++) // first array element has offset '0' so we decrement '$totalLinkCount' by 1
+				{
+					if (is_integer(($linkCounter + 1)/2)) // even number
+						$suffix = "<br>"; // a set of two links is printed per row
+					else // uneven number
+						$suffix = "&nbsp;";
+
+					$linkString .=  $linkArray[$linkCounter] . $suffix;
+				}
+
+				$linkString .=  $linkArray[($totalLinkCount - 1)]; // append last link
+			}
+		}
+
+		return $linkString;
 	}
 
 	// --------------------------------------------------------------------
