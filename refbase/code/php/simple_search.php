@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./simple_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   21-May-05, 19:36
+	// Modified:   31-Oct-05, 16:13
 
 	// Search form providing access to the main fields of the database.
 	// It offers some output options (like how many records to display per page)
@@ -22,13 +22,18 @@
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
 	include 'initialize/ini.inc.php'; // include common variables
-	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
 	// START A SESSION:
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
 	start_session(true);
+
+	// --------------------------------------------------------------------
+
+	// Initialize preferred display language:
+	// (note that 'locales.inc.php' has to be included *after* the call to the 'start_session()' function)
+	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
@@ -73,7 +78,9 @@
 
 
 	$dropDownConditionals2Array = array("is greater than" => $loc["is greater than"],
-										"is less than" => $loc["is less than"]);
+										"is less than" => $loc["is less than"],
+										"is within range" => $loc["is within range"],
+										"is within list" => $loc["is within list"]);
 
 	$dropDownItems2 = buildSelectMenuOptions($dropDownConditionals2Array, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
 
