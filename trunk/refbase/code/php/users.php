@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 00:25
-	// Modified:   21-Aug-05, 22:24
+	// Modified:   27-Aug-05, 21:23
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -145,7 +145,7 @@
 	// --- 'Search within Results' & 'Display Options' forms within 'users.php': ---------------
 	elseif ($formType == "refineSearch" OR $formType == "displayOptions") // the user used the "Search within Results" (or "Display Options") form above the query results list (that was produced by 'users.php')
 	{
-		$query = extractFormElementsRefineDisplay($tableUsers, $displayType, $sqlQuery, $showLinks, ""); // function 'extractFormElementsRefineDisplay()' is defined in 'include.inc.php' since it's also used by 'users.php'
+		list($query, $displayType) = extractFormElementsRefineDisplay($tableUsers, $displayType, $sqlQuery, $showLinks, ""); // function 'extractFormElementsRefineDisplay()' is defined in 'include.inc.php' since it's also used by 'users.php'
 	}
 
 	// --- 'Show User Group' form within 'users.php': ---------------------
@@ -261,7 +261,7 @@
 		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
 
 	// (4b) DISPLAY results:
-	showUsers($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $citeStyle, $showMaxRow, $viewType); // show all users
+	showUsers($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $citeStyle, $showMaxRow, $viewType, $displayType); // show all users
 
 	// ----------------------------------------------
 
@@ -271,7 +271,7 @@
 	// --------------------------------------------------------------------
 	
 	// Display all users listed within the 'users' table
-	function showUsers($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $citeStyle, $showMaxRow, $viewType)
+	function showUsers($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $citeStyle, $showMaxRow, $viewType, $displayType)
 	{
 		global $connection;
 		global $HeaderString;
@@ -306,7 +306,7 @@
 				// Build a TABLE with forms containing options to show the user groups, refine the search results or change the displayed columns:
 
 				//    - Build a FORM with a popup containing the user groups:
-				$formElementsGroup = buildGroupSearchElements("users.php", $queryURL, $query, $showQuery, $showLinks, $showRows); // function 'buildGroupSearchElements()' is defined in 'include.inc.php'
+				$formElementsGroup = buildGroupSearchElements("users.php", $queryURL, $query, $showQuery, $showLinks, $showRows, $displayType); // function 'buildGroupSearchElements()' is defined in 'include.inc.php'
 
 				//    - Build a FORM containing options to refine the search results:
 				//      First, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
@@ -315,7 +315,7 @@
 				$refineSearchSelectorElements2 = ""; // ... and keep the second one blank (compare with 'search.php')
 				$refineSearchSelectorElementSelected = "last_name"; // this column will be selected by default
 				//      Call the 'buildRefineSearchElements()' function (defined in 'include.inc.php') which does the actual work:
-				$formElementsRefine = buildRefineSearchElements("users.php", $queryURL, $showQuery, $showLinks, $showRows, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected);
+				$formElementsRefine = buildRefineSearchElements("users.php", $queryURL, $showQuery, $showLinks, $showRows, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected, $displayType);
 
 				//    - Build a FORM containing display options (show/hide columns or change the number of records displayed per page):
 				//      Again, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
@@ -323,7 +323,7 @@
 				$displayOptionsSelectorElements2 = ""; // again we'll keep the second one blank (compare with 'search.php')
 				$displayOptionsSelectorElementSelected = "last_name"; // this column will be selected by default
 				//      Call the 'buildDisplayOptionsElements()' function (defined in 'include.inc.php') which does the actual work:
-				$formElementsDisplayOptions = buildDisplayOptionsElements("users.php", $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $displayOptionsSelectorElements1, $displayOptionsSelectorElements2, $displayOptionsSelectorElementSelected, $fieldsToDisplay);
+				$formElementsDisplayOptions = buildDisplayOptionsElements("users.php", $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $displayOptionsSelectorElements1, $displayOptionsSelectorElements2, $displayOptionsSelectorElementSelected, $fieldsToDisplay, $displayType);
 
 				echo displayResultsHeader("users.php", $formElementsGroup, $formElementsRefine, $formElementsDisplayOptions); // function 'displayResultsHeader()' is defined in 'results_header.inc.php'
 			}
