@@ -11,7 +11,7 @@
 	// Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
 	//
 	// Created:    02-Oct-04, 12:00
-	// Modified:   21-May-05, 17:48
+	// Modified:   29-Oct-05, 17:16
 
 	// This exports MODS XML. This file must reside in the 'export' directory of the refbase root directory.
 	// It uses functions from include file 'modsxml.inc.php' that requires the ActiveLink PHP XML Package,
@@ -30,7 +30,7 @@
 		return $recordCollection;
 	}
 
-	// --- BEGIN EXPORT FORMAT ---
+	// --- END EXPORT FORMAT ---
 
 	// --------------------------------------------------------------------
 ?>
