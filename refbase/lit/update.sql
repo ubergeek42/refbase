@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./update.sql
 # Created:    01-Mar-05, 16:54
-# Modified:   14-Jul-05, 13:47
+# Modified:   07-Sep-05, 23:41
 
 # This MySQL database structure file will update any refbase v0.7 database to v0.8
 
@@ -170,7 +170,7 @@ CREATE TABLE `styles` (
   `depends_id` mediumint(8) unsigned NOT NULL default '0',
   PRIMARY KEY  (`style_id`),
   KEY `style_name` (`style_name`)
-) TYPE=MyISAM AUTO_INCREMENT=6 ;
+) TYPE=MyISAM AUTO_INCREMENT=8 ;
 
 #
 # data for table `styles`
@@ -180,7 +180,9 @@ INSERT INTO `styles` VALUES (1, 'Polar Biol', 'true', 'cite_PolarBiol_MarBiol_ME
 (2, 'Mar Biol', 'true', 'cite_PolarBiol_MarBiol_MEPS.php', '2', 1),
 (3, 'MEPS', 'true', 'cite_PolarBiol_MarBiol_MEPS.php', '3', 1),
 (4, 'Deep Sea Res', 'true', 'cite_DeepSeaRes.php', '4', 1),
-(5, 'Text Citation', 'true', 'cite_TextCitation.php', '5', 1);
+(5, 'Ann Glaciol', 'true', 'cite_AnnGlaciol_JGlaciol.php', '5', 1),
+(6, 'J Glaciol', 'true', 'cite_DeepSeaRes.php', '6', 1),
+(7, 'Text Citation', 'true', 'cite_TextCitation.php', '7', 1);
 
 # --------------------------------------------------------
 
