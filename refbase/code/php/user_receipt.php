@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_receipt.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   26-Apr-05, 19:11
+	// Modified:   30-Oct-05, 17:00
 
 	// This script shows the user a receipt for their user UPDATE or INSERT.
 	// It carries out no database actions and can be bookmarked.
@@ -434,6 +434,7 @@
 													'allow_upload'           => 'File upload',
 													'allow_details_view'     => 'Details view',
 													'allow_print_view'       => 'Print view',
+													'allow_browse_view'      => 'Browse view',
 													'allow_sql_search'       => 'SQL search',
 													'allow_user_groups'      => 'User groups',
 													'allow_user_queries'     => 'User queries',
