@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./modify.php
 	// Created:    18-Dec-02, 23:08
-	// Modified:   26-Aug-05, 14:02
+	// Modified:   04-Nov-05, 19:57
 
 	// This php script will perform adding, editing & deleting of records.
 	// It then calls 'receipt.php' which displays links to the modified/added record
@@ -168,6 +168,11 @@
 										//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
 	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
 
+
+	// (1) OPEN CONNECTION, (2) SELECT DATABASE
+	connectToMySQLDatabase($oldQuery); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
+
+
 	// Extract all form values provided by 'record.php':
 	$authorName = $formVars['authorName'];
 	$isEditorCheckBox = $formVars['isEditorCheckBox'];
@@ -223,7 +228,27 @@
 	$userGroupsName = $formVars['userGroupsName'];
 	$citeKeyName = $formVars['citeKeyName'];
 	$relatedName = $formVars['relatedName'];
-	$fileName = $formVars['fileName'];
+
+	// if the current user has no permission to download (and hence view) any files, 'record.php' does only show an empty string
+	// in the 'file' field (no matter if a file exists for the given record or not). Thus, we need to make sure that the empty
+	// form value won't overwrite any existing contents of the 'file' field on UPDATE and that the correct field value gets
+	// transferred to table 'deleted' on DELETE:
+	// Therefore, we re-fetch the contents of the 'file' field if NONE of the following conditions are met:
+	// - the variable '$fileVisibility' (defined in 'ini.inc.php') is set to 'everyone'
+	// - the variable '$fileVisibility' is set to 'login' AND the user is logged in
+	// - the variable '$fileVisibility' is set to 'user-specific' AND the 'user_permissions' session variable contains 'allow_download'
+	if (ereg("^(edit|delet)$", $recordAction) AND (!($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND ereg("allow_download", $_SESSION['user_permissions'])))))) // user has NO permission to download (and view) any files
+	{
+		$queryFile = "SELECT file FROM $tableRefs WHERE serial = $serialNo";
+
+		$result = queryMySQLDatabase($queryFile, ""); // RUN the query on the database through the connection
+		$row = @ mysql_fetch_array($result);
+
+		$fileName = $row["file"];
+	}
+	else // user has permission to download (and view) any files
+		$fileName = $formVars['fileName'];
+
 	$urlName = $formVars['urlName'];
 	$doiName = $formVars['doiName'];
 	$contributionID = $formVars['contributionIDName'];
@@ -412,11 +437,6 @@
 
 	// If we made it here, then the data is considered valid!
 
-	// (1) OPEN CONNECTION, (2) SELECT DATABASE
-	connectToMySQLDatabase($oldQuery); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
-
-	// --------------------------------------------------------------------
-
 	// CONSTRUCT SQL QUERY:
 
 	// First, setup some required variables:
@@ -578,7 +598,7 @@
 	{
 		if (!empty($uploadFile) && !empty($uploadFile["tmp_name"])) // if there was a file uploaded successfully
 			// process information of any file that was uploaded, auto-generate a file name if required and move the file to the appropriate directory:
-			$fileName = handleFileUploads($uploadFile, $formVars, $abbrevJournalName);
+			$fileName = handleFileUploads($uploadFile, $formVars);
 	}
 
 
@@ -906,7 +926,7 @@
 		if (!empty($uploadFile) && !empty($uploadFile["tmp_name"])) // if there was a file uploaded successfully
 		{
 			// process information of any file that was uploaded, auto-generate a file name if required and move the file to the appropriate directory:
-			$fileName = handleFileUploads($uploadFile, $formVars, $abbrevJournalName);
+			$fileName = handleFileUploads($uploadFile, $formVars);
 
 			$queryRefsUpdateFileName = "UPDATE $tableRefs SET file = \"$fileName\" WHERE serial = $serialNo";
 
@@ -1013,17 +1033,22 @@
 	// Handle file uploads:
 	// process information of any file that was uploaded, auto-generate a file name if required
 	// and move the file to the appropriate directory
-	function handleFileUploads($uploadFile, $formVars, $abbrevJournalName)
+	function handleFileUploads($uploadFile, $formVars)
 	{
-		global $renameUploadedFiles; // these variables are defined in 'ini.inc.php'
+		global $filesBaseDir; // these variables are defined in 'ini.inc.php'
+		global $moveFilesIntoSubDirectories;
+		global $dirNamingScheme;
+		global $renameUploadedFiles;
 		global $fileNamingScheme;
 		global $handleNonASCIIChars;
 		global $allowedFileNameCharacters;
-		global $moveFilesIntoSubDirectories;
-		global $filesBaseDir;
+		global $allowedDirNameCharacters;
+		global $changeCaseInFileNames;
+		global $changeCaseInDirNames;
 
 		$tmpFilePath = $uploadFile["tmp_name"];
 
+		// Generate file name:
 		if ($renameUploadedFiles == "yes") // rename file according to a standard naming scheme
 		{
 			if (preg_match("/.+\.[^.]+$/i", $uploadFile["name"])) // preserve any existing file name extension
@@ -1031,57 +1056,82 @@
 			else
 				$fileNameExtension = "";
 
-			// auto-generate a file name according to the file naming scheme given in '$fileNamingScheme':
-			$newFileName = parsePlaceholderString($formVars, $fileNamingScheme); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
+			// auto-generate a file name according to the naming scheme given in '$fileNamingScheme':
+			$newFileName = parsePlaceholderString($formVars, $fileNamingScheme, "<:serial:>"); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
 
-			// we treat non-ASCII characters in file names depending on the setting of variable '$handleNonASCIIChars':
-			if ($handleNonASCIIChars == "strip")
-				$newFileName = convertToCharacterEncoding("ASCII", "IGNORE", $newFileName); // remove any non-ASCII characters
+			// handle non-ASCII and unwanted characters:
+			$newFileName = handleNonASCIIAndUnwantedCharacters($newFileName, $allowedFileNameCharacters, $handleNonASCIIChars); // function 'handleNonASCIIAndUnwantedCharacters()' is defined in 'include.inc.php'
 
-			elseif ($handleNonASCIIChars != "keep")
-				// i.e., if '$handleNonASCIIChars = "keep"' we don't attempt to strip/transliterate any non-ASCII chars in the generated file name;
-				// otherwise if '$handleNonASCIIChars = "transliterate"' (or when '$handleNonASCIIChars' contains an unrecognized/empty string)
-				// we'll transliterate most of the non-ASCII characters and strip all other non-ASCII chars that can't be converted into ASCII equivalents:
-				$newFileName = convertToCharacterEncoding("ASCII", "TRANSLIT", $newFileName);
-
-
-			// in addition, we remove all characters from the generated file name which are not listed in variable '$allowedFileNameCharacters':
-			if (!empty($allowedFileNameCharacters))
-				$newFileName = preg_replace("/[^" . $allowedFileNameCharacters . "]+/", "", $newFileName);
-
-			$newFileName .= $fileNameExtension; // add original file name extension
+			// add original file name extension:
+			$newFileName .= $fileNameExtension;
 		}
 		else // take the file name as given by the user:
 			$newFileName = $uploadFile["name"];
 		
-		if (($moveFilesIntoSubDirectories != "never") AND !empty($abbrevJournalName))
+
+		// Generate directory structure:
+		if ($moveFilesIntoSubDirectories != "never")
 		{
-			$abbrevJournalDIR = ereg_replace("[^a-zA-Z]", "", $abbrevJournalName); // strip everything but letters from the abbreviated journal name
-			$abbrevJournalDIR = strtolower($abbrevJournalDIR) . "/"; // convert string to lowercase & append a slash
+			// remove any slashes (i.e., directory delimiter(s)) from the beginning or end of '$dirNamingScheme':
+			$dirNamingScheme = trimTextPattern($dirNamingScheme, "[/\\]+", true, true); // function 'trimTextPattern()' is defined in 'include.inc.php'
+
+			$dirNamingSchemePartsArray = split("[/\\]+", $dirNamingScheme); // split on slashes to separate between multiple sub-directories
+
+			$subDirNamesArray = array(); // initialize array variable which will hold the generated sub-directory names
+
+			// auto-generate a directory name according to the naming scheme given in '$dirNamingScheme'
+			// and handle non-ASCII chars plus unwanted characters:
+			foreach($dirNamingSchemePartsArray as $dirNamingSchemePart)
+			{
+				// parse given placeholder string:
+				$subDirName = parsePlaceholderString($formVars, $dirNamingSchemePart, ""); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
+
+				// handle non-ASCII and unwanted characters:
+				$subDirName = handleNonASCIIAndUnwantedCharacters($subDirName, $allowedDirNameCharacters, $handleNonASCIIChars); // function 'handleNonASCIIAndUnwantedCharacters()' is defined in 'include.inc.php'
+
+				if (!empty($subDirName))
+					$subDirNamesArray[] = $subDirName;
+			}
+
+			if (!empty($subDirNamesArray))
+				$subDirName = implode("/", $subDirNamesArray) . "/"; // merge any individual sub-directory names and append a slash to generate final sub-directory structure
+			else
+				$subDirName = "";
 		}
 		else
-			$abbrevJournalDIR = "";
-		
+			$subDirName = "";
+
+
+		// Perform any case transformations:
+		// change case of file name:
+		if (eregi("^(lower|upper)$", $changeCaseInFileNames))
+			$newFileName = changeCase($changeCaseInFileNames, $newFileName); // function 'changeCase()' is defined in 'include.inc.php'
+
+		// change case of DIR name:
+		if (eregi("^(lower|upper)$", $changeCaseInDirNames) && !empty($subDirName))
+			$subDirName = changeCase($changeCaseInDirNames, $subDirName);
+
+
+		// Generate full destination path:
 		// - if '$moveFilesIntoSubDirectories = "existing"' and there's an existing sub-directory (within the default files directory '$filesBaseDir')
-		//   whose name equals '$abbrevJournalDIR' we'll copy the new file into that sub-directory (in an attempt to group files together which belong to
-		//   the same journal).
-		// - if '$moveFilesIntoSubDirectories = "always"' and '$abbrevJournalDIR' isn't empty, we'll generate an appropriately named sub-directory if it
-		//   doesn't exist yet.
+		//   whose name equals '$subDirName' we'll copy the new file into that sub-directory
+		// - if '$moveFilesIntoSubDirectories = "always"' and '$subDirName' isn't empty, we'll generate an appropriately named sub-directory if it
+		//   doesn't exist yet
 		// - otherwise we just copy the file to the root-level of '$filesBaseDir':
-		if (!empty($abbrevJournalDIR) && (($moveFilesIntoSubDirectories == "existing" AND is_dir($filesBaseDir . $abbrevJournalDIR)) OR ($moveFilesIntoSubDirectories == "always")))
+		if (!empty($subDirName) && (($moveFilesIntoSubDirectories == "existing" AND is_dir($filesBaseDir . $subDirName)) OR ($moveFilesIntoSubDirectories == "always")))
 		{
-			$destFilePath = $filesBaseDir . $abbrevJournalDIR . $newFileName; // new file will be copied into sub-directory within '$filesBaseDir'...
+			$destFilePath = $filesBaseDir . $subDirName . $newFileName; // new file will be copied into sub-directory within '$filesBaseDir'...
 
 			// copy the new subdir name & file name to the 'file' field variable:
 			// Note: if a user uploads a file and there was already a file specified within the 'file' field, the old file will NOT get removed
 			//       from the files directory! Automatic file removal is ommitted on purpose since it's way more difficult to recover an
 			//       inadvertently deleted file than to delete it manually. However, future versions should introduce a smarter way of handling
 			//       orphaned files...
-			$fileName = $abbrevJournalDIR . $newFileName;
+			$fileName = $subDirName . $newFileName;
 
-			if ($moveFilesIntoSubDirectories == "always" AND !is_dir($filesBaseDir . $abbrevJournalDIR))
+			if ($moveFilesIntoSubDirectories == "always" AND !is_dir($filesBaseDir . $subDirName))
 				// make sure the directory we're moving the file to exists before proceeding:
-				mkdir($filesBaseDir . $abbrevJournalDIR, 0770);
+				recursiveMkdir($filesBaseDir . $subDirName);
 		}
 		else
 		{
@@ -1089,11 +1139,30 @@
 			$fileName = $newFileName; // copy the new file name to the 'file' field variable (see note above!)
 		}
 
-		// copy uploaded file from temporary location to the default file directory specified in '$filesBaseDir':
+
+		// Copy uploaded file from temporary location to the default file directory specified in '$filesBaseDir':
 		// (for more on PHP file uploads see <http://www.php.net/manual/en/features.file-upload.php>)
 		move_uploaded_file($tmpFilePath, $destFilePath);
 
 		return $fileName;
+	}
+
+	// --------------------------------------------------------------------
+
+	// recursively create directories:
+	// this function creates the specified directory using mkdir()
+	// (adopted from user-contributed function at <http://de2.php.net/manual/en/function.mkdir.php>)
+	function recursiveMkdir($path)
+	{
+		if (!is_dir($path)) // the directory doesn't exist
+		{
+			// recurse, passing the parent directory so that it gets created
+			// (note that dirname returns the parent directory of the last item of the path
+			//  regardless of whether the last item is a directory or a file)
+			recursiveMkdir(dirname($path));
+
+			mkdir($path, 0770); // create directory
+		}
 	}
 
 	// --------------------------------------------------------------------
