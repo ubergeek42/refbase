@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./footer.inc.php
 	// Created:    28-Jul-02, 11:30
-	// Modified:   04-May-05, 11:49
+	// Modified:   08-Sep-05, 16:35
 
 	// This is the footer include file.
 	// It contains functions that build the footer
@@ -31,6 +31,8 @@
 <tr>
 	<td class="small" width="105"><a href="index.php" title="goto main page">Home</a></td>
 	<td class="small" align="center">
+		<a href="show.php?records=all" title="show all records in the database">Show All</a>
+		&nbsp;|&nbsp;
 		<a href="simple_search.php" title="search the main fields of the database">Simple Search</a>
 		&nbsp;|&nbsp;
 		<a href="advanced_search.php" title="search all fields of the database">Advanced Search</a>

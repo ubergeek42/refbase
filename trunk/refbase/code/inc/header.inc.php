@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./header.inc.php
 	// Created:    28-Jul-02, 11:21
-	// Modified:   04-May-05, 11:50
+	// Modified:   08-Sep-05, 16:33
 
 	// This is the header include file.
 	// It contains functions that provide the HTML header
@@ -115,6 +115,7 @@
 		<h2><?php echo encodeHTML($officialDatabaseName); ?></h2>
 		<span class="smallup">
 			<a href="index.php" title="goto main page">Home</a>&nbsp;|&nbsp;
+			<a href="show.php?records=all" title="show all records in the database">Show All</a>&nbsp;|&nbsp;
 			<a href="simple_search.php" title="search the main fields of the database">Simple Search</a>&nbsp;|&nbsp;
 			<a href="advanced_search.php" title="search all fields of the database">Advanced Search</a><?php
 
