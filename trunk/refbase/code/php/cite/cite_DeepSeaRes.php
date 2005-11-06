@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./cite/cite_DeepSeaRes.php
 	// Created:    28-Sep-04, 23:36
-	// Modified:   26-Apr-05, 15:37
+	// Modified:   08-Sep-05, 13:29
 
 	// This is a citation style file (which must reside within the 'cite/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecord()' function that outputs a reference list from selected records according to the citation style used by
@@ -33,19 +33,26 @@
 					{
 						// Call the 'reArrangeAuthorContents()' function in order to re-order contents of the author field. Required Parameters:
 						//   1. pattern describing old delimiter that separates different authors
-						//   2. new delimiter that separates different authors
-						//   3. pattern describing old delimiter that separates author name & initials (within one author)
-						//   4. new delimiter that separates author name & initials (within one author)
-						//   5. new delimiter that separates multiple initials (within one author)
-						//   6. boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
-						//   7. contents of the author field
-						$author = reArrangeAuthorContents(" *; *",
-															", ",
-															" *, *",
-															", ",
-															".",
-															false,
-															$row['author']);
+						//   2. for all authors except the last author: new delimiter that separates different authors
+						//   3. for the last author: new delimiter that separates the last author from all other authors
+						//   4. pattern describing old delimiter that separates author name & initials (within one author)
+						//   5. for the first author: new delimiter that separates author name & initials (within one author)
+						//   6. for all authors except the first author: new delimiter that separates author name & initials (within one author)
+						//   7. new delimiter that separates multiple initials (within one author)
+						//   8. for the first author: boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+						//   9. for all authors except the first author: boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+						//  10. contents of the author field
+						$author = reArrangeAuthorContents(" *; *", // 1.
+															", ", // 2.
+															", ", // 3.
+															" *, *", // 4.
+															", ", // 5.
+															", ", // 6.
+															".", // 7.
+															false, // 8.
+															false, // 9.
+															$row['author']); // 10.
+
 						$record .= $author . ", ";
 					}
 
@@ -116,19 +123,26 @@
 					{
 						// Call the 'reArrangeAuthorContents()' function in order to re-order contents of the author field. Required Parameters:
 						//   1. pattern describing old delimiter that separates different authors
-						//   2. new delimiter that separates different authors
-						//   3. pattern describing old delimiter that separates author name & initials (within one author)
-						//   4. new delimiter that separates author name & initials (within one author)
-						//   5. new delimiter that separates multiple initials (within one author)
-						//   6. boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
-						//   7. contents of the author field
-						$author = reArrangeAuthorContents(" *; *",
-															", ",
-															" *, *",
-															", ",
-															".",
-															false,
-															$row['author']);
+						//   2. for all authors except the last author: new delimiter that separates different authors
+						//   3. for the last author: new delimiter that separates the last author from all other authors
+						//   4. pattern describing old delimiter that separates author name & initials (within one author)
+						//   5. for the first author: new delimiter that separates author name & initials (within one author)
+						//   6. for all authors except the first author: new delimiter that separates author name & initials (within one author)
+						//   7. new delimiter that separates multiple initials (within one author)
+						//   8. for the first author: boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+						//   9. for all authors except the first author: boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+						//  10. contents of the author field
+						$author = reArrangeAuthorContents(" *; *", // 1.
+															", ", // 2.
+															", ", // 3.
+															" *, *", // 4.
+															", ", // 5.
+															", ", // 6.
+															".", // 7.
+															false, // 8.
+															false, // 9.
+															$row['author']); // 10.
+
 						$record .= $author . ", ";
 					}
 
@@ -147,19 +161,26 @@
 					{
 						// Call the 'reArrangeAuthorContents()' function in order to re-order contents of the author field. Required Parameters:
 						//   1. pattern describing old delimiter that separates different authors
-						//   2. new delimiter that separates different authors
-						//   3. pattern describing old delimiter that separates author name & initials (within one author)
-						//   4. new delimiter that separates author name & initials (within one author)
-						//   5. new delimiter that separates multiple initials (within one author)
-						//   6. boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
-						//   7. contents of the author field
-						$editor = reArrangeAuthorContents(" *; *",
-															", ",
-															" *, *",
-															", ",
-															".",
-															false,
-															$row['editor']);
+						//   2. for all authors except the last author: new delimiter that separates different authors
+						//   3. for the last author: new delimiter that separates the last author from all other authors
+						//   4. pattern describing old delimiter that separates author name & initials (within one author)
+						//   5. for the first author: new delimiter that separates author name & initials (within one author)
+						//   6. for all authors except the first author: new delimiter that separates author name & initials (within one author)
+						//   7. new delimiter that separates multiple initials (within one author)
+						//   8. for the first author: boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+						//   9. for all authors except the first author: boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+						//  10. contents of the author field
+						$editor = reArrangeAuthorContents(" *; *", // 1.
+															", ", // 2.
+															", ", // 3.
+															" *, *", // 4.
+															", ", // 5.
+															", ", // 6.
+															".", // 7.
+															false, // 8.
+															false, // 9.
+															$row['editor']); // 10.
+
 						$record .= "In: " . $editor;
 						if (ereg("^[^;\r\n]+(;[^;\r\n]+)+$", $row['editor'])) // there are at least two editors (separated by ';')
 							$record .= " (Eds.)";
@@ -241,19 +262,26 @@
 
 						// Call the 'reArrangeAuthorContents()' function in order to re-order contents of the author field. Required Parameters:
 						//   1. pattern describing old delimiter that separates different authors
-						//   2. new delimiter that separates different authors
-						//   3. pattern describing old delimiter that separates author name & initials (within one author)
-						//   4. new delimiter that separates author name & initials (within one author)
-						//   5. new delimiter that separates multiple initials (within one author)
-						//   6. boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
-						//   7. contents of the author field
-						$author = reArrangeAuthorContents(" *; *",
-															", ",
-															" *, *",
-															", ",
-															".",
-															false,
-															$author);
+						//   2. for all authors except the last author: new delimiter that separates different authors
+						//   3. for the last author: new delimiter that separates the last author from all other authors
+						//   4. pattern describing old delimiter that separates author name & initials (within one author)
+						//   5. for the first author: new delimiter that separates author name & initials (within one author)
+						//   6. for all authors except the first author: new delimiter that separates author name & initials (within one author)
+						//   7. new delimiter that separates multiple initials (within one author)
+						//   8. for the first author: boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+						//   9. for all authors except the first author: boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+						//  10. contents of the author field
+						$author = reArrangeAuthorContents(" *; *", // 1.
+															", ", // 2.
+															", ", // 3.
+															" *, *", // 4.
+															", ", // 5.
+															", ", // 6.
+															".", // 7.
+															false, // 8.
+															false, // 9.
+															$author); // 10.
+
 						$record .= $author . ", ";
 					}
 
