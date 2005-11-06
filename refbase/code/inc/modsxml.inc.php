@@ -11,7 +11,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
   //
   // Created:    02-Oct-04, 12:00
-  // Modified:   15-Jun-05, 15:25
+  // Modified:   30-Oct-05, 19:34
 
   // This include file contains functions that'll export records to MODS XML.
   // Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -146,10 +146,14 @@
   function modsCollection($result) {
  
     global $contentTypeCharset; // defined in 'ini.inc.php'
+    global $citeKeysArray; // '$citeKeysArray' is made globally available from
+                          // within this function
 
     // Individual records are objects and collections of records are strings
 
-    $exportArray = array(); // Array for individually exported records
+    $exportArray = array(); // array for individually exported records
+    $citeKeysArray = array(); // array of cite keys (used to ensure uniqueness of
+                             // cite keys among all exported records)
 
     // Generate the export for each record and push them onto an array:
     while ($row = @ mysql_fetch_array($result)) {
@@ -204,10 +208,18 @@
     // --- BEGIN TYPE * ---
     //   | These apply to everything
 
+    // this is a stupid hack that maps the names of the '$row' array keys to those used
+    // by the '$formVars' array (which is required by function 'generateCiteKey()')
+    // (eventually, the '$formVars' array should use the MySQL field names as names for its array keys)
+    $formVars = buildFormVarsArray($row); // function 'buildFormVarsArray()' is defined in 'include.inc.php'
+
+    // generate or extract the cite key for this record
+    $citeKey = generateCiteKey($formVars); // function 'generateCiteKey()' is defined in 'include.inc.php'
+
     // Create an XML object for a single record.
     $record = new XML("mods");
-    if (!empty($row['cite_key']))
-      $record->setTagAttribute("ID", $row['cite_key']);
+    if (!empty($citeKey))
+      $record->setTagAttribute("ID", $citeKey);
 
     // titleInfo
     //   Regular Title
@@ -413,9 +425,9 @@
       $record->addXMLBranch($identifier);
     }
     //   cite_key
-    if (!empty($row['cite_key'])) {
+    if (!empty($citeKey)) {
       $identifier = new XMLBranch("identifier");
-      $identifier->setTagContent($row['cite_key']);
+      $identifier->setTagContent($citeKey);
       $identifier->setTagAttribute("type", "citekey");
       $record->addXMLBranch($identifier);
     }
@@ -738,4 +750,7 @@
 
     return $record;
   }
+
+  // --------------------------------------------------------------------
+
 ?>
