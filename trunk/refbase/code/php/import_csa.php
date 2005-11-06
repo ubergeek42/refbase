@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import_csa.php
 	// Created:    21-Nov-03, 22:05
-	// Modified:   26-Apr-05, 18:56
+	// Modified:   06-Nov-05, 11:55
 
 	// Import form that offers to import records from the "Cambridge Scientific Abstracts" (CSA)
 	// Internet Database Service (<http://www.csa1.co.uk/csa/index.html>). This import form requires
@@ -27,6 +27,12 @@
 	// START A SESSION:
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
 	start_session(true);
+
+	// --------------------------------------------------------------------
+
+	// Initialize preferred display language:
+	// (note that 'locales.inc.php' has to be included *after* the call to the 'start_session()' function)
+	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
