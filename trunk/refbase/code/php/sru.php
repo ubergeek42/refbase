@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sru.php
 	// Created:    17-May-05, 16:22
-	// Modified:   15-Jul-05, 20:44
+	// Modified:   31-Oct-05, 16:14
 
 	// This script serves as a (faceless) routing page which takes a SRU query
 	// and converts the query into a native refbase query
@@ -71,7 +71,6 @@
 	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
 	include 'includes/include.inc.php'; // include common functions
 	include 'initialize/ini.inc.php'; // include common variables
-	include 'includes/locales.inc.php'; // include the locales
 	include 'includes/srwxml.inc.php'; // include functions that deal with SRW XML
 
 	// --------------------------------------------------------------------
@@ -79,6 +78,12 @@
 	// START A SESSION:
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
 	start_session(true);
+
+	// --------------------------------------------------------------------
+
+	// Initialize preferred display language:
+	// (note that 'locales.inc.php' has to be included *after* the call to the 'start_session()' function)
+	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
