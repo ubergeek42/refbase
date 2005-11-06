@@ -16,6 +16,7 @@ allow_download	specifies whether this user is allowed to download files which ar
 allow_upload	specifies whether this user is allowed to upload files to the database
 allow_details_view	specifies whether this user is allowed to view any record details
 allow_print_view	specifies whether this user is allowed to view records in print view
+allow_browse_view	specifies whether this user is allowed to view records in browse view
 allow_cite	specifies whether this user is allowed to build a reference list from selected records
 allow_import	specifies whether this user is allowed to import records into the database
 allow_batch_import	specifies whether this user is allowed to batch import records into the database
@@ -42,6 +43,7 @@ allow_download	ENUM('yes','no') NOT NULL
 allow_upload	ENUM('yes','no') NOT NULL
 allow_details_view	ENUM('yes','no') NOT NULL
 allow_print_view	ENUM('yes','no') NOT NULL
+allow_browse_view	ENUM('yes','no') NOT NULL
 allow_cite	ENUM('yes','no') NOT NULL
 allow_import	ENUM('yes','no') NOT NULL
 allow_batch_import	ENUM('yes','no') NOT NULL
@@ -61,7 +63,7 @@ INDEX	(user_id)
 table creation code
 -------------------
 
-CREATE TABLE user_permissions (user_permission_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id MEDIUMINT UNSIGNED NOT NULL, allow_add ENUM('yes','no') NOT NULL, allow_edit ENUM('yes','no') NOT NULL, allow_delete ENUM('yes','no') NOT NULL, allow_download ENUM('yes','no') NOT NULL, allow_upload ENUM('yes','no') NOT NULL, allow_details_view ENUM('yes','no') NOT NULL, allow_print_view ENUM('yes','no') NOT NULL, allow_cite ENUM('yes','no') NOT NULL, allow_import ENUM('yes','no') NOT NULL, allow_batch_import ENUM('yes','no') NOT NULL, allow_export ENUM('yes','no') NOT NULL, allow_batch_export ENUM('yes','no') NOT NULL, allow_user_groups ENUM('yes','no') NOT NULL, allow_user_queries ENUM('yes','no') NOT NULL, allow_rss_feeds ENUM('yes','no') NOT NULL, allow_sql_search ENUM('yes','no') NOT NULL, allow_modify_options ENUM('yes','no') NOT NULL, allow_edit_call_number ENUM('no','yes') NOT NULL, INDEX (user_id));
+CREATE TABLE user_permissions (user_permission_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id MEDIUMINT UNSIGNED NOT NULL, allow_add ENUM('yes','no') NOT NULL, allow_edit ENUM('yes','no') NOT NULL, allow_delete ENUM('yes','no') NOT NULL, allow_download ENUM('yes','no') NOT NULL, allow_upload ENUM('yes','no') NOT NULL, allow_details_view ENUM('yes','no') NOT NULL, allow_print_view ENUM('yes','no') NOT NULL, allow_browse_view ENUM('yes','no') NOT NULL, allow_cite ENUM('yes','no') NOT NULL, allow_import ENUM('yes','no') NOT NULL, allow_batch_import ENUM('yes','no') NOT NULL, allow_export ENUM('yes','no') NOT NULL, allow_batch_export ENUM('yes','no') NOT NULL, allow_user_groups ENUM('yes','no') NOT NULL, allow_user_queries ENUM('yes','no') NOT NULL, allow_rss_feeds ENUM('yes','no') NOT NULL, allow_sql_search ENUM('yes','no') NOT NULL, allow_modify_options ENUM('yes','no') NOT NULL, allow_edit_call_number ENUM('no','yes') NOT NULL, INDEX (user_id));
 
 
 rules for data import
