@@ -7,7 +7,7 @@ Author
 
 About
 -----
-  refbase-0.8.0 does not have a facility to import many references from desktop
+  refbase does not yet have a facility to import many references from desktop
   citation managers via a web interface.  A future version of refbase will have
   this feature, but this style file and php script will allow Endnote users to
   transfer data into refbase at the command line.
@@ -24,12 +24,16 @@ Use
   - Open the Endnote file you wish to import into refbase.
   - Choose the refbase Output Style
   - Export to 'endnote.txt'
-  Part II: PHP
+  Part II: PHP [*]
   - Executing 'php endnote2mysql.php' will produce 'import.txt'
     ('php' must be in your path or you should prefix it with the path to php)
   Part III: Check it!
   - As this is a preliminary script that has undergone little testing, it is
     suggested that you look at 'import.txt' in spreadsheet software.
-  Part IV: MySQL
+  Part IV: MySQL [*]
   - From within your MySQL command line interpreter (mysql -u root literature -p):
       LOAD DATA LOCAL INFILE "import.txt" INTO TABLE refs; 
+
+[*]If you are comfortable that the script works and are on a system with a POSIX
+   shell (nearly all *nix, including OS X; Windows through Cygwin or similar),
+   you may use Andreas Czerniak's en-importer.sh to automate Parts II-IV.
