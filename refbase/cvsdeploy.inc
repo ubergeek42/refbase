@@ -10,6 +10,7 @@
 "code/css"=>"css",
 "code/inc/db.inc.php"=>"initialize/db.inc.php",
 "code/inc/ini.inc.php"=>"initialize/ini.inc.php",
+"code/inc/execute.inc.php"=>"includes/execute.inc.php",
 "code/inc/footer.inc.php"=>"includes/footer.inc.php",
 "code/inc/header.inc.php"=>"includes/header.inc.php",
 "code/inc/include.inc.php"=>"includes/include.inc.php",
