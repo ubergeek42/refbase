@@ -25,7 +25,7 @@
 	function exportRecords($result, $rowOffset, $showRows, $exportStylesheet, $displayType)
 	{
 		// function 'exportBibutils()' is defined in 'execute.inc.php'
-		return exportBibutils($result,"xml2bib");
+		return exportBibutils($result,"xml2end");
 	}
 
 	// --- END EXPORT FORMAT ---
