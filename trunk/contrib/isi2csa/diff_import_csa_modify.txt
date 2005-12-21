@@ -1,0 +1,14 @@
+$ diff import_csa_modify.php ./zexec/PhpBackup_051211/import_csa_modify.php
+70,81d69
+< //-----------------------------------------------------------------------------
+< //  ISI check and Convert AddOn...
+< //-----------------------------------------------------------------------------
+< // First double check for ISI record, otherwise leave...
+< if ( (!preg_match("/Record [0-9]+ of /", $sourceText)) and (preg_match("/FN ISI Export Format/", $sourceText)) ) {
+<       include 'zexec/isi2csa.php'; // Import IsiToCsa function
+<       $sourceText = IsiToCsa($sourceText);
+< }
+< //  END ISI check...
+< //-----------------------------------------------------------------------------
+<
+<
