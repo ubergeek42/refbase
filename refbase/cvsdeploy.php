@@ -12,7 +12,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
   //
   // Created:    15-Dec-05, 19:34
-  // Modified:   15-Dec-05, 19:34
+  // Modified:   03-Jan-06, 19:30
 
   // TO DO: * modify cp to handle globs
   //        * modify cp to do file -> dir copies
@@ -21,7 +21,7 @@
   //        * database?
   //        * old config
 
-  // After you've checked refbase out from CVS, this script will move files to
+  // After you've checked refbase out from CVS, this script will copy files to
   // where they should be for deployment or packaging.
 
   
@@ -29,7 +29,7 @@
     ?>
 
     After you've checked refbase out from CVS, this script will copy files to
-    where thy should be for deployment of packaging.
+    where they should be for deployment or packaging.
 
     Usage:
     <?php echo $argv[0]; ?> <destination>
@@ -39,7 +39,7 @@
     
     With the --help, -help, -h, or -? options, you can get this help.
 
-    <?php
+<?php
   } else {
     if ($argc < 2) {
       $dest = '/usr/local/www/refbase-cvs/';
@@ -48,7 +48,7 @@
     }
     $source = getcwd();
 
-    //OVERWRITES!!!!
+    // OVERWRITES!!!!
     if(is_dir($dest)){
       mkdir($dest.'old');
       cp($dest,$dest.'old');
@@ -63,11 +63,11 @@
     mkdir($dest."/initialize");
 
     // translation array
-    $f = "./cvsdeploy.inc"; //get filename
+    $f = "./cvsdeploy.inc"; // get filename
     ob_start();
     readfile( $f );
     $s = "\$locs=array(".ob_get_contents().");"; 
-    eval( $s );     // ...and store everything into $loc
+    eval( $s );     // ...and store everything into $locs
     ob_end_clean();
 
     foreach ($locs as $key => $value){
