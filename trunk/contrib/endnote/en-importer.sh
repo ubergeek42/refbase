@@ -9,19 +9,19 @@
 # modified:
 # 2005-12-11 ; ac ; clean up static codes
 # 2005-12-15 ; rk ; remove "v.9", import into CVS
+# 2006-01-03 ; ac ; replace LOAD DATA INTO statement with mysqlimport - Thx. Matthias Steffens <refbase@extracts.de> 
 #
 
 if [ $# -lt 1 ]; then
   echo "Which endnote file ?"
-  echo -e "\nusage: $0 endnote.file [database [path-to-mysql [mysql-options] ] ]\n"
+  echo -e "\nusage: $0 endnote.file [database [mysql-options] ]\n"
   exit 127
 fi
 
-$ENFILE=$1
+ENFILE=$1
 
-$MYSQLDB=$2     || $MYSQLDB="literature"          # default: literature
-$MYSQLPATH=$3   || $MYSLPATH="/var/lib/mysql"     # default: /var/lib/mysql
-$MYSQLOPTION=$4 || $MYSQLOPTION="-p"		  # default: with password
+MYSQLDB=$2     || MYSQLDB="literature"      # default: literature
+MYSQLOPTION=$3 || MYSQLOPTION="-p"		  # default: with password
 
 if [ ! -d imported ] ; then
   mkdir imported
@@ -33,14 +33,13 @@ if [ ! -f import.txt ] ; then
   echo "endnote2mysql convert failed !"
   exit 0
 fi
-cp import.txt $MYSQLPATH/$MYSQLDB/
 
-mysql $MYSQLOPTION $MYSQLDB < loadimport.sql > sqloutput.txt
+mv import.txt refs.txt
+mysqlimport --local $MYSQLOPTION $MYSQLDB "refs.txt" > sqloutput.txt
 
 cat sqloutput.txt
 
-rm $MYSQLPATH/$MYSQLDB/import.txt
-rm import.txt
+rm refs.txt
 rm sqloutput.txt
 
 cat $ENFILE | tail
