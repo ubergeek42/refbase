@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./install.sql
 # Created:    02-Oct-04, 20:11
-# Modified:   05-Jan-06, 23:29
+# Modified:   06-Jan-06, 01:59
 
 # MySQL database structure & initial data (for use with 'latin1' character set)
 
@@ -329,7 +329,7 @@ INSERT INTO `styles` VALUES (1, 'Polar Biol', 'true', 'cite_PolarBiol_MarBiol_ME
 (3, 'MEPS', 'true', 'cite_PolarBiol_MarBiol_MEPS.php', '3', 1),
 (4, 'Deep Sea Res', 'true', 'cite_DeepSeaRes.php', '4', 1),
 (5, 'Ann Glaciol', 'true', 'cite_AnnGlaciol_JGlaciol.php', '5', 1),
-(6, 'J Glaciol', 'true', 'cite_DeepSeaRes.php', '6', 1),
+(6, 'J Glaciol', 'true', 'cite_AnnGlaciol_JGlaciol.php', '6', 1),
 (7, 'Text Citation', 'true', 'cite_TextCitation.php', '7', 1);
 
 # --------------------------------------------------------
