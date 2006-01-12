@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   04-Nov-05, 19:59
+	// Modified:   12-Jan-06, 21:18
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -121,9 +121,8 @@
 	// When adding a new user, the following citation styles will be made available to the new user by default:
 	// The specified citation styles must have matching entries within the 'styles' MySQL table.
 	$defaultUserStyles = array("Polar Biol",
-								"Mar Biol",
-								"MEPS",
 								"Deep Sea Res",
+								"J Glaciol",
 								"Text Citation");
 
 
@@ -406,7 +405,7 @@
 	// Notes: - see comments for '$fileNamingScheme' (above) for more info on supported placeholders
 	//        - currently, OpenURL links will only get auto-generated if the main bibliographic data
 	//          (author, year, publication, volume & pages) are present (and displayed on screen)
-	//        - more ifo about the OpenURL standard is available at <http://www.exlibrisgroup.com/sfx_openurl.htm>
+	//        - more info about the OpenURL standard is available at <http://www.exlibrisgroup.com/sfx_openurl.htm>
 	//        - specify an empty string if you don't want any auto-generation of OpenURL links: '$openURLFormat = "";'
 	$openURLFormat = "http://www.crossref.org/openurl?aulast=<:firstAuthor:>&title=<:publication[|]:>&volume=<:volume:>&issue=<:issue:>&spage=<:startPage:>&date=<:year:>";
 	// e.g. CrossRef OpenURL resolver: "http://www.crossref.org/openurl?aulast=<:firstAuthor:>&title=<:publication[|]:>&volume=<:volume:>&issue=<:issue:>&spage=<:startPage:>&date=<:year:>"
