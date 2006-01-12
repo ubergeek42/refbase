@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   05-Nov-05, 12:09
+	// Modified:   11-Jan-06, 21:43
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -632,11 +632,8 @@
 		{
 			$query .= connectConditionals();
 
-			// since 'show.php' will only allow a user to query his own call numbers we need to build a complete call number string that's appropriate for this user:
-			// (the session variables '$loginEmail' and '$abbrevInstitution' are made available globally by the 'start_session()' function)
-			$loginEmailArray = split("@", $loginEmail); // split the login email address at '@'
-			$loginEmailUserName = $loginEmailArray[0]; // extract the user name (which is the first element of the array '$loginEmailArray')
-			$callNumberPrefix = $abbrevInstitution . " @ " . $loginEmailUserName; // construct a correct call number prefix, like: 'IPÖ @ msteffens'
+			// since 'show.php' will only allow a user to query his own call numbers we need to build a complete call number prefix (e.g. 'IPÖ @ msteffens') that's appropriate for this user:
+			$callNumberPrefix = getCallNumberPrefix(); // function 'getCallNumberPrefix()' is defined in 'include.inc.php'
 
 			if ($recordConditionalSelector == "is equal to")
 				$query .= " call_number RLIKE \"(^|.*;) *" . $callNumberPrefix . " @ " . $callNumber . " *(;.*|$)\"";
