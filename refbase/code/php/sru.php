@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sru.php
 	// Created:    17-May-05, 16:22
-	// Modified:   31-Oct-05, 16:14
+	// Modified:   11-Jan-06, 23:17
 
 	// This script serves as a (faceless) routing page which takes a SRU query
 	// and converts the query into a native refbase query
@@ -430,7 +430,8 @@
 			// extract the search term:
 			$searchTerm = preg_replace('/^[^\" <>=]+(?: +(?:all|any|exact|within) +| *(?:<>|<=|>=|<|>|=) *)(.*)/', '\\1', $sruQuery);
 
-			$searchTerm = stripSlashesIfMagicQuotes($searchTerm); // remove slashes from search term if 'magic_quotes_gpc = On' (function 'stripSlashes()' is defined in 'include.inc.php')
+			// remove slashes from search term if 'magic_quotes_gpc = On':
+			$searchTerm = stripSlashesIfMagicQuotes($searchTerm); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
 
 			// remove any leading or trailing quotes from the search term:
 			// (note that multiple query parts connected with boolean operators aren't supported yet!)
