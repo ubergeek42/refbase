@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   05-Nov-05, 23:01
+	// Modified:   12-Jan-06, 19:04
 
 	// This file contains important
 	// functions that are shared
@@ -49,7 +49,15 @@
 //		global $referer;
 
 		// Initialize the session:
-		session_start();
+		if (!isset($_SESSION["sessionID"]))
+		{
+			session_start();
+
+			$sessionID = session_id(); // get the current session ID
+
+			if (!empty($sessionID))
+				saveSessionVariable("sessionID", $sessionID);
+		}
 
 		// Extract session variables (only necessary if register globals is OFF!):
 		if (isset($_SESSION['loginEmail']))
@@ -112,7 +120,7 @@
 	// Connect to the MySQL database:
 	function connectToMySQLDatabase($oldQuery)
 	{
-		global $hostName; // these variables are specified in 'db.inc.php' 
+		global $hostName; // these variables are specified in 'db.inc.php'
 		global $username;
 		global $password;
 		global $databaseName;
@@ -127,7 +135,7 @@
 			if (!($connection = @ mysql_connect($hostName, $username, $password)))
 				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 					showErrorMsg("The following error occurred while trying to connect to the host:", $oldQuery);
-		
+
 			// (2) SELECT the database:
 			//      (variables are set by include file 'db.inc.php'!)
 			if (!(mysql_select_db($databaseName, $connection)))
@@ -281,13 +289,13 @@
 		global $serialNo;
 		global $headerMsg;
 		global $oldQuery;
-		
+
 		global $errorNo;
 		global $errorMsg;
-		
+
 		// Extract checkbox variable values from the request:
 		if (isset($_REQUEST['marked']))
-			$recordSerialsArray = $_REQUEST['marked']; // extract the values of all checked checkboxes (i.e., the serials of all selected records)	
+			$recordSerialsArray = $_REQUEST['marked']; // extract the values of all checked checkboxes (i.e., the serials of all selected records)
 		else
 			$recordSerialsArray = "";
 		$recordSerialsString = ""; // initialize variable
@@ -295,7 +303,7 @@
 		if (!empty($recordSerialsArray)) // the user did check some checkboxes
 			$recordSerialsString = implode("&marked[]=", $recordSerialsArray); // prefix each record serial (except the first one) with "&marked[]="
 		$recordSerialsString = "&marked[]=" . $recordSerialsString; // prefix also the very first record serial with "&marked[]="
-		
+
 		// based on the refering script we adjust the parameters that get included in the link:
 		if (ereg(".*(index|simple_search|advanced_search|sql_search|library_search|extract|users|user_details|user_receipt)\.php", $_SERVER["SCRIPT_NAME"]))
 			$referer = $_SERVER["SCRIPT_NAME"]; // we don't need to provide any parameters if the user clicked login/logout on the main page or any of the search pages (we just need to re-locate
@@ -375,6 +383,384 @@
 		$row = mysql_fetch_array($result);
 
 		return($row["user_id"]);
+	}
+
+	// --------------------------------------------------------------------
+
+	// ADD RECORDS
+	// Adds record(s) to the database (i.e., add one or more row entries to MySQL table 'refs'):
+	// Notes: - the function will return the serial number(s) of all newly created record(s) in an array structure
+	//        - structure of '$importDataArray' (sample values given in "..."):
+	//          array(
+	//                 ['type']     =>  "refbase" // mandatory; indicates the array format of the 'records' element (currently only "refbase" is recognized, a standardized "bibliophile" format may be provided later on)
+	//                 ['version']  =>  "1.0" // mandatory; the version of the given array structure
+	//                 ['records']  =>  array( // mandatory; array of arrays containing the records & field data that should be imported; the sub-array element key must correspond to a refbase database field name from table 'refs'
+	//                                         [0] => array(                   // first record
+	//                                                       [author] => "..." //  - contents of 'author' field
+	//                                                       [title]  => "..." //  - contents of 'title' field
+	//                                                       ...
+	//                                                     )
+	//                                         [1] => array(                   // second record
+	//                                                       [author] => "..." //  - contents of 'author' field
+	//                                                       [title]  => "..." //  - contents of 'title' field
+	//                                                       ...
+	//                                                     )
+	//                                         ...
+	//                                       )
+	//                 ['creator']  =>  "http://refbase.net" // optional; the (preferably unique) name of the calling script/importer, use an URI if possible
+	//                 ['author']   =>  "Matthias Steffens" // optional; the name of the person who developed the script/importer and/or who can be contacted in case of problems
+	//                 ['contact']  =>  "refbase@extracts.de" // optional; the contact address of the person specified under 'author', use an email address if possible
+	//                 ['options']  =>  array( // optional; array with settings that control the behaviour of the 'addRecords()' function, currently there's only one option:
+	//                                         [prefix_call_number] => "true" // if "true", any 'call_number' string will be prefixed with the correct call number prefix of the currently logged-in user (e.g. 'IPÖ @ msteffens @ ')
+	//                                       )
+	//               )
+	function addRecords($importDataArray)
+	{
+		global $oldQuery;
+		global $tableRefs; // defined in 'db.inc.php'
+
+		global $connection;
+
+		if (!isset($oldQuery))
+			$oldQuery = "";
+
+		connectToMySQLDatabase($oldQuery);
+
+		$recognizedArrayFormatsAndVersions = array('refbase' => array("1.0")); // for each recognized format, this array lists its format identifier as element key and an array of known versions as element value
+
+		$serialNumbersArray = array(); // initialize array variable which will hold the serial numbers of all imported records
+
+		// Verify the structure of the '$importDataArray':
+		if (!empty($importDataArray['type']) AND !empty($importDataArray['version']) AND !empty($importDataArray['records'])) // the array elements 'type', 'version' and 'records' are mandatory and must not be empty
+		{
+			// Currently, we only support the default "refbase" array structure in its initial version ("1.0") (support for other more generalized array formats may come later)
+			if (($importDataArray['type'] == "refbase") AND (in_array($importDataArray['version'], $recognizedArrayFormatsAndVersions['refbase'])))
+			{
+				$recordsArray = $importDataArray['records']; // get the array of records that shall be imported
+
+				// First, setup some required variables:
+				// Get the current date (e.g. '2003-12-31'), time (e.g. '23:59:49') and user name & email address (e.g. 'Matthias Steffens (refbase@extracts.de)'):
+				// note that we use the same time stamp for ALL imported records (so that users can easily identify all records belonging to one import action)
+				list ($currentDate, $currentTime, $currentUser) = getCurrentDateTimeUser();
+
+				// LOOP OVER EACH RECORD:
+				foreach ($recordsArray as $recordData) // for each record...
+				{
+					// Initialize some variables (in order to avoid "undefined index" messages when the particular array elements are not available):
+					if (isset($recordData['author']))
+						$author = $recordData['author'];
+					else
+						$author = "";
+
+					if (isset($recordData['pages']))
+						$pages = $recordData['pages'];
+					else
+						$pages = "";
+
+					if (isset($recordData['volume']))
+						$volume = $recordData['volume'];
+					else
+						$volume = "";
+
+					if (isset($recordData['series_volume']))
+						$seriesVolume = $recordData['series_volume'];
+					else
+						$seriesVolume = "";
+
+					// Assign correct values to the calculation fields 'first_author', 'author_count', 'first_page', 'volume_numeric' and 'series_volume_numeric':
+					list ($firstAuthor, $authorCount, $firstPage, $volumeNumeric, $seriesVolumeNumeric) = generateCalculationFieldContent($author, $pages, $volume, $seriesVolume);
+
+					// CONSTRUCT SQL QUERY:
+
+					// INSERT - construct a query to add data as new record
+					$queryRefs = ""; // note: we'll prefix "INSERT INTO $tableRefs SET " *after* we've parsed all array elements to trap the case that none of the array elements did contain any data
+
+					if (!empty($recordData['author']))
+						$queryRefs .= "author = \"" . $recordData['author'] . "\", ";
+
+					if (!empty($firstAuthor))
+						$queryRefs .= "first_author = \"" . $firstAuthor . "\", ";
+
+					if (!empty($authorCount))
+						$queryRefs .= "author_count = \"" . $authorCount . "\", ";
+
+					if (!empty($recordData['title']))
+						$queryRefs .= "title = \"" . $recordData['title'] . "\", ";
+
+					if (!empty($recordData['year']))
+						$queryRefs .= "year = \"" . $recordData['year'] . "\", ";
+
+					if (!empty($recordData['publication']))
+						$queryRefs .= "publication = \"" . $recordData['publication'] . "\", ";
+
+					if (!empty($recordData['abbrev_journal']))
+						$queryRefs .= "abbrev_journal = \"" . $recordData['abbrev_journal'] . "\", ";
+
+					if (!empty($recordData['volume']))
+						$queryRefs .= "volume = \"" . $recordData['volume'] . "\", ";
+
+					if (!empty($volumeNumeric))
+						$queryRefs .= "volume_numeric = \"" . $volumeNumeric . "\", ";
+
+					if (!empty($recordData['issue']))
+						$queryRefs .= "issue = \"" . $recordData['issue'] . "\", ";
+
+					if (!empty($recordData['pages']))
+						$queryRefs .= "pages = \"" . $recordData['pages'] . "\", ";
+
+					if (!empty($firstPage))
+						$queryRefs .= "first_page = \"" . $firstPage . "\", ";
+
+					if (!empty($recordData['address']))
+						$queryRefs .= "address = \"" . $recordData['address'] . "\", ";
+
+					if (!empty($recordData['corporate_author']))
+						$queryRefs .= "corporate_author = \"" . $recordData['corporate_author'] . "\", ";
+
+					if (!empty($recordData['keywords']))
+						$queryRefs .= "keywords = \"" . $recordData['keywords'] . "\", ";
+
+					if (!empty($recordData['abstract']))
+						$queryRefs .= "abstract = \"" . $recordData['abstract'] . "\", ";
+
+					if (!empty($recordData['publisher']))
+						$queryRefs .= "publisher = \"" . $recordData['publisher'] . "\", ";
+
+					if (!empty($recordData['place']))
+						$queryRefs .= "place = \"" . $recordData['place'] . "\", ";
+
+					if (!empty($recordData['editor']))
+						$queryRefs .= "editor = \"" . $recordData['editor'] . "\", ";
+
+					if (!empty($recordData['language']))
+						$queryRefs .= "language = \"" . $recordData['language'] . "\", ";
+
+					if (!empty($recordData['summary_language']))
+						$queryRefs .= "summary_language = \"" . $recordData['summary_language'] . "\", ";
+
+					if (!empty($recordData['orig_title']))
+						$queryRefs .= "orig_title = \"" . $recordData['orig_title'] . "\", ";
+
+					if (!empty($recordData['series_editor']))
+						$queryRefs .= "series_editor = \"" . $recordData['series_editor'] . "\", ";
+
+					if (!empty($recordData['series_title']))
+						$queryRefs .= "series_title = \"" . $recordData['series_title'] . "\", ";
+
+					if (!empty($recordData['abbrev_series_title']))
+						$queryRefs .= "abbrev_series_title = \"" . $recordData['abbrev_series_title'] . "\", ";
+
+					if (!empty($recordData['series_volume']))
+						$queryRefs .= "series_volume = \"" . $recordData['series_volume'] . "\", ";
+
+					if (!empty($seriesVolumeNumeric))
+						$queryRefs .= "series_volume_numeric = \"" . $seriesVolumeNumeric . "\", ";
+
+					if (!empty($recordData['series_issue']))
+						$queryRefs .= "series_issue = \"" . $recordData['series_issue'] . "\", ";
+
+					if (!empty($recordData['edition']))
+						$queryRefs .= "edition = \"" . $recordData['edition'] . "\", ";
+
+					if (!empty($recordData['issn']))
+						$queryRefs .= "issn = \"" . $recordData['issn'] . "\", ";
+
+					if (!empty($recordData['isbn']))
+						$queryRefs .= "isbn = \"" . $recordData['isbn'] . "\", ";
+
+					if (!empty($recordData['medium']))
+						$queryRefs .= "medium = \"" . $recordData['medium'] . "\", ";
+
+					if (!empty($recordData['area']))
+						$queryRefs .= "area = \"" . $recordData['area'] . "\", ";
+
+					if (!empty($recordData['expedition']))
+						$queryRefs .= "expedition = \"" . $recordData['expedition'] . "\", ";
+
+					if (!empty($recordData['conference']))
+						$queryRefs .= "conference = \"" . $recordData['conference'] . "\", ";
+
+					// the 'location' field is handled below
+
+					if (!empty($recordData['call_number']))
+						$queryRefs .= "call_number = \"" . $recordData['call_number'] . "\", ";
+
+					if (!empty($recordData['approved']))
+						$queryRefs .= "approved = \"" . $recordData['approved'] . "\", ";
+
+					if (!empty($recordData['file']))
+						$queryRefs .= "file = \"" . $recordData['file'] . "\", ";
+
+					// the 'serial' field is handled below
+
+					if (!empty($recordData['orig_record']))
+						$queryRefs .= "orig_record = \"" . $recordData['orig_record'] . "\", ";
+
+					if (!empty($recordData['type']))
+						$queryRefs .= "type = \"" . $recordData['type'] . "\", ";
+
+					if (!empty($recordData['thesis']))
+						$queryRefs .= "thesis = \"" . $recordData['thesis'] . "\", ";
+
+					if (!empty($recordData['notes']))
+						$queryRefs .= "notes = \"" . $recordData['notes'] . "\", ";
+
+					if (!empty($recordData['url']))
+						$queryRefs .= "url = \"" . $recordData['url'] . "\", ";
+
+					if (!empty($recordData['doi']))
+						$queryRefs .= "doi = \"" . $recordData['doi'] . "\", ";
+
+					if (!empty($recordData['contribution_id']))
+						$queryRefs .= "contribution_id = \"" . $recordData['contribution_id'] . "\", ";
+
+					if (!empty($recordData['online_publication']))
+						$queryRefs .= "online_publication = \"" . $recordData['online_publication'] . "\", ";
+
+					if (!empty($recordData['online_citation']))
+						$queryRefs .= "online_citation = \"" . $recordData['online_citation'] . "\", ";
+
+
+					if (!empty($queryRefs)) // go ahead, if some array elements did contain data
+					{
+						// for the 'location' field, we accept input from the '$recordData',
+						// but if no data were given, we'll add the currently logged-in user to the 'location' field:
+						if (!empty($recordData['location']))
+							$queryRefs .= "location = \"" . $recordData['location'] . "\", ";
+						elseif (isset($_SESSION['loginEmail']))
+							$queryRefs .= "location = \"" . $currentUser . "\", ";
+
+						// if the 'prefix_call_number' option is set to "true", any 'call_number' string will be prefixed with
+						// the correct call number prefix of the currently logged-in user (e.g. 'IPÖ @ msteffens @ '):
+						if ((isset($_SESSION['loginEmail'])) AND (isset($importDataArray['options']['prefix_call_number'])) AND ($importDataArray['options']['prefix_call_number'] == "true"))
+						{
+							if (empty($recordData['call_number'])) // similar to the GUI behaviour, we'll also add a call number prefix if the 'call_number' field is empty
+								$queryRefs .= "call_number = \"\", ";
+
+							$callNumberPrefix = getCallNumberPrefix(); // build a correct call number prefix for the currently logged-in user (e.g. 'IPÖ @ msteffens')
+
+							$queryRefs = preg_replace("/(call_number = \")/", "\\1" . $callNumberPrefix . " @ ", $queryRefs); // add call number prefix to 'call_number' field
+						}
+
+						$queryRefs .= "serial = NULL, "; // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
+
+						// we accept custom values for the *date/*time/*by fields if they are in correct format (*date: 'YYYY-MM-DD'; *time: 'HH:MM:SS'; *by: 'string'),
+						// otherwise we'll use the current date & time as well as the currently logged-in user name & email address:
+						if (!empty($recordData['created_by']))
+							$queryRefs .= "created_by = \"" . $recordData['created_by'] . "\", ";
+						elseif (isset($_SESSION['loginEmail']))
+							$queryRefs .= "created_by = \"" . $currentUser . "\", ";
+
+						if (!empty($recordData['created_date']) AND preg_match("/^\d{4}-\d{2}-\d{2}$/", $recordData['created_date']))
+							$queryRefs .= "created_date = \"" . $recordData['created_date'] . "\", ";
+						else
+							$queryRefs .= "created_date = \"" . $currentDate . "\", ";
+
+						if (!empty($recordData['created_time']) AND preg_match("/^\d{2}:\d{2}:\d{2}$/", $recordData['created_time']))
+							$queryRefs .= "created_time = \"" . $recordData['created_time'] . "\", ";
+						else
+							$queryRefs .= "created_time = \"" . $currentTime . "\", ";
+
+						if (!empty($recordData['modified_by']))
+							$queryRefs .= "modified_by = \"" . $recordData['modified_by'] . "\", ";
+						elseif (isset($_SESSION['loginEmail']))
+							$queryRefs .= "modified_by = \"" . $currentUser . "\", ";
+
+						if (!empty($recordData['modified_date']) AND preg_match("/^\d{4}-\d{2}-\d{2}$/", $recordData['modified_date']))
+							$queryRefs .= "modified_date = \"" . $recordData['modified_date'] . "\", ";
+						else
+							$queryRefs .= "modified_date = \"" . $currentDate . "\", ";
+
+						if (!empty($recordData['modified_time']) AND preg_match("/^\d{2}:\d{2}:\d{2}$/", $recordData['modified_time']))
+							$queryRefs .= "modified_time = \"" . $recordData['modified_time'] . "\"";
+						else
+							$queryRefs .= "modified_time = \"" . $currentTime . "\"";
+
+
+						$queryRefs = "INSERT INTO $tableRefs SET " . $queryRefs; // finalize the query by prefixing it with the actual MySQL command
+
+						// ADD RECORD:
+
+						// RUN the query on the database through the connection:
+						$result = queryMySQLDatabase($queryRefs, $oldQuery);
+
+						// Get the record id that was created
+						$serialNo = @ mysql_insert_id($connection); // find out the unique ID number of the newly created record (Note: this function should be called immediately after the
+																	// SQL INSERT statement! After any subsequent query it won't be possible to retrieve the auto_increment identifier value for THIS record!)
+
+						$serialNumbersArray[] = $serialNo; // append this record's serial number to the array of imported record serials
+					}
+					// else: '$recordData' did not contain any data, so we skip this record
+				}
+				// (END LOOP OVER EACH RECORD)
+			}
+			// else: unknown array structure, return an empty '$serialNumbersArray'
+		}
+		// else: couldn't verify structure of '$importDataArray', return an empty '$serialNumbersArray'
+
+		return $serialNumbersArray; // return list of serial numbers of all imported records
+	}
+
+	// --------------------------------------------------------------------
+
+	// Assign correct values to the calculation fields 'first_author', 'author_count', 'first_page', 'volume_numeric' and 'series_volume_numeric':
+	function generateCalculationFieldContent($author, $pages, $volume, $seriesVolume)
+	{
+		if (!empty($author))
+		{
+			// 'first_author' field:
+			$firstAuthor = ereg_replace("^([^;]+).*", "\\1", $author); // extract first author from 'author' field
+			$firstAuthor = trim($firstAuthor); // remove leading & trailing whitespace (if any)
+			$firstAuthor = ereg_replace(" *\(eds?\)$", "", $firstAuthor); // remove any existing editor info from the 'first_author' string, i.e., kill any trailing " (ed)" or " (eds)"
+
+			// 'author_count' field:
+			if (!ereg(";", $author)) // if the 'author' field does NOT contain a ';' (which would delimit multiple authors) => single author
+				$authorCount = "1"; // indicates a single author
+			elseif (ereg("^[^;]+;[^;]+$", $author)) // the 'author' field does contain exactly one ';' => two authors
+				$authorCount = "2"; // indicates two authors
+			elseif (ereg("^[^;]+;[^;]+;[^;]+", $author)) // the 'author' field does contain at least two ';' => more than two authors
+				$authorCount = "3"; // indicates three (or more) authors
+		}
+		else
+		{
+			$firstAuthor = "";
+			$authorCount = "";
+		}
+
+		// 'first_page' field:
+		if (!empty($pages))
+		{
+			if (ereg("([0-9]+)", $pages)) // if the 'pages' field contains any numeric value(s)
+				$firstPage = ereg_replace("^[^0-9]*([0-9]+).*", "\\1", $pages); // extract first page from 'pages' field
+			else
+				$firstPage = "";
+		}
+		else
+			$firstPage = "";
+
+		// 'volume_numeric' field:
+		if (!empty($volume))
+		{
+			if (ereg("([0-9]+)", $volume)) // if the 'volume' field contains any numeric value(s)
+				$volumeNumeric = ereg_replace("^[^0-9]*([0-9]+).*", "\\1", $volume); // extract first number from 'volume' field
+			else
+				$volumeNumeric = "";
+		}
+		else
+			$volumeNumeric = "";
+
+		// 'series_volume_numeric' field:
+		if (!empty($seriesVolume))
+		{
+			if (ereg("([0-9]+)", $seriesVolume)) // if the 'series_volume' field contains any numeric value(s)
+				$seriesVolumeNumeric = ereg_replace("^[^0-9]*([0-9]+).*", "\\1", $seriesVolume); // extract first number from 'series_volume' field
+			else
+				$seriesVolumeNumeric = "";
+		}
+		else
+			$seriesVolumeNumeric = "";
+
+		return array($firstAuthor, $authorCount, $firstPage, $volumeNumeric, $seriesVolumeNumeric);
 	}
 
 	// --------------------------------------------------------------------
@@ -479,7 +865,7 @@
 
 		// build an informative string that get's displayed when a user mouses over a link:
 		$linkTitle = "\"sort by field '" . $orig_fieldname . "'" . $linkTitleSortOrder . "\"";
-		
+
 		// start the table header tag & print the attribute name as link:
 		$tableHeaderLink = "$HTMLbeforeLink<a href=\"$href?sqlQuery=$queryURLNewOrder&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;formType=$formType&amp;showRows=$showRows&amp;rowOffset=$rowOffset&amp;submit=$submitType&amp;orderBy=" . rawurlencode($orderBy) . "&amp;oldQuery=" . rawurlencode($oldQuery) . "&amp;viewType=$viewType\" title=$linkTitle>$linkName</a>";
 
@@ -503,6 +889,7 @@
 		$queryNewOrder = eregi_replace('ORDER BY [^¥]+',$newORDER,$queryNewOrder); // replace old 'ORDER BY'... parameter by new one
 		$queryNewOrder = str_replace('¥',' ',$queryNewOrder); // remove the unique delimiter again
 		$queryURLNewOrder = rawurlencode($queryNewOrder); // URL encode query
+
 		return $queryURLNewOrder;
 	}
 
@@ -595,7 +982,7 @@
 		else
 			// No, there is no previous page so don't print a link
 			$BrowseLinks .= "\n\t\t&lt;&lt;";
-	
+
 		// c) Output the page numbers as links:
 		// Count through the number of pages in the results:
 		for($x=($pageOffset * $showRows), $page=($pageOffset + 1);
@@ -625,7 +1012,7 @@
 					$BrowseLinks .= " \n\t\t<b>$page</b>"; // current page is set in <b>BOLD</b>
 
 		$BrowseLinks .= " ";
-	
+
 		// d) Are there any Next pages?
 		if ($rowsFound > $nextOffset)
 			// Yes, so create a next link
@@ -858,7 +1245,7 @@ EOF;
 					<td valign="top">
 						<select name="groupSearchSelector" title="$groupSearchSelectorTitle"$groupSearchDisabled>
 EOF;
-	
+
 			if (($href == "search.php" AND isset($_SESSION['userGroups'])) OR ($href == "users.php" AND isset($_SESSION['adminUserGroups']))) // if the appropriate session variable is set
 			{
 				 // build properly formatted <option> tag elements from the items listed in the appropriate session variable:
@@ -940,7 +1327,7 @@ EOF;
 
 		// NOTE: we embed the current value of '$rowOffset' as hidden tag within the 'displayOptions' form. By this, the current row offset can be re-applied after the user pressed the 'Show'/'Hide' button within the 'displayOptions' form.
 		//       To avoid that browse links don't behave as expected, the actual value of '$rowOffset' will be adjusted in 'search.php' to an exact multiple of '$showRows'!
-	
+
 		$optionTags = buildSelectMenuOptions($displayOptionsSelectorElements1, " *, *", "\t\t\t\t\t\t\t", false); // build correct option tags from the column items provided
 
 		if (isset($_SESSION['loginEmail']) AND !empty($displayOptionsSelectorElements2)) // if a user is logged in -AND- there were any additional elements specified...
@@ -1093,10 +1480,10 @@ EOF;
 			{
 				$query = eregi_replace(" FROM $tableRefs",", orig_record FROM $tableRefs",$query); // add 'orig_record' column (although it won't be visible the 'orig_record' column gets included in every search query)
 																						// (which is required in order to present visual feedback on duplicate records)
-		
+
 				$query = eregi_replace(" FROM $tableRefs",", serial FROM $tableRefs",$query); // add 'serial' column (although it won't be visible the 'serial' column gets included in every search query)
 																				// (which is required in order to obtain unique checkbox names)
-	
+
 				if ($showLinks == "1")
 					$query = eregi_replace(" FROM $tableRefs",", file, url, doi, isbn FROM $tableRefs",$query); // add 'file', 'url', 'doi' & 'isbn' columns
 			}
@@ -1106,7 +1493,6 @@ EOF;
 			$query = eregi_replace(" FROM $tableUsers",", user_id FROM $tableUsers",$query); // add 'user_id' column (although it won't be visible the 'user_id' column gets included in every search query)
 																				// (which is required in order to obtain unique checkbox names as well as for use in the 'getUserID()' function)
 		}
-
 
 		return array($query, $displayType);
 	}
@@ -1181,7 +1567,7 @@ EOF;
 		// setlocale(LC_COLLATE, 'la_LN.ISO-8859-1'); // use the ISO 8859-1 Latin-1 character set  for pattern matching
 
 		$authorsArray = split($oldBetweenAuthorsDelim, $authorContents); // get a list of all authors for this record
-		
+
 		$authorCount = count($authorsArray); // check how many authors we have to deal with
 		$newAuthorContents = ""; // this variable will hold the final author string
 
@@ -1211,7 +1597,7 @@ EOF;
 
 			if ((($i == 0) AND $initialsBeforeAuthorFirstAuthor) OR (($i > 0) AND $initialsBeforeAuthorStandard)) // put array elements in reverse order:
 				$singleAuthorArray = array_reverse($singleAuthorArray); // (Note: this only works, if the array has only *two* elements, i.e., one containing the author's name and one holding the initials!)
-				
+
 			// re-join author name & initials, using the specified delimiter, and copy the string to the end of an array:
 			if ($i == 0) // -> first author
 				$singleAuthorString = implode($newAuthorsInitialsDelimFirstAuthor, $singleAuthorArray);
@@ -1230,7 +1616,7 @@ EOF;
 		// do some final clean up:
 		$newAuthorContents = preg_replace("/  +/", " ", $newAuthorContents); // remove double spaces (which occur e.g., when both, $betweenInitialsDelim & $newAuthorsInitialsDelim..., end with a space)
 		$newAuthorContents = preg_replace("/ +([,.;:?!])/", "\\1", $newAuthorContents); // remove spaces before [,.;:?!]
-		
+
 		$newAuthorContents = encodeHTML($newAuthorContents); // HTML encode higher ASCII characters within the newly arranged author contents
 
 		return $newAuthorContents;
@@ -1583,10 +1969,10 @@ EOF;
 			if (preg_match("/^\[-?\d+\|/i", $options)) // if the first option contains a number
 			{
 				$useMaxNoOfAuthors = preg_replace("/\[(-?\d+)\|[^][|]*\|[^][|]*\]/i", "\\1", $options); // regex note: to include a literal closing bracket (']') in a negated character class ('[^...]') it must be positioned right after the caret character ('^') such as in: '[^]...]'
-	
+
 				if ($useMaxNoOfAuthors == 0) // the special number '0' indicates that all authors shall be retrieved
 					$useMaxNoOfAuthors = 250; // by assigning a very high number to '$useMaxNoOfAuthors' we should be pretty safe to catch all authors from the author field (extremely high values may choke the regular expression engine, though)
-	
+
 				elseif ($useMaxNoOfAuthors < 0) // negative numbers have currently no meaning and will be treated as if the corresponding positive number was given
 					$useMaxNoOfAuthors = abs($useMaxNoOfAuthors);
 			}
@@ -1610,7 +1996,7 @@ EOF;
 		else
 		{
 			$authorDetails = ""; // initialize variable which will hold the author identifier string
-	
+
 			// Add first author (plus additional authors if available up to the number of authors specified in '$useMaxNoOfAuthors');
 			// but if more authors are present as in '$useMaxNoOfAuthors', add the contents of '$etalIdentifierString' after the first(!) author ignoring all other authors.
 			// Example with '$extractDetailsAuthorsDefault = "[2|+|_etal]"':
@@ -1625,7 +2011,7 @@ EOF;
 			{
 				if (preg_match("/^[^;]+(;[^;]+){" . ($i - 1) . "}/", $authorString)) // if the 'author' field does contain (at least) as many authors as specified in '$i'
 				{
-	
+
 					if ($i>1)
 					{
 						if (preg_match("/^[^;]+(;[^;]+){" . $useMaxNoOfAuthors . "}/", $authorString)) // if the 'author' field does contain more authors as specified in '$useMaxNoOfAuthors'
@@ -1636,7 +2022,7 @@ EOF;
 						else
 							$authorDetails .= $authorConnectorString;
 					}
-	
+
 					// Call the 'extractAuthorsLastName()' function to extract the last name of a particular author (specified by position):
 					// (see function header for description of required parameters)
 					$authorDetails .= extractAuthorsLastName(" *; *",
@@ -1770,7 +2156,7 @@ EOF;
 		{
 			// extract the individual options:
 			$minRandomNumber = preg_replace("/\[(\d+)\|.+/i", "\\1", $options); // extract first option which defines the minimum random number
-			$maxRandomNumber = preg_replace("/\[\d+\|(\d+)\]/i", "\\1", $options); // extract second option which defines the maximum random number				
+			$maxRandomNumber = preg_replace("/\[\d+\|(\d+)\]/i", "\\1", $options); // extract second option which defines the maximum random number
 
 			// generate random number:
 			$randomNumber = mt_rand($minRandomNumber, $maxRandomNumber);
@@ -1805,14 +2191,14 @@ EOF;
 	//     tmp_name    "" OR "none"                  ""                      [tmp_name]
 	//     error          4                          1                           0
 	//     size           0                          0                         [size]
-	
+
 	// The function prefers the $_FILES array if it is available, falling back
 	// to $HTTP_POST_FILES and $HTTP_POST_VARS as necessary.
-	
+
 	function getUploadInfo($name)
 	{
 		global $HTTP_POST_FILES, $HTTP_POST_VARS;
-	
+
 		$uploadFileInfo = array(); // initialize array variable
 
 		// Look for information in PHP 4.1 $_FILES array first.
@@ -1878,7 +2264,7 @@ EOF;
 						if (ereg(":",$relatedFieldArrayElement))
 							$relatedFieldArrayElement = preg_replace("/ *: *(.+)/"," RLIKE \"\\1\"",$relatedFieldArrayElement);
 						// else we assume '$relatedFieldArrayElement' to contain a valid 'WHERE' clause!
-						
+
 						$queriesArray[] = $relatedFieldArrayElement; // append the current array element to the end of the queries array
 					}
 				}
@@ -1904,7 +2290,7 @@ EOF;
 			$relatedQuery .= " FROM $tableRefs";
 
 		$relatedQuery .= " WHERE " . $queriesString . " ORDER BY author, year DESC, publication"; // add 'WHERE' & 'ORDER BY' clause
-		
+
 		// build the correct query URL:
 		$relatedRecordsLink = "search.php?sqlQuery=" . rawurlencode($relatedQuery) . "&amp;formType=sqlSearch&amp;showLinks=1"; // we skip unnecessary parameters ('search.php' will use it's default values for them)
 
@@ -1937,7 +2323,7 @@ EOF;
 // 			// E.g., without enclosing brackets, the pattern 'mygroup|.+' would be (among others) resolved to ' *; *mygroup|.+ *' (see below).
 // 			// This, in turn, would cause the pattern to match beyond the group delimiter (semicolon), causing severe damage to the user's
 // 			// other group names!
-// 
+//
 // 			// to assure that the regular pattern specified by the user doesn't match beyond our group delimiter ';' (semicolon),
 // 			// we'll need to convert any greedy regex quantifiers to non-greedy ones:
 // 			$userGroup = preg_replace("/(?<![?+*]|[\d,]})([?+*]|\{\d+(, *\d*)?\})(?!\?)/", "\\1?", $userGroup);
@@ -2010,7 +2396,7 @@ EOF;
 								. "record_id = \"$leftoverRecordID\", "
 								. "user_id = \"$userID\", "
 								. "data_id = NULL"; // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
-	
+
 				$resultUserData = queryMySQLDatabase($queryUserData, $oldQuery); // RUN the query on the database through the connection
 			}
 		}
@@ -2139,9 +2525,9 @@ EOF;
 			$query = "SELECT type_name, type_id FROM $tableTypes WHERE type_enabled = 'true' ORDER BY order_by, type_name";
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
-	
+
 		$availableFormatsStylesTypesArray = array(); // initialize array variable
-	
+
 		$rowsFound = @ mysql_num_rows($result);
 		if ($rowsFound > 0) // If there were rows found ...
 			while ($row = @ mysql_fetch_array($result)) // for all rows found
@@ -2170,9 +2556,9 @@ EOF;
 			$query = "SELECT $tableTypes.type_name, $tableTypes.type_id FROM $tableTypes LEFT JOIN $tableUserTypes USING (type_id) WHERE type_enabled = 'true' AND user_id = '" . $userID . "' ORDER BY $tableTypes.order_by, $tableTypes.type_name";
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
-	
+
 		$enabledFormatsStylesTypesArray = array(); // initialize array variable
-	
+
 		$rowsFound = @ mysql_num_rows($result);
 		if ($rowsFound > 0) // If there were rows found ...
 			while ($row = @ mysql_fetch_array($result)) // for all rows found
@@ -2243,7 +2629,7 @@ EOF;
 			{
 				// join array of unique user formats/styles/types with '; ' as separator:
 				$userFormatsStylesTypesString = implode('; ', $userFormatsStylesTypesArray);
-	
+
 				// Write the resulting string of user formats/styles/types into a session variable:
 				saveSessionVariable("user_" . $dataType . "s", $userFormatsStylesTypesString);
 			}
@@ -2251,7 +2637,7 @@ EOF;
 		else // no user formats/styles/types found
 			// we'll only delete the appropriate session variable if either a normal user is logged in -OR- the admin is logged in and views his own user options page
 			if (($loginEmail != $adminLoginEmail) OR (($loginEmail == $adminLoginEmail) && ($userID == getUserID($loginEmail))))
-				deleteSessionVariable("user_" . $dataType . "s"); // delete any 'user_formats'/'user_styles'/'user_types' session variable (which is now outdated)		
+				deleteSessionVariable("user_" . $dataType . "s"); // delete any 'user_formats'/'user_styles'/'user_types' session variable (which is now outdated)
 
 		return $userFormatsStylesTypesArray;
 	}
@@ -2284,12 +2670,12 @@ EOF;
 		{
 			$optionTags = buildSelectMenuOptions($enabledFormatsStylesTypesArray, " *; *", "\t\t\t", true); // build properly formatted <option> tag elements from the items listed in '$enabledFormatsStylesTypesArray'
 
-			$selectedFormatsStylesTypesArray = getVisibleUserFormatsStylesTypes($userID, $dataType, $formatType); // get all formats/styles/types that were choosen to be visible for the current user		
+			$selectedFormatsStylesTypesArray = getVisibleUserFormatsStylesTypes($userID, $dataType, $formatType); // get all formats/styles/types that were choosen to be visible for the current user
 		}
-	
+
 		foreach($selectedFormatsStylesTypesArray as $itemKey => $itemValue) // escape possible meta characters within names of formats/styles/types that shall be selected (otherwise the grep pattern below would fail)
 			$selectedFormatsStylesTypesArray[$itemKey] = preg_quote($itemValue);
-	
+
 		$selectedFormatsStylesTypes = implode("|", $selectedFormatsStylesTypesArray); // merge array of formats/styles/types that shall be selected
 
 		$optionTags = ereg_replace("<option([^>]*)>($selectedFormatsStylesTypes)</option>", "<option\\1 selected>\\2</option>", $optionTags); // select all formats/styles/types that are listed within '$selectedFormatsStylesTypesArray'
@@ -2392,7 +2778,7 @@ EOF;
 
 			// join array of allowed user actions with '; ' as separator:
 			$allowedUserActionsString = implode('; ', $userPermissionsFieldNameArray);
-	
+
 			if ($savePermissionsToSessionVariable)
 				// Write the resulting string of allowed user actions into a session variable:
 				saveSessionVariable("user_permissions", $allowedUserActionsString);
@@ -2429,7 +2815,7 @@ EOF;
 		else
 			// Get the preferred language for the user with the user ID given in '$userID':
 			$query = "SELECT language AS language_name FROM $tableUsers WHERE user_id = '" . $userID . "'";
-		
+
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 
@@ -2475,6 +2861,39 @@ EOF;
 
 	// --------------------------------------------------------------------
 
+	// Returns the current date (e.g. '2003-12-31'), time (e.g. '23:59:49') and user name & email address (e.g. 'Matthias Steffens (refbase@extracts.de)'):
+	// this information is used when adding/updating/deleting records in the database
+	function getCurrentDateTimeUser()
+	{
+		global $loginEmail;
+		global $loginFirstName;
+		global $loginLastName;
+
+		$currentDate = date('Y-m-d'); // get the current date in a format recognized by MySQL (which is 'YYYY-MM-DD', e.g. '2003-12-31')
+		$currentTime = date('H:i:s'); // get the current time in a format recognized by MySQL (which is 'HH:MM:SS', e.g. '23:59:49')
+		$currentUser = $loginFirstName . " " . $loginLastName . " (" . $loginEmail . ")"; // we use session variables to construct the user name, e.g. 'Matthias Steffens (refbase@extracts.de)'
+
+		return array($currentDate, $currentTime, $currentUser);
+	}
+
+	// --------------------------------------------------------------------
+
+	// Build a correct call number prefix for the currently logged-in user (e.g. 'IPÖ @ msteffens'):
+	function getCallNumberPrefix()
+	{
+		global $loginEmail;
+		global $abbrevInstitution;
+
+		// we use session variables to construct a correct call number prefix:
+		$loginEmailArray = split("@", $loginEmail); // split the login email address at '@'
+		$loginEmailUserName = $loginEmailArray[0]; // extract the user name (which is the first element of the array '$loginEmailArray')
+		$callNumberPrefix = $abbrevInstitution . " @ " . $loginEmailUserName;
+
+		return $callNumberPrefix;
+	}
+
+	// --------------------------------------------------------------------
+
 	// Returns the total number of records in the database:
 	function getNumberOfRecords()
 	{
@@ -2484,7 +2903,7 @@ EOF;
 
 		// CONSTRUCT SQL QUERY:
 		$query = "SELECT COUNT(serial) FROM $tableRefs"; // query the total number of records
-		
+
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 
 		$row = mysql_fetch_row($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
@@ -2504,7 +2923,7 @@ EOF;
 
 		// CONSTRUCT SQL QUERY:
 		$query = "SELECT modified_date, modified_time FROM $tableRefs ORDER BY modified_date DESC, modified_time DESC, created_date DESC, created_time DESC LIMIT 1"; // get date/time info for the record that was added/edited most recently
-		
+
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 
 		$row = mysql_fetch_row($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
@@ -2561,10 +2980,10 @@ EOF;
 					{
 						if ($userOptionsArray['use_custom_cite_key_format'] == "yes") // if the user wants to use a custom cite key format
 							$citeKeyFormat = $userOptionsArray['cite_key_format'];
-	
+
 						else // use the default cite key format that was specified by the admin in 'ini.inc.php'
 							$citeKeyFormat = $defaultCiteKeyFormat;
-	
+
 						// auto-generate a cite key according to the given naming scheme:
 						$citeKey = parsePlaceholderString($formVars, $citeKeyFormat, "<:authors:><:year:>"); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
 					}
@@ -2792,10 +3211,9 @@ EOF;
 		if(isset($row['doi']))
 			$formVars['doiName'] = $row['doi'];
 
-
 		return $formVars;
 	}
-	
+
 	// --------------------------------------------------------------------
 
 	// Build properly formatted <option> tag elements from items listed within an array or string (and which -- in the case of strings -- are delimited by '$splitDelim').
@@ -2902,7 +3320,7 @@ EOF;
 		}
 
 	// Start the select widget
-	echo "\n\t\t<select name=\"$pulldownName\">";		 
+	echo "\n\t\t<select name=\"$pulldownName\">";
 
 	// Is there an additional option?
 	if (isset($additionalOptionDisplay))
@@ -2919,7 +3337,7 @@ EOF;
 	{
 		// Yes, there's a default value specified
 
-		// Check if the defaultValue is in the 
+		// Check if the defaultValue is in the
 		// database values
 		foreach ($resultBuffer as $result)
 			if ($result == $defaultValue)
@@ -2929,10 +3347,10 @@ EOF;
 				// No, just show as an option
 				echo "\n\t\t\t<option>$result</option>";
 	}	// end if defaultValue
-	else 
-	{ 
+	else
+	{
 		// No defaultValue
-		
+
 		// Show database values as options
 		foreach ($resultBuffer as $result)
 			echo "\n\t\t\t<option>$result</option>";
@@ -2997,7 +3415,6 @@ EOF;
 			if (preg_match("/" . $searchString . "/", $sourceString))
 				$sourceString = preg_replace("/" . $searchString . "/", $replaceString, $sourceString);
 
-
 		return $sourceString;
 	}
 
@@ -3012,7 +3429,6 @@ EOF;
 
 		elseif (eregi("upper", $transformation)) // change source text to upper case
 			$sourceString = strtoupper($sourceString);
-
 
 		return $sourceString;
 	}
@@ -3086,7 +3502,6 @@ EOF;
 		//     - The optional third argument defines the character set used in conversion. Support for this argument
 		//       was added in PHP 4.1.0. Presently, the ISO-8859-1 character set is used as the default.
 
-
 		return $encodedString;
 	}
 
@@ -3115,7 +3530,6 @@ EOF;
 		//
 		//     - The optional third argument defines the character set used in conversion. Support for this argument
 		//       was added in PHP 4.1.0. Presently, the ISO-8859-1 character set is used as the default.
-
 
 		return $encodedString;
 	}
@@ -3148,15 +3562,15 @@ EOF;
 					// save an appropriate error message:
 					$HeaderString = "<b><span class=\"warning\">Display of file field was ommitted!</span></b>";
 					// note: we don't write out any error message if the file field does only occur within the 'ORDER' clause (but not within the 'SELECT' clause)
-	
+
 					// Write back session variable:
 					saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 				}
-	
+
 				$sqlQuery = eregi_replace("(SELECT|ORDER BY) file( DESC)?", "\\1 ", $sqlQuery); // ...delete 'file' field from beginning of 'SELECT' or 'ORDER BY' clause
 				$sqlQuery = eregi_replace(", *file( DESC)?", "", $sqlQuery); // ...delete any other occurrences of the 'file' field from 'SELECT' or 'ORDER BY' clause
 				$sqlQuery = eregi_replace("(SELECT|ORDER BY) *, *", "\\1 ", $sqlQuery); // ...remove any field delimiters that directly follow the 'SELECT' or 'ORDER BY' terms
-	
+
 				$sqlQuery = preg_replace("/SELECT *(?=FROM)/i", "SELECT author, title, year, publication, volume, pages ", $sqlQuery); // ...supply generic 'SELECT' clause if it did ONLY contain the 'file' field
 				$sqlQuery = preg_replace("/ORDER BY *(?=LIMIT|GROUP BY|HAVING|PROCEDURE|FOR UPDATE|LOCK IN|$)/i", "ORDER BY author, year DESC, publication", $sqlQuery); // ...supply generic 'ORDER BY' clause if it did ONLY contain the 'file' field
 			}
@@ -3172,12 +3586,12 @@ EOF;
 
 				// save an appropriate error message:
 				$HeaderString = "<b><span class=\"warning\">Querying of file field was ommitted!</span></b>"; // save an appropriate error message
-	
+
 				// Write back session variable:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 			}
 		}
-	
+
 
 		// handle the display & querying of user-specific fields:
 		if (!isset($_SESSION['loginEmail'])) // if NO user is logged in...
@@ -3191,23 +3605,23 @@ EOF;
 					// save an appropriate error message:
 					$HeaderString = "<b><span class=\"warning\">Display of user-specific fields was ommitted!</span></b>";
 					// note: we don't write out any error message if the user-specific fields do only occur within the 'ORDER' clause (but not within the 'SELECT' clause)
-	
+
 					// Write back session variable:
 					saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 				}
-	
+
 				$sqlQuery = eregi_replace("(SELECT|ORDER BY) (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)( DESC)?", "\\1 ", $sqlQuery); // ...delete any user-specific fields from beginning of 'SELECT' or 'ORDER BY' clause
 				$sqlQuery = eregi_replace(", *(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)( DESC)?", "", $sqlQuery); // ...delete any remaining user-specific fields from 'SELECT' or 'ORDER BY' clause
 				$sqlQuery = eregi_replace("(SELECT|ORDER BY) *, *", "\\1 ", $sqlQuery); // ...remove any field delimiters that directly follow the 'SELECT' or 'ORDER BY' terms
-	
+
 				$sqlQuery = preg_replace("/SELECT *(?=FROM)/i", "SELECT author, title, year, publication, volume, pages ", $sqlQuery); // ...supply generic 'SELECT' clause if it did ONLY contain user-specific fields
 				$sqlQuery = preg_replace("/ORDER BY *(?=LIMIT|GROUP BY|HAVING|PROCEDURE|FOR UPDATE|LOCK IN|$)/i", "ORDER BY author, year DESC, publication", $sqlQuery); // ...supply generic 'ORDER BY' clause if it did ONLY contain user-specific fields
 			}
-	
+
 			// ... and the 'LEFT JOIN...' statement is part of the 'FROM' clause...
 			if ((eregi(".+search.php",$referer)) AND (eregi("LEFT JOIN $tableUserData",$sqlQuery))) // if the calling script ends with 'search.php' (i.e., is NOT 'show.php' or 'sru.php', see note below!) AND the 'LEFT JOIN...' statement is part of the 'FROM' clause...
 				$sqlQuery = eregi_replace("FROM $tableRefs LEFT JOIN.+WHERE","FROM $tableRefs WHERE",$sqlQuery); // ...delete 'LEFT JOIN...' part from 'FROM' clause
-	
+
 			// ... and any user-specific fields are part of the WHERE clause...
 			if ((eregi(".+search.php",$referer) OR $displayType == "RSS") AND (eregi("WHERE.+(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)",$sqlQuery))) // if a user who's NOT logged in tries to query user-specific fields (by use of 'sql_search.php')...
 			// Note that the script 'show.php' may query the user-specific field 'selected' (e.g., by URLs of the form: 'show.php?author=...&userID=...&only=selected')
@@ -3223,12 +3637,12 @@ EOF;
 
 				// save an appropriate error message:
 				$HeaderString = "<b><span class=\"warning\">Querying of user-specific fields was ommitted!</span></b>"; // save an appropriate error message
-	
+
 				// Write back session variable:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 			}
 		}
-	
+
 		else // if a user is logged in...
 		{
 			if (eregi("LEFT JOIN $tableUserData",$sqlQuery)) // if the 'LEFT JOIN...' statement is part of the 'FROM' clause...
@@ -3243,12 +3657,12 @@ EOF;
 					$sqlQuery = eregi_replace("location RLIKE [^ ]+","location RLIKE \"$loginEmail\"",$sqlQuery); // ...replace any other user email address with the login email address of the currently logged in user
 				}
 			}
-	
+
 			// if we're going to display record details for a logged in user, we have to ensure the display of user-specific fields (which may have been deleted from a query due to a previous logout action);
 			// in 'Display Details' view, the 'call_number' and 'serial' fields are the last generic fields before any user-specific fields:
 			if ((eregi("^(Display|Export)$",$displayType)) AND (eregi(", call_number, serial FROM $tableRefs",$sqlQuery))) // if the user-specific fields are missing from the SELECT statement...
 				$sqlQuery = eregi_replace(", call_number, serial FROM $tableRefs",", call_number, serial, marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key, related FROM $tableRefs",$sqlQuery); // ...add all user-specific fields to the 'SELECT' clause
-	
+
 			if ((eregi("^(Display|Export|RSS)$",$displayType)) AND (!eregi("LEFT JOIN $tableUserData",$sqlQuery))) // if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
 				$sqlQuery = eregi_replace(" FROM $tableRefs"," FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = $loginUserID",$sqlQuery); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
 		}
@@ -3260,15 +3674,14 @@ EOF;
 		{
 			$sqlQuery = eregi_replace(" FROM $tableRefs",", orig_record FROM $tableRefs",$sqlQuery); // add 'orig_record' column (which is required in order to present visual feedback on duplicate records)
 			$sqlQuery = eregi_replace(" FROM $tableRefs",", serial FROM $tableRefs",$sqlQuery); // add 'serial' column (which is required in order to obtain unique checkbox names)
-	
+
 			if ($showLinks == "1")
 				$sqlQuery = eregi_replace(" FROM $tableRefs",", file, url, doi, isbn FROM $tableRefs",$sqlQuery); // add 'file', 'url', 'doi' & 'isbn' columns
 		}
-	
+
 		// fix escape sequences within the SQL query:
 		$query = str_replace('\"','"',$sqlQuery); // replace any \" with "
 		$query = eregi_replace('(\\\\)+','\\\\',$query);
-
 
 		return $query;
 	}
@@ -3286,7 +3699,6 @@ EOF;
 
 		$rfc2822date = date('r', $timeStamp);
 
-
 		return $rfc2822date;
 	}
 
@@ -3302,7 +3714,6 @@ EOF;
 		$authorEmail = preg_replace("/.+?\(([^)]+)\)/", "\\1", $createdBy);
 
 		$rfc2822address = encodeHTMLspecialchars($authorName . "<" . $authorEmail . ">");
-
 
 		return $rfc2822address;
 	}
@@ -3341,7 +3752,6 @@ EOF;
 
 		$translatedSQL = str_replace('"',"'",$translatedSQL); // replace any remaining " with '
 
-
 		return $translatedSQL;
 	}
 
@@ -3352,7 +3762,6 @@ EOF;
 	{
 		$queryWhereClause = preg_replace("/^.+?WHERE (.+?)(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$).*?$/i","\\1",$query);
 
-
 		return $queryWhereClause;
 	}
 
@@ -3362,7 +3771,6 @@ EOF;
 	function generateRSSURL($queryWhereClause, $showRows)
 	{
 		$rssURL = "rss.php?where=" . rawurlencode($queryWhereClause) . "&amp;showRows=" . $showRows;
-
 
 		return $rssURL;
 	}
@@ -3448,7 +3856,6 @@ EOF;
 		// finish RSS data:
 		$rssData .=  "\n\n\t</channel>"
 					. "\n</rss>\n";
-
 
 		return $rssData;
 	}
