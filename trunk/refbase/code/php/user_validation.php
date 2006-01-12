@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   30-Oct-05, 16:54
+	// Modified:   10-Jan-06, 14:49
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -238,9 +238,8 @@
 
 	// CONSTRUCT SQL QUERY:
 	// First, setup some required variables:
-	$currentDate = date('Y-m-d'); // get the current date in a format recognized by mySQL (which is 'YYYY-MM-DD', e.g.: '2003-12-31')
-	$currentTime = date('H:i:s'); // get the current time in a format recognized by mySQL (which is 'HH:MM:SS', e.g.: '23:59:49')
-	$currentUser = $loginFirstName . " " . $loginLastName . " (" . $loginEmail . ")"; // here we use session variables to construct the user name, e.g.: 'Matthias Steffens (msteffens@ipoe.uni-kiel.de)'
+	// Get the current date (e.g. '2003-12-31'), time (e.g. '23:59:49') and user name & email address (e.g. 'Matthias Steffens (refbase@extracts.de)'):
+	list ($currentDate, $currentTime, $currentUser) = getCurrentDateTimeUser(); // function 'getCurrentDateTimeUser()' is defined in 'include.inc.php'
 
 	// If a user is logged in and has submitted 'user_details.php' with a 'userID' parameter:
 	// (while the admin has no restrictions, a normal user can only submit 'user_details.php' with his own 'userID' as parameter!)
