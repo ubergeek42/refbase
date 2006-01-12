@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   06-Nov-05, 00:05
+	// Modified:   06-Jan-06, 02:29
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -1223,21 +1223,27 @@
 						}
 				}
 
+			if ($viewType != "Print") // supply an appropriate colspan value
+				$ColspanFields = $NoColumns;
+			else // print view (i.e., no marker column)
+				$ColspanFields = ($NoColumns - 1);
+
 			// Print out an URL that links directly to this record:
 			$recordData .= "\n<tr>" // start a new TR (Table Row)
-						. "\n\t<td colspan=\"$NoColumns\" align=\"center\" class=\"smaller\"><a href=\"" . $databaseBaseURL . "show.php?record=" . $row["serial"] . "\" title=\"copy this URL to directly link to this record\">Permanent link to this record</a></td>"
+						. "\n\t<td colspan=\"$ColspanFields\" align=\"center\" class=\"smaller\"><a href=\"" . $databaseBaseURL . "show.php?record=" . $row["serial"] . "\" title=\"copy this URL to directly link to this record\">Permanent link to this record</a></td>"
 						. "\n</tr>";
 
-			if ((($rowCounter+1) < $showRows) && (($rowCounter+1) < $rowsFound)) // append a divider line if it's not the last (or only) record on the page
+			// Append a divider line if it's not the last (or only) record on the page:
+			if ((($rowCounter+1) < $showRows) && (($rowCounter+1) < $rowsFound))
 				if (!(($showMaxRow == $rowsFound) && (($rowCounter+1) == ($showMaxRow-$rowOffset)))) // if we're NOT on the *last* page processing the *last* record... ('$showMaxRow-$rowOffset' gives the number of displayed records for a particular page)
 					$recordData .= "\n<tr>"
-						. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>"
+						. "\n\t<td colspan=\"$ColspanFields\">&nbsp;</td>"
 						. "\n</tr>"
 						. "\n<tr>"
-						. "\n\t<td colspan=\"$NoColumns\"><hr align=\"left\" width=\"100%\"></td>"
+						. "\n\t<td colspan=\"$ColspanFields\"><hr align=\"left\" width=\"100%\"></td>"
 						. "\n</tr>"
 						. "\n<tr>"
-						. "\n\t<td colspan=\"$NoColumns\">&nbsp;</td>"
+						. "\n\t<td colspan=\"$ColspanFields\">&nbsp;</td>"
 						. "\n</tr>";
 
 			echo $recordData;
@@ -5350,6 +5356,8 @@
 	{
 		$totalLinkCount = count($linkArray); // check how many links we're dealing with
 
+		$linkString = "";
+
 		if (!empty($linkArray)) // if some links are present
 		{
 			if ($totalLinkCount == 1) // only one link
@@ -5358,8 +5366,6 @@
 			}
 			else // multiple links
 			{
-				$linkString = "";
-
 				for ($linkCounter=0; $linkCounter < ($totalLinkCount - 1); $linkCounter++) // first array element has offset '0' so we decrement '$totalLinkCount' by 1
 				{
 					if (is_integer(($linkCounter + 1)/2)) // even number
