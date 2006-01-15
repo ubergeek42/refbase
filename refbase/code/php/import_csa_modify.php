@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import_csa_modify.php
 	// Created:    21-Nov-03, 22:46
-	// Modified:   12-Jan-06, 14:33
+	// Modified:   15-Jan-06, 14:38
 
 	// This php script accepts input from 'import_csa.php' and will process any CSA full record data. In case of a single
 	// record, the script will call 'record.php' with all provided fields pre-filled. The user can then verify the data,
@@ -19,6 +19,7 @@
 	// Incorporate some include files:
 	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
 	include 'includes/include.inc.php'; // include common functions
+	include 'includes/import.inc.php'; // include common import functions
 	include 'initialize/ini.inc.php'; // include common variables
 
 	// --------------------------------------------------------------------
@@ -74,6 +75,14 @@
 
 	// Get the source text containing the CSA record(s):
 	$sourceText = $formVars['sourceText'];
+
+	// Check if the format of the pasted source data is in "ISI Web of Science" format (instead of "CSA" format):
+	if ((!preg_match("/\s*Record \d+ of \d+\s*/", $sourceText)) and (preg_match("/\s*FN ISI Export Format\s*/", $sourceText)))
+	{
+		// Convert ISI WoS format to CSA format:
+		// (this allows for import of ISI WoS records via the import form provided by 'import_csa.php')
+		$sourceText = IsiToCsa($sourceText); // function 'IsiToCsa()' is defined in 'import.inc.php'
+	}
 
 	// Check whether we're supposed to display the original source data:
 	if (isset($formVars['showSource']))
@@ -420,7 +429,7 @@
 				$fieldLabelPlusDataArray = preg_split("/___LabelDataSplitter___/", $singleField); // split each field into a 2-element array containing [0] the field identifier and [1] the field data
 
 				$fieldLabelPlusDataArray[1] = preg_replace("/\s{2,}/", " ", $fieldLabelPlusDataArray[1]); // remove any hard returns and extra spaces within the data string
-				$fieldLabelPlusDataArray[1] = trim($fieldLabelPlusDataArray[1]); // remove any preseeding and trailing whitespace from the field data
+				$fieldLabelPlusDataArray[1] = trim($fieldLabelPlusDataArray[1]); // remove any preceeding and trailing whitespace from the field data
 
 				if (ereg("AU: Author", $fieldLabelPlusDataArray[0]))
 					$fieldLabelPlusDataArray[1] = preg_replace("/\*/", "", $fieldLabelPlusDataArray[1]); // remove any asterisk ("*")
@@ -686,12 +695,42 @@
 
 		$importedRecordsCount = count($importedRecordsArray);
 
+		// Send EMAIL announcement:
+		if ($sendEmailAnnouncements == "yes")
+		{
+			// variables '$sendEmailAnnouncements', '$mailingListEmail', '$officialDatabaseName' and '$databaseBaseURL' are specified in 'ini.inc.php';
+			// '$loginFirstName' and '$loginLastName' are provided as session variables by the 'start_session()' function in 'include.inc.php'
+
+			// send a notification email to the mailing list email address given in '$mailingListEmail':
+			$emailRecipient = "Literature Database Announcement List <" . $mailingListEmail . ">";
+	
+			if ($importedRecordsCount == 1)
+			{
+				$emailSubject = "New record added to the " . $officialDatabaseName;
+				$emailBodyIntro = "One record has been added to the " . $officialDatabaseName . ":";
+				$detailsURL = $databaseBaseURL . "show.php?record=" . $importedRecordsArray[0];
+			}
+			else // $importedRecordsCount > 1
+			{
+				$emailSubject = "New records added to the " . $officialDatabaseName;
+				$emailBodyIntro = $importedRecordsCount . " records have been added to the " . $officialDatabaseName . ":";
+				$detailsURL = $databaseBaseURL . "show.php?serial=" . rawurlencode($recordSerialsQueryString);
+			}
+
+			$emailBody = $emailBodyIntro
+						. "\n\n  added by:     " . $loginFirstName . " " . $loginLastName
+						. "\n  details:      " . $detailsURL
+						. "\n";
+
+			sendEmail($emailRecipient, $emailSubject, $emailBody); // function 'sendEmail()' is defined in 'include.inc.php'
+		}
+
 		if ($importedRecordsCount == 1)
 			$headerMessage = $importedRecordsCount . " record has been successfully imported:";
 		else // $importedRecordsCount > 1
 			$headerMessage = $importedRecordsCount . " records have been successfully imported:";
 
-		// display all newly added records:
+		// DISPLAY all newly added records:
 		header("Location: show.php?serial=" . rawurlencode($recordSerialsQueryString) . "&headerMsg=" . rawurlencode($headerMessage));
 	}
 	else // nothing imported
