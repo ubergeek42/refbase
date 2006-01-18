@@ -97,7 +97,7 @@
 		{
 			$errors = array(); // re-assign an empty array (in order to prevent 'Undefined variable "errors"...' messages when calling the 'fieldError' function later on)
 			if ($recordAction == "edit") // *edit* record
-				$HeaderString = "Edit the following record:";
+				$HeaderString = $loc["EditRecordLinkTitle"];
 			else // *add* record will be the default action if no parameter is given
 			{
 				$HeaderString = $loc["AddRecordLinkTitle"];
@@ -108,7 +108,7 @@
 			}
 		}
 		else // -> there were errors validating the data entered by the user
-			$HeaderString = "<b><span class=\"warning\">There were validation errors regarding the data you entered. Please check the comments above the respective fields:</span></b>";
+			$HeaderString = "<b><span class=\"warning\">". $loc["WarningInputDataError"]."</span></b>";
 	}
 	else // there is already a stored message available
 	{
@@ -133,7 +133,7 @@
 
 	if ($recordAction == "edit") // *edit* record
 	{
-		$pageTitle = "Edit Record"; // set the correct page title
+		$pageTitle = $loc["EditRecord"]; // set the correct page title
 	}
 	else
 	{
@@ -326,7 +326,7 @@
 				$origRecord = $row['orig_record'];
 			}
 			else
-				showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", "");
+				showErrorMsg($loc["The Query"].":\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n ". $loc["caused an error"].":", "");
 
 		}
 	else // if ($recordAction == "add") -OR- ($recordAction == "edit" but there were some errors on submit)
@@ -756,18 +756,18 @@
 	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" width=\"600\" summary=\"This table holds a form that offers to add records or edit existing ones\">"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"mainfieldsbg\"><b>". $loc["Author"]."</b></td>"
-			. "\n\t<td colspan=\"5\" class=\"mainfieldsbg\">" . fieldError("authorName", $errors) . "<input type=\"text\" name=\"authorName\" value=\"$authorName\" size=\"70\" title=\"the author(s) of this publication (e.g. 'Clough, LM; de Broyer, H-C; Ambrose Jr., WG'); please separate multiple authors with a semicolon &amp; a space ('; ')\">";
+			. "\n\t<td colspan=\"5\" class=\"mainfieldsbg\">" . fieldError("authorName", $errors) . "<input type=\"text\" name=\"authorName\" value=\"$authorName\" size=\"70\" title=\"". $loc["DescriptionAuthor"]."\">";
 
 	if ($isEditorCheckBox == "1" OR ereg(" *\(eds?\)$", $authorName)) // if the '$isEditorCheckBox' variable is set to 1 -OR- if 'author' field ends with either " (ed)" or " (eds)"
 		$isEditorCheckBoxIsChecked = " checked"; // mark the 'is Editor' checkbox
 	else
 		$isEditorCheckBoxIsChecked = ""; // don't mark the 'is Editor' checkbox
 
-	echo "\n\t&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"checkbox\" name=\"isEditorCheckBox\" value=\"1\"$isEditorCheckBoxIsChecked title=\"mark this checkbox if the author is actually the editor (info will be also copied to the editor field)\">&nbsp;&nbsp;<b>". $loc["is"]." ". $loc["Editor"]."</b></td>"
+	echo "\n\t&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"checkbox\" name=\"isEditorCheckBox\" value=\"1\"$isEditorCheckBoxIsChecked title=\"". $loc["DescriptionEditorCheckBox"]."\">&nbsp;&nbsp;<b>". $loc["is"]." ". $loc["Editor"]."</b></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"mainfieldsbg\"><b>". $loc["Title"]."</b></td>"
-			. "\n\t<td colspan=\"3\" class=\"mainfieldsbg\">" . fieldError("titleName", $errors) . "<input type=\"text\" name=\"titleName\" value=\"$titleName\" size=\"48\" title=\"the title of this publication; please don't append any dot to the title!\"></td>"
+			. "\n\t<td colspan=\"3\" class=\"mainfieldsbg\">" . fieldError("titleName", $errors) . "<input type=\"text\" name=\"titleName\" value=\"$titleName\" size=\"48\" title=\"". $loc["DescriptionTitle"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"mainfieldsbg\"><b>". $loc["Type"]."</b></td>";
 
 	if (!isset($_SESSION['user_types']))
@@ -776,7 +776,7 @@
 		$documentTypeDisabled = "";
 
 	$recordType = "\n\t<td align=\"right\" class=\"mainfieldsbg\">"
-				. "\n\t\t<select name=\"typeName\" title=\"please specify the type of this publication (e.g. 'Journal Article' for a paper)\"$documentTypeDisabled>";
+				. "\n\t\t<select name=\"typeName\" title=\"". $loc["DescriptionType"]."\" $documentTypeDisabled>";
 	
 	if (isset($_SESSION['user_types']))
 	{
@@ -813,26 +813,26 @@
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"mainfieldsbg\"><b>". $loc["Year"]."</b></td>"
-			. "\n\t<td class=\"mainfieldsbg\">" . fieldError("yearNo", $errors) . "<input type=\"text\" name=\"yearNo\" value=\"$yearNo\" size=\"14\" title=\"please specify years in 4-digit format, like '1998'\"></td>"
+			. "\n\t<td class=\"mainfieldsbg\">" . fieldError("yearNo", $errors) . "<input type=\"text\" name=\"yearNo\" value=\"$yearNo\" size=\"14\" title=\"". $loc["DescriptionYear"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"mainfieldsbg\"><b>". $loc["Publication"]."</b></td>"
-			. "\n\t<td class=\"mainfieldsbg\">" . fieldError("publicationName", $errors) . "<input type=\"text\" name=\"publicationName\" value=\"$publicationName\" size=\"14\" title=\"the full title of the journal or the book title\"></td>"
+			. "\n\t<td class=\"mainfieldsbg\">" . fieldError("publicationName", $errors) . "<input type=\"text\" name=\"publicationName\" value=\"$publicationName\" size=\"14\" title=\"". $loc["DescriptionPublicationName"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"mainfieldsbg\"><b>". $loc["JournalAbbr"]."</b></td>"
-			. "\n\t<td align=\"right\" class=\"mainfieldsbg\">" . fieldError("abbrevJournalName", $errors) . "<input type=\"text\" name=\"abbrevJournalName\" value=\"$abbrevJournalName\" size=\"14\" title=\"the abbreviated journal title\"></td>"
+			. "\n\t<td align=\"right\" class=\"mainfieldsbg\">" . fieldError("abbrevJournalName", $errors) . "<input type=\"text\" name=\"abbrevJournalName\" value=\"$abbrevJournalName\" size=\"14\" title=\"". $loc["DescriptionJournalAbbr"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"mainfieldsbg\"><b>". $loc["Volume"]."</b></td>"
-			. "\n\t<td class=\"mainfieldsbg\">" . fieldError("volumeNo", $errors) . "<input type=\"text\" name=\"volumeNo\" value=\"$volumeNo\" size=\"14\" title=\"the volume of the specified publication\"></td>"
+			. "\n\t<td class=\"mainfieldsbg\">" . fieldError("volumeNo", $errors) . "<input type=\"text\" name=\"volumeNo\" value=\"$volumeNo\" size=\"14\" title=\"". $loc["DescriptionVolume"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"mainfieldsbg\"><b>". $loc["Issue"]."</b></td>"
-			. "\n\t<td class=\"mainfieldsbg\"><input type=\"text\" name=\"issueNo\" value=\"$issueNo\" size=\"14\" title=\"the issue of the specified volume\"></td>"
+			. "\n\t<td class=\"mainfieldsbg\"><input type=\"text\" name=\"issueNo\" value=\"$issueNo\" size=\"14\" title=\"". $loc["DescriptionIssue"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"mainfieldsbg\"><b>". $loc["Pages"]."</b></td>"
-			. "\n\t<td align=\"right\" class=\"mainfieldsbg\">" . fieldError("pagesNo", $errors) . "<input type=\"text\" name=\"pagesNo\" value=\"$pagesNo\" size=\"14\" title=\"papers &amp; book chapters: e.g. '12-18' (no 'pp'!), whole books: e.g. '316 pp'\"></td>"
+			. "\n\t<td align=\"right\" class=\"mainfieldsbg\">" . fieldError("pagesNo", $errors) . "<input type=\"text\" name=\"pagesNo\" value=\"$pagesNo\" size=\"14\" title=\"". $loc["DescriptionPages"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["CorporateAuthor"]."</b></td>"
-			. "\n\t<td colspan=\"3\" class=\"otherfieldsbg\"><input type=\"text\" name=\"corporateAuthorName\" value=\"$corporateAuthorName\" size=\"48\" title=\"author affiliation\"></td>"
+			. "\n\t<td colspan=\"3\" class=\"otherfieldsbg\"><input type=\"text\" name=\"corporateAuthorName\" value=\"$corporateAuthorName\" size=\"48\" title=\"". $loc["DescriptionCorporate"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Thesis"]."</b></td>";
 
-	$thesisType = "\n\t<td align=\"right\" class=\"otherfieldsbg\">\n\t\t<select name=\"thesisName\" title=\"if this is a thesis, specify the degree here\">\n\t\t\t<option></option>\n\t\t\t<option>Bachelor's thesis</option>\n\t\t\t<option>Master's thesis</option>\n\t\t\t<option>Ph.D. thesis</option>\n\t\t\t<option>Diploma thesis</option>\n\t\t\t<option>Doctoral thesis</option>\n\t\t\t<option>Habilitation thesis</option>\n\t\t</select>\n\t</td>";
+	$thesisType = "\n\t<td align=\"right\" class=\"otherfieldsbg\">\n\t\t<select name=\"thesisName\" title=\"". $loc["DescriptionThesis"]."\">\n\t\t\t<option></option>\n\t\t\t<option>Bachelor's thesis</option>\n\t\t\t<option>Master's thesis</option>\n\t\t\t<option>Ph.D. thesis</option>\n\t\t\t<option>Diploma thesis</option>\n\t\t\t<option>Doctoral thesis</option>\n\t\t\t<option>Habilitation thesis</option>\n\t\t</select>\n\t</td>";
 	if (!empty($thesisName))
 		$thesisType = ereg_replace("<option>$thesisName", "<option selected>$thesisName", $thesisType);
 
@@ -840,70 +840,70 @@
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Address"]."</b></td>"
-			. "\n\t<td colspan=\"5\" class=\"otherfieldsbg\"><input type=\"text\" name=\"addressName\" value=\"$addressName\" size=\"85\" title=\"any contact information\"></td>"
+			. "\n\t<td colspan=\"5\" class=\"otherfieldsbg\"><input type=\"text\" name=\"addressName\" value=\"$addressName\" size=\"85\" title=\"". $loc["DescriptionAdress"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Keywords"]."</b></td>"
-			. "\n\t<td colspan=\"5\" class=\"otherfieldsbg\"><input type=\"text\" name=\"keywordsName\" value=\"$keywordsName\" size=\"85\" title=\"keywords given by the authors, please enter your own keywords below; multiple items should be separated with a semicolon &amp; a space ('; ')\"></td>"
+			. "\n\t<td colspan=\"5\" class=\"otherfieldsbg\"><input type=\"text\" name=\"keywordsName\" value=\"$keywordsName\" size=\"85\" title=\"". $loc["DescriptionKeywords"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Abstract"]."</b></td>"
-			. "\n\t<td colspan=\"5\" class=\"otherfieldsbg\"><textarea name=\"abstractName\" rows=\"6\" cols=\"83\" title=\"the abstract for this publication (if any)\">$abstractName</textarea></td>"
+			. "\n\t<td colspan=\"5\" class=\"otherfieldsbg\"><textarea name=\"abstractName\" rows=\"6\" cols=\"83\" title=\"". $loc["DescriptionAbstract"]."\">$abstractName</textarea></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Publisher"]."</b></td>"
-			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"publisherName\" value=\"$publisherName\" size=\"14\" title=\"the publisher of this publication\"></td>"
+			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"publisherName\" value=\"$publisherName\" size=\"14\" title=\"". $loc["DescriptionPublisher"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["PublisherPlace"]."</b></td>"
-			. "\n\t<td class=\"otherfieldsbg\" class=\"otherfieldsbg\"><input type=\"text\" name=\"placeName\" value=\"$placeName\" size=\"14\" title=\"the place of publication\"></td>"
+			. "\n\t<td class=\"otherfieldsbg\" class=\"otherfieldsbg\"><input type=\"text\" name=\"placeName\" value=\"$placeName\" size=\"14\" title=\"". $loc["DescriptionPublisherPlace"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Editor"]."</b></td>"
-			. "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"text\" name=\"editorName\" value=\"$editorName\" size=\"14\" title=\"the editor(s) of this publication (e.g. 'Clough, LM; de Broyer, H-C; Ambrose Jr., WG'); please separate multiple editors with a semicolon &amp; a space ('; ')\"></td>"
+			. "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"text\" name=\"editorName\" value=\"$editorName\" size=\"14\" title=\"". $loc["DescriptionEditor"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Language"]."</b></td>"
-			. "\n\t<td class=\"otherfieldsbg\">" . fieldError("languageName", $errors) . "<input type=\"text\" name=\"languageName\" value=\"$languageName\" size=\"14\" title=\"language of the body text\"></td>"
+			. "\n\t<td class=\"otherfieldsbg\">" . fieldError("languageName", $errors) . "<input type=\"text\" name=\"languageName\" value=\"$languageName\" size=\"14\" title=\"". $loc["DescriptionLanguage"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["LanguageSummary"]."</b></td>"
-			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"summaryLanguageName\" value=\"$summaryLanguageName\" size=\"14\" title=\"language of the summary or abstract (if any)\"></td>"
+			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"summaryLanguageName\" value=\"$summaryLanguageName\" size=\"14\" title=\"". $loc["DescriptionLanguageSummary"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["TitleOriginal"]."</b></td>"
-			. "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"text\" name=\"origTitleName\" value=\"$origTitleName\" size=\"14\" title=\"original title of this publication (if any)\"></td>"
+			. "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"text\" name=\"origTitleName\" value=\"$origTitleName\" size=\"14\" title=\"". $loc["DescriptionTitleOriginal"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["SeriesEditor"]."</b></td>"
-			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"seriesEditorName\" value=\"$seriesEditorName\" size=\"14\" title=\"if this publication belongs to a series, specify the series editor(s) here\"></td>"
+			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"seriesEditorName\" value=\"$seriesEditorName\" size=\"14\" title=\"". $loc["DescriptionSeriesEditor"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["TitleSeries"]."</b></td>"
-			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"seriesTitleName\" value=\"$seriesTitleName\" size=\"14\" title=\"if this publication belongs to a series, give the full title of the series here\"></td>"
+			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"seriesTitleName\" value=\"$seriesTitleName\" size=\"14\" title=\"". $loc["DescriptionTitleSeries"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["TitleSeriesAbbr"]."</b></td>"
-			. "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"text\" name=\"abbrevSeriesTitleName\" value=\"$abbrevSeriesTitleName\" size=\"14\" title=\"if this publication belongs to a series, give the abbreviated title of the series here\"></td>"
+			. "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"text\" name=\"abbrevSeriesTitleName\" value=\"$abbrevSeriesTitleName\" size=\"14\" title=\"". $loc["DescriptionTitleSeriesAbbr"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["SeriesVolume"]."</b></td>"
-			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"seriesVolumeNo\" value=\"$seriesVolumeNo\" size=\"14\" title=\"if this publication belongs to a series, enter the volume of the series here\"></td>"
+			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"seriesVolumeNo\" value=\"$seriesVolumeNo\" size=\"14\" title=\"". $loc["DescriptionSeriesVolume"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["SeriesIssue"]."</b></td>"
-			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"seriesIssueNo\" value=\"$seriesIssueNo\" size=\"14\" title=\"if this publication belongs to a series, enter the issue of the series volume here\"></td>"
+			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"seriesIssueNo\" value=\"$seriesIssueNo\" size=\"14\" title=\"". $loc["DescriptionSeriesIssue"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Edition"]."</b></td>"
-			. "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"text\" name=\"editionNo\" value=\"$editionNo\" size=\"14\" title=\"if it's not the first edition, please specify the edition number of this publication\"></td>"
+			. "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"text\" name=\"editionNo\" value=\"$editionNo\" size=\"14\" title=\"". $loc["DescriptionEdition"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["ISSN"]."</b></td>"
-			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"issnName\" value=\"$issnName\" size=\"14\" title=\"if this publication is a journal or dissertation, please specify it's ISSN number\"></td>"
+			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"issnName\" value=\"$issnName\" size=\"14\" title=\"". $loc["DescriptionISSN"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["ISBN"]."</b></td>"
-			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"isbnName\" value=\"$isbnName\" size=\"14\" title=\"if this publication is a book (chapter), please specify it's ISBN number\"></td>"
+			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"isbnName\" value=\"$isbnName\" size=\"14\" title=\"". $loc["DescriptionISBN"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Medium"]."</b></td>"
-			. "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"text\" name=\"mediumName\" value=\"$mediumName\" size=\"14\" title=\"please specify if not paper (like e.g. CD-ROM, cassettes, disks, transparencies, negatives, slides, etc.)\"></td>"
+			. "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"text\" name=\"mediumName\" value=\"$mediumName\" size=\"14\" title=\"". $loc["DescriptionMedium"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Area"]."</b></td>"
-			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"areaName\" value=\"$areaName\" size=\"14\" title=\"the area of investigation this publication deals with; multiple items should be separated with a semicolon &amp; a space ('; ')\"></td>"
+			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"areaName\" value=\"$areaName\" size=\"14\" title=\"". $loc["DescriptionArea"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Expedition"]."</b></td>"
-			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"expeditionName\" value=\"$expeditionName\" size=\"14\" title=\"the name of the expedition where sampling took place\"></td>"
+			. "\n\t<td class=\"otherfieldsbg\"><input type=\"text\" name=\"expeditionName\" value=\"$expeditionName\" size=\"14\" title=\"". $loc["DescriptionExpedition"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Conference"]."</b></td>"
-			. "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"text\" name=\"conferenceName\" value=\"$conferenceName\" size=\"14\" title=\"any conference this publication was initially presented at\"></td>"
+			. "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"text\" name=\"conferenceName\" value=\"$conferenceName\" size=\"14\" title=\"". $loc["DescriptionConference"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Notes"]."</b></td>"
-			. "\n\t<td colspan=\"3\" class=\"otherfieldsbg\"><input type=\"text\" name=\"notesName\" value=\"$notesName\" size=\"48\" title=\"enter any generic notes here\"></td>"
+			. "\n\t<td colspan=\"3\" class=\"otherfieldsbg\"><input type=\"text\" name=\"notesName\" value=\"$notesName\" size=\"48\" title=\"". $loc["DescriptionNotes"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Approved"]."</b></td>";
 
-	$approved = "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"radio\" name=\"approvedRadio\" value=\"yes\" title=\"choose 'yes' if you've verified this record for correctness, otherwise set to 'no'\">&nbsp;&nbsp;". $loc["yes"]."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"approvedRadio\" value=\"no\" title=\"choose 'yes' if you've verified this record for correctness, otherwise set to 'no'\">&nbsp;&nbsp;". $loc["no"]."</td>";
+	$approved = "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"radio\" name=\"approvedRadio\" value=\"yes\" title=\"". $loc["DescriptionApproved"]."\">&nbsp;&nbsp;". $loc["yes"]."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"approvedRadio\" value=\"no\" title=\"". $loc["DescriptionApproved"]."\">&nbsp;&nbsp;". $loc["no"]."</td>";
 	if ($approvedRadio == "yes")
 		$approved = ereg_replace("name=\"approvedRadio\" value=\"yes\"", "name=\"approvedRadio\" value=\"yes\" checked", $approved);
 	else // ($approvedRadio == "no")
@@ -913,7 +913,7 @@
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Location"]."</b></td>"
-			. "\n\t<td colspan=\"5\" class=\"otherfieldsbg\"><input type=\"text\" name=\"locationName\" value=\"$locationName\" size=\"85\" title=\"shows all users who have added this record to their personal literature data set.$fieldLock\"$fieldLock></td>"
+			. "\n\t<td colspan=\"5\" class=\"otherfieldsbg\"><input type=\"text\" name=\"locationName\" value=\"$locationName\" size=\"85\" title=\"". $loc["DescriptionLocation"].".$fieldLock\"$fieldLock></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"mainfieldsbg\"><b>". $loc["CallNumber"]."</b></td>";
@@ -921,18 +921,18 @@
 	// if the user isn't logged in -OR- any normal user is logged in (not the admin)...
 	if ((!isset($loginEmail)) OR ((isset($loginEmail)) AND ($loginEmail != $adminLoginEmail)))
 		// ...we just show the user's own call number (if any):
-		echo "\n\t<td colspan=\"3\" class=\"mainfieldsbg\">" . fieldError("callNumberNameUserOnly", $errors) . "<input type=\"text\" name=\"callNumberNameUserOnly\" value=\"$callNumberNameUserOnly\" size=\"48\" title=\"enter your own reference number that uniquely identifies this record for you\"></td>";
+		echo "\n\t<td colspan=\"3\" class=\"mainfieldsbg\">" . fieldError("callNumberNameUserOnly", $errors) . "<input type=\"text\" name=\"callNumberNameUserOnly\" value=\"$callNumberNameUserOnly\" size=\"48\" title=\"". $loc["DescriptionCallNumber"]."\"></td>";
 	else // if the admin is logged in...
 		// ...we display the full contents of the 'call_number' field:
-		echo "\n\t<td colspan=\"3\" class=\"mainfieldsbg\"><input type=\"text\" name=\"callNumberName\" value=\"$callNumberName\" size=\"48\" title=\"institutional_abbreviation @ user_id @ user_reference_id\"></td>";
+		echo "\n\t<td colspan=\"3\" class=\"mainfieldsbg\"><input type=\"text\" name=\"callNumberName\" value=\"$callNumberName\" size=\"48\" title=\"". $loc["DescriptionCallNumberFull"]."\"></td>";
 
 	echo "\n\t<td width=\"74\" class=\"mainfieldsbg\"><b>". $loc["Serial"]."</b></td>"
-			. "\n\t<td align=\"right\" class=\"mainfieldsbg\"><input type=\"text\" name=\"serialNo\" value=\"$serialNo\" size=\"14\" title=\"this is the unique serial number for this record\" readonly></td>"
+			. "\n\t<td align=\"right\" class=\"mainfieldsbg\"><input type=\"text\" name=\"serialNo\" value=\"$serialNo\" size=\"14\" title=\"". $loc["DescriptionSerial"]."\" readonly></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>". $loc["marked"]."</b></td>";
 
-	$marked = "\n\t<td class=\"userfieldsbg\"><input type=\"radio\" name=\"markedRadio\" value=\"yes\" title=\"mark this record if you'd like to easily retrieve it afterwards\">&nbsp;&nbsp;". $loc["yes"]."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"markedRadio\" value=\"no\" title=\"mark this record if you'd like to easily retrieve it afterwards\">&nbsp;&nbsp;". $loc["no"]."</td>";
+	$marked = "\n\t<td class=\"userfieldsbg\"><input type=\"radio\" name=\"markedRadio\" value=\"yes\" title=\"". $loc["DescriptionMarked"]."\">&nbsp;&nbsp;". $loc["yes"]."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"markedRadio\" value=\"no\" title=\"". $loc["DescriptionMarked"]."\">&nbsp;&nbsp;". $loc["no"]."</td>";
 	if ($markedRadio == "yes")
 		$marked = ereg_replace("name=\"markedRadio\" value=\"yes\"", "name=\"markedRadio\" value=\"yes\" checked", $marked);
 	else // ($markedRadio == "no")
@@ -941,14 +941,14 @@
 	echo "$marked"
 			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>". $loc["Copy"]."</b></td>";
 	
-	$copy = "\n\t<td class=\"userfieldsbg\">\n\t\t<select name=\"copyName\" title=\"set to 'true' if you own a copy of this publication, adjust otherwise if not\">\n\t\t\t<option>true</option>\n\t\t\t<option>fetch</option>\n\t\t\t<option>ordered</option>\n\t\t\t<option>false</option>\n\t\t</select>\n\t</td>";
+	$copy = "\n\t<td class=\"userfieldsbg\">\n\t\t<select name=\"copyName\" title=\"". $loc["DescriptionCopy"]."\">\n\t\t\t<option>". $loc["true"]."</option>\n\t\t\t<option>". $loc["fetch"]."</option>\n\t\t\t<option>". $loc["ordered"]."</option>\n\t\t\t<option>". $loc["false"]."</option>\n\t\t</select>\n\t</td>";
 	if (!empty($copyName))
 		$copy = ereg_replace("<option>$copyName", "<option selected>$copyName", $copy);
 	
 	echo "$copy"
 			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>". $loc["selected"]."</b></td>";
 
-	$selected = "\n\t<td align=\"right\" class=\"userfieldsbg\"><input type=\"radio\" name=\"selectedRadio\" value=\"yes\" title=\"select this record if this is one of your important publications\">&nbsp;&nbsp;". $loc["yes"]."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"selectedRadio\" value=\"no\" title=\"select this record if this is one of your important publications\">&nbsp;&nbsp;". $loc["no"]."</td>";
+	$selected = "\n\t<td align=\"right\" class=\"userfieldsbg\"><input type=\"radio\" name=\"selectedRadio\" value=\"yes\" title=\"". $loc["DescriptionSelected"]."\">&nbsp;&nbsp;". $loc["yes"]."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"selectedRadio\" value=\"no\" title=\"". $loc["DescriptionSelected"]."\">&nbsp;&nbsp;". $loc["no"]."</td>";
 	if ($selectedRadio == "yes")
 		$selected = ereg_replace("name=\"selectedRadio\" value=\"yes\"", "name=\"selectedRadio\" value=\"yes\" checked", $selected);
 	else // ($selectedRadio == "no")
@@ -958,13 +958,13 @@
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>". $loc["UserKeys"]."</b></td>"
-			. "\n\t<td colspan=\"5\" class=\"userfieldsbg\"><input type=\"text\" name=\"userKeysName\" value=\"$userKeysName\" size=\"85\" title=\"enter your personal keywords here; multiple items should be separated with a semicolon &amp; a space ('; ')\"></td>"
+			. "\n\t<td colspan=\"5\" class=\"userfieldsbg\"><input type=\"text\" name=\"userKeysName\" value=\"$userKeysName\" size=\"85\" title=\"". $loc["DescriptionUserKeys"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>". $loc["UserNotes"]."</b></td>"
-			. "\n\t<td colspan=\"3\" class=\"userfieldsbg\"><input type=\"text\" name=\"userNotesName\" value=\"$userNotesName\" size=\"48\" title=\"enter your personal notes here\"></td>"
+			. "\n\t<td colspan=\"3\" class=\"userfieldsbg\"><input type=\"text\" name=\"userNotesName\" value=\"$userNotesName\" size=\"48\" title=\"". $loc["DescriptionUserNotes"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>". $loc["UserFile"]."</b></td>"
-			. "\n\t<td align=\"right\" class=\"userfieldsbg\"><input type=\"text\" name=\"userFileName\" value=\"$userFileName\" size=\"14\" title=\"if this record corresponds to any personal file(s) or directory on your disk, you can enter the file/dir spec(s) here\"></td>"
+			. "\n\t<td align=\"right\" class=\"userfieldsbg\"><input type=\"text\" name=\"userFileName\" value=\"$userFileName\" size=\"14\" title=\"". $loc["DescriptionUserFile"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>". $loc["UserGroups"]."</b></td>";
@@ -973,45 +973,45 @@
 	// adjust the title string for the user groups text entry field:
 	{
 		$userGroupsFieldLock = "";
-		$userGroupsTitle = "if this records belongs to one of your personal groups, enter the group's name here; multiple groups should be separated with a semicolon &amp; a space ('; ')";
+		$userGroupsTitle = $loc["DescriptionUserGroups"];
 	}
 	else
 	{
 		$userGroupsFieldLock = " disabled"; // it would be more consistent to remove the user groups field completely from the form if the user has no permission to use the user groups feature; but since this would complicate the processing quite a bit, we just disable the field (for now)
-		$userGroupsTitle = "not available since you have no permission to use the user groups feature";
+		$userGroupsTitle = $loc["DescriptionUserGroupsDisabled"];
 	}
 
 	echo "\n\t<td colspan=\"3\" class=\"userfieldsbg\"><input type=\"text\" name=\"userGroupsName\" value=\"$userGroupsName\" size=\"48\"$userGroupsFieldLock title=\"$userGroupsTitle\"></td>"
 			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>". $loc["CiteKey"]."</b></td>"
-			. "\n\t<td align=\"right\" class=\"userfieldsbg\"><input type=\"text\" name=\"citeKeyName\" value=\"$citeKeyName\" size=\"14\" title=\"the custom identifier that uniquely describes this record when citing it (keep empty for automatic cite key generation on export)\"></td>"
+			. "\n\t<td align=\"right\" class=\"userfieldsbg\"><input type=\"text\" name=\"citeKeyName\" value=\"$citeKeyName\" size=\"14\" title=\"". $loc["DescriptionCiteKey"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>". $loc["related"]."</b></td>"
-			. "\n\t<td colspan=\"5\" class=\"userfieldsbg\"><input type=\"text\" name=\"relatedName\" value=\"$relatedName\" size=\"85\" title=\"to directly link this record to any other records enter their serial numbers here; multiple serials should be separated with a semicolon &amp; a space ('; ')\"></td>"
+			. "\n\t<td colspan=\"5\" class=\"userfieldsbg\"><input type=\"text\" name=\"relatedName\" value=\"$relatedName\" size=\"85\" title=\"". $loc["DescriptionRelated"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["File"]."</b></td>"
-			. "\n\t<td colspan=\"3\" class=\"otherfieldsbg\"><input type=\"text\" name=\"fileName\" value=\"$fileName\" size=\"48\" title=\"if there's a file associated with this record (e.g. a PDF file) please use the upload button and select the file to copy it to the server\"$fieldLock></td>";
+			. "\n\t<td colspan=\"3\" class=\"otherfieldsbg\"><input type=\"text\" name=\"fileName\" value=\"$fileName\" size=\"48\" title=\"". $loc["DescriptionFile"]."\"$fieldLock></td>";
 
 	if (isset($_SESSION['user_permissions']) AND ereg("allow_upload", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_upload'...
 	// adjust the title string for the upload button:
 	{
 		$uploadButtonLock = "";
-		$uploadTitle = "upload any file that's associated with this record";
+		$uploadTitle = $loc["DescriptionFileUpload"];
 	}
 	else
 	{
 		$uploadButtonLock = " disabled"; // disabling of the upload button doesn't seem to work in all browsers (e.g., it doesn't work in Safari on MacOSX Panther, but does work with Mozilla & Camino) ?:-/
-		$uploadTitle = "not available since you have no permission to upload any files"; // similarily, not all browsers will show title strings for disabled buttons (Safari does, Mozilla & Camino do not)
+		$uploadTitle = $loc["DescriptionFileUploadDisabled"]; // similarily, not all browsers will show title strings for disabled buttons (Safari does, Mozilla & Camino do not)
 	}
 
 	echo "\n\t<td valign=\"bottom\" colspan=\"2\" class=\"otherfieldsbg\">" . fieldError("uploadFile", $errors) . "<input type=\"file\" name=\"uploadFile\" size=\"17\"$uploadButtonLock title=\"$uploadTitle\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["URL"]."</b></td>"
-			. "\n\t<td colspan=\"3\" class=\"otherfieldsbg\"><input type=\"text\" name=\"urlName\" value=\"$urlName\" size=\"48\" title=\"the web address providing more information for this publication (if any)\"></td>"
+			. "\n\t<td colspan=\"3\" class=\"otherfieldsbg\"><input type=\"text\" name=\"urlName\" value=\"$urlName\" size=\"48\" title=\"". $loc["DescriptionURL"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["DOI"]."</b></td>"
-			. "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"text\" name=\"doiName\" value=\"$doiName\" size=\"14\" title=\"the unique 'digital object identifier' of this publication (if available)\"></td>"
+			. "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"text\" name=\"doiName\" value=\"$doiName\" size=\"14\" title=\"". $loc["DescriptionDOI"]."\"></td>"
 			. "\n</tr>";
 
 	if ($onlinePublication == "yes") // if the 'online_publication' field value is "yes"
@@ -1021,8 +1021,8 @@
 
 	echo "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\">&nbsp;</td>"
-			. "\n\t<td colspan=\"3\" class=\"otherfieldsbg\">\n\t\t<input type=\"checkbox\" name=\"onlinePublicationCheckBox\" value=\"1\"$onlinePublicationCheckBoxIsChecked title=\"mark this checkbox if this record refers to an online publication that has no print equivalent (yet)\">&nbsp;"
-			. "\n\t\t". $loc["Online publication. Cite with this text:"]."&nbsp;<input type=\"text\" name=\"onlineCitationName\" value=\"$onlineCitationName\" size=\"9\" title=\"enter any additional info that's required to locate the online location of this publication\">\n\t</td>";
+			. "\n\t<td colspan=\"3\" class=\"otherfieldsbg\">\n\t\t<input type=\"checkbox\" name=\"onlinePublicationCheckBox\" value=\"1\"$onlinePublicationCheckBoxIsChecked title=\"". $loc["DescriptionOnlinePublicationCheckbox"]."\">&nbsp;"
+			. "\n\t\t". $loc["Online publication. Cite with this text:"]."&nbsp;<input type=\"text\" name=\"onlineCitationName\" value=\"$onlineCitationName\" size=\"9\" title=\"". $loc["DescriptionOnlinePublicationCitation"]."\">\n\t</td>";
 
 	if (isset($loginEmail)) // if a user is logged in...
 	{
@@ -1037,13 +1037,8 @@
 		else
 			$contributionIDCheckBoxLock = "";
 
-		if (eregi("^[aeiou]", $abbrevInstitution))
-			$n = "n";
-		else
-			$n = "";
-
-		echo "\n\t<td colspan=\"2\" class=\"otherfieldsbg\">\n\t\t<input type=\"checkbox\" name=\"contributionIDCheckBox\" value=\"1\"$contributionIDCheckBoxIsChecked title=\"mark this checkbox if one of the authors of this publication belongs to your own institution\"$contributionIDCheckBoxLock>&nbsp;"
-				. "\n\t\tThis is a" . $n . " " . encodeHTML($abbrevInstitution) . " publication.\n\t</td>"; // we make use of the session variable '$abbrevInstitution' here
+		echo "\n\t<td colspan=\"2\" class=\"otherfieldsbg\">\n\t\t<input type=\"checkbox\" name=\"contributionIDCheckBox\" value=\"1\"$contributionIDCheckBoxIsChecked title=\"". $loc["DescriptionOwnPublication"]."\"$contributionIDCheckBoxLock>&nbsp;"
+				. "\n\t\t". $loc["Publication"]." ". $loc["of"]. " " . encodeHTML($abbrevInstitution) . ".\n\t</td>"; // we make use of the session variable '$abbrevInstitution' here
 	}
 	else
 	{
@@ -1059,7 +1054,7 @@
 	echo "\n<tr>"
 			. "\n\t<td width=\"74\">". $loc["Location Field"].":</td>";
 
-	$locationSelector = "\n\t<td colspan=\"3\">\n\t\t<select name=\"locationSelectorName\" title=\"choose 'Add' if this record belongs to your personal literature data set, choose 'Remove' to delete it again from your own literature data set\">\n\t\t\t<option>Don't touch</option>\n\t\t\t<option>Add</option>\n\t\t\t<option>Remove</option>\n\t\t</select>&nbsp;&nbsp;\n\t\tmy name &amp; email address\n\t</td>";
+	$locationSelector = "\n\t<td colspan=\"3\">\n\t\t<select name=\"locationSelectorName\" title=\"". $loc["DescriptionLocationSelector"]."\">\n\t\t\t<option>". $loc["don't touch"]."</option>\n\t\t\t<option>". $loc["add"]."</option>\n\t\t\t<option>". $loc["remove"]."</option>\n\t\t</select>&nbsp;&nbsp;\n\t\t". $loc["Name"]." ". $loc["and"]." ". $loc["EmailAddress"]."\n\t</td>";
 	if ($recordAction == "edit" AND !empty($locationSelectorName))
 		$locationSelector = ereg_replace("<option>$locationSelectorName", "<option selected>$locationSelectorName", $locationSelector);
 	elseif ($recordAction == "add")
