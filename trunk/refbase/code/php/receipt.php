@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./receipt.php
 	// Created:    2-Jan-03, 22:43
-	// Modified:   26-Apr-05, 19:44
+	// Modified:   19-Jan-06, 23:50
 
 	// This php script will display a feedback page after any action of
 	// adding/editing/deleting a record. It will display links to the
@@ -32,8 +32,9 @@
 	// --------------------------------------------------------------------
 
 	// First of all, check if this script was called by something else than 'record.php' (via 'modify.php'):
-	// (Note: Although 'receipt.php' gets actually called by 'modify.php', the HTTP_REFERER will be still set to 'record.php')
-	if (!ereg(".+/record.php\?.+", $_SERVER['HTTP_REFERER']))
+	// Notes: - although 'receipt.php' gets actually called by 'modify.php', the HTTP_REFERER will be still set to 'record.php'
+	//        - if a user clicks on Login/Logout while viewing a 'receipt.php' page she should get directed back to this receipt page (which is why 'receipt.php' must be also among the recognized referrers)
+	if (!preg_match("/.*(record|receipt)\.php.*/", $_SERVER['HTTP_REFERER']))
 	{
 		// save an appropriate error message:
 		$HeaderString = "<b><span class=\"warning\">Invalid call to script 'receipt.php'!</span></b>";
@@ -63,6 +64,9 @@
 
 	// Extract the header message that was returned by 'modify.php':
 	$HeaderString = $_REQUEST['headerMsg'];
+
+	// Function 'showLogin()' in 'include.inc.php' requires the header string being available in the '$headerMsg' variable so that it gets included within the Login/Logout links:
+	$headerMsg = $HeaderString;
 
 	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
 	// ('' will produce the default 'Web' output style)
