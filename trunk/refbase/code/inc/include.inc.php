@@ -3,9 +3,9 @@
 	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
 	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
 	//             Please see the GNU General Public License for more details.
-	// File:       ./include.inc.php
+	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   12-Jan-06, 19:04
+	// Modified:   20-Jan-06, 13:48
 
 	// This file contains important
 	// functions that are shared
@@ -46,6 +46,7 @@
 		global $loginFirstName;
 		global $loginLastName;
 		global $abbrevInstitution;
+		global $lastLogin;
 //		global $referer;
 
 		// Initialize the session:
@@ -67,6 +68,7 @@
 			$loginFirstName = $_SESSION['loginFirstName'];
 			$loginLastName = $_SESSION['loginLastName'];
 			$abbrevInstitution = $_SESSION['abbrevInstitution'];
+			$lastLogin = $_SESSION['lastLogin'];
 		}
 		elseif ($updateUserFormatsStylesTypesPermissions)
 			// if the user isn't logged in we set the available export formats, citation styles, document types and permissions to
