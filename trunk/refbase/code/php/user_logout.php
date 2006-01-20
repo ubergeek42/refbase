@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_logout.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   24-Oct-04, 22:02
+	// Modified:   20-Jan-06, 13:47
 
 	// This script logs a user out and redirects 
 	// to the calling page. If the script is called
@@ -54,6 +54,7 @@
 		deleteSessionVariable("loginLastName"); // clear the user's last name
 		deleteSessionVariable("abbrevInstitution"); // clear the user's abbreviated institution name
 		deleteSessionVariable("userLanguage"); // clear the user's preferred language
+		deleteSessionVariable("lastLogin"); // clear the user's last login date & time
 	
 		if (isset($_SESSION['userGroups']))
 			deleteSessionVariable("userGroups"); // clear the user's user groups (if any)
