@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   10-Jan-06, 14:49
+	// Modified:   20-Jan-06, 13:46
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -508,6 +508,7 @@
 			$loginFirstName = $formVars["firstName"];
 			$loginLastName = $formVars["lastName"];
 			$abbrevInstitution = $formVars["abbrevInstitution"];
+			$lastLogin = date('Y-m-d H:i:s'); // use the current date & time
 
 			// Get the user permissions for the newly created user
 			// and save all allowed user actions as semicolon-delimited string to the session variable 'user_permissions':
@@ -521,6 +522,7 @@
 	saveSessionVariable("loginFirstName", $loginFirstName);
 	saveSessionVariable("loginLastName", $loginLastName);
 	saveSessionVariable("abbrevInstitution", $abbrevInstitution);
+	saveSessionVariable("lastLogin", $lastLogin);
 
 	// If an authorized user uses 'user_details.php' to add a new user (-> 'userID' is empty!):
 	if ((!isset($_SESSION['loginEmail']) && ($addNewUsers == "everyone") && ($_REQUEST['userID'] == "")) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == "")))
