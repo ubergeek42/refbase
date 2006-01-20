@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   04-May-05, 11:56
+	// Modified:   20-Jan-06, 13:46
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -147,7 +147,7 @@
 			$userID = $row["user_id"]; // extract the user's userID from the last query
 
 			// Now we need to get the user's first name and last name (e.g., in order to display them within the login welcome message)
-			$query = "SELECT user_id, first_name, last_name, abbrev_institution, language FROM $tableUsers WHERE user_id = " . $userID; // CONSTRUCT SQL QUERY
+			$query = "SELECT user_id, first_name, last_name, abbrev_institution, language, last_login FROM $tableUsers WHERE user_id = " . $userID; // CONSTRUCT SQL QUERY
 	
 			// RUN the query on the database through the connection:
 			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
@@ -163,6 +163,7 @@
 			saveSessionVariable("loginLastName", $row2["last_name"]);
 			saveSessionVariable("abbrevInstitution", $row2["abbrev_institution"]);
 			saveSessionVariable("userLanguage", $row2["language"]);
+			saveSessionVariable("lastLogin", $row2["last_login"]);
 
 			// Get all user groups specified by the current user
 			// and (if some groups were found) save them as semicolon-delimited string to the session variable 'userGroups':
