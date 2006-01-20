@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   20-Jan-06, 13:46
+	// Modified:   20-Jan-06, 18:15
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -275,10 +275,13 @@
 					. "marked = \"" . $formVars["marked"] . "\", ";
 		}
 
+		if (isset($_SESSION['loginEmail']))
+			$query .= "modified_by = \"$currentUser\", ";
+
 		$query .= "modified_date = \"$currentDate\", "
-				. "modified_time = \"$currentTime\", "
-				. "modified_by = \"$currentUser\" "
-				. "WHERE user_id = $userID";
+				. "modified_time = \"$currentTime\" ";
+
+		$query .= "WHERE user_id = $userID";
 	}
 	// If an authorized user uses 'user_details.php' to add a new user (-> 'userID' is empty!):
 	// INSERTs are allowed to:
@@ -313,14 +316,21 @@
 					. "marked = \"" . $formVars["marked"] . "\", ";
 		}
 
-		$query .= "email = \"" . $formVars["email"] . "\", "
-				. "created_date = \"$currentDate\", "
-				. "created_time = \"$currentTime\", "
-				. "created_by = \"$currentUser\", "
-				. "modified_date = \"$currentDate\", "
-				. "modified_time = \"$currentTime\", "
-				. "modified_by = \"$currentUser\", "
-				. "language = \"en\", " // initially, english will be used as default language (the language setting can be changed by the user in 'user_options.php')
+		$query .= "email = \"" . $formVars["email"] . "\", ";
+
+		if (isset($_SESSION['loginEmail']))
+			$query .= "created_by = \"$currentUser\", ";
+
+		$query .= "created_date = \"$currentDate\", "
+				. "created_time = \"$currentTime\", ";
+
+		if (isset($_SESSION['loginEmail']))
+			$query .= "modified_by = \"$currentUser\", ";
+
+		$query .= "modified_date = \"$currentDate\", "
+				. "modified_time = \"$currentTime\", ";
+
+		$query .= "language = \"en\", " // initially, english will be used as default language (the language setting can be changed by the user in 'user_options.php')
 				. "last_login = NOW(), " // set 'last_login' field to the current date & time in 'DATETIME' format (which is 'YYYY-MM-DD HH:MM:SS', e.g.: '2003-12-31 23:45:59')
 				. "logins = 1 "; // set the number of logins to 1 (so that any subsequent login attempt can be counted correctly)
 	}
