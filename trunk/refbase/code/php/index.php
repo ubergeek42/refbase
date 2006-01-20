@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./index.php
 	// Created:    29-Jul-02, 16:45
-	// Modified:   31-Oct-05, 17:02
+	// Modified:   20-Jan-06, 13:53
 
 	// This script builds the main page.
 	// It provides login and quick search forms
@@ -83,9 +83,6 @@
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $loc["Home"], "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, $rssURLArray);
 	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
-
-	// (5) CLOSE the database connection:
-	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// Define variable holding common drop-down elements, i.e. build properly formatted <option> tag elements:
 	$dropDownFieldNameArray = array("author" => $loc["DropDownFieldName_Author"],
@@ -365,10 +362,25 @@ else
 	// Plus, we'll calculate the date that's a week ago (again, for inclusion into query URLs):
 	$TimeStampLastWeek = mktime(0, 0, 0, date('m'), (date('d') - 7), date('Y'));
 	$DateLastWeek = date('Y-m-d', $TimeStampLastWeek);
+
+	if (isset($_SESSION['loginEmail'])) // if a user is logged in
+	{
+		// Get the date & time of the last login for the current user:
+		if (!empty($lastLogin)) // '$lastLogin' is provided as session variable
+		{
+			$lastLoginDate = date('Y-m-d', strtotime($lastLogin));
+			$lastLoginTime = date('H:i:s', strtotime($lastLogin));
+		}
+		else
+		{
+			$lastLoginDate = "";
+			$lastLoginTime = "";
+		}
+	}
 ?>
 			<ul type="circle" class="moveup">
-				<li><?php echo $loc["added"]; ?>: <a href="show.php?date=<?php echo $CurrentDate; ?>"><?php echo $loc["today"]; ?></a> | <a href="show.php?date=<?php echo $DateYesterday; ?>"><?php echo $loc["yesterday"]; ?></a> | <a href="show.php?date=<?php echo $DateLastWeek; ?>&amp;range=after"><?php echo $loc["last 7 days"]; ?></a></li>
-				<li><?php echo $loc["edited"]; ?>: <a href="show.php?date=<?php echo $CurrentDate; ?>&amp;when=edited"><?php echo $loc["today"]; ?></a> | <a href="show.php?date=<?php echo $DateYesterday; ?>&amp;when=edited"><?php echo $loc["yesterday"]; ?></a> | <a href="show.php?date=<?php echo $DateLastWeek; ?>&amp;when=edited&amp;range=after"><?php echo $loc["last 7 days"]; ?></a></li>
+				<li><?php echo $loc["added"]; ?>: <a href="show.php?date=<?php echo $CurrentDate; ?>"><?php echo $loc["today"]; ?></a> | <a href="show.php?date=<?php echo $DateYesterday; ?>"><?php echo $loc["yesterday"]; ?></a> | <a href="show.php?date=<?php echo $DateLastWeek; ?>&amp;range=after"><?php echo $loc["last 7 days"]; ?></a><?php if (isset($_SESSION['loginEmail']) AND !empty($lastLoginDate) AND !empty($lastLoginTime)) { ?> | <a href="show.php?date=<?php echo $lastLoginDate; ?>&amp;time=<?php echo $lastLoginTime; ?>&amp;range=equal_or_after"><?php echo $loc["since last login"]; ?></a><?php } ?></li>
+				<li><?php echo $loc["edited"]; ?>: <a href="show.php?date=<?php echo $CurrentDate; ?>&amp;when=edited"><?php echo $loc["today"]; ?></a> | <a href="show.php?date=<?php echo $DateYesterday; ?>&amp;when=edited"><?php echo $loc["yesterday"]; ?></a> | <a href="show.php?date=<?php echo $DateLastWeek; ?>&amp;when=edited&amp;range=after"><?php echo $loc["last 7 days"]; ?></a><?php if (isset($_SESSION['loginEmail']) AND !empty($lastLoginDate) AND !empty($lastLoginTime)) { ?> | <a href="show.php?date=<?php echo $lastLoginDate; ?>&amp;time=<?php echo $lastLoginTime; ?>&amp;when=edited&amp;range=equal_or_after"><?php echo $loc["since last login"]; ?></a><?php } ?></li>
 				<li><?php echo $loc["published in"]; ?>: <a href="show.php?year=<?php echo $CurrentYear; ?>"><?php echo $CurrentYear; ?></a> | <a href="show.php?year=<?php echo ($CurrentYear - 1); ?>"><?php echo ($CurrentYear - 1); ?></a> | <a href="show.php?year=<?php echo ($CurrentYear - 2); ?>"><?php echo ($CurrentYear - 2); ?></a> | <a href="show.php?year=<?php echo ($CurrentYear - 3); ?>"><?php echo ($CurrentYear - 3); ?></a></li>
 			</ul>
 		</td>
@@ -519,6 +531,11 @@ else
 		<td width="182" valign="top"><a href="http://www.refbase.net/"><img src="img/refbase_credit.gif" alt="powered by refbase" width="80" height="44" hspace="0" border="0"></a></td>
 	</tr>
 </table><?php
+
+	// --------------------------------------------------------------------
+
+	// (5) CLOSE the database connection:
+	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 
