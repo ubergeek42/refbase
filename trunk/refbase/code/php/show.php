@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   11-Jan-06, 21:43
+	// Modified:   20-Jan-06, 13:28
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -167,13 +167,18 @@
 	else
 		$date = "";
 
+	if (isset($_REQUEST['time']))
+		$time = $_REQUEST['time']; // get time
+	else
+		$time = "";
+
 	if (isset($_REQUEST['when'])) // if given only 'edited' is recognized as value
 		$when = $_REQUEST['when']; // get info about what kind of date shall be searched for ("when=edited" -> search field 'modified_date'; otherwise -> search field 'created_date')
 	else
 		$when = "";
 
-	if (isset($_REQUEST['range'])) // given value must be either 'after' or 'before'
-		$range = $_REQUEST['range']; // check the date range ("range=after" -> return all records whose created/modifed date is after '$date'; "range=before" -> return all records whose created/modifed date is before '$date')
+	if (isset($_REQUEST['range'])) // given value must be either 'after', 'before', 'equal_or_after' or 'equal_or_before'
+		$range = $_REQUEST['range']; // check the date range ("range=after" -> return all records whose created/modifed date/time is after '$date'/'$time'; "range=before" -> return all records whose created/modifed date/time is before '$date'/'$time')
 	else
 		$range = "";
 
@@ -291,7 +296,7 @@
 
 
 	// Check the correct parameters have been passed:
-	if (empty($serial) AND empty($date) AND empty($year) AND empty($author) AND empty($title) AND empty($keywords) AND empty($abstract) AND empty($area) AND empty($type) AND empty($contributionID) AND empty($thesis) AND empty($without) AND (empty($selected) OR (!empty($selected) AND empty($userID))) AND (empty($marked) OR (!empty($marked) AND empty($userID))) AND (empty($citeKey) OR (!empty($citeKey) AND empty($userID))) AND empty($callNumber) AND (empty($browseByField) OR (!empty($browseByField) AND $displayType != "Browse")))
+	if (empty($serial) AND empty($date) AND empty($time) AND empty($year) AND empty($author) AND empty($title) AND empty($keywords) AND empty($abstract) AND empty($area) AND empty($type) AND empty($contributionID) AND empty($thesis) AND empty($without) AND (empty($selected) OR (!empty($selected) AND empty($userID))) AND (empty($marked) OR (!empty($marked) AND empty($userID))) AND (empty($citeKey) OR (!empty($citeKey) AND empty($userID))) AND empty($callNumber) AND (empty($browseByField) OR (!empty($browseByField) AND $displayType != "Browse")))
 	{
 		// if 'show.php' was called without any valid parameters, we'll present a form where a user can input a record serial number.
 		// Currently, this form will not present form elements for other supported options (like searching by date, year or author),
@@ -503,8 +508,12 @@
 		{
 			if ($range == "after")
 				$searchOperator = ">"; // return all records whose created/modifed date is after '$date'
+			elseif ($range == "equal_or_after")
+				$searchOperator = ">="; // return all records whose created/modifed date equals or is after '$date'
 			elseif ($range == "before")
 				$searchOperator = "<"; // return all records whose created/modifed date is before '$date'
+			elseif ($range == "equal_or_before")
+				$searchOperator = "<="; // return all records whose created/modifed date equals or is before '$date'
 			else
 				$searchOperator = "="; // return all records whose created/modifed date matches exactly '$date'
 
@@ -514,6 +523,27 @@
 				$query .= " modified_date " . $searchOperator . " \"" . $date . "\"";
 			else
 				$query .= " created_date " . $searchOperator . " \"" . $date . "\"";
+		}
+
+		if (!empty($time)) // if the 'time' parameter is present:
+		{
+			if ($range == "after")
+				$searchOperator = ">"; // return all records whose created/modifed time is after '$time'
+			elseif ($range == "equal_or_after")
+				$searchOperator = ">="; // return all records whose created/modifed time equals or is after '$time'
+			elseif ($range == "before")
+				$searchOperator = "<"; // return all records whose created/modifed time is before '$time'
+			elseif ($range == "equal_or_before")
+				$searchOperator = "<="; // return all records whose created/modifed time equals or is before '$time'
+			else
+				$searchOperator = "="; // return all records whose created/modifed time matches exactly '$time'
+
+			$query .= connectConditionals();
+
+			if ($when == "edited")
+				$query .= " modified_time " . $searchOperator . " \"" . $time . "\"";
+			else
+				$query .= " created_time " . $searchOperator . " \"" . $time . "\"";
 		}
 
 		if (!empty($year)) // if the 'year' parameter is present:
