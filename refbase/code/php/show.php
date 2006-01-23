@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   23-Jan-06, 14:20
+	// Modified:   23-Jan-06, 14:47
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -178,7 +178,7 @@
 		$when = "";
 
 	if (isset($_REQUEST['range'])) // given value must be either 'after', 'before', 'equal_or_after' or 'equal_or_before'
-		$range = $_REQUEST['range']; // check the date range ("range=after" -> return all records whose created/modifed date/time is after '$date'/'$time'; "range=before" -> return all records whose created/modifed date/time is before '$date'/'$time')
+		$range = $_REQUEST['range']; // check the date range ("range=after" -> return all records whose created/modified date/time is after '$date'/'$time'; "range=before" -> return all records whose created/modified date/time is before '$date'/'$time')
 	else
 		$range = "";
 
@@ -519,52 +519,59 @@
 
 			if ($range == "after")
 			{
-				// return all records whose created/modifed time is after '$time' of the given '$date' -OR- where the created/modifed date is after '$date':
+				// return all records whose created/modified time is after '$time' of the given '$date' -OR- where the created/modified date is after '$date':
 				$searchOperatorDate = ">";
 				$searchOperatorTime = ">";
 			}
 
 			elseif ($range == "equal_or_after")
 			{
-				// return all records whose created/modifed time is equal or after '$time' of the given '$date' -OR- where the created/modifed date is after '$date':
+				// return all records whose created/modified time is equal or after '$time' of the given '$date' -OR- where the created/modified date is after '$date':
 				$searchOperatorDate = ">";
 				$searchOperatorTime = ">=";
 			}
 
 			elseif ($range == "before")
 			{
-				// return all records whose created/modifed time is before '$time' of the given '$date' -OR- where the created/modifed date is before '$date':
+				// return all records whose created/modified time is before '$time' of the given '$date' -OR- where the created/modified date is before '$date':
 				$searchOperatorDate = "<";
 				$searchOperatorTime = "<";
 			}
 
 			elseif ($range == "equal_or_before")
 			{
-				// return all records whose created/modifed time is equal or before '$time' of the given '$date' -OR- where the created/modifed date is before '$date':
+				// return all records whose created/modified time is equal or before '$time' of the given '$date' -OR- where the created/modified date is before '$date':
 				$searchOperatorDate = "<";
 				$searchOperatorTime = "<=";
 			}
 
-			else // return all records whose created/modifed date matches exactly '$date':
-				$query .= "=";
+			else
+			{
+				// return all records whose created/modified date & time matches exactly '$date' and '$time':
+				$searchOperatorDate = "=";
+				$searchOperatorTime = "=";
+			}
 
 			$query .= connectConditionals();
 
-			$query .= " ((" . $queryDateField . " = \"" . $date . "\" AND " . $queryTimeField . " " . $searchOperatorTime . " \"" . $time . "\") OR " . $queryDateField . " " . $searchOperatorDate . " \"" . $date . "\")";
+			if (($searchOperatorDate == "=") AND ($searchOperatorTime == "="))
+				$query .= " " . $queryDateField . " = \"" . $date . "\" AND " . $queryTimeField . " = \"" . $time . "\"";
+			else
+				$query .= " ((" . $queryDateField . " = \"" . $date . "\" AND " . $queryTimeField . " " . $searchOperatorTime . " \"" . $time . "\") OR " . $queryDateField . " " . $searchOperatorDate . " \"" . $date . "\")";
 		}
 
 		elseif (!empty($date)) // if only the 'date' parameter is present (and not the 'time' parameter):
 		{
 			if ($range == "after")
-				$searchOperator = ">"; // return all records whose created/modifed date is after '$date'
+				$searchOperator = ">"; // return all records whose created/modified date is after '$date'
 			elseif ($range == "equal_or_after")
-				$searchOperator = ">="; // return all records whose created/modifed date equals or is after '$date'
+				$searchOperator = ">="; // return all records whose created/modified date equals or is after '$date'
 			elseif ($range == "before")
-				$searchOperator = "<"; // return all records whose created/modifed date is before '$date'
+				$searchOperator = "<"; // return all records whose created/modified date is before '$date'
 			elseif ($range == "equal_or_before")
-				$searchOperator = "<="; // return all records whose created/modifed date equals or is before '$date'
+				$searchOperator = "<="; // return all records whose created/modified date equals or is before '$date'
 			else
-				$searchOperator = "="; // return all records whose created/modifed date matches exactly '$date'
+				$searchOperator = "="; // return all records whose created/modified date matches exactly '$date'
 
 			$query .= connectConditionals();
 
@@ -577,15 +584,15 @@
 		elseif (!empty($time)) // if only the 'time' parameter is present (and not the 'date' parameter):
 		{
 			if ($range == "after")
-				$searchOperator = ">"; // return all records whose created/modifed time is after '$time'
+				$searchOperator = ">"; // return all records whose created/modified time is after '$time'
 			elseif ($range == "equal_or_after")
-				$searchOperator = ">="; // return all records whose created/modifed time equals or is after '$time'
+				$searchOperator = ">="; // return all records whose created/modified time equals or is after '$time'
 			elseif ($range == "before")
-				$searchOperator = "<"; // return all records whose created/modifed time is before '$time'
+				$searchOperator = "<"; // return all records whose created/modified time is before '$time'
 			elseif ($range == "equal_or_before")
-				$searchOperator = "<="; // return all records whose created/modifed time equals or is before '$time'
+				$searchOperator = "<="; // return all records whose created/modified time equals or is before '$time'
 			else
-				$searchOperator = "="; // return all records whose created/modifed time matches exactly '$time'
+				$searchOperator = "="; // return all records whose created/modified time matches exactly '$time'
 
 			$query .= connectConditionals();
 
