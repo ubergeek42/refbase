@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import_csa_modify.php
 	// Created:    21-Nov-03, 22:46
-	// Modified:   15-Jan-06, 14:38
+	// Modified:   23-Jan-06, 21:50
 
 	// This php script accepts input from 'import_csa.php' and will process any CSA full record data. In case of a single
 	// record, the script will call 'record.php' with all provided fields pre-filled. The user can then verify the data,
@@ -31,8 +31,8 @@
 	// Clear any errors that might have been found previously:
 	$errors = array();
 
-	// Write the (POST) form variables into an array:
-	foreach($_POST as $varname => $value)
+	// Write the (POST or GET) form variables into an array:
+	foreach($_REQUEST as $varname => $value)
 		$formVars[$varname] = $value;
 
 	// --------------------------------------------------------------------
@@ -75,6 +75,14 @@
 
 	// Get the source text containing the CSA record(s):
 	$sourceText = $formVars['sourceText'];
+
+	// Check if source text originated from a PubMed import form (instead of 'import_csa.php')
+	if ($formType == "importPUBMED")
+	{
+		// Fetch PubMed XML data (by PubMed ID given in '$sourceText') and convert to CSA format:
+		// (this allows for import of PubMed records via the import form provided by 'import_pubmed.php')
+		$sourceText = PubmedToCsa($sourceText); // function 'PubmedToCsa()' is defined in 'import.inc.php'
+	}
 
 	// Check if the format of the pasted source data is in "ISI Web of Science" format (instead of "CSA" format):
 	if ((!preg_match("/\s*Record \d+ of \d+\s*/", $sourceText)) and (preg_match("/\s*FN ISI Export Format\s*/", $sourceText)))
@@ -691,7 +699,7 @@
 
 	if (!empty($importedRecordsArray)) // if some records were successfully imported
 	{
-		$recordSerialsQueryString = "^(" . implode("|", $importedRecordsArray) . ")$";
+		$recordSerialsQueryString = implode(",", $importedRecordsArray);
 
 		$importedRecordsCount = count($importedRecordsArray);
 
@@ -714,7 +722,7 @@
 			{
 				$emailSubject = "New records added to the " . $officialDatabaseName;
 				$emailBodyIntro = $importedRecordsCount . " records have been added to the " . $officialDatabaseName . ":";
-				$detailsURL = $databaseBaseURL . "show.php?serial=" . rawurlencode($recordSerialsQueryString);
+				$detailsURL = $databaseBaseURL . "show.php?records=" . $recordSerialsQueryString;
 			}
 
 			$emailBody = $emailBodyIntro
@@ -731,7 +739,7 @@
 			$headerMessage = $importedRecordsCount . " records have been successfully imported:";
 
 		// DISPLAY all newly added records:
-		header("Location: show.php?serial=" . rawurlencode($recordSerialsQueryString) . "&headerMsg=" . rawurlencode($headerMessage));
+		header("Location: show.php?records=" . $recordSerialsQueryString . "&headerMsg=" . rawurlencode($headerMessage));
 	}
 	else // nothing imported
 	{
