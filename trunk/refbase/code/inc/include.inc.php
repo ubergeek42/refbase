@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   20-Jan-06, 13:48
+	// Modified:   23-Jan-06, 22:11
 
 	// This file contains important
 	// functions that are shared
@@ -1425,7 +1425,7 @@ EOF;
 					{
 						$query = eregi_replace("WHERE","WHERE ($fieldSelector NOT RLIKE \"$refineSearchName\" OR $fieldSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
 					}
-				$query = eregi_replace(' AND serial RLIKE ".+"','',$query); // remove any 'AND serial RLIKE ".+"' which isn't required anymore
+				$query = eregi_replace(' AND serial RLIKE "\.\+"','',$query); // remove any 'AND serial RLIKE ".+"' which isn't required anymore
 			}
 			// else, if the user did NOT type a search string into the text entry field, we simply keep the old WHERE clause...
 		}
