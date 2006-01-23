@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   20-Jan-06, 18:15
+	// Modified:   23-Jan-06, 16:01
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -509,7 +509,7 @@
 		// if EVERYONE who's not logged in is able to add a new user (which is the case if the variable '$addNewUsers' in 'ini.inc.php'
 		// is set to "everyone", see note above!), then we have to make sure that this visitor gets logged into his new
 		// account - otherwise the following receipt page ('users_receipt.php') will generate an error:
-		if ($addNewUsers == "everyone")
+		if (!isset($_SESSION['loginEmail']) && ($addNewUsers == "everyone") && ($_REQUEST['userID'] == ""))
 		{
 			// Log the user into his new account by assigning his information to
 			// those variables that will be written to the '$_SESSION' variable below:
