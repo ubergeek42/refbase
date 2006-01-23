@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   23-Jan-06, 14:47
+	// Modified:   23-Jan-06, 21:16
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -150,15 +150,23 @@
 			$recordConditionalSelector = "";
 	}
 
-	// If the 'records' parameter is present and contains 'all' as value, it will override any given 'serial' or 'record' parameters.
-	// This param was introduced to provide an easy 'Show All' link ('.../show.php?records=all') which will display all records in the database
+	// If the 'records' parameter is present and contains any number(s) or 'all' as value, it will override any given 'serial' or 'record' parameters.
+	// This param was introduced to provide an easy 'Show All' link ('.../show.php?records=all') which will display all records in the database.
+	// It does also allow to easily link to multiple records (such as in '.../show.php?records=1234,5678,90123').
 	if (isset($_REQUEST['records']))
 	{
-		if (eregi("^all$", $_REQUEST['records'])) // if given only 'all' is recognized as value
+		// if the 'records' parameter is given, it's value must be either 'all' or any number(s) delimited by non-digit characters:
+		if (eregi("^all$", $_REQUEST['records']))
 		{
 			// '.../show.php?records=all' is effectively a more nice looking variant of 'show.php?serial=%2E%2B&recordConditionalSelector=contains':
 			$serial = ".+"; // show all records
 			$recordConditionalSelector = "contains";
+		}
+		elseif (ereg("[0-9]", $_REQUEST['records']))
+		{
+			// '.../show.php?records=1234,5678,90123' is effectively a more nice looking variant of 'show.php?serial=1,12,123,1234&recordConditionalSelector=is%20within%20list':
+			$serial = $_REQUEST['records']; // show all records whose serial numbers match the given numbers
+			$recordConditionalSelector = "is within list";
 		}
 	}
 
