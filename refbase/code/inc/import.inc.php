@@ -9,7 +9,7 @@
 	//
 	// File:       ./includes/import.inc.php
 	// Created:    13-Jan-06, 21:00
-	// Modified:   17-Jan-06, 18:57
+	// Modified:   24-Jan-06, 16:00
 
 	// This file contains functions
 	// that are used when importing
@@ -204,6 +204,13 @@
 
 	// --------------------------------------------------------------------
 
+/*
+
+	// NOTE: by default, this function is currently disabled, since it uses DOM which is part of PHP 5 but must
+	// be installed as a separate PEAR extension for PHP 4. In order to provide widest compatibility with PHP 4,
+	// this function should be modified so that it makes use of ActiveLink's XML package instead:
+	// <http://www.active-link.com/software/>
+
 	// PUBMEDTOCSA
 	// This function takes a PubMed ID and fetches corresponding PubMed XML record data from the PubMed server.
 	// Record data will be converted to CSA format which can be imported via 'import_csa_modify.php'.
@@ -363,6 +370,8 @@
 
 		return $result;
 	}
+
+*/
 
 	// --------------------------------------------------------------------
 
