@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   23-Jan-06, 16:01
+	// Modified:   28-Jan-06, 13:55
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -499,6 +499,7 @@
 
 		// Insert a row for this new user into the 'user_options' table:
 		$defaultUserOptionsString = implode("\", \"", $defaultUserOptions); // '$defaultUserOptions' is defined in 'ini.inc.php'
+		$defaultUserOptionsString = ereg_replace("\"\"", "NULL", $defaultUserOptionsString); // replace empty string with NULL
 		$queryArray[] = "INSERT INTO $tableUserOptions VALUES (NULL, " . $userID . ", \"" . $defaultUserOptionsString . "\")";
 
 
