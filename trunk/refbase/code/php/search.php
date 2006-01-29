@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   06-Jan-06, 02:29
+	// Modified:   29-Jan-06, 13:29
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -4012,23 +4012,26 @@
 			}
 
 		// ... if the user has specified a file, add the value of '$fileName' as an AND clause:
-		$fileName = $_POST['fileName'];
-		if ($fileName != "")
-			{
-				$fileSelector = $_POST['fileSelector'];
-				if ($fileSelector == "contains")
-					$query .= " AND file RLIKE \"$fileName\"";
-				elseif ($fileSelector == "does not contain")
-					$query .= " AND file NOT RLIKE \"$fileName\"";
-				elseif ($fileSelector == "is equal to")
-					$query .= " AND file = \"$fileName\"";
-				elseif ($fileSelector == "is not equal to")
-					$query .= " AND file != \"$fileName\"";
-				elseif ($fileSelector == "starts with")
-					$query .= " AND file RLIKE \"^$fileName\"";
-				elseif ($fileSelector == "ends with")
-					$query .= " AND file RLIKE \"$fileName$\"";
-			}
+		if (isset($_POST['fileName'])) // the file text entry form may be hidden if the user has no permission to see any files
+		{
+			$fileName = $_POST['fileName'];
+			if ($fileName != "")
+				{
+					$fileSelector = $_POST['fileSelector'];
+					if ($fileSelector == "contains")
+						$query .= " AND file RLIKE \"$fileName\"";
+					elseif ($fileSelector == "does not contain")
+						$query .= " AND file NOT RLIKE \"$fileName\"";
+					elseif ($fileSelector == "is equal to")
+						$query .= " AND file = \"$fileName\"";
+					elseif ($fileSelector == "is not equal to")
+						$query .= " AND file != \"$fileName\"";
+					elseif ($fileSelector == "starts with")
+						$query .= " AND file RLIKE \"^$fileName\"";
+					elseif ($fileSelector == "ends with")
+						$query .= " AND file RLIKE \"$fileName$\"";
+				}
+		}
 
 
 		if (isset($loginEmail)) // if a user is logged in and...
