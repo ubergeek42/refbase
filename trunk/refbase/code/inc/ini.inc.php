@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   12-Jan-06, 21:18
+	// Modified:   28-Feb-06, 02:23
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -52,6 +52,10 @@
 
 	// The URL of the institution hosting this literature database:
 	$hostInstitutionURL = "INSTITUTION_WEB_ADDRESS"; // e.g. "http://www.uni-kiel.de/ipoe/"
+
+
+	// The URL to any (custom) help resources for this literature database:
+	$helpResourcesURL = "http://wiki.refbase.net/"; // e.g. "http://wiki.refbase.net/"
 
 
 	// Specify whether announcements should be sent to the email address given in '$mailingListEmail':
@@ -293,7 +297,7 @@
 	// <:recordIdentifier:>, <:randomNumber:>
 	// Notes: - some of these placeholders offer options (e.g. how many words/items shall be extracted
 	//          from the given field), please see the refbase online documentation for more info about
-	//          placeholders and their syntax
+	//          placeholders and their syntax: <http://wiki.refbase.net/index.php/Placeholder_syntax>
 	//        - existing file extensions will be kept untouched by this naming scheme
 	//        - you're allowed to use any characters between (or within) placeholders except the delimiters
 	//          '<', '>' and ':'
@@ -345,7 +349,7 @@
 	// Default options for placeholders used by the file/directory name, cite key and
 	// link auto-generation features:
 	// Notes: - please see the refbase online documentation for more info about placeholders and
-	//          their syntax
+	//          their syntax: <http://wiki.refbase.net/index.php/Placeholder_syntax>
 	//
 	// Default options for '<:authors:>':
 	// syntax: "[USE_MAX_NUMBER_OF_AUTHORS|AUTHOR_CONNECTOR|ET_AL_IDENTIFIER]"
@@ -400,7 +404,7 @@
 	$showLinkTypesInCitationView = array("details", "file");
 
 
-	// Define an OpenURL with placeholders that will be autocompleted for each record according to its
+	// Define an OpenURL with placeholders that will be auto-completed for each record according to its
 	// field values:
 	// Notes: - see comments for '$fileNamingScheme' (above) for more info on supported placeholders
 	//        - currently, OpenURL links will only get auto-generated if the main bibliographic data
@@ -429,75 +433,96 @@
 
 
 	// The following search & replace actions will be applied to the 'title', 'address', 'keywords' and
-	// 'abstract' fields. This feature is meant to provide richer text capabilities (like displaying
-	// italics or super-/subscript) from the plain text data delivered by the MySQL database. It works
-	// by means of "human readable markup" that's used within the plain text fields of the database to
-	// define rich text characters (note that the current implementation only supports the 'title',
-	// 'address', 'keywords' and 'abstract' fields!). E.g., if you enclose a particular word by
-	// substrings (like '_in-situ_') this word will be output in italics. Similarly, '**word**' will
-	// print the word in boldface, 'CO[sub:2]' will cause the number in 'CO2' to be set as subscript
-	// while '[delta]' will produce a proper delta symbol. Feel free to customize this markup scheme to
-	// your needs (the left column below represents regular expression patterns matching the human
-	// readable markup that's used in your database while the right column represents the equivalent
-	// HTML encoding). If you do not wish to perform any search and replace actions, just specify an
-	// empty array, like: '$markupSearchReplacePatterns = array();'. Search & replace patterns must be
-	// specified as perl-style regular expression (in this case, without the leading & trailing
-	// slashes) -> see note at the end of this file.
-	$markupSearchReplacePatterns = array("_(.+?)_"          =>  "<i>\\1</i>",
-										"\\*\\*(.+?)\\*\\*" =>  "<b>\\1</b>",
-										"\\[super:(.+?)\\]" =>  "<sup>\\1</sup>",
-										"\\[sub:(.+?)\\]"   =>  "<sub>\\1</sub>",
-										"\\[permil\\]"      =>  "&permil;",
-										"\\[infinity\\]"    =>  "&infin;",
-										"\\[alpha\\]"       =>  "&alpha;",
-										"\\[beta\\]"        =>  "&beta;",
-										"\\[gamma\\]"       =>  "&gamma;",
-										"\\[delta\\]"       =>  "&delta;",
-										"\\[epsilon\\]"     =>  "&epsilon;",
-										"\\[zeta\\]"        =>  "&zeta;",
-										"\\[eta\\]"         =>  "&eta;",
-										"\\[theta\\]"       =>  "&theta;",
-										"\\[iota\\]"        =>  "&iota;",
-										"\\[kappa\\]"       =>  "&kappa;",
-										"\\[lambda\\]"      =>  "&lambda;",
-										"\\[mu\\]"          =>  "&mu;",
-										"\\[nu\\]"          =>  "&nu;",
-										"\\[xi\\]"          =>  "&xi;",
-										"\\[omicron\\]"     =>  "&omicron;",
-										"\\[pi\\]"          =>  "&pi;",
-										"\\[rho\\]"         =>  "&rho;",
-										"\\[sigmaf\\]"      =>  "&sigmaf;",
-										"\\[sigma\\]"       =>  "&sigma;",
-										"\\[tau\\]"         =>  "&tau;",
-										"\\[upsilon\\]"     =>  "&upsilon;",
-										"\\[phi\\]"         =>  "&phi;",
-										"\\[chi\\]"         =>  "&chi;",
-										"\\[psi\\]"         =>  "&psi;",
-										"\\[omega\\]"       =>  "&omega;",
-										"\\[Alpha\\]"       =>  "&Alpha;",
-										"\\[Beta\\]"        =>  "&Beta;",
-										"\\[Gamma\\]"       =>  "&Gamma;",
-										"\\[Delta\\]"       =>  "&Delta;",
-										"\\[Epsilon\\]"     =>  "&Epsilon;",
-										"\\[Zeta\\]"        =>  "&Zeta;",
-										"\\[Eta\\]"         =>  "&Eta;",
-										"\\[Theta\\]"       =>  "&Theta;",
-										"\\[Iota\\]"        =>  "&Iota;",
-										"\\[Kappa\\]"       =>  "&Kappa;",
-										"\\[Lambda\\]"      =>  "&Lambda;",
-										"\\[Mu\\]"          =>  "&Mu;",
-										"\\[Nu\\]"          =>  "&Nu;",
-										"\\[Xi\\]"          =>  "&Xi;",
-										"\\[Omicron\\]"     =>  "&Omicron;",
-										"\\[Pi\\]"          =>  "&Pi;",
-										"\\[Rho\\]"         =>  "&Rho;",
-										"\\[Sigma\\]"       =>  "&Sigma;",
-										"\\[Tau\\]"         =>  "&Tau;",
-										"\\[Upsilon\\]"     =>  "&Upsilon;",
-										"\\[Phi\\]"         =>  "&Phi;",
-										"\\[Chi\\]"         =>  "&Chi;",
-										"\\[Psi\\]"         =>  "&Psi;",
-										"\\[Omega\\]"       =>  "&Omega;");
+	// 'abstract' fields (the list of fields can be modified below, see '$searchReplaceActionsArray').
+	// This feature is meant to provide richer text capabilities (like displaying italics or
+	// super-/subscript) from the plain text data delivered by the MySQL database. It works by means of
+	// "human readable markup" that's used within the plain text fields of the database to define rich
+	// text characters. E.g., if you enclose a particular word by substrings (like '_in-situ_') this
+	// word will be output in italics. Similarly, '**word**' will print the word in boldface,
+	// 'CO[sub:2]' will cause the number in 'CO2' to be set as subscript while '[delta]' will produce a
+	// proper delta symbol. Feel free to customize this markup scheme to your needs (the left column
+	// below represents regular expression patterns matching the human readable markup that's used in
+	// your database while the right column represents the equivalent HTML encoding). If you do not
+	// wish to perform any search and replace actions, just specify an empty array, like:
+	// '$markupSearchReplacePatterns = array();'. Search & replace patterns must be specified as
+	// perl-style regular expression (in this case, with the leading & trailing slashes) -> see note at
+	// the end of this file.
+	$markupSearchReplacePatterns = array("/_(.+?)_/"           =>  "<i>\\1</i>",
+										"/\\*\\*(.+?)\\*\\*/"  =>  "<b>\\1</b>",
+										"/\\[super:(.+?)\\]/i" =>  "<sup>\\1</sup>",
+										"/\\[sub:(.+?)\\]/i"   =>  "<sub>\\1</sub>",
+										"/\\[permil\\]/"       =>  "&permil;",
+										"/\\[infinity\\]/"     =>  "&infin;",
+										"/\\[alpha\\]/"        =>  "&alpha;",
+										"/\\[beta\\]/"         =>  "&beta;",
+										"/\\[gamma\\]/"        =>  "&gamma;",
+										"/\\[delta\\]/"        =>  "&delta;",
+										"/\\[epsilon\\]/"      =>  "&epsilon;",
+										"/\\[zeta\\]/"         =>  "&zeta;",
+										"/\\[eta\\]/"          =>  "&eta;",
+										"/\\[theta\\]/"        =>  "&theta;",
+										"/\\[iota\\]/"         =>  "&iota;",
+										"/\\[kappa\\]/"        =>  "&kappa;",
+										"/\\[lambda\\]/"       =>  "&lambda;",
+										"/\\[mu\\]/"           =>  "&mu;",
+										"/\\[nu\\]/"           =>  "&nu;",
+										"/\\[xi\\]/"           =>  "&xi;",
+										"/\\[omicron\\]/"      =>  "&omicron;",
+										"/\\[pi\\]/"           =>  "&pi;",
+										"/\\[rho\\]/"          =>  "&rho;",
+										"/\\[sigmaf\\]/"       =>  "&sigmaf;",
+										"/\\[sigma\\]/"        =>  "&sigma;",
+										"/\\[tau\\]/"          =>  "&tau;",
+										"/\\[upsilon\\]/"      =>  "&upsilon;",
+										"/\\[phi\\]/"          =>  "&phi;",
+										"/\\[chi\\]/"          =>  "&chi;",
+										"/\\[psi\\]/"          =>  "&psi;",
+										"/\\[omega\\]/"        =>  "&omega;",
+										"/\\[Alpha\\]/"        =>  "&Alpha;",
+										"/\\[Beta\\]/"         =>  "&Beta;",
+										"/\\[Gamma\\]/"        =>  "&Gamma;",
+										"/\\[Delta\\]/"        =>  "&Delta;",
+										"/\\[Epsilon\\]/"      =>  "&Epsilon;",
+										"/\\[Zeta\\]/"         =>  "&Zeta;",
+										"/\\[Eta\\]/"          =>  "&Eta;",
+										"/\\[Theta\\]/"        =>  "&Theta;",
+										"/\\[Iota\\]/"         =>  "&Iota;",
+										"/\\[Kappa\\]/"        =>  "&Kappa;",
+										"/\\[Lambda\\]/"       =>  "&Lambda;",
+										"/\\[Mu\\]/"           =>  "&Mu;",
+										"/\\[Nu\\]/"           =>  "&Nu;",
+										"/\\[Xi\\]/"           =>  "&Xi;",
+										"/\\[Omicron\\]/"      =>  "&Omicron;",
+										"/\\[Pi\\]/"           =>  "&Pi;",
+										"/\\[Rho\\]/"          =>  "&Rho;",
+										"/\\[Sigma\\]/"        =>  "&Sigma;",
+										"/\\[Tau\\]/"          =>  "&Tau;",
+										"/\\[Upsilon\\]/"      =>  "&Upsilon;",
+										"/\\[Phi\\]/"          =>  "&Phi;",
+										"/\\[Chi\\]/"          =>  "&Chi;",
+										"/\\[Psi\\]/"          =>  "&Psi;",
+										"/\\[Omega\\]/"        =>  "&Omega;");
+
+
+	// Defines search & replace 'actions' that will be applied to all those refbase fields that are listed in the corresponding 'fields'
+	// element. Search & replace patterns must be specified as perl-style regular expression (including the leading & trailing slashes)
+	// and may include mode modifiers (such as '/.../i' to perform a case insensitive match) -> see note at the end of this file.
+	// If you don't want to perform any search and replace actions, specify an empty array, like: '$searchReplaceActionsArray = array();')
+	// 								"/Search Pattern/"  =>  "Replace Pattern"
+	$searchReplaceActionsArray = array(
+										array(
+												'fields'  => array("title", "address", "keywords", "abstract"),
+												'actions' => $markupSearchReplacePatterns // perform search & replace actions that provide for human readable markup (as defined above)
+											)
+//										,
+//										array(
+//												'fields'  => array("address", "abstract"),
+//												'actions' => array(
+//																	"/((?:ht|f)tp:\/\/[^ \"<>\r\n]+?)(?=&gt;|&quot;|[ \"<>\r\n]|$)/" => "<a target='_new' href='\\1'>\\1</a>", // generate clickable links from any web addresses
+//																	"/([0-9a-zA-Z._-]+)@([0-9a-zA-Z._-]+)\\.([a-zA-Z]{2,3})/"        => "<a href='mailto:\\1@\\2.\\3'>\\1@\\2.\\3</a>" // generate clickable links from any email addresses
+//																)
+//											)
+									);
 
 	// --------------------------------------------------------------------
 
