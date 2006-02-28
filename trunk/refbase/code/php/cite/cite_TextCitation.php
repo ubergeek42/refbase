@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./cite/cite_TextCitation.php
 	// Created:    28-Sep-04, 23:46
-	// Modified:   05-Nov-05, 20:14
+	// Modified:   26-Feb-06, 13:58
 
 	// This is a citation style file (which must reside within the 'cite/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecord()' function that outputs a reference list from selected records according to the citation style defined
@@ -47,7 +47,7 @@
 		// Perform search & replace actions on the text:
 		$searchReplaceActionsArray = array('(et +al\.)' => '<i>\\1</i>'); // print 'et al.' in italic
 
-		$record = searchReplaceText($searchReplaceActionsArray, $record); // function 'searchReplaceText()' is defined in 'include.inc.php'
+		$record = searchReplaceText($searchReplaceActionsArray, $record, false); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
 
 		return $record;
