@@ -212,7 +212,7 @@
 "HelpLinkTitle"=>"Hilfe anzeigen",
 "Home"=>"Hauptseite",
 "Import"=>"Import",
-"ImportLinkTitle"=>" von üblichen bibliographischen Formaten and Online-Datenbanken",
+"ImportLinkTitle"=>" von üblichen bibliographischen Formaten und Online-Datenbanken",
 "ISBN"=>"ISBN",
 "ISSN"=>"ISSN",
 "Issue"=>"Ausgabe",
