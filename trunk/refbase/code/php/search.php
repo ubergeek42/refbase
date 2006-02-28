@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   29-Jan-06, 13:29
+	// Modified:   28-Feb-06, 03:30
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -219,8 +219,9 @@
 
 	// get information how exported data shall be returned:
 	// - 'text' => return data with mime type 'text/plain'
-	// - 'html' => return data with mime type 'text/html
-	// - 'xml' => return data with mime type 'text/xml
+	// - 'html' => return data with mime type 'text/html'
+	// - 'xml' => return data with mime type 'text/xml'
+	// - 'rss' => return data with mime type 'application/rss+xml'
 	// - 'file' => return data as downloadable file
 	// - 'email' => send data as email (to the user's login email address)
 	if (isset($_REQUEST['exportType']))
@@ -629,8 +630,8 @@
 	function displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $addCounterMax)
 	{
 		global $oldQuery; // This is required since the 'add record' link gets constructed outside this function, otherwise it would still contain the older query URL!)
-		global $markupSearchReplacePatterns; // defined in 'ini.inc.php'
-		global $showLinkTypesInListView; // defined in 'ini.inc.php'
+		global $searchReplaceActionsArray; // these variables are defined in 'ini.inc.php'
+		global $showLinkTypesInListView;
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
 		if (eregi(".+LIMIT *[0-9]+",$query)) // query does contain the 'LIMIT' parameter
@@ -818,10 +819,10 @@
 					if (($displayType == "Browse") AND ($i == 0)) // in Browse view we save the first field name to yet another variable (since it'll be needed when generating correct queries in the Links column)
 						$browseFieldName = $orig_fieldname;
 
-					// Perform search & replace actions on the text of the 'title', 'address', 'keywords' and 'abstract' fields:
-					// (the array '$markupSearchReplacePatterns' in 'ini.inc.php' defines which search & replace actions will be employed)
-					if (ereg("^(title|address|keywords|abstract)$", $orig_fieldname)) // apply the defined search & replace actions to the 'title', 'address', 'keywords' and 'abstract' fields:
-						$encodedRowAttribute = searchReplaceText($markupSearchReplacePatterns, $encodedRowAttribute); // function 'searchReplaceText()' is defined in 'include.inc.php'
+					// apply search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$searchReplaceActionsArray' (which is defined in 'ini.inc.php'):
+					foreach ($searchReplaceActionsArray as $fieldActionsArray)
+						if (in_array($orig_fieldname, $fieldActionsArray['fields']))
+							$encodedRowAttribute = searchReplaceText($fieldActionsArray['actions'], $encodedRowAttribute, true); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
 					echo "\n\t<td valign=\"top\">" . $encodedRowAttribute . "</td>";
 				}
@@ -931,7 +932,7 @@
 	function displayDetails($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $showMaxRow, $headerMsg, $userID, $viewType, $selectedRecordsArray)
 	{
 		global $filesBaseURL; // these variables are defined in 'ini.inc.php'
-		global $markupSearchReplacePatterns;
+		global $searchReplaceActionsArray;
 		global $databaseBaseURL;
 		global $fileVisibility;
 		global $fileVisibilityException;
@@ -1098,10 +1099,10 @@
 					if (ereg("^abstract$", $orig_fieldname)) // for the abstract field, transform newline ('\n') characters into <br> tags
 						$row[$i] = ereg_replace("\n", "<br>", $row[$i]);
 
-					// Perform search & replace actions on the text of the 'title', 'address', 'keywords' and 'abstract' fields:
-					// (the array '$markupSearchReplacePatterns' in 'ini.inc.php' defines which search & replace actions will be employed)
-					if (ereg("^(title|address|keywords|abstract)$", $orig_fieldname)) // apply the defined search & replace actions to the 'title', 'address', 'keywords' and 'abstract' fields:
-						$row[$i] = searchReplaceText($markupSearchReplacePatterns, $row[$i]); // function 'searchReplaceText()' is defined in 'include.inc.php'
+					// apply search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$searchReplaceActionsArray' (which is defined in 'ini.inc.php'):
+					foreach ($searchReplaceActionsArray as $fieldActionsArray)
+						if (in_array($orig_fieldname, $fieldActionsArray['fields']))
+							$row[$i] = searchReplaceText($fieldActionsArray['actions'], $row[$i], true); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
 					$recordData .= $row[$i]; // print the attribute data
 
@@ -1283,7 +1284,6 @@
 	function generateExport($result, $rowOffset, $showRows, $exportFormat, $exportType, $exportStylesheet, $displayType, $viewType, $userID)
 	{
 		global $officialDatabaseName; // these variables are defined in 'ini.inc.php'
-		global $markupSearchReplacePatterns;
 		global $contentTypeCharset;
 		global $userOptionsArray;
 
@@ -1291,7 +1291,8 @@
 		// (note that '$userOptionsArray' is made globally available)
 		$userOptionsArray = getUserOptions($userID); // function 'getUserOptions()' is defined in 'include.inc.php'
 
-		$exportFormatFile = getFormatFile($exportFormat, "export"); // fetch the path/name of the export format file that's associated with the export format given in '$exportFormat'
+		// fetch the path/name of the export format file that's associated with the export format given in '$exportFormat':
+		$exportFormatFile = getFormatFile($exportFormat, "export"); // function 'getFormatFile()' is defined in 'include.inc.php()'
 
 		// include the found export format file *once*:
 		include_once "export/" . $exportFormatFile; // instead of 'include_once' we could also use: 'if ($rowCounter == 0) { include "export/" . $exportFormatFile; }'
@@ -1308,6 +1309,9 @@
 
 		elseif ($exportType == "xml")
 			$exportContentType = "text/xml";
+
+		elseif ($exportType == "rss")
+			$exportContentType = "application/rss+xml";
 
 		elseif ($exportType == "file") // attempt to set mime type & download file name according to the chosen export format:
 		{
@@ -1386,8 +1390,8 @@
 	// SHOW THE RESULTS IN AN HTML <TABLE> (citation layout)
 	function generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $headerMsg, $userID, $viewType, $selectedRecordsArray)
 	{
-		global $markupSearchReplacePatterns; // defined in 'ini.inc.php'
-		global $showLinkTypesInCitationView; // defined in 'ini.inc.php'
+		global $searchReplaceActionsArray; // defined in 'ini.inc.php'
+		global $showLinkTypesInCitationView;
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 		global $userOptionsArray;
 
@@ -1427,13 +1431,16 @@
 			for ($rowCounter=0; (($rowCounter < $showRows) && ($row = @ mysql_fetch_array($result))); $rowCounter++)
 			{
 				foreach ($row as $rowFieldName => $rowFieldValue)
+				{
 					if (!ereg($rowFieldName, "^(author|editor)$")) // we HTML encode higher ASCII chars for all but the author & editor fields. The author & editor fields are excluded here
 						// since these fields must be passed *without* HTML entities to the 'reArrangeAuthorContents()' function (which will then handle the HTML encoding by itself)
 						$row[$rowFieldName] = encodeHTML($row[$rowFieldName]); // HTML encode higher ASCII characters within each of the fields
 
-				// Perform search & replace actions on the text of the 'title' field:
-				// (the array '$markupSearchReplacePatterns' in 'ini.inc.php' defines which search & replace actions will be employed)
-				$row['title'] = searchReplaceText($markupSearchReplacePatterns, $row['title']); // function 'searchReplaceText()' is defined in 'include.inc.php'
+					// apply search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$searchReplaceActionsArray' (which is defined in 'ini.inc.php'):
+					foreach ($searchReplaceActionsArray as $fieldActionsArray)
+						if (in_array($rowFieldName, $fieldActionsArray['fields']))
+							$row[$rowFieldName] = searchReplaceText($fieldActionsArray['actions'], $row[$rowFieldName], true); // function 'searchReplaceText()' is defined in 'include.inc.php'
+				}
 
 
 				$citeStyleFile = getStyleFile($citeStyle); // fetch the name of the citation style file that's associated with the style given in '$citeStyle'
