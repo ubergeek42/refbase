@@ -3,9 +3,9 @@
 	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
 	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
 	//             Please see the GNU General Public License for more details.
-	// File:       ./header.inc.php
+	// File:       ./includes/header.inc.php
 	// Created:    28-Jul-02, 11:21
-	// Modified:   08-Sep-05, 16:33
+	// Modified:   18-Feb-06, 02:29
 
 	// This is the header include file.
 	// It contains functions that provide the HTML header
@@ -131,10 +131,10 @@
 		// -------------------------------------------------------
 		if (isset($_SESSION['user_permissions']) AND ereg("(allow_import|allow_batch_import)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains either 'allow_import' or 'allow_batch_import'...
 		{
-		// ... include a link to 'import_csa.php':
+		// ... include a link to 'import.php':
 ?>
 
-			&nbsp;|&nbsp;<a href="import_csa.php" title="import a record from Cambridge Scientific Abstracts">CSA Import</a><?php
+			&nbsp;|&nbsp;<a href="import.php" title="import records into the database">Import</a><?php
 		}
 
 		// -------------------------------------------------------
