@@ -3,9 +3,9 @@
 	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
 	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
 	//             Please see the GNU General Public License for more details.
-	// File:       ./footer.inc.php
+	// File:       ./includes/footer.inc.php
 	// Created:    28-Jul-02, 11:30
-	// Modified:   08-Sep-05, 16:35
+	// Modified:   21-Feb-06, 02:55
 
 	// This is the footer include file.
 	// It contains functions that build the footer
@@ -24,6 +24,7 @@
 		global $hostInstitutionAbbrevName; // usage example: <a href="[? echo $hostInstitutionURL; ?]">[? echo encodeHTML($hostInstitutionAbbrevName); ?] Home</a>
 		global $hostInstitutionName; // (note: in the examples above, square brackets must be replaced by their respective angle brackets)
 		global $hostInstitutionURL;
+		global $helpResourcesURL;
 ?>
 
 <hr align="center" width="95%">
@@ -56,7 +57,7 @@
 	<td class="small" align="right" width="105"><?php echo date('D, j M Y'); ?></td>
 </tr>
 <tr>
-	<td class="small" width="105"><!--<a href="help.php" title="display help">Help</a>--></td>
+	<td class="small" width="105"><a href="<?php echo $helpResourcesURL; ?>" title="display help">Help</a></td>
 	<td class="small" align="center"><?php
 
 		// -------------------------------------------------------
@@ -72,10 +73,10 @@
 		// -------------------------------------------------------
 		if (isset($_SESSION['user_permissions']) AND ereg("(allow_import|allow_batch_import)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains either 'allow_import' or 'allow_batch_import'...
 		{
-		// ... include a link to 'import_csa.php':
+		// ... include a link to 'import.php':
 ?>
 
-		<a href="import_csa.php" title="import a record from Cambridge Scientific Abstracts">CSA Import</a>
+		<a href="import.php" title="import records into the database">Import</a>
 		&nbsp;|&nbsp;<?php
 		}
 
