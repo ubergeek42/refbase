@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./index.php
 	// Created:    29-Jul-02, 16:45
-	// Modified:   20-Jan-06, 13:53
+	// Modified:   28-Feb-06, 13:43
 
 	// This script builds the main page.
 	// It provides login and quick search forms
@@ -138,8 +138,8 @@ else
 				// -------------------------------------------------------
 				if (isset($_SESSION['user_permissions']) AND ereg("(allow_import|allow_batch_import)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains either 'allow_import' or 'allow_batch_import'...
 				{
-				// ... include a link to 'import_csa.php':
-					echo "<a href=\"import_csa.php\">". $loc["Import"] ."</a>";
+				// ... include a link to 'import.php':
+					echo "<a href=\"import.php\">". $loc["Import"] ."</a>";
 				}
 				else
 				{
@@ -148,7 +148,7 @@ else
 
 				// -------------------------------------------------------
 
-				echo $loc["CSAImportLinkTitle"]; ?></li>
+				echo $loc["ImportLinkTitle"]; ?></li>
 			</ul>
 		</td>
 		<td width="182" valign="top">
