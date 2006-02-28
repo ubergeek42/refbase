@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./cite/cite_PolarBiol_MarBiol_MEPS.php
 	// Created:    28-Sep-04, 22:14
-	// Modified:   08-Sep-05, 13:30
+	// Modified:   25-Feb-06, 15:25
 
 	// This is a citation style file (which must reside within the 'cite/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecord()' function that outputs a reference list from selected records according to the citation style used by
@@ -31,27 +31,42 @@
 			{
 				if (!empty($row['author']))			// author
 					{
-						// Call the 'reArrangeAuthorContents()' function in order to re-order contents of the author field. Required Parameters:
-						//   1. pattern describing old delimiter that separates different authors
-						//   2. for all authors except the last author: new delimiter that separates different authors
-						//   3. for the last author: new delimiter that separates the last author from all other authors
-						//   4. pattern describing old delimiter that separates author name & initials (within one author)
-						//   5. for the first author: new delimiter that separates author name & initials (within one author)
-						//   6. for all authors except the first author: new delimiter that separates author name & initials (within one author)
-						//   7. new delimiter that separates multiple initials (within one author)
-						//   8. for the first author: boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
-						//   9. for all authors except the first author: boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
-						//  10. contents of the author field
-						$author = reArrangeAuthorContents(" *; *", // 1.
-															", ", // 2.
-															", ", // 3.
-															" *, *", // 4.
-															" ", // 5.
-															" ", // 6.
-															"", // 7.
-															false, // 8.
-															false, // 9.
-															$row['author']); // 10.
+						// Call the 'reArrangeAuthorContents()' function (defined in 'include.inc.php') in order to re-order contents of the author field. Required Parameters:
+						//   1. input:  contents of the author field
+						//   2. input:  boolean value that specifies whether the author's family name comes first (within one author) in the source string
+						//              ('true' means that the family name is followed by the given name (or initials), 'false' if it's the other way around)
+						//
+						//   3. input:  pattern describing old delimiter that separates different authors
+						//   4. output: for all authors except the last author: new delimiter that separates different authors
+						//   5. output: for the last author: new delimiter that separates the last author from all other authors
+						//
+						//   6. input:  pattern describing old delimiter that separates author name & initials (within one author)
+						//   7. output: for the first author: new delimiter that separates author name & initials (within one author)
+						//   8. output: for all authors except the first author: new delimiter that separates author name & initials (within one author)
+						//   9. output: new delimiter that separates multiple initials (within one author)
+						//  10. output: for the first author: boolean value that specifies if initials go *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+						//  11. output: for all authors except the first author: boolean value that specifies if initials go *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+						//  12. output: boolean value that specifies whether an author's full given name(s) shall be shortened to initial(s)
+						//
+						//  13. output: if the number of authors is greater than the given number (integer >= 1), only the first author will be included along with the string given in (14); keep empty if all authors shall be returned
+						//  14. output: string that's appended to the first author if number of authors is greater than the number given in (13); the actual number of authors can be printed by including '__NUMBER_OF_AUTHORS__' (without quotes) within the string
+						//
+						//  15. output: boolean value that specifies whether the re-ordered string shall be returned with higher ASCII chars HTML encoded
+						$author = reArrangeAuthorContents($row['author'], // 1.
+															true, // 2.
+															" *; *", // 3.
+															", ", // 4.
+															", ", // 5.
+															" *, *", // 6.
+															" ", // 7.
+															" ", // 8.
+															"", // 9.
+															false, // 10.
+															false, // 11.
+															true, // 12.
+															"", // 13.
+															" <i>and __NUMBER_OF_AUTHORS__ others</i>", // 14.
+															true); // 15.
 
 						$record .= $author . " ";
 					}
@@ -117,27 +132,42 @@
 			{
 				if (!empty($row['author']))			// author
 					{
-						// Call the 'reArrangeAuthorContents()' function in order to re-order contents of the author field. Required Parameters:
-						//   1. pattern describing old delimiter that separates different authors
-						//   2. for all authors except the last author: new delimiter that separates different authors
-						//   3. for the last author: new delimiter that separates the last author from all other authors
-						//   4. pattern describing old delimiter that separates author name & initials (within one author)
-						//   5. for the first author: new delimiter that separates author name & initials (within one author)
-						//   6. for all authors except the first author: new delimiter that separates author name & initials (within one author)
-						//   7. new delimiter that separates multiple initials (within one author)
-						//   8. for the first author: boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
-						//   9. for all authors except the first author: boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
-						//  10. contents of the author field
-						$author = reArrangeAuthorContents(" *; *", // 1.
-															", ", // 2.
-															", ", // 3.
-															" *, *", // 4.
-															" ", // 5.
-															" ", // 6.
-															"", // 7.
-															false, // 8.
-															false, // 9.
-															$row['author']); // 10.
+						// Call the 'reArrangeAuthorContents()' function (defined in 'include.inc.php') in order to re-order contents of the author field. Required Parameters:
+						//   1. input:  contents of the author field
+						//   2. input:  boolean value that specifies whether the author's family name comes first (within one author) in the source string
+						//              ('true' means that the family name is followed by the given name (or initials), 'false' if it's the other way around)
+						//
+						//   3. input:  pattern describing old delimiter that separates different authors
+						//   4. output: for all authors except the last author: new delimiter that separates different authors
+						//   5. output: for the last author: new delimiter that separates the last author from all other authors
+						//
+						//   6. input:  pattern describing old delimiter that separates author name & initials (within one author)
+						//   7. output: for the first author: new delimiter that separates author name & initials (within one author)
+						//   8. output: for all authors except the first author: new delimiter that separates author name & initials (within one author)
+						//   9. output: new delimiter that separates multiple initials (within one author)
+						//  10. output: for the first author: boolean value that specifies if initials go *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+						//  11. output: for all authors except the first author: boolean value that specifies if initials go *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+						//  12. output: boolean value that specifies whether an author's full given name(s) shall be shortened to initial(s)
+						//
+						//  13. output: if the number of authors is greater than the given number (integer >= 1), only the first author will be included along with the string given in (14); keep empty if all authors shall be returned
+						//  14. output: string that's appended to the first author if number of authors is greater than the number given in (13); the actual number of authors can be printed by including '__NUMBER_OF_AUTHORS__' (without quotes) within the string
+						//
+						//  15. output: boolean value that specifies whether the re-ordered string shall be returned with higher ASCII chars HTML encoded
+						$author = reArrangeAuthorContents($row['author'], // 1.
+															true, // 2.
+															" *; *", // 3.
+															", ", // 4.
+															", ", // 5.
+															" *, *", // 6.
+															" ", // 7.
+															" ", // 8.
+															"", // 9.
+															false, // 10.
+															false, // 11.
+															true, // 12.
+															"", // 13.
+															" <i>and __NUMBER_OF_AUTHORS__ others</i>", // 14.
+															true); // 15.
 
 						$record .= $author . " ";
 					}
@@ -155,27 +185,42 @@
 
 				if (!empty($row['editor']))			// editor
 					{
-						// Call the 'reArrangeAuthorContents()' function in order to re-order contents of the author field. Required Parameters:
-						//   1. pattern describing old delimiter that separates different authors
-						//   2. for all authors except the last author: new delimiter that separates different authors
-						//   3. for the last author: new delimiter that separates the last author from all other authors
-						//   4. pattern describing old delimiter that separates author name & initials (within one author)
-						//   5. for the first author: new delimiter that separates author name & initials (within one author)
-						//   6. for all authors except the first author: new delimiter that separates author name & initials (within one author)
-						//   7. new delimiter that separates multiple initials (within one author)
-						//   8. for the first author: boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
-						//   9. for all authors except the first author: boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
-						//  10. contents of the author field
-						$editor = reArrangeAuthorContents(" *; *", // 1.
-															", ", // 2.
-															", ", // 3.
-															" *, *", // 4.
-															" ", // 5.
-															" ", // 6.
-															"", // 7.
-															false, // 8.
-															false, // 9.
-															$row['editor']); // 10.
+						// Call the 'reArrangeAuthorContents()' function (defined in 'include.inc.php') in order to re-order contents of the author field. Required Parameters:
+						//   1. input:  contents of the author field
+						//   2. input:  boolean value that specifies whether the author's family name comes first (within one author) in the source string
+						//              ('true' means that the family name is followed by the given name (or initials), 'false' if it's the other way around)
+						//
+						//   3. input:  pattern describing old delimiter that separates different authors
+						//   4. output: for all authors except the last author: new delimiter that separates different authors
+						//   5. output: for the last author: new delimiter that separates the last author from all other authors
+						//
+						//   6. input:  pattern describing old delimiter that separates author name & initials (within one author)
+						//   7. output: for the first author: new delimiter that separates author name & initials (within one author)
+						//   8. output: for all authors except the first author: new delimiter that separates author name & initials (within one author)
+						//   9. output: new delimiter that separates multiple initials (within one author)
+						//  10. output: for the first author: boolean value that specifies if initials go *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+						//  11. output: for all authors except the first author: boolean value that specifies if initials go *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+						//  12. output: boolean value that specifies whether an author's full given name(s) shall be shortened to initial(s)
+						//
+						//  13. output: if the number of authors is greater than the given number (integer >= 1), only the first author will be included along with the string given in (14); keep empty if all authors shall be returned
+						//  14. output: string that's appended to the first author if number of authors is greater than the number given in (13); the actual number of authors can be printed by including '__NUMBER_OF_AUTHORS__' (without quotes) within the string
+						//
+						//  15. output: boolean value that specifies whether the re-ordered string shall be returned with higher ASCII chars HTML encoded
+						$editor = reArrangeAuthorContents($row['editor'], // 1.
+															true, // 2.
+															" *; *", // 3.
+															", ", // 4.
+															", ", // 5.
+															" *, *", // 6.
+															" ", // 7.
+															" ", // 8.
+															"", // 9.
+															false, // 10.
+															false, // 11.
+															true, // 12.
+															"", // 13.
+															" <i>and __NUMBER_OF_AUTHORS__ others</i>", // 14.
+															true); // 15.
 
 						$record .= "In: " . $editor;
 						if (ereg("^[^;\r\n]+(;[^;\r\n]+)+$", $row['editor'])) // there are at least two editors (separated by ';')
@@ -258,27 +303,42 @@
 					{
 						$author = ereg_replace("[ \r\n]*\(eds?\)", "", $row['author']);
 
-						// Call the 'reArrangeAuthorContents()' function in order to re-order contents of the author field. Required Parameters:
-						//   1. pattern describing old delimiter that separates different authors
-						//   2. for all authors except the last author: new delimiter that separates different authors
-						//   3. for the last author: new delimiter that separates the last author from all other authors
-						//   4. pattern describing old delimiter that separates author name & initials (within one author)
-						//   5. for the first author: new delimiter that separates author name & initials (within one author)
-						//   6. for all authors except the first author: new delimiter that separates author name & initials (within one author)
-						//   7. new delimiter that separates multiple initials (within one author)
-						//   8. for the first author: boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
-						//   9. for all authors except the first author: boolean value that specifies if initials follow *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
-						//  10. contents of the author field
-						$author = reArrangeAuthorContents(" *; *", // 1.
-															", ", // 2.
-															", ", // 3.
-															" *, *", // 4.
-															" ", // 5.
-															" ", // 6.
-															"", // 7.
-															false, // 8.
-															false, // 9.
-															$author); // 10.
+						// Call the 'reArrangeAuthorContents()' function (defined in 'include.inc.php') in order to re-order contents of the author field. Required Parameters:
+						//   1. input:  contents of the author field
+						//   2. input:  boolean value that specifies whether the author's family name comes first (within one author) in the source string
+						//              ('true' means that the family name is followed by the given name (or initials), 'false' if it's the other way around)
+						//
+						//   3. input:  pattern describing old delimiter that separates different authors
+						//   4. output: for all authors except the last author: new delimiter that separates different authors
+						//   5. output: for the last author: new delimiter that separates the last author from all other authors
+						//
+						//   6. input:  pattern describing old delimiter that separates author name & initials (within one author)
+						//   7. output: for the first author: new delimiter that separates author name & initials (within one author)
+						//   8. output: for all authors except the first author: new delimiter that separates author name & initials (within one author)
+						//   9. output: new delimiter that separates multiple initials (within one author)
+						//  10. output: for the first author: boolean value that specifies if initials go *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+						//  11. output: for all authors except the first author: boolean value that specifies if initials go *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+						//  12. output: boolean value that specifies whether an author's full given name(s) shall be shortened to initial(s)
+						//
+						//  13. output: if the number of authors is greater than the given number (integer >= 1), only the first author will be included along with the string given in (14); keep empty if all authors shall be returned
+						//  14. output: string that's appended to the first author if number of authors is greater than the number given in (13); the actual number of authors can be printed by including '__NUMBER_OF_AUTHORS__' (without quotes) within the string
+						//
+						//  15. output: boolean value that specifies whether the re-ordered string shall be returned with higher ASCII chars HTML encoded
+						$author = reArrangeAuthorContents($author, // 1.
+															true, // 2.
+															" *; *", // 3.
+															", ", // 4.
+															", ", // 5.
+															" *, *", // 6.
+															" ", // 7.
+															" ", // 8.
+															"", // 9.
+															false, // 10.
+															false, // 11.
+															true, // 12.
+															"", // 13.
+															" <i>and __NUMBER_OF_AUTHORS__ others</i>", // 14.
+															true); // 15.
 
 						$record .= $author . " ";
 					}
