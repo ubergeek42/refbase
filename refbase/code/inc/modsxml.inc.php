@@ -11,7 +11,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
   //
   // Created:    02-Oct-04, 12:00
-  // Modified:   30-Oct-05, 19:34
+  // Modified:   26-Feb-06, 14:08
 
   // This include file contains functions that'll export records to MODS XML.
   // Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -169,7 +169,7 @@
       foreach ($row as $rowFieldName => $rowFieldValue)
         // function 'searchReplaceText()' is defined in 'include.inc.php'
         $row[$rowFieldName] = searchReplaceText($exportSearchReplacePatterns,
-                                                $row[$rowFieldName]); 
+                                                $row[$rowFieldName], false);
 
       // Note: except from the above conversion of angle brackets (i.e., '<'
       //       and '>') and ampersands ('&'), data will be exported as fetched
