@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_receipt.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   30-Oct-05, 17:00
+	// Modified:   26-Feb-06, 14:09
 
 	// This script shows the user a receipt for their user UPDATE or INSERT.
 	// It carries out no database actions and can be bookmarked.
@@ -451,13 +451,13 @@
 					$enabledUserActionsArray[] = "(none)";
 				else
 					foreach($enabledUserActionsArray as $permissionKey => $permissionName)
-						$enabledUserActionsArray[$permissionKey] = searchReplaceText($searchReplaceActionsArray, $permissionName); // function 'searchReplaceText()' is defined in 'include.inc.php'
+						$enabledUserActionsArray[$permissionKey] = searchReplaceText($searchReplaceActionsArray, $permissionName, false); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
 				if (empty($disabledUserActionsArray))
 					$disabledUserActionsArray[] = "(none)";
 				else
 					foreach($disabledUserActionsArray as $permissionKey => $permissionName)
-						$disabledUserActionsArray[$permissionKey] = searchReplaceText($searchReplaceActionsArray, $permissionName); // function 'searchReplaceText()' is defined in 'include.inc.php'
+						$disabledUserActionsArray[$permissionKey] = searchReplaceText($searchReplaceActionsArray, $permissionName, false); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
 				echo "\n\t\t<tr>\n\t\t\t<td colspan=\"2\"></td>\n\t\t</tr>";
 
