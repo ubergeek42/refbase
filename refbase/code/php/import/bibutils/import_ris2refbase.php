@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import/bibutils/import_ris2refbase.php
 	// Created:    23-Feb-06, 02:35
-	// Modified:   25-Feb-06, 18:59
+	// Modified:   28-Feb-06, 01:29
 
 	// This is an import format file (which must reside within the 'import/' sub-directory of your refbase root directory). It contains a version of the
 	// 'importRecords()' function that imports records from 'RIS'-formatted data, i.e. data formatted according to the standard export format used e.g.
@@ -28,7 +28,7 @@
 		// You can use './import/import_ris2refbase.php' to import RIS records directly.
 
 		// convert RIS format to MODS XML format:
-		$sourceText = importBibutils($sourceText,"end2xml"); // function 'importBibutils()' is defined in 'execute.inc.php'
+		$sourceText = importBibutils($sourceText,"ris2xml"); // function 'importBibutils()' is defined in 'execute.inc.php'
 
 		// convert MODS XML format to RIS format:
 		$sourceText = importBibutils($sourceText,"xml2ris"); // function 'importBibutils()' is defined in 'execute.inc.php'
