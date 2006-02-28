@@ -212,6 +212,7 @@
 "HelpLinkTitle"=>"montrer aide",
 "Home"=>"Accueil",
 "Import"=>"Importer",
+"ImportLinkTitle"=>" d'enregistrements complets des Endnote, Reference Manager (RIS), BibTeX, ISI Web of Science, Pubmed, CSA, Copac et MODS XML",
 "ISBN"=>"ISBN",
 "ISSN"=>"ISSN",
 "Issue"=>"Numéro",
