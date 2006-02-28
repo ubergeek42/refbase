@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   23-Jan-06, 22:11
+	// Modified:   27-Feb-06, 02:05
 
 	// This file contains important
 	// functions that are shared
@@ -887,9 +887,8 @@
 	//	REPLACE ORDER CLAUSE IN SQL QUERY
 	function newORDERclause($newORDER, $query)
 	{
-		$queryNewOrder = eregi_replace('LIMIT','¥LIMIT',$query); // put a unique delimiter in front of the 'LIMIT'... parameter (in order to keep any 'LIMIT' parameter)
-		$queryNewOrder = eregi_replace('ORDER BY [^¥]+',$newORDER,$queryNewOrder); // replace old 'ORDER BY'... parameter by new one
-		$queryNewOrder = str_replace('¥',' ',$queryNewOrder); // remove the unique delimiter again
+		// replace any existing ORDER BY clause with the new one given in '$newORDER':
+		$queryNewOrder = preg_replace("/ORDER BY .+?(?=LIMIT.*|GROUP BY.*|HAVING.*|PROCEDURE.*|FOR UPDATE.*|LOCK IN.*|$)/i", $newORDER, $query);
 		$queryURLNewOrder = rawurlencode($queryNewOrder); // URL encode query
 
 		return $queryURLNewOrder;
@@ -960,7 +959,7 @@
 					. "&amp;rowOffset=" . (($pageOffset - $maxPageNo) * $showRows)
 					. "&amp;oldQuery=" . rawurlencode($oldQuery)
 					. "&amp;viewType=$viewType"
-					. "\" title=\"display results page " . $previousRangeLastPage . " and links to pages " . $previousRangeFirstPage . "&#8211;" . $previousRangeLastPage . "\">[" . $previousRangeFirstPage . "&#8211;" . $previousRangeLastPage . "] </a>";
+					. "\" title=\"display results page " . $previousRangeFirstPage . " and links to pages " . $previousRangeFirstPage . "&#8211;" . $previousRangeLastPage . "\">[" . $previousRangeFirstPage . "&#8211;" . $previousRangeLastPage . "] </a>";
 			}
 
 		// b) Are there any previous pages?
@@ -1328,7 +1327,7 @@ EOF;
 			$displayOptionsForm .= "\n\t\t\t\t\t\t<select name=\"displayOptionsSelector\" title=\"choose the field you want to show or hide\">";
 
 		// NOTE: we embed the current value of '$rowOffset' as hidden tag within the 'displayOptions' form. By this, the current row offset can be re-applied after the user pressed the 'Show'/'Hide' button within the 'displayOptions' form.
-		//       To avoid that browse links don't behave as expected, the actual value of '$rowOffset' will be adjusted in 'search.php' to an exact multiple of '$showRows'!
+		//       To avoid that browse links don't behave as expected, the actual value of '$rowOffset' will be adjusted in function 'seekInMySQLResultsToOffset()' to an exact multiple of '$showRows'!
 
 		$optionTags = buildSelectMenuOptions($displayOptionsSelectorElements1, " *, *", "\t\t\t\t\t\t\t", false); // build correct option tags from the column items provided
 
@@ -1557,44 +1556,48 @@ EOF;
 	//		}
 	//  then, these functional pieces will be joined again according to the separators specified)
 	//  Note: this function assumes that:
-	//			1. within one author object, there's only *one* delimiter separating author name & initials!
-	//			2. author objects are stored in the db as "<author_name><author_initials_delimiter><author_initials>", i.e., initials follow *after* the author's name!
-	function reArrangeAuthorContents($oldBetweenAuthorsDelim, $newBetweenAuthorsDelimStandard, $newBetweenAuthorsDelimLastAuthor, $oldAuthorsInitialsDelim, $newAuthorsInitialsDelimFirstAuthor, $newAuthorsInitialsDelimStandard, $betweenInitialsDelim, $initialsBeforeAuthorFirstAuthor, $initialsBeforeAuthorStandard, $authorContents)
+	//			- within one author object, there's only *one* delimiter separating author name & initials!
+	function reArrangeAuthorContents($authorContents, $familyNameFirst, $oldBetweenAuthorsDelim, $newBetweenAuthorsDelimStandard, $newBetweenAuthorsDelimLastAuthor, $oldAuthorsInitialsDelim, $newAuthorsInitialsDelimFirstAuthor, $newAuthorsInitialsDelimStandard, $betweenInitialsDelim, $initialsBeforeAuthorFirstAuthor, $initialsBeforeAuthorStandard, $shortenGivenNames, $includeNumberOfAuthors, $customStringAfterFirstAuthor, $encodeHTML)
 	{
 		// Note: I haven't figured out how to *successfully* enable locale support, so that e.g. '[[:upper:]]' would also match 'Ø' etc.
 		//       Therefore, as a workaround, high ascii chars are specified literally below
 		//       (in order to have this work, the character encoding of 'search.php' must be set to 'Western (Iso Latin 1)' aka 'ISO-8859-1'!)
-		//       high ascii chars upper case = "ÄÅÁÀÂÃÇÉÈÊËÑÖØÓÒÔÕÜÚÙÛÍÌÎÏÆ"
-		//       high ascii chars lower case = "äåáàâãçéèêëñöøóòôõüúùûíìîïæÿß"
-		// setlocale(LC_COLLATE, 'la_LN.ISO-8859-1'); // use the ISO 8859-1 Latin-1 character set  for pattern matching
+		//       high ascii chars upper case = "ÄÅÁÀÂÃÇÉÈÊËÑÖØÓÒÔÕÜÚÙÛÍÌÎÏÆ"
+		//       high ascii chars lower case = "äåáàâãçéèêëñöøóòôõüúùûíìîïæÿß"
+		// setlocale(LC_COLLATE, 'la_LN.ISO-8859-1'); // use the ISO 8859-1 Latin-1 character set for pattern matching
 
 		$authorsArray = split($oldBetweenAuthorsDelim, $authorContents); // get a list of all authors for this record
 
 		$authorCount = count($authorsArray); // check how many authors we have to deal with
 		$newAuthorContents = ""; // this variable will hold the final author string
+		$includeStringAfterFirstAuthor = false;
 
 		for ($i=0; $i < $authorCount; $i++)
 		{
 			$singleAuthorArray = split($oldAuthorsInitialsDelim, $authorsArray[$i]); // for each author, extract author name & initials to separate list items
 
+			if (!$familyNameFirst) // if the family name comes *after* the given name (or initials) in the source string, put array elements in reverse order:
+				$singleAuthorArray = array_reverse($singleAuthorArray); // (Note: this only works, if the array has only *two* elements, i.e., one containing the author's name and one holding the initials!)
 
-			// within initials, reduce all full first names (-> defined by a starting uppercase character, followed by one ore more lowercase characters)
-			// to initials, i.e., only retain their first character
-			// (as of the 2. assumption outlined in this functions header, the second element must be the author's initials)
-			$singleAuthorArray[1] = preg_replace("/([[:upper:]ÄÅÁÀÂÃÇÉÈÊËÑÖØÓÒÔÕÜÚÙÛÍÌÎÏÆ])[[:lower:]äåáàâãçéèêëñöøóòôõüúùûíìîïæÿß]+/", "\\1", $singleAuthorArray[1]);
+			if ($shortenGivenNames) // if we're supposed to abbreviate given names
+			{
+				// within initials, reduce all full first names (-> defined by a starting uppercase character, followed by one ore more lowercase characters)
+				// to initials, i.e., only retain their first character
+				$singleAuthorArray[1] = preg_replace("/([[:upper:]ÄÅÁÀÂÃÇÉÈÊËÑÖØÓÒÔÕÜÚÙÛÍÌÎÏÆ])[[:lower:]äåáàâãçéèêëñöøóòôõüúùûíìîïæÿß]+/", "\\1", $singleAuthorArray[1]);
 
-			// within initials, remove any dots:
-			$singleAuthorArray[1] = preg_replace("/([[:upper:]ÄÅÁÀÂÃÇÉÈÊËÑÖØÓÒÔÕÜÚÙÛÍÌÎÏÆ])\.+/", "\\1", $singleAuthorArray[1]);
+				// within initials, remove any dots:
+				$singleAuthorArray[1] = preg_replace("/([[:upper:]ÄÅÁÀÂÃÇÉÈÊËÑÖØÓÒÔÕÜÚÙÛÍÌÎÏÆ])\.+/", "\\1", $singleAuthorArray[1]);
 
-			// within initials, remove any spaces *between* initials:
-			$singleAuthorArray[1] = preg_replace("/(?<=[-[:upper:]ÄÅÁÀÂÃÇÉÈÊËÑÖØÓÒÔÕÜÚÙÛÍÌÎÏÆ]) +(?=[-[:upper:]ÄÅÁÀÂÃÇÉÈÊËÑÖØÓÒÔÕÜÚÙÛÍÌÎÏÆ])/", "", $singleAuthorArray[1]);
+				// within initials, remove any spaces *between* initials:
+				$singleAuthorArray[1] = preg_replace("/(?<=[-[:upper:]ÄÅÁÀÂÃÇÉÈÊËÑÖØÓÒÔÕÜÚÙÛÍÌÎÏÆ]) +(?=[-[:upper:]ÄÅÁÀÂÃÇÉÈÊËÑÖØÓÒÔÕÜÚÙÛÍÌÎÏÆ])/", "", $singleAuthorArray[1]);
 
-			// within initials, add a space after a hyphen, but only if ...
-			if (ereg(" $", $betweenInitialsDelim)) // ... the delimiter that separates initials ends with a space
-				$singleAuthorArray[1] = preg_replace("/-(?=[[:upper:]ÄÅÁÀÂÃÇÉÈÊËÑÖØÓÒÔÕÜÚÙÛÍÌÎÏÆ])/", "- ", $singleAuthorArray[1]);
+				// within initials, add a space after a hyphen, but only if ...
+				if (ereg(" $", $betweenInitialsDelim)) // ... the delimiter that separates initials ends with a space
+					$singleAuthorArray[1] = preg_replace("/-(?=[[:upper:]ÄÅÁÀÂÃÇÉÈÊËÑÖØÓÒÔÕÜÚÙÛÍÌÎÏÆ])/", "- ", $singleAuthorArray[1]);
 
-			// then, separate initials with the specified delimiter:
-			$singleAuthorArray[1] = preg_replace("/([[:upper:]ÄÅÁÀÂÃÇÉÈÊËÑÖØÓÒÔÕÜÚÙÛÍÌÎÏÆ])/", "\\1$betweenInitialsDelim", $singleAuthorArray[1]);
+				// then, separate initials with the specified delimiter:
+				$singleAuthorArray[1] = preg_replace("/([[:upper:]ÄÅÁÀÂÃÇÉÈÊËÑÖØÓÒÔÕÜÚÙÛÍÌÎÏÆ])/", "\\1$betweenInitialsDelim", $singleAuthorArray[1]);
+			}
 
 
 			if ((($i == 0) AND $initialsBeforeAuthorFirstAuthor) OR (($i > 0) AND $initialsBeforeAuthorStandard)) // put array elements in reverse order:
@@ -1608,7 +1611,19 @@ EOF;
 
 			// append this author to the final author string:
 			if ($i == 0) // -> first author
+			{
 				$newAuthorContents .= $singleAuthorString;
+
+				// we'll append the string in '$customStringAfterFirstAuthor' to the first author if number of authors is greater than the number given in '$includeNumberOfAuthors':
+				if (!empty($includeNumberOfAuthors) AND ($authorCount > $includeNumberOfAuthors))
+				{
+					if (ereg("__NUMBER_OF_AUTHORS__", $customStringAfterFirstAuthor))
+						$customStringAfterFirstAuthor = preg_replace("/__NUMBER_OF_AUTHORS__/", ($authorCount -1), $customStringAfterFirstAuthor); // resolve placeholder
+
+					$includeStringAfterFirstAuthor = true;
+					break;
+				}
+			}
 			elseif (($authorCount > 1) AND (($i + 1) == $authorCount)) // -> last author
 				$newAuthorContents .= $newBetweenAuthorsDelimLastAuthor . $singleAuthorString;
 			else // -> all authors except the first or the last one
@@ -1619,7 +1634,11 @@ EOF;
 		$newAuthorContents = preg_replace("/  +/", " ", $newAuthorContents); // remove double spaces (which occur e.g., when both, $betweenInitialsDelim & $newAuthorsInitialsDelim..., end with a space)
 		$newAuthorContents = preg_replace("/ +([,.;:?!])/", "\\1", $newAuthorContents); // remove spaces before [,.;:?!]
 
-		$newAuthorContents = encodeHTML($newAuthorContents); // HTML encode higher ASCII characters within the newly arranged author contents
+		if ($encodeHTML)
+			$newAuthorContents = encodeHTML($newAuthorContents); // HTML encode higher ASCII characters within the newly arranged author contents
+
+		if ($includeStringAfterFirstAuthor)
+			$newAuthorContents .= $customStringAfterFirstAuthor; // the custom string won't get HTML encoded so that it's possible to include HTML tags (such as '<i>') within the string
 
 		return $newAuthorContents;
 	}
@@ -3410,12 +3429,19 @@ EOF;
 	// --------------------------------------------------------------------
 
 	// Perform search & replace actions on the given text input:
-	function searchReplaceText($searchReplaceActionsArray, $sourceString)
+	// ('$includesSearchPatternDelimiters' must be a boolean value that specifies whether the leading and trailing slashes
+	//  are included within the search pattern ['true'] or not ['false'])
+	function searchReplaceText($searchReplaceActionsArray, $sourceString, $includesSearchPatternDelimiters)
 	{
 		// apply the search & replace actions defined in '$searchReplaceActionsArray' to the text passed in '$sourceString':
 		foreach ($searchReplaceActionsArray as $searchString => $replaceString)
-			if (preg_match("/" . $searchString . "/", $sourceString))
-				$sourceString = preg_replace("/" . $searchString . "/", $replaceString, $sourceString);
+		{
+			if (!$includesSearchPatternDelimiters)
+				$searchString = "/" . $searchString . "/"; // add search pattern delimiters
+
+			if (preg_match($searchString, $sourceString))
+				$sourceString = preg_replace($searchString, $replaceString, $sourceString);
+		}
 
 		return $sourceString;
 	}
@@ -3463,9 +3489,9 @@ EOF;
 		if (($targetCharset == "ASCII") AND ($transliteration == "TRANSLIT"))
 		{
 			if ($contentTypeCharset == "UTF-8")
-				$convertedString = searchReplaceText($transtab_unicode_ascii, $sourceString);
+				$convertedString = searchReplaceText($transtab_unicode_ascii, $sourceString, false);
 			else // we assume "ISO-8859-1" by default
-				$convertedString = searchReplaceText($transtab_latin1_ascii, $sourceString);
+				$convertedString = searchReplaceText($transtab_latin1_ascii, $sourceString, false);
 
 			// strip any additional non-ASCII characters which we weren't able to transliterate:
 			$convertedString = iconv($contentTypeCharset, "ASCII//IGNORE", $convertedString);
@@ -3750,7 +3776,7 @@ EOF;
 										"AND"                            =>  "and");
 
 		// Perform search & replace actions on the SQL query:
-		$translatedSQL = searchReplaceText($sqlSearchReplacePatterns, $translatedSQL); // function 'searchReplaceText()' is defined in 'include.inc.php'
+		$translatedSQL = searchReplaceText($sqlSearchReplacePatterns, $translatedSQL, false); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
 		$translatedSQL = str_replace('"',"'",$translatedSQL); // replace any remaining " with '
 
@@ -3823,7 +3849,7 @@ EOF;
 
 			// Perform search & replace actions on the text of the 'title' field:
 			// (the array '$markupSearchReplacePatterns' in 'ini.inc.php' defines which search & replace actions will be employed)
-			$row['title'] = searchReplaceText($markupSearchReplacePatterns, $row['title']); // function 'searchReplaceText()' is defined in 'include.inc.php'
+			$row['title'] = searchReplaceText($markupSearchReplacePatterns, $row['title'], true); // function 'searchReplaceText()' is defined in 'include.inc.php'
 			// this will provide for correct rendering of italic, super/sub-script and greek letters in item descriptions (which are enclosed by '<![CDATA[...]]>' to ensure well-formed XML);
 			// item titles are still served in raw format, though, since the use of HTML in item titles breaks many news readers
 
