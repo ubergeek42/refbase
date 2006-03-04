@@ -12,7 +12,7 @@
 	//             Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    16-Dec-05, 18:00
-	// Modified:   27-Feb-06, 16:15
+	// Modified:   02-Mar-06, 21:03
 
 	// This file contains functions that deal with execution of shell commands and provides
 	// fixes for 'exec()' on certain win32 systems (based on rivera at spamjoy dot unr dot edu's
@@ -84,8 +84,21 @@
 	// Convert file contents using the bibutils program given in '$program'
 	function convertBibutils($bibutilsPath, $tempDirPath, $tempFile, $program)
 	{
+		global $contentTypeCharset; // defined in 'ini.inc.php'
+
+		if (eregi("UTF-8", $contentTypeCharset))
+		{
+			$inputEncodingArg = " -i utf8";
+			$outputEncodingArg = " -o utf8";
+		}
+		else // if (eregi("ISO-8859-1", $contentTypeCharset))
+		{
+			$inputEncodingArg = " -i iso8859_1";
+			$outputEncodingArg = " -o iso8859_1";
+		}
+
 		$outputFile = tempnam($tempDirPath, "refbase-");
-		$cmd = $bibutilsPath . $program . " " . $tempFile . " > " . $outputFile;
+		$cmd = $bibutilsPath . $program . $inputEncodingArg . $outputEncodingArg . " " . $tempFile . " > " . $outputFile;
 		execute($cmd);
 
 		return $outputFile;
