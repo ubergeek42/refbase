@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./install.sql
 # Created:    02-Oct-04, 20:11
-# Modified:   06-Jan-06, 01:59
+# Modified:   04-Mar-06, 02:21
 
 # MySQL database structure & initial data (for use with 'latin1' character set)
 
@@ -103,7 +103,6 @@ CREATE TABLE `deleted` (
 # data for table `deleted`
 #
 
-
 # --------------------------------------------------------
 
 #
@@ -143,24 +142,28 @@ CREATE TABLE `formats` (
   `depends_id` mediumint(8) unsigned NOT NULL default '0',
   PRIMARY KEY  (`format_id`),
   KEY `format_name` (`format_name`)
-) TYPE=MyISAM AUTO_INCREMENT=13 ;
+) TYPE=MyISAM AUTO_INCREMENT=17 ;
 
 #
 # data for table `formats`
 #
 
-INSERT INTO `formats` VALUES (1, 'MODS XML','import', 'true', 'import_modsxml.php', '6', 1),
-(2, 'MODS XML','export', 'true', 'export_modsxml.php', '6', 1),
-(3, 'Text (CSV)','export', 'false', 'export_textcsv.php', '7', 1),
-(4, 'Bibtex','import', 'true', 'bibutils/import_bib2xml.php', '1', 2),
-(5, 'Bibtex','export', 'true', 'bibutils/export_xml2bib.php', '1', 2),
-(6, 'Endnote','import', 'true', 'bibutils/import_end2xml.php', '2', 2),
-(7, 'Endnote','export', 'true', 'bibutils/export_xml2end.php', '2', 2),
-(8, 'Pubmed XML','import', 'true', 'bibutils/import_med2xml.php', '5', 2),
-(9, 'RIS', 'import','true', 'bibutils/import_ris2xml.php', '3', 2),
-(10, 'RIS', 'export','true', 'bibutils/export_xml2ris.php', '3', 2),
-(11, 'RIS (ISI)','import', 'true', 'bibutils/import_isi2xml.php', '4', 2),
-(12, 'SRW XML','export', 'true', 'export_srwxml.php', '8', 1);
+INSERT INTO `formats` VALUES (1, 'MODS XML', 'import', 'true', 'bibutils/import_modsxml2refbase.php', '06', 2), 
+(2, 'MODS XML', 'export', 'true', 'export_modsxml.php', '06', 1), 
+(3, 'Text (CSV)', 'export', 'false', 'export_textcsv.php', '07', 1), 
+(4, 'Bibtex', 'import', 'true', 'bibutils/import_bib2refbase.php', '01', 2), 
+(5, 'Bibtex', 'export', 'true', 'bibutils/export_xml2bib.php', '01', 2), 
+(6, 'Endnote', 'import', 'true', 'bibutils/import_end2refbase.php', '02', 2), 
+(7, 'Endnote', 'export', 'true', 'bibutils/export_xml2end.php', '02', 2), 
+(8, 'Pubmed Medline', 'import', 'true', 'import_medline2refbase.php', '08', '1'),
+(9, 'Pubmed XML', 'import', 'true', 'bibutils/import_med2refbase.php', '09', 2), 
+(10, 'RIS', 'import', 'true', 'import_ris2refbase.php', '03', 1), 
+(11, 'RIS', 'export', 'true', 'bibutils/export_xml2ris.php', '03', 2), 
+(12, 'ISI', 'import', 'true', 'import_isi2refbase.php', '04', 1), 
+(13, 'CSA', 'import', 'true', 'import_csa2refbase.php', '05', '1'),
+(14, 'Copac', 'import', 'true', 'bibutils/import_copac2refbase.php', '10', '2'),
+(15, 'SRW XML', 'export', 'true', 'export_srwxml.php', '11', 1), 
+(16, 'OpenSearch RSS', 'export', 'true', 'export_osrss.php', '12', 1);
 
 # --------------------------------------------------------
 
@@ -182,9 +185,9 @@ CREATE TABLE `languages` (
 # data for table `languages`
 #
 
-INSERT INTO `languages` VALUES (1,'en','true','1'),
-(2,'de','true','2'),
-(3,'fr','true','3');
+INSERT INTO `languages` VALUES (1, 'en', 'true', '1'), 
+(2, 'de', 'true', '2'), 
+(3, 'fr', 'true', '3');
 
 # --------------------------------------------------------
 
@@ -415,34 +418,40 @@ CREATE TABLE `user_formats` (
   `show_format` enum('true','false') NOT NULL default 'true',
   PRIMARY KEY  (`user_format_id`),
   KEY `format_id` (`format_id`,`user_id`)
-) TYPE=MyISAM AUTO_INCREMENT=23 ;
+) TYPE=MyISAM AUTO_INCREMENT=29 ;
 
 #
 # data for table `user_formats`
 #
 
-INSERT INTO `user_formats` VALUES (1, 1, 1, 'true'),
-(2, 2, 1, 'true'),
-(3, 3, 1, 'true'),
-(4, 4, 1, 'true'),
-(5, 5, 1, 'true'),
-(6, 6, 1, 'true'),
-(7, 7, 1, 'true'),
-(8, 8, 1, 'true'),
-(9, 9, 1, 'true'),
-(10, 10, 1, 'true'),
-(11, 11, 1, 'true'),
-(12, 1, 0, 'true'),
-(13, 2, 0, 'false'),
-(14, 3, 0, 'false'),
-(15, 4, 0, 'true'),
-(16, 5, 0, 'false'),
-(17, 6, 0, 'true'),
-(18, 7, 0, 'false'),
-(19, 8, 0, 'true'),
-(20, 9, 0, 'true'),
-(21, 10, 0, 'false'),
-(22, 11, 0, 'true');
+INSERT INTO `user_formats` VALUES (1, 1, 0, 'false'),
+(2, 2, 0, 'false'),
+(3, 3, 0, 'false'),
+(4, 4, 0, 'false'),
+(5, 5, 0, 'false'),
+(6, 6, 0, 'false'),
+(7, 7, 0, 'false'),
+(8, 8, 0, 'false'),
+(9, 9, 0, 'false'),
+(10, 10, 0, 'false'),
+(11, 11, 0, 'false'),
+(12, 12, 0, 'false'),
+(13, 13, 0, 'false'),
+(14, 14, 0, 'false'),
+(15, 1, 1, 'true'),
+(16, 2, 1, 'true'),
+(17, 3, 1, 'false'),
+(18, 4, 1, 'true'),
+(19, 5, 1, 'true'),
+(20, 6, 1, 'true'),
+(21, 7, 1, 'true'),
+(22, 8, 1, 'true'),
+(23, 9, 1, 'true'),
+(24, 10, 1, 'true'),
+(25, 11, 1, 'true'),
+(26, 12, 1, 'true'),
+(27, 13, 1, 'true'),
+(28, 14, 1, 'true');
 
 # --------------------------------------------------------
 
@@ -528,22 +537,20 @@ CREATE TABLE `user_styles` (
   `show_style` enum('true','false') NOT NULL default 'true',
   PRIMARY KEY  (`user_style_id`),
   KEY `style_id` (`style_id`,`user_id`)
-) TYPE=MyISAM AUTO_INCREMENT=11 ;
+) TYPE=MyISAM AUTO_INCREMENT=9 ;
 
 #
 # data for table `user_styles`
 #
 
 INSERT INTO `user_styles` VALUES (1, 1, 0, 'true'),
-(2, 2, 0, 'true'),
-(3, 3, 0, 'true'),
-(4, 4, 0, 'true'),
-(5, 5, 0, 'true'),
-(6, 1, 1, 'true'),
-(7, 2, 1, 'true'),
-(8, 3, 1, 'true'),
-(9, 4, 1, 'true'),
-(10, 5, 1, 'true');
+(2, 4, 0, 'true'),
+(3, 6, 0, 'true'),
+(4, 7, 0, 'true'),
+(5, 1, 1, 'true'),
+(6, 4, 1, 'true'),
+(7, 6, 1, 'true'),
+(8, 7, 1, 'true');
 
 # --------------------------------------------------------
 
