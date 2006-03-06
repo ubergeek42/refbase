@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./install_utf8.sql
 # Created:    02-Oct-04, 20:11
-# Modified:   04-Mar-06, 02:21
+# Modified:   06-Mar-06, 01:39
 
 # MySQL database structure & initial data (for use with 'utf8' character set)
 
