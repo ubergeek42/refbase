@@ -24,4 +24,5 @@
 "code/xsl"=>"",
 "img"=>"img",
 "lit/install.sql"=>"install.sql",
+"lit/install_utf8.sql"=>"install_utf8.sql",
 "lit/update.sql"=>"update.sql"
