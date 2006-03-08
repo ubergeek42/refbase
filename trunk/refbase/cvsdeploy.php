@@ -12,7 +12,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
   //
   // Created:    15-Dec-05, 19:34
-  // Modified:   03-Jan-06, 19:30
+  // Modified:   05-Mar-06, 15:30
 
   // TO DO: * modify cp to handle globs
   //        * modify cp to do file -> dir copies
@@ -42,17 +42,23 @@
 <?php
   } else {
     if ($argc < 2) {
-      $dest = '/usr/local/www/refbase-cvs/';
+      $d = '/usr/local/www/refbase-cvs/';
     } else {
-      $dest = $argv[1];
+      $d = $argv[1];
     }
     $source = getcwd();
 
+    $dest = realpath($d);
+
     // OVERWRITES!!!!
-    if(is_dir($dest)){
-      mkdir($dest.'old');
-      cp($dest,$dest.'old');
+    if($dest!=FALSE){
+      $backup = $dest."-old";
+      mkdir($backup);
+      cp($dest,$backup);
       rm($dest);
+    }
+    else{
+      $dest = $d;
     }
 
     // make directories (clean this up later)
@@ -165,7 +171,4 @@
     }
     return true;
   }
-  
-  
-
 ?>
