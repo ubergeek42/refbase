@@ -101,7 +101,23 @@
 			$formVars["adminPassword"] = "";
 			$formVars["pathToMYSQL"] = "/usr/local/mysql/bin/mysql";
 			$formVars["databaseStructureFile"] = "./install.sql";
-			$formVars["pathToBibutils"] = "/usr/local/bin/";
+			
+			// Try to find bibutils
+			// If this is useful, it should probably be broken out as a function which both the install & update scripts can access
+			$formVars["pathToBibutils"] = "";
+			$sep = PATH_SEPARATOR;
+			$bibutilsLocations = array("/usr/bin", "/usr/local/bin", ".", "./refbase") + explode($sep, getenv("PATH"));
+			// We'll only check for one program to save time (and because, we currently don't allow the script to have a subset of the functionality provided by bibutils)
+			$bibutilsNames = array("xml2bib", "xml2bib.exe");
+			foreach ($bibutilsLocations as $loc)
+			{
+				foreach  ($bibutilsNames as $exe)
+				{
+					if(file_exists("$loc/$exe"))
+						$formVars["pathToBibutils"] = realpath($loc)."/";
+				}
+			}
+
 			$formVars["defaultCharacterSet"] = "latin1";
 		}
 
@@ -209,7 +225,7 @@
 
 			<input type="text" name="pathToBibutils" value="<?php echo $formVars["pathToBibutils"]; ?>" size="30">
 		</td>
-		<td valign="top">If you'd like to use the export functionality you need to install <a href="http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html" title="bibutils home page">bibutils</a> and enter the full path to the bibutils utilities here. The given path just serves as an example and your path spec may be different. The path must end with a slash!</td>
+		<td valign="top"><a href="http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html" title="bibutils home page">bibutils</a> provides additional import and export funtionality to refbase.  It is optional, but highly recommended.  The install script attempts to locate bibutils for you.  If you can't access bibutils from your path, please fill this value in manually (and, if you think other people might have bibutils installed to the same path, report it to the refbase developers).  The path must end with a slash!</td>
 	</tr>
 	<tr>
 		<td valign="top"><b>Default character set:</b></td>
@@ -562,6 +578,4 @@
 		if (isset($errors[$fieldName]))
 			echo "\n\t\t\t<b><span class=\"warning\">" . $errors[$fieldName] . "</span></b>\n\t\t\t<br>";
 	}
-
-	// --------------------------------------------------------------------
 ?>
