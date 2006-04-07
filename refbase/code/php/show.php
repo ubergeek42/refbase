@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   23-Jan-06, 21:16
+	// Modified:   08-Apr-06, 00:01
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -77,10 +77,15 @@
 	else
 		$showLinks = "1"; // for 'show.php' we'll always show the links column by default if the 'showLinks' parameter isn't set explicitly to "0"
 
-	if (isset($_REQUEST['showRows']))
+	if (isset($_REQUEST['showRows'])) // contains the desired number of search results (OpenSearch equivalent: '{count}')
 		$showRows = $_REQUEST['showRows'];
 	else
-		$showRows = 0; // assigning 0 will cause 'search.php' to use the default number
+		$showRows = $defaultNumberOfRecords; // '$defaultNumberOfRecords' is defined in 'ini.inc.php'
+
+	if (isset($_REQUEST['startRecord'])) // contains the offset of the first search result, starting with one (OpenSearch equivalent: '{startIndex}')
+		$rowOffset = ($_REQUEST['startRecord']) - 1; // first row number in a MySQL result set is 0 (not 1)
+	else
+		$rowOffset = ""; // if no value to the 'startRecord' parameter is given, we'll output records starting with the first record in the result set
 
 	if (isset($_REQUEST['citeStyle'])) // NOTE: while this parameter is normally called 'citeStyleSelector' (e.g. in 'search.php') we call it just 'citeStyle' here in an attempt to ease legibility of 'show.php' URLs
 		$citeStyle = $_REQUEST['citeStyle']; // get cite style
@@ -277,6 +282,17 @@
 	else
 		$browseByField = "";
 
+	if (isset($_REQUEST['queryType']))
+		$queryType = $_REQUEST['queryType']; // get 'queryType' parameter
+	else
+		$queryType = "";
+
+	if ($queryType == "or")
+		$queryType = "OR"; // we allow for lowercase 'or' but convert it to uppercase (in an attempt to increase consistency & legibility of the SQL query) 
+
+	if ($queryType != "OR") // if given value is 'OR' multiple parameters will be connected by 'OR', otherwise an 'AND' query will be performed
+		$queryType = "AND";
+
 
 	// normally, 'show.php' requires that parameters must be specified explicitly to gain any view that's different from the default view
 	// (which is columnar output as web view, display 5 records per page, show links but don't show query)
@@ -413,7 +429,7 @@
 	// -------------------------------------------------------------------------------------------------------------------
 
 
-	else // the script was called with at least one of the following parameters: 'record', 'date', 'year', 'author', 'title', 'keywords', 'abstract', 'area', 'type', 'contribution_id', 'thesis', 'without', 'selected', 'marked', 'cite_key', 'call_number', 'by'
+	else // the script was called with at least one of the following parameters: 'record', 'records', 'date', 'time', 'year', 'author', 'title', 'keywords', 'abstract', 'area', 'type', 'contribution_id', 'thesis', 'without', 'selected', 'marked', 'cite_key', 'call_number', 'by'
 	{
 		// CONSTRUCT SQL QUERY:
 
@@ -783,7 +799,7 @@
 
 		// Build the correct query URL:
 		// (we skip unnecessary parameters here since 'search.php' will use it's default values for them)
-		$queryURL = "sqlQuery=" . rawurlencode($query) . "&formType=sqlSearch&submit=" . $displayType . "&viewType=" . $viewType . "&showQuery=" . $showQuery . "&showLinks=" . $showLinks . "&showRows=" . $showRows . "&citeOrder=" . $citeOrder . "&citeStyleSelector=" . rawurlencode($citeStyle) . "&exportFormatSelector=" . rawurlencode($exportFormat) . "&exportType=" . $exportType . "&headerMsg=" . rawurlencode($headerMsg);
+		$queryURL = "sqlQuery=" . rawurlencode($query) . "&formType=sqlSearch&submit=" . $displayType . "&viewType=" . $viewType . "&showQuery=" . $showQuery . "&showLinks=" . $showLinks . "&showRows=" . $showRows . "&rowOffset=" . $rowOffset . "&citeOrder=" . $citeOrder . "&citeStyleSelector=" . rawurlencode($citeStyle) . "&exportFormatSelector=" . rawurlencode($exportFormat) . "&exportType=" . $exportType . "&headerMsg=" . rawurlencode($headerMsg);
 
 		// call 'search.php' with the correct query URL in order to display record details:
 		header("Location: search.php?$queryURL");
@@ -797,10 +813,11 @@
 	function connectConditionals()
 	{
 		global $multipleParameters;
+		global $queryType;
 
 		if ($multipleParameters)
 		{
-			$queryConnector = " AND";
+			$queryConnector = " " . $queryType;
 		}
 		else
 		{
