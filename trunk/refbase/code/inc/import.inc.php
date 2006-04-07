@@ -9,7 +9,7 @@
 	//
 	// File:       ./includes/import.inc.php
 	// Created:    13-Jan-06, 21:00
-	// Modified:   27-Feb-06, 22:47
+	// Modified:   28-Mar-06, 18:23
 
 	// This file contains functions
 	// that are used when importing
@@ -810,7 +810,7 @@
 			$sourceFormat = "MODS XML";
 
 		// BibTeX format:
-		elseif (preg_match("/^@\w+\{[^ ,\r\n]+ *, *[\r\n]/m", $sourceText)) // BibTeX records must at start with the "@" sign, followed by a type specifier and a cite key (such as in '@article{steffens1988,')
+		elseif (preg_match("/^@\w+\{[^ ,\r\n]* *, *[\r\n]/m", $sourceText)) // BibTeX records must at start with the "@" sign, followed by a type specifier and an optional cite key (such as in '@article{steffens1988,')
 			$sourceFormat = "Bibtex";
 
 		return $sourceFormat;
