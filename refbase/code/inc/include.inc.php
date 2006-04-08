@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   27-Feb-06, 02:05
+	// Modified:   07-Apr-06, 21:17
 
 	// This file contains important
 	// functions that are shared
@@ -127,6 +127,8 @@
 		global $password;
 		global $databaseName;
 
+		global $contentTypeCharset; // defined in 'ini.inc.php'
+
 		global $connection;
 
 		// If a connection parameter is not available, then use our own connection to avoid any locking problems
@@ -138,7 +140,14 @@
 				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 					showErrorMsg("The following error occurred while trying to connect to the host:", $oldQuery);
 
-			// (2) SELECT the database:
+			// (2) Set the connection character set:
+			//     more info at <http://dev.mysql.com/doc/refman/5.1/en/charset-connection.html>
+			if ($contentTypeCharset == "UTF-8")
+				queryMySQLDatabase("SET NAMES utf8", ""); // set the character set for this connection to 'utf8'
+			else
+				queryMySQLDatabase("SET NAMES latin1", ""); // by default, we establish a 'latin1' connection
+
+			// (3) SELECT the database:
 			//      (variables are set by include file 'db.inc.php'!)
 			if (!(mysql_select_db($databaseName, $connection)))
 				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
@@ -3518,17 +3527,26 @@ EOF;
 	{
 		global $contentTypeCharset; // defined in 'ini.inc.php'
 
-		$encodedString = htmlentities($sourceString, ENT_COMPAT, "$contentTypeCharset");
-		// Notes from <http://www.php.net/manual/en/function.htmlentities.php>:
-		//
-		//     - The optional second parameter lets you define what will be done with 'single' and "double" quotes.
-		//       It takes on one of three constants with the default being ENT_COMPAT:
-		//       ENT_COMPAT:   Will convert double-quotes and leave single-quotes alone.
-		//       ENT_QUOTES:   Will convert both double and single quotes.
-		//       ENT_NOQUOTES: Will leave both double and single quotes unconverted.
-		//
-		//     - The optional third argument defines the character set used in conversion. Support for this argument
-		//       was added in PHP 4.1.0. Presently, the ISO-8859-1 character set is used as the default.
+		// Note: I couldn't get 'htmlentities()' to work properly with UTF-8. Apparently, versions before PHP 4.3.11 and
+		// PHP 5.0.4 had a partially incorrect utf8 to htmlentities mapping (see <http://bugs.php.net/28067>). Therefore,
+		// in case of UTF-8, we'll use 'mb_convert_encoding()' instead.
+		// IMPORTANT: this requires multi-byte support enabled on your PHP server!
+		//            (i.e., PHP must be compiled with the '--enable-mbstring' configure option)
+		if ($contentTypeCharset == "UTF-8")
+			// converts from 'UTF-8' to 'HTML-ENTITIES' (see: <http://php.net/manual/en/function.mb-convert-encoding.php>)
+			$encodedString = mb_convert_encoding($sourceString, 'HTML-ENTITIES', "$contentTypeCharset");
+		else
+			$encodedString = htmlentities($sourceString, ENT_COMPAT, "$contentTypeCharset");
+			// Notes from <http://www.php.net/manual/en/function.htmlentities.php>:
+			//
+			//     - The optional second parameter lets you define what will be done with 'single' and "double" quotes.
+			//       It takes on one of three constants with the default being ENT_COMPAT:
+			//       ENT_COMPAT:   Will convert double-quotes and leave single-quotes alone.
+			//       ENT_QUOTES:   Will convert both double and single quotes.
+			//       ENT_NOQUOTES: Will leave both double and single quotes unconverted.
+			//
+			//     - The optional third argument defines the character set used in conversion. Support for this argument
+			//       was added in PHP 4.1.0. Presently, the ISO-8859-1 character set is used as the default.
 
 		return $encodedString;
 	}
