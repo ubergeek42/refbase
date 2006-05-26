@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   07-Apr-06, 21:17
+	// Modified:   25-May-06, 17:33
 
 	// This file contains important
 	// functions that are shared
@@ -1391,7 +1391,7 @@ EOF;
 	// --------------------------------------------------------------------
 
 	// Build the database query from user input provided by the "Search within Results" or "Display Options" forms above the query results list (which, in turn, was returned by 'search.php' or 'users.php', respectively):
-	function extractFormElementsRefineDisplay($queryTable, $displayType, $query, $showLinks, $userID)
+	function extractFormElementsRefineDisplay($queryTable, $displayType, $originalDisplayType, $query, $showLinks, $userID)
 	{
 		global $tableRefs, $tableUserData, $tableUsers; // defined in 'db.inc.php'
 
@@ -1412,8 +1412,6 @@ EOF;
 		{
 			$fieldSelector = $_POST['displayOptionsSelector']; // extract field name chosen by the user
 		}
-
-		$originalDisplayType = $_POST['originalDisplayType']; // extract the original value of the '$displayType' variable (which was included as a hidden form tag so that we can re-apply its value)
 
 
 		if ($displayType == "Search")
@@ -1474,7 +1472,8 @@ EOF;
 
 
 		// re-establish the original display type:
-		// (while this wouldn't be really necessary for List view, resetting '$displayType' to its original value is required for Browse view)
+		// (resetting '$displayType' to its original value is required for Browse view; for List view, it does also correct incorrect
+		//  display types such as 'Search' or 'Show'/'Hide' which stem from the submit buttons in the forms of the results header)
 		$displayType = $originalDisplayType;
 
 
