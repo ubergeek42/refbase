@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   28-Feb-06, 03:30
+	// Modified:   25-May-06, 16:57
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -62,6 +62,13 @@
 		$displayType = $_REQUEST['submit'];
 	else
 		$displayType = "";
+
+	// extract the original value of the '$displayType' variable:
+	// (which was included as a hidden form tag within the 'groupSearch' form of a search results page and within the 'queryResults' form in Details view)
+	if (isset($_REQUEST['originalDisplayType']))
+		$originalDisplayType = $_REQUEST['originalDisplayType'];
+	else
+		$originalDisplayType = "";
 
 	// get the referring URL (if any):
 	if (isset($_SERVER['HTTP_REFERER']))
@@ -133,15 +140,15 @@
 			{
 				// save an appropriate error message:
 				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForSQL"]."!</span></b>";
-	
+
 				// Write back session variables:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-	
+
 				if (ereg(".+sql_search.php", $referer)) // if the sql query was entered in the form provided by 'sql_search.php'
 					header("Location: " . $referer); // redirect to calling page
 				else
 					header("Location: index.php"); // redirect to main page ('index.php')
-	
+
 				exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			}
 		}
@@ -374,13 +381,13 @@
 	// --- Form within 'search.php': ---------------
 	elseif ($formType == "refineSearch" OR $formType == "displayOptions") // the user used the "Search within Results" (or "Display Options") form above the query results list (that was produced by 'search.php')
 		{
-			list($query, $displayType) = extractFormElementsRefineDisplay($tableRefs, $displayType, $sqlQuery, $showLinks, $userID); // function 'extractFormElementsRefineDisplay()' is defined in 'include.inc.php' since it's also used by 'users.php'
+			list($query, $displayType) = extractFormElementsRefineDisplay($tableRefs, $displayType, $originalDisplayType, $sqlQuery, $showLinks, $userID); // function 'extractFormElementsRefineDisplay()' is defined in 'include.inc.php' since it's also used by 'users.php'
 		}
 
 	// --- Form within 'search.php': ---------------
 	elseif ($formType == "queryResults") // the user clicked one of the buttons under the query results list (that was produced by 'search.php')
 		{
-			$query = extractFormElementsQueryResults($displayType, $showLinks, $citeOrder, $orderBy, $userID, $sqlQuery, $referer, $recordSerialsArray);
+			list($query, $displayType) = extractFormElementsQueryResults($displayType, $originalDisplayType, $showLinks, $citeOrder, $orderBy, $userID, $sqlQuery, $referer, $recordSerialsArray);
 		}
 
 	// --- Form 'extract.php': ---------------------
@@ -410,7 +417,7 @@
 	// --- My Groups Search Form within 'index.php': ---------------------
 	elseif ($formType == "groupSearch") // the user used the 'Show My Group' form on the main page ('index.php') or above the query results list (that was produced by 'search.php')
 		{
-			$query = extractFormElementsGroup($sqlQuery, $showLinks, $userID, $displayType);
+			$query = extractFormElementsGroup($sqlQuery, $showLinks, $userID, $displayType, $originalDisplayType);
 		}
 
 	// --------------------------------------------------------------------
@@ -611,13 +618,13 @@
 
 	// (4b) DISPLAY results:
 	if ($displayType == "Display") // display details for each of the selected records
-		displayDetails($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $showMaxRow, $headerMsg, $userID, $viewType, $selectedRecordsArray);
+		displayDetails($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $showMaxRow, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $formType);
 
 	elseif ($displayType == "Cite") // build a proper citation for each of the selected records
 		generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $headerMsg, $userID, $viewType, $selectedRecordsArray);
 
 	else // show all records in columnar style
-		displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $addCounterMax);
+		displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $addCounterMax, $formType);
 
 	// --------------------------------------------------------------------
 
@@ -627,7 +634,7 @@
 	// --------------------------------------------------------------------
 
 	// SHOW THE RESULTS IN AN HTML <TABLE> (columnar layout)
-	function displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $addCounterMax)
+	function displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $addCounterMax, $formType)
 	{
 		global $oldQuery; // This is required since the 'add record' link gets constructed outside this function, otherwise it would still contain the older query URL!)
 		global $searchReplaceActionsArray; // these variables are defined in 'ini.inc.php'
@@ -639,297 +646,297 @@
 		else // query does not contain the 'LIMIT' parameter
 			$orderBy = eregi_replace(".+ORDER BY (.+)","\\1",$query); // extract 'ORDER BY'... parameter
 
-	if (!ereg("^(Add|Remove|Export)$", $displayType) OR (ereg("^(Add|Remove|Export)$", $displayType) AND ($nothingChecked == false))) // we include 'Export' here since this routine will be used for feedback in case the user clicked the 'Export' button but didn't select any records
-	{
-		// If the query has results ...
-		if ($rowsFound > 0)
+		if (($formType != "queryResults") OR (($formType == "queryResults") AND !($nothingChecked))) // some checkboxes were marked within the 'queryResults' form (or the request stems from a different script without checkboxes)
 		{
-			// BEGIN RESULTS HEADER --------------------
-			// 1) First, initialize some variables that we'll need later on
-			if ($showLinks == "1" AND $displayType != "Browse") // we exclude the Browse view since it has a special type of 'Links' column and the 'file', 'url', 'doi' & 'isbn' columns weren't included in the query
-				$CounterMax = 4; // When displaying a 'Links' column truncate the last four columns (i.e., hide the 'file', 'url', 'doi' & 'isbn' columns)
-			else
-				$CounterMax = 0; // Otherwise don't hide any columns
-
-			// count the number of fields
-			$fieldsFound = mysql_num_fields($result);
-			if ($displayType != "Browse")
+			// If the query has results ...
+			if ($rowsFound > 0)
 			{
-				// hide those last columns that were added by the script and not by the user
-				$fieldsToDisplay = $fieldsFound-(2+$CounterMax+$addCounterMax); // (2+$CounterMax) -> $CounterMax is increased by 2 in order to hide the 'orig_record' & 'serial' columns (which were added to make checkboxes & dup warning work)
-																				// $addCounterMax is set to 1 when the field given in '$fileVisibilityException[0]' (defined in 'ini.inc.php') was added to the query, otherwise '$addCounterMax = 0'
-			}
-			else // for Browse view the 'orig_record' & 'serial' columns weren't included in the query
-				$fieldsToDisplay = $fieldsFound;
-
-			// Calculate the number of all visible columns (which is needed as colspan value inside some TD tags)
-			if ($showLinks == "1")
-				$NoColumns = (1+$fieldsToDisplay+1); // add checkbox & Links column
-			else
-				$NoColumns = (1+$fieldsToDisplay); // add checkbox column
-
-			// Although there might be an (older) query URL available, we build a new query URL for the page currently displayed. The variable '$oldQuery' will get included into every 'browse'/'field title'/'display details'/'edit record'/'add record' link. Plus it will get written into a hidden form tag so that it's available on 'display details' (batch display)
-			// The variable '$oldQuery' gets routed thru the 'display details' and 'record.php' forms to facilitate a link to the current results page on the subsequent receipt page that follows any add/edit/delete action!
-			$oldQuery = "sqlQuery=" . $query . "&amp;showQuery=" . $showQuery . "&amp;showLinks=" . $showLinks . "&amp;formType=sqlSearch&amp;showRows=" . $showRows . "&amp;rowOffset=" . $rowOffset . "&amp;submit=" . $displayType . "&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=" . $citeOrder;
-
-
-			// Note: we ommit the 'Search Within Results' form in print view! ('viewType=Print')
-			if ($viewType != "Print")
-			{
-				if ($displayType == "Browse")
-					$selectedField = preg_replace("/^SELECT (\w+).*/i","\\1",$query); // extract the field that's currently used in Browse view (so that we can re-select it in the drop-downs of the 'refineSearch' and 'displayOptions' forms)
+				// BEGIN RESULTS HEADER --------------------
+				// 1) First, initialize some variables that we'll need later on
+				if ($showLinks == "1" AND $displayType != "Browse") // we exclude the Browse view since it has a special type of 'Links' column and the 'file', 'url', 'doi' & 'isbn' columns weren't included in the query
+					$CounterMax = 4; // When displaying a 'Links' column truncate the last four columns (i.e., hide the 'file', 'url', 'doi' & 'isbn' columns)
 				else
-					$selectedField = "author"; // otherwise we'll always selected the 'author' field by default
+					$CounterMax = 0; // Otherwise don't hide any columns
 
-				// 2) Build a TABLE with forms containing options to show the user's groups, refine the search results or change the displayed columns:
+				// count the number of fields
+				$fieldsFound = mysql_num_fields($result);
+				if ($displayType != "Browse")
+				{
+					// hide those last columns that were added by the script and not by the user
+					$fieldsToDisplay = $fieldsFound-(2+$CounterMax+$addCounterMax); // (2+$CounterMax) -> $CounterMax is increased by 2 in order to hide the 'orig_record' & 'serial' columns (which were added to make checkboxes & dup warning work)
+																					// $addCounterMax is set to 1 when the field given in '$fileVisibilityException[0]' (defined in 'ini.inc.php') was added to the query, otherwise '$addCounterMax = 0'
+				}
+				else // for Browse view the 'orig_record' & 'serial' columns weren't included in the query
+					$fieldsToDisplay = $fieldsFound;
 
-				//    2a) Build a FORM with a popup containing the user's groups:
-				$formElementsGroup = buildGroupSearchElements("search.php", $queryURL, $query, $showQuery, $showLinks, $showRows, $displayType); // function 'buildGroupSearchElements()' is defined in 'include.inc.php'
+				// Calculate the number of all visible columns (which is needed as colspan value inside some TD tags)
+				if ($showLinks == "1")
+					$NoColumns = (1+$fieldsToDisplay+1); // add checkbox & Links column
+				else
+					$NoColumns = (1+$fieldsToDisplay); // add checkbox column
 
-				//    2b) Build a FORM containing options to refine the search results:
-				//        First, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
-				$refineSearchSelectorElements1 = "author, title, year, keywords, abstract, type, publication, abbrev_journal, volume, issue, pages, thesis, publisher, place, editor, series_title, language, area, notes, location, call_number, serial"; // these columns will be always visible (no matter whether the user is logged in or not)
-				$refineSearchSelectorElements2 = "marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key"; // these columns will be only visible to logged in users (in this case: the user specific fields from table 'user_data')
-				$refineSearchSelectorElementSelected = $selectedField; // this column will be selected by default
-				//        Call the 'buildRefineSearchElements()' function (defined in 'include.inc.php') which does the actual work:
-				$formElementsRefine = buildRefineSearchElements("search.php", $queryURL, $showQuery, $showLinks, $showRows, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected, $displayType);
-
-				//    2c) Build a FORM containing display options (show/hide columns or change the number of records displayed per page):
-				//        Again, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
-				$displayOptionsSelectorElements1 = "author, title, year, keywords, abstract, type, publication, abbrev_journal, volume, issue, pages, thesis, publisher, place, editor, series_title, language, area, notes, location, call_number, serial"; // these columns will be always visible (no matter whether the user is logged in or not)
-				$displayOptionsSelectorElements2 = "marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key"; // these columns will be only visible to logged in users (in this case: the user specific fields from table 'user_data')
-				$displayOptionsSelectorElementSelected = $selectedField; // this column will be selected by default
-				//        Call the 'buildDisplayOptionsElements()' function (defined in 'include.inc.php') which does the actual work:
-				$formElementsDisplayOptions = buildDisplayOptionsElements("search.php", $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $displayOptionsSelectorElements1, $displayOptionsSelectorElements2, $displayOptionsSelectorElementSelected, $fieldsToDisplay, $displayType);
-
-				echo displayResultsHeader("search.php", $formElementsGroup, $formElementsRefine, $formElementsDisplayOptions); // function 'displayResultsHeader()' is defined in 'results_header.inc.php'
-			}
+				// Although there might be an (older) query URL available, we build a new query URL for the page currently displayed. The variable '$oldQuery' will get included into every 'browse'/'field title'/'display details'/'edit record'/'add record' link. Plus it will get written into a hidden form tag so that it's available on 'display details' (batch display)
+				// The variable '$oldQuery' gets routed thru the 'display details' and 'record.php' forms to facilitate a link to the current results page on the subsequent receipt page that follows any add/edit/delete action!
+				$oldQuery = "sqlQuery=" . $query . "&amp;showQuery=" . $showQuery . "&amp;showLinks=" . $showLinks . "&amp;formType=sqlSearch&amp;showRows=" . $showRows . "&amp;rowOffset=" . $rowOffset . "&amp;submit=" . $displayType . "&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=" . $citeOrder;
 
 
-			//    and insert a divider line (which separates the 'Search Within Results' form from the browse links & results data below):
-			if ($viewType != "Print") // Note: we ommit the divider line in print view! ('viewType=Print')
-				echo "\n<hr align=\"center\" width=\"93%\">";
+				// Note: we ommit the 'Search Within Results' form in print view! ('viewType=Print')
+				if ($viewType != "Print")
+				{
+					if ($displayType == "Browse")
+						$selectedField = preg_replace("/^SELECT (\w+).*/i","\\1",$query); // extract the field that's currently used in Browse view (so that we can re-select it in the drop-downs of the 'refineSearch' and 'displayOptions' forms)
+					else
+						$selectedField = "author"; // otherwise we'll always selected the 'author' field by default
 
-			// 3) Build a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages
-			//    call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
-			$BrowseLinks = buildBrowseLinks("search.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", $displayType, $citeStyle, $citeOrder, $orderBy, $headerMsg, $viewType);
-			echo $BrowseLinks;
+					// 2) Build a TABLE with forms containing options to show the user's groups, refine the search results or change the displayed columns:
 
+					//    2a) Build a FORM with a popup containing the user's groups:
+					$formElementsGroup = buildGroupSearchElements("search.php", $queryURL, $query, $showQuery, $showLinks, $showRows, $displayType); // function 'buildGroupSearchElements()' is defined in 'include.inc.php'
 
-			// 4) Start a FORM
-			echo "\n<form action=\"search.php\" method=\"POST\" name=\"queryResults\">"
-					. "\n<input type=\"hidden\" name=\"formType\" value=\"queryResults\">"
-					. "\n<input type=\"hidden\" name=\"submit\" value=\"Display\">" // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
-					. "\n<input type=\"hidden\" name=\"orderBy\" value=\"" . rawurlencode($orderBy) . "\">" // embed the current ORDER BY parameter so that it can be re-applied when displaying details
-					. "\n<input type=\"hidden\" name=\"showQuery\" value=\"$showQuery\">" // embed the current value of '$showQuery' so that it's available on 'display details' (batch display) & 'cite'
-					. "\n<input type=\"hidden\" name=\"showLinks\" value=\"$showLinks\">" // embed the current value of '$showLinks' so that it's available on 'display details' (batch display) & 'cite'
-					. "\n<input type=\"hidden\" name=\"rowOffset\" value=\"$rowOffset\">" // embed the current value of '$rowOffset' so that it can be re-applied after the user pressed either of the 'Add', 'Remove', 'Remember' or 'Forget' buttons within the 'queryResults' form
-					// Note: the inclusion of '$rowOffset' here is only meant to support reloading of the same results page again after a user clicked the 'Add', 'Remove', 'Remember' or 'Forget' buttons
-					//       However, '$rowOffset' MUST NOT be set if the user clicked the 'Display' or 'Cite' button! Therefore we'll trap for this case at the top of the script.
-					. "\n<input type=\"hidden\" name=\"sqlQuery\" value=\"$queryURL\">" // embed the current sqlQuery so that it can be re-applied after the user pressed either of the 'Add', 'Remove', 'Remember' or 'Forget' buttons within the 'queryResults' form
-					. "\n<input type=\"hidden\" name=\"oldQuery\" value=\"" . rawurlencode($oldQuery) . "\">"; // embed the current value of '$oldQuery' so that it's available on 'display details' (batch display)
+					//    2b) Build a FORM containing options to refine the search results:
+					//        First, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
+					$refineSearchSelectorElements1 = "author, title, year, keywords, abstract, type, publication, abbrev_journal, volume, issue, pages, thesis, publisher, place, editor, series_title, language, area, notes, location, call_number, serial"; // these columns will be always visible (no matter whether the user is logged in or not)
+					$refineSearchSelectorElements2 = "marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key"; // these columns will be only visible to logged in users (in this case: the user specific fields from table 'user_data')
+					$refineSearchSelectorElementSelected = $selectedField; // this column will be selected by default
+					//        Call the 'buildRefineSearchElements()' function (defined in 'include.inc.php') which does the actual work:
+					$formElementsRefine = buildRefineSearchElements("search.php", $queryURL, $showQuery, $showLinks, $showRows, $refineSearchSelectorElements1, $refineSearchSelectorElements2, $refineSearchSelectorElementSelected, $displayType);
 
+					//    2c) Build a FORM containing display options (show/hide columns or change the number of records displayed per page):
+					//        Again, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
+					$displayOptionsSelectorElements1 = "author, title, year, keywords, abstract, type, publication, abbrev_journal, volume, issue, pages, thesis, publisher, place, editor, series_title, language, area, notes, location, call_number, serial"; // these columns will be always visible (no matter whether the user is logged in or not)
+					$displayOptionsSelectorElements2 = "marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key"; // these columns will be only visible to logged in users (in this case: the user specific fields from table 'user_data')
+					$displayOptionsSelectorElementSelected = $selectedField; // this column will be selected by default
+					//        Call the 'buildDisplayOptionsElements()' function (defined in 'include.inc.php') which does the actual work:
+					$formElementsDisplayOptions = buildDisplayOptionsElements("search.php", $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $displayOptionsSelectorElements1, $displayOptionsSelectorElements2, $displayOptionsSelectorElementSelected, $fieldsToDisplay, $displayType);
 
-			// 5) And start a TABLE, with column headers
-			echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the database results for your query\">";
-
-			//    for the column headers, start a TABLE ROW ...
-			echo "\n<tr>";
-
-			// ... print a marker ('x') column (which will hold the checkboxes within the results part)
-			if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
-				echo "\n\t<th align=\"left\" valign=\"top\">&nbsp;</th>";
-
-			// for each of the attributes in the result set...
-			for ($i=0; $i<$fieldsToDisplay; $i++)
-			{
-				// ... and print out each of the attribute names
-				// in that row as a separate TH (Table Header)...
-				$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
-				$HTMLafterLink = "</th>"; // close the table header tag
-				// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
-				// as well as the URL encoded query with the appropriate ORDER clause:
-				$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", $displayType, "", "", $viewType);
-				echo $tableHeaderLink; // print the attribute name as link
-			 }
-
-			if (($showLinks == "1") AND ($displayType != "Browse"))
-			{
-				$newORDER = ("ORDER BY url DESC, doi DESC"); // Build the appropriate ORDER BY clause to facilitate sorting by Links column
-
-				$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
-				$HTMLafterLink = "</th>"; // close the table header tag
-				// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
-				// as well as the URL encoded query with the appropriate ORDER clause:
-				$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", $displayType, "Links", "url", $viewType);
-				echo $tableHeaderLink; // print the attribute name as link
-			}
-			elseif (($showLinks == "1") AND ($displayType == "Browse"))
-			{
-				echo "\n\t<th align=\"left\" valign=\"top\">" // start the table header tag
-					. "Show" // in Browse view we simply provide a static column header
-					. "</th>"; // close the table header tag
-			}
-
-			// Finish the row
-			echo "\n</tr>";
-			// END RESULTS HEADER ----------------------
+					echo displayResultsHeader("search.php", $formElementsGroup, $formElementsRefine, $formElementsDisplayOptions); // function 'displayResultsHeader()' is defined in 'results_header.inc.php'
+				}
 
 
-			// BEGIN RESULTS DATA COLUMNS --------------
-			// Fetch one page of results (or less if on the last page)
-			// (i.e., upto the limit specified in $showRows) fetch a row into the $row array and ...
-			for ($rowCounter=0; (($rowCounter < $showRows) && ($row = @ mysql_fetch_array($result))); $rowCounter++)
-			{
-				// ... start a TABLE ROW ...
+				//    and insert a divider line (which separates the 'Search Within Results' form from the browse links & results data below):
+				if ($viewType != "Print") // Note: we ommit the divider line in print view! ('viewType=Print')
+					echo "\n<hr align=\"center\" width=\"93%\">";
+
+				// 3) Build a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages
+				//    call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
+				$BrowseLinks = buildBrowseLinks("search.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", $displayType, $citeStyle, $citeOrder, $orderBy, $headerMsg, $viewType);
+				echo $BrowseLinks;
+
+
+				// 4) Start a FORM
+				echo "\n<form action=\"search.php\" method=\"POST\" name=\"queryResults\">"
+						. "\n<input type=\"hidden\" name=\"formType\" value=\"queryResults\">"
+						. "\n<input type=\"hidden\" name=\"submit\" value=\"Display\">" // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
+						. "\n<input type=\"hidden\" name=\"orderBy\" value=\"" . rawurlencode($orderBy) . "\">" // embed the current ORDER BY parameter so that it can be re-applied when displaying details
+						. "\n<input type=\"hidden\" name=\"showQuery\" value=\"$showQuery\">" // embed the current value of '$showQuery' so that it's available on 'display details' (batch display) & 'cite'
+						. "\n<input type=\"hidden\" name=\"showLinks\" value=\"$showLinks\">" // embed the current value of '$showLinks' so that it's available on 'display details' (batch display) & 'cite'
+						. "\n<input type=\"hidden\" name=\"rowOffset\" value=\"$rowOffset\">" // embed the current value of '$rowOffset' so that it can be re-applied after the user pressed either of the 'Add', 'Remove', 'Remember' or 'Forget' buttons within the 'queryResults' form
+						// Note: the inclusion of '$rowOffset' here is only meant to support reloading of the same results page again after a user clicked the 'Add', 'Remove', 'Remember' or 'Forget' buttons
+						//       However, '$rowOffset' MUST NOT be set if the user clicked the 'Display' or 'Cite' button! Therefore we'll trap for this case at the top of the script.
+						. "\n<input type=\"hidden\" name=\"sqlQuery\" value=\"$queryURL\">" // embed the current sqlQuery so that it can be re-applied after the user pressed either of the 'Add', 'Remove', 'Remember' or 'Forget' buttons within the 'queryResults' form
+						. "\n<input type=\"hidden\" name=\"oldQuery\" value=\"" . rawurlencode($oldQuery) . "\">"; // embed the current value of '$oldQuery' so that it's available on 'display details' (batch display)
+
+
+				// 5) And start a TABLE, with column headers
+				echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the database results for your query\">";
+
+				//    for the column headers, start a TABLE ROW ...
 				echo "\n<tr>";
 
-				// ... print a column with a checkbox
+				// ... print a marker ('x') column (which will hold the checkboxes within the results part)
 				if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
-				{
-					echo "\n\t<td align=\"center\" valign=\"top\" width=\"10\">\n\t\t<input type=\"checkbox\" name=\"marked[]\" value=\"";
-					if ($displayType == "Browse")
-						echo $row[0];
-					else
-						echo $row["serial"];
-					echo "\" title=\"select this record\">";
+					echo "\n\t<th align=\"left\" valign=\"top\">&nbsp;</th>";
 
-					if (!empty($row["orig_record"]))
-					{
-						echo "\n\t\t<br>";
-						if ($row["orig_record"] < 0)
-							echo "<img src=\"img/ok.gif\" alt=\"(original)\" title=\"original record\" width=\"14\" height=\"16\" hspace=\"0\" border=\"0\">";
-						else // $row["orig_record"] > 0
-							echo "<img src=\"img/caution.gif\" alt=\"(duplicate)\" title=\"duplicate record\" width=\"5\" height=\"16\" hspace=\"0\" border=\"0\">";
-					}
-
-					echo "\n\t</td>";
-				}
-
-				// ... and print out each of the attributes
-				// in that row as a separate TD (Table Data)
+				// for each of the attributes in the result set...
 				for ($i=0; $i<$fieldsToDisplay; $i++)
 				{
-					$encodedRowAttribute = encodeHTML($row[$i]); // HTML encode higher ASCII characters (we write the data into a new variable since we still need unencoded data when including them into a link for Browse view)
+					// ... and print out each of the attribute names
+					// in that row as a separate TH (Table Header)...
+					$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
+					$HTMLafterLink = "</th>"; // close the table header tag
+					// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
+					// as well as the URL encoded query with the appropriate ORDER clause:
+					$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", $displayType, "", "", $viewType);
+					echo $tableHeaderLink; // print the attribute name as link
+				 }
 
-					// the following two lines will fetch the current attribute name:
-					$info = mysql_fetch_field ($result, $i); // get the meta-data for the attribute
-					$orig_fieldname = $info->name; // get the attribute name
-
-					if (($displayType == "Browse") AND ($i == 0)) // in Browse view we save the first field name to yet another variable (since it'll be needed when generating correct queries in the Links column)
-						$browseFieldName = $orig_fieldname;
-
-					// apply search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$searchReplaceActionsArray' (which is defined in 'ini.inc.php'):
-					foreach ($searchReplaceActionsArray as $fieldActionsArray)
-						if (in_array($orig_fieldname, $fieldActionsArray['fields']))
-							$encodedRowAttribute = searchReplaceText($fieldActionsArray['actions'], $encodedRowAttribute, true); // function 'searchReplaceText()' is defined in 'include.inc.php'
-
-					echo "\n\t<td valign=\"top\">" . $encodedRowAttribute . "</td>";
-				}
-
-				// embed appropriate links (if available):
-				if (($showLinks == "1") AND ($displayType != "Browse")) // we exclude Browse view since it will need a different type of link query (see below)
+				if (($showLinks == "1") AND ($displayType != "Browse"))
 				{
-					echo "\n\t<td valign=\"top\">";
+					$newORDER = ("ORDER BY url DESC, doi DESC"); // Build the appropriate ORDER BY clause to facilitate sorting by Links column
 
-					// print out available links:
-					// for List view, we'll use the '$showLinkTypesInListView' array that's defined in 'ini.inc.php'
-					// to specify which links shall be displayed (if available and if 'showLinks == 1')
-					// (for links of type DOI/URL/ISBN/XREF, only one link will be printed; order of preference: DOI, URL, ISBN, XREF)
-					printLinks($showLinkTypesInListView, $row, $showQuery, $showLinks, $userID, $viewType, $orderBy);
-
-					echo "\n\t</td>";
+					$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
+					$HTMLafterLink = "</th>"; // close the table header tag
+					// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
+					// as well as the URL encoded query with the appropriate ORDER clause:
+					$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", $displayType, "Links", "url", $viewType);
+					echo $tableHeaderLink; // print the attribute name as link
 				}
-
-				// for Browse view we'll incorporate links that will show all records whose field (given in '$orig_fieldname') matches the current value (given in '$row[0]'):
 				elseif (($showLinks == "1") AND ($displayType == "Browse"))
 				{
-					// ...extract the 'WHERE' clause from the SQL query to include it within the link URL:
-					$queryWhereClause = extractWhereClause($query); // function 'extractWhereClause()' is defined in 'include.inc.php'
-					$queryWhereClause = eregi_replace('^serial RLIKE "\.\+"','',$queryWhereClause); // strip generic WHERE clause if present
-
-					echo "\n\t<td valign=\"top\">";
-
-					echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20year%2C%20publication%2C%20volume%2C%20pages%20";
-
-					if (isset($_SESSION['loginEmail']) AND eregi("^(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)$", $browseFieldName)) // if a user is logged in and a user specific field is used in Browse view, we add the 'LEFT JOIN...' part to the 'FROM' clause:
-						echo "FROM%20" . $tableRefs . "%20LEFT%20JOIN%20" . $tableUserData . "%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
-					else
-						echo "FROM%20" . $tableRefs . "%20";
-
-					echo "WHERE%20";
-
-					if (!empty($queryWhereClause))
-						echo rawurlencode($queryWhereClause) . "%20AND%20";
-
-					echo $browseFieldName . "%20";
-
-					if (!empty($row[0]))
-						echo "=%20%22" . rawurlencode($row[0]) . "%22%20";
-					else
-						echo "IS%20NULL%20";
-
-					echo  "ORDER%20BY%20author%2C%20year%20DESC%2C%20publication" // use the default ORDER BY clause
-						. "&amp;showQuery=" . $showQuery
-						. "&amp;showLinks=" . $showLinks
-						. "&amp;showRows=" . $showRows
-						. "&amp;formType=sqlSearch"
-						. "&amp;viewType=" . $viewType
-						. "&amp;submit="
-						. "&amp;oldQuery=" . rawurlencode($oldQuery)
-						. "\"><img src=\"img/details.gif\" alt=\"records\" title=\"show records\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
-
-					echo "\n\t</td>";
+					echo "\n\t<th align=\"left\" valign=\"top\">" // start the table header tag
+						. "Show" // in Browse view we simply provide a static column header
+						. "</th>"; // close the table header tag
 				}
 
 				// Finish the row
 				echo "\n</tr>";
-			}
-			// Finish the table
-			echo "\n</table>";
-			// END RESULTS DATA COLUMNS ----------------
+				// END RESULTS HEADER ----------------------
 
-			// BEGIN RESULTS FOOTER --------------------
-			// Note: we ommit the results footer in print view! ('viewType=Print')
-			if ($viewType != "Print")
+
+				// BEGIN RESULTS DATA COLUMNS --------------
+				// Fetch one page of results (or less if on the last page)
+				// (i.e., upto the limit specified in $showRows) fetch a row into the $row array and ...
+				for ($rowCounter=0; (($rowCounter < $showRows) && ($row = @ mysql_fetch_array($result))); $rowCounter++)
+				{
+					// ... start a TABLE ROW ...
+					echo "\n<tr>";
+
+					// ... print a column with a checkbox
+					if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
+					{
+						echo "\n\t<td align=\"center\" valign=\"top\" width=\"10\">\n\t\t<input type=\"checkbox\" name=\"marked[]\" value=\"";
+						if ($displayType == "Browse")
+							echo $row[0];
+						else
+							echo $row["serial"];
+						echo "\" title=\"select this record\">";
+
+						if (!empty($row["orig_record"]))
+						{
+							echo "\n\t\t<br>";
+							if ($row["orig_record"] < 0)
+								echo "<img src=\"img/ok.gif\" alt=\"(original)\" title=\"original record\" width=\"14\" height=\"16\" hspace=\"0\" border=\"0\">";
+							else // $row["orig_record"] > 0
+								echo "<img src=\"img/caution.gif\" alt=\"(duplicate)\" title=\"duplicate record\" width=\"5\" height=\"16\" hspace=\"0\" border=\"0\">";
+						}
+
+						echo "\n\t</td>";
+					}
+
+					// ... and print out each of the attributes
+					// in that row as a separate TD (Table Data)
+					for ($i=0; $i<$fieldsToDisplay; $i++)
+					{
+						$encodedRowAttribute = encodeHTML($row[$i]); // HTML encode higher ASCII characters (we write the data into a new variable since we still need unencoded data when including them into a link for Browse view)
+
+						// the following two lines will fetch the current attribute name:
+						$info = mysql_fetch_field ($result, $i); // get the meta-data for the attribute
+						$orig_fieldname = $info->name; // get the attribute name
+
+						if (($displayType == "Browse") AND ($i == 0)) // in Browse view we save the first field name to yet another variable (since it'll be needed when generating correct queries in the Links column)
+							$browseFieldName = $orig_fieldname;
+
+						// apply search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$searchReplaceActionsArray' (which is defined in 'ini.inc.php'):
+						foreach ($searchReplaceActionsArray as $fieldActionsArray)
+							if (in_array($orig_fieldname, $fieldActionsArray['fields']))
+								$encodedRowAttribute = searchReplaceText($fieldActionsArray['actions'], $encodedRowAttribute, true); // function 'searchReplaceText()' is defined in 'include.inc.php'
+
+						echo "\n\t<td valign=\"top\">" . $encodedRowAttribute . "</td>";
+					}
+
+					// embed appropriate links (if available):
+					if (($showLinks == "1") AND ($displayType != "Browse")) // we exclude Browse view since it will need a different type of link query (see below)
+					{
+						echo "\n\t<td valign=\"top\">";
+
+						// print out available links:
+						// for List view, we'll use the '$showLinkTypesInListView' array that's defined in 'ini.inc.php'
+						// to specify which links shall be displayed (if available and if 'showLinks == 1')
+						// (for links of type DOI/URL/ISBN/XREF, only one link will be printed; order of preference: DOI, URL, ISBN, XREF)
+						printLinks($showLinkTypesInListView, $row, $showQuery, $showLinks, $userID, $viewType, $orderBy);
+
+						echo "\n\t</td>";
+					}
+
+					// for Browse view we'll incorporate links that will show all records whose field (given in '$orig_fieldname') matches the current value (given in '$row[0]'):
+					elseif (($showLinks == "1") AND ($displayType == "Browse"))
+					{
+						// ...extract the 'WHERE' clause from the SQL query to include it within the link URL:
+						$queryWhereClause = extractWhereClause($query); // function 'extractWhereClause()' is defined in 'include.inc.php'
+						$queryWhereClause = eregi_replace('^serial RLIKE "\.\+"','',$queryWhereClause); // strip generic WHERE clause if present
+
+						echo "\n\t<td valign=\"top\">";
+
+						echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20year%2C%20publication%2C%20volume%2C%20pages%20";
+
+						if (isset($_SESSION['loginEmail']) AND eregi("^(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)$", $browseFieldName)) // if a user is logged in and a user specific field is used in Browse view, we add the 'LEFT JOIN...' part to the 'FROM' clause:
+							echo "FROM%20" . $tableRefs . "%20LEFT%20JOIN%20" . $tableUserData . "%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
+						else
+							echo "FROM%20" . $tableRefs . "%20";
+
+						echo "WHERE%20";
+
+						if (!empty($queryWhereClause))
+							echo rawurlencode($queryWhereClause) . "%20AND%20";
+
+						echo $browseFieldName . "%20";
+
+						if (!empty($row[0]))
+							echo "=%20%22" . rawurlencode($row[0]) . "%22%20";
+						else
+							echo "IS%20NULL%20";
+
+						echo  "ORDER%20BY%20author%2C%20year%20DESC%2C%20publication" // use the default ORDER BY clause
+							. "&amp;showQuery=" . $showQuery
+							. "&amp;showLinks=" . $showLinks
+							. "&amp;showRows=" . $showRows
+							. "&amp;formType=sqlSearch"
+							. "&amp;viewType=" . $viewType
+							. "&amp;submit="
+							. "&amp;oldQuery=" . rawurlencode($oldQuery)
+							. "\"><img src=\"img/details.gif\" alt=\"records\" title=\"show records\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
+
+						echo "\n\t</td>";
+					}
+
+					// Finish the row
+					echo "\n</tr>";
+				}
+				// Finish the table
+				echo "\n</table>";
+				// END RESULTS DATA COLUMNS ----------------
+
+				// BEGIN RESULTS FOOTER --------------------
+				// Note: we ommit the results footer in print view! ('viewType=Print')
+				if ($viewType != "Print")
+				{
+					// Again, insert the (already constructed) BROWSE LINKS
+					// (i.e., a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages)
+					echo $BrowseLinks;
+
+					if (isset($_SESSION['user_permissions']) AND ((isset($_SESSION['loginEmail']) AND ereg("(allow_details_view|allow_cite|allow_user_groups|allow_export|allow_batch_export)", $_SESSION['user_permissions'])) OR (!isset($_SESSION['loginEmail']) AND ereg("(allow_details_view|allow_cite)", $_SESSION['user_permissions'])))) // if the 'user_permissions' session variable does contain any of the following: 'allow_details_view', 'allow_cite' -AND- if logged in, aditionally: 'allow_user_groups', 'allow_export', 'allow_batch_export'...
+						// ...Insert a divider line (which separates the results data from the forms in the footer):
+						echo "\n<hr align=\"center\" width=\"93%\">";
+
+					// Build a TABLE containing rows with buttons for displaying/citing selected records
+					// Call the 'buildResultsFooter()' function (which does the actual work):
+					$ResultsFooter = buildResultsFooter($NoColumns, $showRows, $citeStyle, $selectedRecordsArray);
+					echo $ResultsFooter;
+				}
+				// END RESULTS FOOTER ----------------------
+
+				// Finally, finish the form
+				echo "\n</form>";
+			}
+			else
 			{
-				// Again, insert the (already constructed) BROWSE LINKS
-				// (i.e., a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages)
-				echo $BrowseLinks;
-
-				if (isset($_SESSION['user_permissions']) AND ((isset($_SESSION['loginEmail']) AND ereg("(allow_details_view|allow_cite|allow_user_groups|allow_export|allow_batch_export)", $_SESSION['user_permissions'])) OR (!isset($_SESSION['loginEmail']) AND ereg("(allow_details_view|allow_cite)", $_SESSION['user_permissions'])))) // if the 'user_permissions' session variable does contain any of the following: 'allow_details_view', 'allow_cite' -AND- if logged in, aditionally: 'allow_user_groups', 'allow_export', 'allow_batch_export'...
-					// ...Insert a divider line (which separates the results data from the forms in the footer):
-					echo "\n<hr align=\"center\" width=\"93%\">";
-
-				// Build a TABLE containing rows with buttons for displaying/citing selected records
-				// Call the 'buildResultsFooter()' function (which does the actual work):
-				$ResultsFooter = buildResultsFooter($NoColumns, $showRows, $citeStyle, $selectedRecordsArray);
-				echo $ResultsFooter;
-			}
-			// END RESULTS FOOTER ----------------------
-
-			// Finally, finish the form
-			echo "\n</form>";
+				// Report that nothing was found:
+				$nothingFoundFeedback = nothingFound(false); // This is a clumsy workaround: by pretending that there were some records marked by the user ($nothingChecked = false) we force the 'nothingFound()' function to output "Sorry, but your query didn't produce any results!" instead of "No records selected..."
+				echo $nothingFoundFeedback;
+			}// end if $rowsFound body
 		}
-		else
+		else // if the user clicked either the 'Add' or the 'Remove' button on a search results page but did not mark some checkboxes in front of the records, we display a "No records selected..." warning:
 		{
-			// Report that nothing was found:
-			$nothingFoundFeedback = nothingFound(false); // This is a clumsy workaround: by pretending that there were some records marked by the user ($nothingChecked = false) we force the 'nothingFound()' function to output "Sorry, but your query didn't produce any results!" instead of "No records selected..."
+			// Report that nothing was selected:
+			$nothingFoundFeedback = nothingFound($nothingChecked);
 			echo $nothingFoundFeedback;
-		}// end if $rowsFound body
-	}
-	else // if the user clicked either the 'Add' or the 'Remove' button on a search results page but did not mark some checkboxes in front of the records, we display a "No records selected..." warning:
-	{
-		// Report that nothing was selected:
-		$nothingFoundFeedback = nothingFound($nothingChecked);
-		echo $nothingFoundFeedback;
-	}
+		}
 	}
 
 	// --------------------------------------------------------------------
 
 	// SHOW THE RESULTS IN AN HTML <TABLE> (horizontal layout)
-	function displayDetails($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $showMaxRow, $headerMsg, $userID, $viewType, $selectedRecordsArray)
+	function displayDetails($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $showMaxRow, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $formType)
 	{
 		global $filesBaseURL; // these variables are defined in 'ini.inc.php'
 		global $searchReplaceActionsArray;
@@ -939,343 +946,358 @@
 		global $openURLFormat;
 		global $isbnURLFormat;
 
-	// If the query has results ...
-	if ($rowsFound > 0)
-	{
-		// BEGIN RESULTS HEADER --------------------
-		// 1) First, initialize some variables that we'll need later on
-		if ($showLinks == "1")
-			$CounterMax = 4; // When displaying a 'Links' column truncate the last four columns (i.e., hide the 'file', 'url', 'doi' & 'isbn' columns)
-		else
-			$CounterMax = 0; // Otherwise don't hide any columns
-
-		if (isset($_SESSION['loginEmail'])) // if a user is logged in...
-			$CounterMax = ($CounterMax + 1); // ...we'll also need to hide the 'related' column (which isn't displayed in 'details view' but is only used to generate a link to related records)
-
-		// count the number of fields
-		$fieldsFound = mysql_num_fields($result);
-		// hide those last columns that were added by the script and not by the user
-		$fieldsToDisplay = $fieldsFound-(2+$CounterMax); // (2+$CounterMax) -> $CounterMax is increased by 2 in order to hide the 'orig_record' & 'serial' columns (which were added to make checkboxes & dup warning work)
-		// In summary, when displaying a 'Links' column and with a user being logged in, we hide the following fields: 'related, orig_record, serial, file, url, doi, isbn' (i.e., truncate the last seven columns)
-
-		// Calculate the number of all visible columns (which is needed as colspan value inside some TD tags)
-		if ($showLinks == "1") // in 'display details' layout, we simply set it to a fixed no of columns:
-			$NoColumns = 8; // 8 columns: checkbox, 3 x (field name + field contents), links
-		else
-			$NoColumns = 7; // 7 columns: checkbox, field name, field contents
-
-
-		// 2) Note: we ommit the 'Search Within Results' form when displaying details! (compare with 'displayColumns()' function)
-
-
-		// 3) Build a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages
-		//    call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
-		$BrowseLinks = buildBrowseLinks("search.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "Display", $citeStyle, $citeOrder, $orderBy, $headerMsg, $viewType);
-		echo $BrowseLinks;
-
-
-		// 4) Start a FORM
-		echo "\n<form action=\"search.php\" method=\"POST\" name=\"queryResults\">"
-				. "\n<input type=\"hidden\" name=\"formType\" value=\"queryResults\">"
-				. "\n<input type=\"hidden\" name=\"submit\" value=\"Display\">" // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
-				. "\n<input type=\"hidden\" name=\"orderBy\" value=\"" . rawurlencode($orderBy) . "\">" // embed the current ORDER BY parameter so that it can be re-applied when displaying details
-				. "\n<input type=\"hidden\" name=\"showQuery\" value=\"$showQuery\">" // embed the current value of '$showQuery' so that it's available on 'display details' (batch display) & 'cite'
-				. "\n<input type=\"hidden\" name=\"showLinks\" value=\"$showLinks\">" // embed the current value of '$showLinks' so that it's available on 'display details' (batch display) & 'cite'
-				. "\n<input type=\"hidden\" name=\"oldQuery\" value=\"" . rawurlencode($oldQuery) . "\">"; // embed the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
-
-
-		// 5) And start a TABLE, with column headers
-		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" width=\"95%\" summary=\"This table holds the database results for your query\">";
-
-		//    for the column headers, start a TABLE ROW ...
-		echo "\n<tr>";
-
-		// ... print a marker ('x') column (which will hold the checkboxes within the results part)
-		if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
-			echo "\n\t<th align=\"left\" valign=\"top\">&nbsp;</th>";
-
-		// ... print a record header
-		if (($showMaxRow-$rowOffset) == "1") // '$showMaxRow-$rowOffset' gives the number of displayed records for a particular page) // '($rowsFound == "1" || $showRows == "1")' wouldn't trap the case of a single record on the last of multiple results pages!
-				$recordHeader = "Record"; // use singular form if there's only one record to display
-		else
-				$recordHeader = "Records"; // use plural form if there are multiple records to display
-		echo "\n\t<th align=\"left\" valign=\"top\" colspan=\"6\">$recordHeader</th>";
-
-		if ($showLinks == "1")
-			{
-				$newORDER = ("ORDER BY url DESC, doi DESC"); // Build the appropriate ORDER BY clause to facilitate sorting by Links column
-
-				$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
-				$HTMLafterLink = "</th>"; // close the table header tag
-				// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
-				// as well as the URL encoded query with the appropriate ORDER clause:
-				$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, $newORDER, $result, "", $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "Display", "Links", "url", $viewType);
-				echo $tableHeaderLink; // print the attribute name as link
-			}
-
-		// Finish the row
-		echo "\n</tr>";
-		// END RESULTS HEADER ----------------------
-
-		// BEGIN RESULTS DATA COLUMNS --------------
-		// Fetch one page of results (or less if on the last page)
-		// (i.e., upto the limit specified in $showRows) fetch a row into the $row array and ...
-		for ($rowCounter=0; (($rowCounter < $showRows) && ($row = @ mysql_fetch_array($result))); $rowCounter++)
+		if (($formType != "queryResults") OR (($formType == "queryResults") AND !($nothingChecked))) // some checkboxes were marked within the 'queryResults' form (or the request stems from a different script without checkboxes)
 		{
-			// ... print out each of the attributes
-			// in that row as a separate TR (Table Row)
-			$recordData = ""; // make sure that buffer variable is empty
+			// If the query has results ...
+			if ($rowsFound > 0)
+			{
+				// BEGIN RESULTS HEADER --------------------
+				// 1) First, initialize some variables that we'll need later on
+				if ($showLinks == "1")
+					$CounterMax = 4; // When displaying a 'Links' column truncate the last four columns (i.e., hide the 'file', 'url', 'doi' & 'isbn' columns)
+				else
+					$CounterMax = 0; // Otherwise don't hide any columns
 
-			for ($i=0; $i<$fieldsToDisplay; $i++)
+				if (isset($_SESSION['loginEmail'])) // if a user is logged in...
+					$CounterMax = ($CounterMax + 1); // ...we'll also need to hide the 'related' column (which isn't displayed in Details view but is only used to generate a link to related records)
+
+				// count the number of fields
+				$fieldsFound = mysql_num_fields($result);
+				// hide those last columns that were added by the script and not by the user
+				$fieldsToDisplay = $fieldsFound-(2+$CounterMax); // (2+$CounterMax) -> $CounterMax is increased by 2 in order to hide the 'orig_record' & 'serial' columns (which were added to make checkboxes & dup warning work)
+				// In summary, when displaying a 'Links' column and with a user being logged in, we hide the following fields: 'related, orig_record, serial, file, url, doi, isbn' (i.e., truncate the last seven columns)
+
+				// Calculate the number of all visible columns (which is needed as colspan value inside some TD tags)
+				if ($showLinks == "1") // in 'display details' layout, we simply set it to a fixed no of columns:
+					$NoColumns = 8; // 8 columns: checkbox, 3 x (field name + field contents), links
+				else
+					$NoColumns = 7; // 7 columns: checkbox, field name, field contents
+
+
+				// 2) Note: we ommit the 'Search Within Results' form when displaying details! (compare with 'displayColumns()' function)
+
+
+				// 3) Build a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages
+				//    call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
+				$BrowseLinks = buildBrowseLinks("search.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "Display", $citeStyle, $citeOrder, $orderBy, $headerMsg, $viewType);
+				echo $BrowseLinks;
+
+
+				// 4) Start a FORM
+				echo "\n<form action=\"search.php\" method=\"POST\" name=\"queryResults\">"
+						. "\n<input type=\"hidden\" name=\"formType\" value=\"queryResults\">"
+						. "\n<input type=\"hidden\" name=\"submit\" value=\"Display\">" // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
+						. "\n<input type=\"hidden\" name=\"originalDisplayType\" value=\"$displayType\">" // embed the original value of the '$displayType' variable
+						. "\n<input type=\"hidden\" name=\"orderBy\" value=\"" . rawurlencode($orderBy) . "\">" // embed the current ORDER BY parameter so that it can be re-applied when displaying details
+						. "\n<input type=\"hidden\" name=\"showQuery\" value=\"$showQuery\">" // embed the current value of '$showQuery' so that it's available on 'display details' (batch display) & 'cite'
+						. "\n<input type=\"hidden\" name=\"showLinks\" value=\"$showLinks\">" // embed the current value of '$showLinks' so that it's available on 'display details' (batch display) & 'cite'
+						. "\n<input type=\"hidden\" name=\"rowOffset\" value=\"$rowOffset\">" // embed the current value of '$rowOffset' so that it can be re-applied after the user pressed either of the 'Add', 'Remove', 'Remember' or 'Forget' buttons within the 'queryResults' form
+						// Note: the inclusion of '$rowOffset' here is only meant to support reloading of the same results page again after a user clicked the 'Add', 'Remove', 'Remember' or 'Forget' buttons
+						//       However, '$rowOffset' MUST NOT be set if the user clicked the 'Display' or 'Cite' button! Therefore we'll trap for this case at the top of the script.
+						. "\n<input type=\"hidden\" name=\"sqlQuery\" value=\"$queryURL\">" // embed the current sqlQuery so that it can be re-applied after the user pressed either of the 'Add', 'Remove', 'Remember' or 'Forget' buttons within the 'queryResults' form
+						. "\n<input type=\"hidden\" name=\"oldQuery\" value=\"" . rawurlencode($oldQuery) . "\">"; // embed the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
+
+
+				// 5) And start a TABLE, with column headers
+				echo "\n<table align=\"center\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" width=\"95%\" summary=\"This table holds the database results for your query\">";
+
+				//    for the column headers, start a TABLE ROW ...
+				echo "\n<tr>";
+
+				// ... print a marker ('x') column (which will hold the checkboxes within the results part)
+				if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
+					echo "\n\t<th align=\"left\" valign=\"top\">&nbsp;</th>";
+
+				// ... print a record header
+				if (($showMaxRow-$rowOffset) == "1") // '$showMaxRow-$rowOffset' gives the number of displayed records for a particular page) // '($rowsFound == "1" || $showRows == "1")' wouldn't trap the case of a single record on the last of multiple results pages!
+						$recordHeader = "Record"; // use singular form if there's only one record to display
+				else
+						$recordHeader = "Records"; // use plural form if there are multiple records to display
+				echo "\n\t<th align=\"left\" valign=\"top\" colspan=\"6\">$recordHeader</th>";
+
+				if ($showLinks == "1")
+					{
+						$newORDER = ("ORDER BY url DESC, doi DESC"); // Build the appropriate ORDER BY clause to facilitate sorting by Links column
+
+						$HTMLbeforeLink = "\n\t<th align=\"left\" valign=\"top\">"; // start the table header tag
+						$HTMLafterLink = "</th>"; // close the table header tag
+						// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
+						// as well as the URL encoded query with the appropriate ORDER clause:
+						$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, $newORDER, $result, "", $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "Display", "Links", "url", $viewType);
+						echo $tableHeaderLink; // print the attribute name as link
+					}
+
+				// Finish the row
+				echo "\n</tr>";
+				// END RESULTS HEADER ----------------------
+
+				// BEGIN RESULTS DATA COLUMNS --------------
+				// Fetch one page of results (or less if on the last page)
+				// (i.e., upto the limit specified in $showRows) fetch a row into the $row array and ...
+				for ($rowCounter=0; (($rowCounter < $showRows) && ($row = @ mysql_fetch_array($result))); $rowCounter++)
 				{
-					// the following two lines will fetch the current attribute name:
-					$info = mysql_fetch_field ($result, $i); // get the meta-data for the attribute
-					$orig_fieldname = $info->name; // get the attribute name
+					// ... print out each of the attributes
+					// in that row as a separate TR (Table Row)
+					$recordData = ""; // make sure that buffer variable is empty
 
-					// for all the fields specified (-> all fields to the left):
-					if (ereg("^(author|title|year|volume|corporate_author|address|keywords|abstract|publisher|language|series_editor|series_volume|issn|area|notes|location|call_number|marked|user_keys|user_notes|user_groups|created_date|modified_date)$", $orig_fieldname))
+					for ($i=0; $i<$fieldsToDisplay; $i++)
 						{
-							$recordData .= "\n<tr>"; // ...start a new TABLE row
+							// the following two lines will fetch the current attribute name:
+							$info = mysql_fetch_field ($result, $i); // get the meta-data for the attribute
+							$orig_fieldname = $info->name; // get the attribute name
 
-							if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
-							{
-								if ($i == 0) // ... print a column with a checkbox if it's the first row of attribute data:
-									$recordData .= "\n\t<td align=\"left\" valign=\"top\" width=\"10\"><input type=\"checkbox\" name=\"marked[]\" value=\"" . $row["serial"] . "\" title=\"select this record\"></td>";
-								else // ... otherwise simply print an empty TD tag:
-									$recordData .= "\n\t<td valign=\"top\" width=\"10\">&nbsp;</td>";
-							}
-						}
-
-					// ... and print out each of the ATTRIBUTE NAMES:
-					// in that row as a bold link...
-					if (ereg("^(author|title|type|year|publication|abbrev_journal|volume|issue|pages|call_number|serial)$", $orig_fieldname)) // print a colored background (grey, by default)
-						{
-							$HTMLbeforeLink = "\n\t<td valign=\"top\" width=\"75\" class=\"mainfieldsbg\"><b>"; // start the (bold) TD tag
-							$HTMLafterLink = "</b></td>"; // close the (bold) TD tag
-						}
-					elseif (ereg("^(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key)$", $orig_fieldname)) // print a colored background (light orange, by default) for all the user specific fields
-						{
-							$HTMLbeforeLink = "\n\t<td valign=\"top\" width=\"75\" class=\"userfieldsbg\"><b>"; // start the (bold) TD tag
-							$HTMLafterLink = "</b></td>"; // close the (bold) TD tag
-						}
-					else // no colored background (by default)
-						{
-							$HTMLbeforeLink = "\n\t<td valign=\"top\" width=\"75\" class=\"otherfieldsbg\"><b>"; // start the (bold) TD tag
-							$HTMLafterLink = "</b></td>"; // close the (bold) TD tag
-						}
-					// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table data tag holding the current field's name
-					// as well as the URL encoded query with the appropriate ORDER clause:
-					$recordData .= buildFieldNameLinks("search.php", $query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "Display", "", "", $viewType);
-
-					// print the ATTRIBUTE DATA:
-					// first, calculate the correct colspan value for all the fields specified:
-					if (ereg("^(author|address|keywords|abstract|location|user_keys)$", $orig_fieldname))
-						$ColspanFields = 5; // supply an appropriate colspan value
-					elseif (ereg("^(title|corporate_author|notes|call_number|user_notes|user_groups)$", $orig_fieldname))
-						$ColspanFields = 3; // supply an appropriate colspan value
-
-					// then, start the TD tag, for all the fields specified:
-					if (ereg("^(author|title|corporate_author|address|keywords|abstract|notes|location|call_number|user_keys|user_notes|user_groups)$", $orig_fieldname)) // WITH colspan attribute:
-						if (ereg("^(author|title|call_number)$", $orig_fieldname)) // print a colored background (grey, by default)
-							$recordData .= "\n\t<td valign=\"top\" colspan=\"$ColspanFields\" class=\"mainfieldsbg\">"; // ...with colspan attribute & appropriate value
-						elseif (ereg("^(user_keys|user_notes|user_file|user_groups)$", $orig_fieldname)) // print a colored background (light orange, by default) for all the user specific fields
-							$recordData .= "\n\t<td valign=\"top\" colspan=\"$ColspanFields\" class=\"userfieldsbg\">"; // ...with colspan attribute & appropriate value
-						else // no colored background (by default)
-							$recordData .= "\n\t<td valign=\"top\" colspan=\"$ColspanFields\" class=\"otherfieldsbg\">"; // ...with colspan attribute & appropriate value
-
-					else // for all other fields WITHOUT colspan attribute:
-						if (ereg("^(type|year|publication|abbrev_journal|volume|issue|pages|serial)$", $orig_fieldname)) // print a colored background (grey, by default)
-							$recordData .= "\n\t<td valign=\"top\" class=\"mainfieldsbg\">"; // ...without colspan attribute
-						elseif (ereg("^(marked|copy|selected|user_file|cite_key)$", $orig_fieldname)) // print a colored background (light orange, by default) for all the user specific fields
-							$recordData .= "\n\t<td valign=\"top\" class=\"userfieldsbg\">"; // ...without colspan attribute
-						else // no colored background (by default)
-							$recordData .= "\n\t<td valign=\"top\" class=\"otherfieldsbg\">"; // ...without colspan attribute
-
-					if (ereg("^(author|title|year)$", $orig_fieldname)) // print author, title & year fields in bold
-						$recordData .= "<b>";
-
-					$row[$i] = encodeHTML($row[$i]); // HTML encode higher ASCII characters
-
-					if (ereg("^abstract$", $orig_fieldname)) // for the abstract field, transform newline ('\n') characters into <br> tags
-						$row[$i] = ereg_replace("\n", "<br>", $row[$i]);
-
-					// apply search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$searchReplaceActionsArray' (which is defined in 'ini.inc.php'):
-					foreach ($searchReplaceActionsArray as $fieldActionsArray)
-						if (in_array($orig_fieldname, $fieldActionsArray['fields']))
-							$row[$i] = searchReplaceText($fieldActionsArray['actions'], $row[$i], true); // function 'searchReplaceText()' is defined in 'include.inc.php'
-
-					$recordData .= $row[$i]; // print the attribute data
-
-					if (ereg("^(author|title|year)$", $orig_fieldname))
-						$recordData .= "</b>";
-
-					$recordData .= "</td>"; // finish the TD tag
-
-					// for all the fields specified (-> all fields to the right):
-					if (ereg("^(author|type|abbrev_journal|pages|thesis|address|keywords|abstract|editor|orig_title|abbrev_series_title|edition|medium|conference|approved|location|serial|selected|user_keys|user_file|cite_key|created_by|modified_by)$", $orig_fieldname))
-						{
-							if ($showLinks == "1")
+							// for all the fields specified (-> all fields to the left):
+							if (ereg("^(author|title|year|volume|corporate_author|address|keywords|abstract|publisher|language|series_editor|series_volume|issn|area|notes|location|call_number|marked|user_keys|user_notes|user_groups|created_date|modified_date)$", $orig_fieldname))
 								{
-									// ...embed appropriate links (if available):
-									if ($i == 0) // ... print a column with links if it's the first row of attribute data:
+									$recordData .= "\n<tr>"; // ...start a new TABLE row
+
+									if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
 									{
-										$recordData .= "\n\t<td valign=\"top\" width=\"50\" rowspan=\"2\">"; // note that this table cell spans the next row!
-
-										$linkArray = array(); // initialize array variable that will hold all available links
-
-										if (isset($_SESSION['user_permissions']) AND ereg("allow_edit", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_edit'...
-											// ... display a link that opens the edit form for this record:
-											$linkArray[] = "\n\t\t<a href=\"record.php?serialNo=" . $row["serial"] . "&amp;recordAction=edit"
-															. "&amp;oldQuery=" . rawurlencode($oldQuery)
-															. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit record\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
-
-										// show a link to any corresponding FILE if one of the following conditions is met:
-										// - the variable '$fileVisibility' (defined in 'ini.inc.php') is set to 'everyone'
-										// - the variable '$fileVisibility' is set to 'login' AND the user is logged in
-										// - the variable '$fileVisibility' is set to 'user-specific' AND the 'user_permissions' session variable contains 'allow_download'
-										// - the array variable '$fileVisibilityException' (defined in 'ini.inc.php') contains a pattern (in array element 1) that matches the contents of the field given (in array element 0)
-										if ($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND ereg("allow_download", $_SESSION['user_permissions']))) OR (!empty($fileVisibilityException) AND preg_match($fileVisibilityException[1], $row[$fileVisibilityException[0]])))
-										{
-											if (!empty($row["file"]))// if the 'file' field is NOT empty
-											{
-												if (isset($_SESSION['user_permissions']) AND ereg("allow_edit", $_SESSION['user_permissions']))
-													$prefix = "&nbsp;";
-												else
-													$prefix = "";
-
-												if (ereg("^(http|ftp)://", $row["file"])) // if the 'file' field contains a full URL (starting with "http://" or "ftp://")
-													$URLprefix = ""; // we don't alter the URL given in the 'file' field
-												else // if the 'file' field contains only a partial path (like 'polarbiol/10240001.pdf') or just a file name (like '10240001.pdf')
-													$URLprefix = $filesBaseURL; // use the base URL of the standard files directory as prefix ('$filesBaseURL' is defined in 'ini.inc.php')
-
-												if (eregi("\.pdf$", $row["file"])) // if the 'file' field contains a link to a PDF file
-													$linkArray[] = $prefix . "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file_PDF.gif\" alt=\"pdf\" title=\"download PDF file\" width=\"17\" height=\"17\" hspace=\"0\" border=\"0\"></a>"; // display a PDF file icon as download link
-												else
-													$linkArray[] = $prefix . "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file.gif\" alt=\"file\" title=\"download file\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link
-											}
-										}
-
-										// generate a link from the URL field:
-										if (!empty($row["url"])) // 'htmlentities()' is used to convert any '&' into '&amp;'
-											$linkArray[] = "\n\t\t<a href=\"" . encodeHTML($row["url"]) . "\"><img src=\"img/www.gif\" alt=\"url\" title=\"goto web page\" width=\"17\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
-
-										// generate a link from the DOI field:
-										if (!empty($row["doi"]))
-											$linkArray[] = "\n\t\t<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/doi.gif\" alt=\"doi\" title=\"goto web page (via DOI)\" width=\"17\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
-
-										// generate a link from the RELATED field:
-										if (isset($_SESSION['loginEmail'])) // if a user is logged in, show a link to any related records (if available):
-										{
-											if (!empty($row["related"]))
-											{
-												$relatedRecordsLink = buildRelatedRecordsLink($row["related"], $userID);
-
-												$linkArray[] = "\n\t\t<a href=\"" . $relatedRecordsLink . "\"><img src=\"img/related.gif\" alt=\"related\" title=\"display related records\" width=\"19\" height=\"16\" hspace=\"0\" border=\"0\"></a>";
-											}
-										}
-
-										// if an ISBN number exists for the current record, provide a link to an ISBN resolver:
-										if (!empty($isbnURLFormat) AND !empty($row["isbn"]))
-										{
-											// this is a stupid hack that maps the names of the '$row' array keys to those used
-											// by the '$formVars' array (which is required by function 'parsePlaceholderString()')
-											// (eventually, the '$formVars' array should use the MySQL field names as names for its array keys)
-											$formVars = buildFormVarsArray($row); // function 'buildFormVarsArray()' is defined in 'include.inc.php'
-
-											// auto-generate an ISBN link according to the naming scheme given in '$isbnURLFormat' (in 'ini.inc.php'):
-											$isbnURL = parsePlaceholderString($formVars, $isbnURLFormat, ""); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
-
-											$encodedURL = encodeHTML($isbnURL); // 'htmlentities()' is used to convert higher ASCII chars into its entities and any '&' into '&amp;'
-											$encodedURL = str_replace(" ", "%20", $encodedURL); // ensure that any spaces are also properly urlencoded
-
-											if (!empty($isbnURL))
-												$linkArray[] = "\n\t\t<a href=\"" . $encodedURL . "\"><img src=\"img/isbn.gif\" alt=\"isbn\" title=\"find book details (via ISBN)\" width=\"17\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
-										}
-
-										// provide a link to an OpenURL resolver:
-										// auto-generated OpenURL links are only included if the main bibliographic data (author/year/publication/volume/pages) are present
-										if (!empty($openURLFormat) AND !empty($row["author"]) AND !empty($row["year"]) AND !empty($row["publication"]) AND !empty($row["volume"]) AND !empty($row["pages"]))
-										{
-											if (!isset($formVars))// again, the stupid hack (see note above)
-												$formVars = buildFormVarsArray($row); // function 'buildFormVarsArray()' is defined in 'include.inc.php'
-
-											// auto-generate an OpenURL according to the naming scheme given in '$openURLFormat' (in 'ini.inc.php'):
-											$openURL = parsePlaceholderString($formVars, $openURLFormat, ""); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
-
-											$encodedURL = encodeHTML($openURL); // 'htmlentities()' is used to convert higher ASCII chars into its entities and any '&' into '&amp;'
-											$encodedURL = str_replace(" ", "%20", $encodedURL); // ensure that any spaces are also properly urlencoded
-
-											if (!empty($openURL))
-												$linkArray[] = "\n\t\t<a href=\"" . $encodedURL . "\"><img src=\"img/xref.gif\" alt=\"openurl\" title=\"find record details (via OpenURL)\" width=\"18\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
-										}
-
-										// merge links with delimiters appropriate for display in the Links column:
-										$recordData .=  mergeLinks($linkArray);
-
-										$recordData .= "\n\t</td>";
+										if ($i == 0) // ... print a column with a checkbox if it's the first row of attribute data:
+											$recordData .= "\n\t<td align=\"left\" valign=\"top\" width=\"10\"><input type=\"checkbox\" name=\"marked[]\" value=\"" . $row["serial"] . "\" title=\"select this record\"></td>";
+										else // ... otherwise simply print an empty TD tag:
+											$recordData .= "\n\t<td valign=\"top\" width=\"10\">&nbsp;</td>";
 									}
-
-									// ... for the second row (which consists of the second and third field), we don't print any table column tag at all since the links (printed in the first row) span this second row!
-									elseif ($i > 3) // ... for the third row up to the last row, simply print an empty TD tag:
-										$recordData .= "\n\t<td valign=\"top\" width=\"50\">&nbsp;</td>";
 								}
 
-							$recordData .= "\n</tr>"; // ...and finish the row
+							// ... and print out each of the ATTRIBUTE NAMES:
+							// in that row as a bold link...
+							if (ereg("^(author|title|type|year|publication|abbrev_journal|volume|issue|pages|call_number|serial)$", $orig_fieldname)) // print a colored background (grey, by default)
+								{
+									$HTMLbeforeLink = "\n\t<td valign=\"top\" width=\"75\" class=\"mainfieldsbg\"><b>"; // start the (bold) TD tag
+									$HTMLafterLink = "</b></td>"; // close the (bold) TD tag
+								}
+							elseif (ereg("^(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key)$", $orig_fieldname)) // print a colored background (light orange, by default) for all the user specific fields
+								{
+									$HTMLbeforeLink = "\n\t<td valign=\"top\" width=\"75\" class=\"userfieldsbg\"><b>"; // start the (bold) TD tag
+									$HTMLafterLink = "</b></td>"; // close the (bold) TD tag
+								}
+							else // no colored background (by default)
+								{
+									$HTMLbeforeLink = "\n\t<td valign=\"top\" width=\"75\" class=\"otherfieldsbg\"><b>"; // start the (bold) TD tag
+									$HTMLafterLink = "</b></td>"; // close the (bold) TD tag
+								}
+							// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table data tag holding the current field's name
+							// as well as the URL encoded query with the appropriate ORDER clause:
+							$recordData .= buildFieldNameLinks("search.php", $query, $oldQuery, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "Display", "", "", $viewType);
+
+							// print the ATTRIBUTE DATA:
+							// first, calculate the correct colspan value for all the fields specified:
+							if (ereg("^(author|address|keywords|abstract|location|user_keys)$", $orig_fieldname))
+								$ColspanFields = 5; // supply an appropriate colspan value
+							elseif (ereg("^(title|corporate_author|notes|call_number|user_notes|user_groups)$", $orig_fieldname))
+								$ColspanFields = 3; // supply an appropriate colspan value
+
+							// then, start the TD tag, for all the fields specified:
+							if (ereg("^(author|title|corporate_author|address|keywords|abstract|notes|location|call_number|user_keys|user_notes|user_groups)$", $orig_fieldname)) // WITH colspan attribute:
+								if (ereg("^(author|title|call_number)$", $orig_fieldname)) // print a colored background (grey, by default)
+									$recordData .= "\n\t<td valign=\"top\" colspan=\"$ColspanFields\" class=\"mainfieldsbg\">"; // ...with colspan attribute & appropriate value
+								elseif (ereg("^(user_keys|user_notes|user_file|user_groups)$", $orig_fieldname)) // print a colored background (light orange, by default) for all the user specific fields
+									$recordData .= "\n\t<td valign=\"top\" colspan=\"$ColspanFields\" class=\"userfieldsbg\">"; // ...with colspan attribute & appropriate value
+								else // no colored background (by default)
+									$recordData .= "\n\t<td valign=\"top\" colspan=\"$ColspanFields\" class=\"otherfieldsbg\">"; // ...with colspan attribute & appropriate value
+
+							else // for all other fields WITHOUT colspan attribute:
+								if (ereg("^(type|year|publication|abbrev_journal|volume|issue|pages|serial)$", $orig_fieldname)) // print a colored background (grey, by default)
+									$recordData .= "\n\t<td valign=\"top\" class=\"mainfieldsbg\">"; // ...without colspan attribute
+								elseif (ereg("^(marked|copy|selected|user_file|cite_key)$", $orig_fieldname)) // print a colored background (light orange, by default) for all the user specific fields
+									$recordData .= "\n\t<td valign=\"top\" class=\"userfieldsbg\">"; // ...without colspan attribute
+								else // no colored background (by default)
+									$recordData .= "\n\t<td valign=\"top\" class=\"otherfieldsbg\">"; // ...without colspan attribute
+
+							if (ereg("^(author|title|year)$", $orig_fieldname)) // print author, title & year fields in bold
+								$recordData .= "<b>";
+
+							$row[$i] = encodeHTML($row[$i]); // HTML encode higher ASCII characters
+
+							if (ereg("^abstract$", $orig_fieldname)) // for the abstract field, transform newline ('\n') characters into <br> tags
+								$row[$i] = ereg_replace("\n", "<br>", $row[$i]);
+
+							// apply search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$searchReplaceActionsArray' (which is defined in 'ini.inc.php'):
+							foreach ($searchReplaceActionsArray as $fieldActionsArray)
+								if (in_array($orig_fieldname, $fieldActionsArray['fields']))
+									$row[$i] = searchReplaceText($fieldActionsArray['actions'], $row[$i], true); // function 'searchReplaceText()' is defined in 'include.inc.php'
+
+							$recordData .= $row[$i]; // print the attribute data
+
+							if (ereg("^(author|title|year)$", $orig_fieldname))
+								$recordData .= "</b>";
+
+							$recordData .= "</td>"; // finish the TD tag
+
+							// for all the fields specified (-> all fields to the right):
+							if (ereg("^(author|type|abbrev_journal|pages|thesis|address|keywords|abstract|editor|orig_title|abbrev_series_title|edition|medium|conference|approved|location|serial|selected|user_keys|user_file|cite_key|created_by|modified_by)$", $orig_fieldname))
+								{
+									if ($showLinks == "1")
+										{
+											// ...embed appropriate links (if available):
+											if ($i == 0) // ... print a column with links if it's the first row of attribute data:
+											{
+												$recordData .= "\n\t<td valign=\"top\" width=\"50\" rowspan=\"2\">"; // note that this table cell spans the next row!
+
+												$linkArray = array(); // initialize array variable that will hold all available links
+
+												if (isset($_SESSION['user_permissions']) AND ereg("allow_edit", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_edit'...
+													// ... display a link that opens the edit form for this record:
+													$linkArray[] = "\n\t\t<a href=\"record.php?serialNo=" . $row["serial"] . "&amp;recordAction=edit"
+																	. "&amp;oldQuery=" . rawurlencode($oldQuery)
+																	. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit record\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
+
+												// show a link to any corresponding FILE if one of the following conditions is met:
+												// - the variable '$fileVisibility' (defined in 'ini.inc.php') is set to 'everyone'
+												// - the variable '$fileVisibility' is set to 'login' AND the user is logged in
+												// - the variable '$fileVisibility' is set to 'user-specific' AND the 'user_permissions' session variable contains 'allow_download'
+												// - the array variable '$fileVisibilityException' (defined in 'ini.inc.php') contains a pattern (in array element 1) that matches the contents of the field given (in array element 0)
+												if ($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND ereg("allow_download", $_SESSION['user_permissions']))) OR (!empty($fileVisibilityException) AND preg_match($fileVisibilityException[1], $row[$fileVisibilityException[0]])))
+												{
+													if (!empty($row["file"]))// if the 'file' field is NOT empty
+													{
+														if (isset($_SESSION['user_permissions']) AND ereg("allow_edit", $_SESSION['user_permissions']))
+															$prefix = "&nbsp;";
+														else
+															$prefix = "";
+
+														if (ereg("^(https?|ftp)://", $row["file"])) // if the 'file' field contains a full URL (starting with "http://", "https://" or "ftp://")
+															$URLprefix = ""; // we don't alter the URL given in the 'file' field
+														else // if the 'file' field contains only a partial path (like 'polarbiol/10240001.pdf') or just a file name (like '10240001.pdf')
+															$URLprefix = $filesBaseURL; // use the base URL of the standard files directory as prefix ('$filesBaseURL' is defined in 'ini.inc.php')
+
+														if (eregi("\.pdf$", $row["file"])) // if the 'file' field contains a link to a PDF file
+															$linkArray[] = $prefix . "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file_PDF.gif\" alt=\"pdf\" title=\"download PDF file\" width=\"17\" height=\"17\" hspace=\"0\" border=\"0\"></a>"; // display a PDF file icon as download link
+														else
+															$linkArray[] = $prefix . "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file.gif\" alt=\"file\" title=\"download file\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link
+													}
+												}
+
+												// generate a link from the URL field:
+												if (!empty($row["url"])) // 'htmlentities()' is used to convert any '&' into '&amp;'
+													$linkArray[] = "\n\t\t<a href=\"" . encodeHTML($row["url"]) . "\"><img src=\"img/www.gif\" alt=\"url\" title=\"goto web page\" width=\"17\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
+
+												// generate a link from the DOI field:
+												if (!empty($row["doi"]))
+													$linkArray[] = "\n\t\t<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/doi.gif\" alt=\"doi\" title=\"goto web page (via DOI)\" width=\"17\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
+
+												// generate a link from the RELATED field:
+												if (isset($_SESSION['loginEmail'])) // if a user is logged in, show a link to any related records (if available):
+												{
+													if (!empty($row["related"]))
+													{
+														$relatedRecordsLink = buildRelatedRecordsLink($row["related"], $userID);
+
+														$linkArray[] = "\n\t\t<a href=\"" . $relatedRecordsLink . "\"><img src=\"img/related.gif\" alt=\"related\" title=\"display related records\" width=\"19\" height=\"16\" hspace=\"0\" border=\"0\"></a>";
+													}
+												}
+
+												// if an ISBN number exists for the current record, provide a link to an ISBN resolver:
+												if (!empty($isbnURLFormat) AND !empty($row["isbn"]))
+												{
+													// this is a stupid hack that maps the names of the '$row' array keys to those used
+													// by the '$formVars' array (which is required by function 'parsePlaceholderString()')
+													// (eventually, the '$formVars' array should use the MySQL field names as names for its array keys)
+													$formVars = buildFormVarsArray($row); // function 'buildFormVarsArray()' is defined in 'include.inc.php'
+
+													// auto-generate an ISBN link according to the naming scheme given in '$isbnURLFormat' (in 'ini.inc.php'):
+													$isbnURL = parsePlaceholderString($formVars, $isbnURLFormat, ""); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
+
+													$encodedURL = encodeHTML($isbnURL); // 'htmlentities()' is used to convert higher ASCII chars into its entities and any '&' into '&amp;'
+													$encodedURL = str_replace(" ", "%20", $encodedURL); // ensure that any spaces are also properly urlencoded
+
+													if (!empty($isbnURL))
+														$linkArray[] = "\n\t\t<a href=\"" . $encodedURL . "\"><img src=\"img/isbn.gif\" alt=\"isbn\" title=\"find book details (via ISBN)\" width=\"17\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
+												}
+
+												// provide a link to an OpenURL resolver:
+												// auto-generated OpenURL links are only included if the main bibliographic data (author/year/publication/volume/pages) are present
+												if (!empty($openURLFormat) AND !empty($row["author"]) AND !empty($row["year"]) AND !empty($row["publication"]) AND !empty($row["volume"]) AND !empty($row["pages"]))
+												{
+													// again, the stupid hack (see note above)
+													$formVars = buildFormVarsArray($row); // function 'buildFormVarsArray()' is defined in 'include.inc.php'
+
+													// auto-generate an OpenURL according to the naming scheme given in '$openURLFormat' (in 'ini.inc.php'):
+													$openURL = parsePlaceholderString($formVars, $openURLFormat, ""); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
+
+													$encodedURL = encodeHTML($openURL); // 'htmlentities()' is used to convert higher ASCII chars into its entities and any '&' into '&amp;'
+													$encodedURL = str_replace(" ", "%20", $encodedURL); // ensure that any spaces are also properly urlencoded
+
+													if (!empty($openURL))
+														$linkArray[] = "\n\t\t<a href=\"" . $encodedURL . "\"><img src=\"img/xref.gif\" alt=\"openurl\" title=\"find record details (via OpenURL)\" width=\"18\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
+												}
+
+												// merge links with delimiters appropriate for display in the Links column:
+												$recordData .=  mergeLinks($linkArray);
+
+												$recordData .= "\n\t</td>";
+											}
+
+											// ... for the second row (which consists of the second and third field), we don't print any table column tag at all since the links (printed in the first row) span this second row!
+											elseif ($i > 3) // ... for the third row up to the last row, simply print an empty TD tag:
+												$recordData .= "\n\t<td valign=\"top\" width=\"50\">&nbsp;</td>";
+										}
+
+									$recordData .= "\n</tr>"; // ...and finish the row
+								}
 						}
+
+					if ($viewType != "Print") // supply an appropriate colspan value
+						$ColspanFields = $NoColumns;
+					else // print view (i.e., no marker column)
+						$ColspanFields = ($NoColumns - 1);
+
+					// Print out an URL that links directly to this record:
+					$recordData .= "\n<tr>" // start a new TR (Table Row)
+								. "\n\t<td colspan=\"$ColspanFields\" align=\"center\" class=\"smaller\"><a href=\"" . $databaseBaseURL . "show.php?record=" . $row["serial"] . "\" title=\"copy this URL to directly link to this record\">Permanent link to this record</a></td>"
+								. "\n</tr>";
+
+					// Append a divider line if it's not the last (or only) record on the page:
+					if ((($rowCounter+1) < $showRows) && (($rowCounter+1) < $rowsFound))
+						if (!(($showMaxRow == $rowsFound) && (($rowCounter+1) == ($showMaxRow-$rowOffset)))) // if we're NOT on the *last* page processing the *last* record... ('$showMaxRow-$rowOffset' gives the number of displayed records for a particular page)
+							$recordData .= "\n<tr>"
+								. "\n\t<td colspan=\"$ColspanFields\">&nbsp;</td>"
+								. "\n</tr>"
+								. "\n<tr>"
+								. "\n\t<td colspan=\"$ColspanFields\"><hr align=\"left\" width=\"100%\"></td>"
+								. "\n</tr>"
+								. "\n<tr>"
+								. "\n\t<td colspan=\"$ColspanFields\">&nbsp;</td>"
+								. "\n</tr>";
+
+					echo $recordData;
 				}
+				// Finish the table
+				echo "\n</table>";
+				// END RESULTS DATA COLUMNS ----------------
 
-			if ($viewType != "Print") // supply an appropriate colspan value
-				$ColspanFields = $NoColumns;
-			else // print view (i.e., no marker column)
-				$ColspanFields = ($NoColumns - 1);
+				// BEGIN RESULTS FOOTER --------------------
+				// Note: we ommit the results footer in print view! ('viewType=Print')
+				if ($viewType != "Print")
+				{
+					// Again, insert the (already constructed) BROWSE LINKS
+					// (i.e., a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages)
+					echo $BrowseLinks;
 
-			// Print out an URL that links directly to this record:
-			$recordData .= "\n<tr>" // start a new TR (Table Row)
-						. "\n\t<td colspan=\"$ColspanFields\" align=\"center\" class=\"smaller\"><a href=\"" . $databaseBaseURL . "show.php?record=" . $row["serial"] . "\" title=\"copy this URL to directly link to this record\">Permanent link to this record</a></td>"
-						. "\n</tr>";
+					// Build a TABLE containing rows with buttons for displaying/citing selected records
+					// Call the 'buildResultsFooter()' function (which does the actual work):
+					$ResultsFooter = buildResultsFooter($NoColumns, $showRows, $citeStyle, $selectedRecordsArray);
+					echo $ResultsFooter;
+				}
+				// END RESULTS FOOTER ----------------------
 
-			// Append a divider line if it's not the last (or only) record on the page:
-			if ((($rowCounter+1) < $showRows) && (($rowCounter+1) < $rowsFound))
-				if (!(($showMaxRow == $rowsFound) && (($rowCounter+1) == ($showMaxRow-$rowOffset)))) // if we're NOT on the *last* page processing the *last* record... ('$showMaxRow-$rowOffset' gives the number of displayed records for a particular page)
-					$recordData .= "\n<tr>"
-						. "\n\t<td colspan=\"$ColspanFields\">&nbsp;</td>"
-						. "\n</tr>"
-						. "\n<tr>"
-						. "\n\t<td colspan=\"$ColspanFields\"><hr align=\"left\" width=\"100%\"></td>"
-						. "\n</tr>"
-						. "\n<tr>"
-						. "\n\t<td colspan=\"$ColspanFields\">&nbsp;</td>"
-						. "\n</tr>";
-
-			echo $recordData;
+				// Finally, finish the form
+				echo "\n</form>";
+			}
+			else
+			{
+				// Report that nothing was found:
+				$nothingFoundFeedback = nothingFound(false); // This is a clumsy workaround: by pretending that there were some records marked by the user ($nothingChecked = false) we force the 'nothingFound()' function to output "Sorry, but your query didn't produce any results!" instead of "No records selected..."
+				echo $nothingFoundFeedback;
+			}// end if $rowsFound body
 		}
-		// Finish the table
-		echo "\n</table>";
-		// END RESULTS DATA COLUMNS ----------------
-
-		// BEGIN RESULTS FOOTER --------------------
-		// Note: we ommit the results footer in print view! ('viewType=Print')
-		if ($viewType != "Print")
+		else // if the user clicked one of the buttons in the 'queryResults' form on a search results page but did not mark some checkboxes in front of the records, we display a "No records selected..." warning:
 		{
-			// Again, insert the (already constructed) BROWSE LINKS
-			// (i.e., a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages)
-			echo $BrowseLinks;
-
-			// Build a TABLE containing rows with buttons for displaying/citing selected records
-			// Call the 'buildResultsFooter()' function (which does the actual work):
-			$ResultsFooter = buildResultsFooter($NoColumns, $showRows, $citeStyle, $selectedRecordsArray);
-			echo $ResultsFooter;
+			// Report that nothing was selected:
+			$nothingFoundFeedback = nothingFound($nothingChecked);
+			echo $nothingFoundFeedback;
 		}
-		// END RESULTS FOOTER ----------------------
-
-		// Finally, finish the form
-		echo "\n</form>";
-	}
-	else
-	{
-		$nothingFoundFeedback = nothingFound($nothingChecked);
-		echo $nothingFoundFeedback;
-	}// end if $rowsFound body
 	}
 
 	// --------------------------------------------------------------------
@@ -1322,7 +1344,7 @@
 			if (eregi("XML", $exportFormat)) // if the export format name contains 'XML'
 			{
 				$exportContentType = "text/xml";
-	
+
 				if (eregi("MODS", $exportFormat)) // if the export format name contains 'MODS'
 					$exportFileName = "mods_export.xml";
 				elseif (eregi("SRW", $exportFormat)) // if the export format name contains 'SRW'
@@ -1361,7 +1383,7 @@
 				$emailRecipient = $_SESSION['loginEmail'];
 				$emailSubject = "Your records from the " . $officialDatabaseName . " (exported to " . $exportFormat . " format)";
 				$emailBody = $exportText;
-	
+
 				sendEmail($emailRecipient, $emailSubject, $emailBody); // function 'sendEmail()' is defined in 'include.inc.php'
 			}
 
@@ -4137,7 +4159,7 @@
 					elseif ($userNotesSelector == "ends with")
 						$query .= " AND user_notes RLIKE \"$userNotesName$\"";
 				}
-	
+
 			// ... if the user has specified a user file, add the value of '$userFileName' as an AND clause:
 			$userFileName = $_POST['userFileName'];
 			if ($userFileName != "")
@@ -4199,7 +4221,7 @@
 							$query .= " AND user_groups RLIKE \"$userGroupsName2$\"";
 					}
 			}
-	
+
 			// ... if the user has specified a cite key, add the value of '$citeKeyName' as an AND clause:
 			$citeKeyName = $_POST['citeKeyName'];
 			if ($citeKeyName != "")
@@ -4323,7 +4345,7 @@
 				elseif ($markedRadio == "0")
 					$query .= " AND marked = \"no\"";
 			}
-	
+
 			// ... if the user has selected a radio button for 'Selected', add the corresponding value for 'selected' as an AND clause:
 			if (isset($_POST['selectedRadio']))
 			{
@@ -4692,7 +4714,7 @@
 	// --------------------------------------------------------------------
 
 	// Build the database query from records selected by the user within the query results list (which, in turn, was returned by 'search.php'):
-	function extractFormElementsQueryResults($displayType, $showLinks, $citeOrder, $orderBy, $userID, $sqlQuery, $referer, $recordSerialsArray)
+	function extractFormElementsQueryResults($displayType, $originalDisplayType, $showLinks, $citeOrder, $orderBy, $userID, $sqlQuery, $referer, $recordSerialsArray)
 	{
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
@@ -4754,7 +4776,7 @@
 
 		elseif (ereg("^(Display|Export)$", $displayType)) // (hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
 			{
-				// for the selected records, select all fields that are visible in details view:
+				// for the selected records, select all fields that are visible in Details view:
 				$query = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial";
 
 				if ($displayType == "Export") // for export, we add some additional fields:
@@ -4792,9 +4814,12 @@
 
 				if ($showLinks == "1")
 					$query = eregi_replace(" FROM $tableRefs",", file, url, doi, isbn FROM $tableRefs",$query); // add 'file', 'url', 'doi' & 'isbn' columns
+
+				// re-assign the correct display type if the user clicked the 'Remember', 'Add' or 'Remove' button of the 'queryResults' form:
+				$displayType = $originalDisplayType;
 			}
 
-		return $query;
+		return array($query, $displayType);
 	}
 
 	// --------------------------------------------------------------------
@@ -4855,7 +4880,7 @@
 			$query .= " LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID; // add LEFT JOIN part to FROM clause
 
 		$query .= " WHERE"; // add WHERE clause:
-		
+
 		if (!empty($recordSerialsArray) OR (empty($recordSerialsArray) AND empty($escapedRecordKeysArray)) OR (empty($recordSerialsArray) AND !isset($_SESSION['loginEmail']))) // the second condition ensures a valid SQL query if no serial numbers or cite keys were found, same for the third condition if a user isn't logged in and '$sourceText' did only contain cite keys
 			$query .= " serial RLIKE \"^(" . $recordSerialsString . ")$\""; // add any serial numbers to WHERE clause
 
@@ -4927,16 +4952,11 @@
 	// --------------------------------------------------------------------
 
 	// Build the database query from user input provided by the "Show My Group" form on the main page ('index.php') or above the query results list (that was produced by 'search.php'):
-	function extractFormElementsGroup($sqlQuery, $showLinks, $userID, $displayType)
+	function extractFormElementsGroup($sqlQuery, $showLinks, $userID, $displayType, $originalDisplayType)
 	{
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
 		$groupSearchSelector = $_POST['groupSearchSelector']; // extract the user group chosen by the user
-
-		if (isset($_POST['originalDisplayType']))
-			$originalDisplayType = $_POST['originalDisplayType']; // extract the original value of the '$displayType' variable (which was included as a hidden form tag within the 'groupSearch' form of a search results page)
-		else
-			$originalDisplayType = "";
 
 		if (($originalDisplayType != "Browse") AND (!empty($sqlQuery))) // if we're not in Browse view and there's a previous SQL query available (as is the case if the group search originated from a search results page - and not from the main page 'index.php')
 		{
@@ -5256,7 +5276,7 @@
 
 		if (in_array("details", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_details_view'...
 		{
-			// ... display a link that opens the 'details view' for this record:
+			// ... display a link that opens the Details view for this record:
 			if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
 				echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20cite_key%2C%20related%20"
 					. "FROM%20" . $tableRefs . "%20LEFT%20JOIN%20" . $tableUserData . "%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
@@ -5301,7 +5321,7 @@
 		{
 			if (!empty($row["file"]))// if the 'file' field is NOT empty
 			{
-				if (ereg("^(http|ftp)://", $row["file"])) // if the 'file' field contains a full URL (starting with "http://" or "ftp://")
+				if (ereg("^(https?|ftp)://", $row["file"])) // if the 'file' field contains a full URL (starting with "http://", "https://" or "ftp://")
 					$URLprefix = ""; // we don't alter the URL given in the 'file' field
 				else // if the 'file' field contains only a partial path (like 'polarbiol/10240001.pdf') or just a file name (like '10240001.pdf')
 					$URLprefix = $filesBaseURL; // use the base URL of the standard files directory as prefix ('$filesBaseURL' is defined in 'ini.inc.php')
