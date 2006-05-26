@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 00:25
-	// Modified:   27-Aug-05, 21:23
+	// Modified:   25-May-06, 17:46
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -65,6 +65,13 @@
 		$displayType = $_REQUEST['submit'];
 	else
 		$displayType = "";
+
+	// extract the original value of the '$displayType' variable:
+	// (which was included as a hidden form tag within the 'groupSearch' form of a search results page)
+	if (isset($_REQUEST['originalDisplayType']))
+		$originalDisplayType = $_REQUEST['originalDisplayType'];
+	else
+		$originalDisplayType = "";
 
 	// For a given display type, extract the view type requested by the user (either 'Print', 'Web' or ''):
 	// ('' will produce the default 'Web' output style)
@@ -145,7 +152,7 @@
 	// --- 'Search within Results' & 'Display Options' forms within 'users.php': ---------------
 	elseif ($formType == "refineSearch" OR $formType == "displayOptions") // the user used the "Search within Results" (or "Display Options") form above the query results list (that was produced by 'users.php')
 	{
-		list($query, $displayType) = extractFormElementsRefineDisplay($tableUsers, $displayType, $sqlQuery, $showLinks, ""); // function 'extractFormElementsRefineDisplay()' is defined in 'include.inc.php' since it's also used by 'users.php'
+		list($query, $displayType) = extractFormElementsRefineDisplay($tableUsers, $displayType, $originalDisplayType, $sqlQuery, $showLinks, ""); // function 'extractFormElementsRefineDisplay()' is defined in 'include.inc.php' since it's also used by 'users.php'
 	}
 
 	// --- 'Show User Group' form within 'users.php': ---------------------
@@ -192,7 +199,7 @@
 
 			// Adjust the '$showRows' value if not previously defined, or if a wrong number (<=0 or float) was given
 			if (empty($showRows) || ($showRows <= 0) || !ereg("^[0-9]+$", $showRows))
-				$showRows = 10;
+				$showRows = $defaultNumberOfRecords; // by default, we'll return as many records as defined in variable '$defaultNumberOfRecords' in 'ini.inc.php'
 
 			// NOTE: The current value of '$rowOffset' is embedded as hidden tag within the 'displayOptions' form. By this, the current row offset can be re-applied
 			//       after the user pressed the 'Show'/'Hide' button within the 'displayOptions' form. But then, to avoid that browse links don't behave as expected,
