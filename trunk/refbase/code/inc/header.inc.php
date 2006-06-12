@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/header.inc.php
 	// Created:    28-Jul-02, 11:21
-	// Modified:   18-Feb-06, 02:29
+	// Modified:   27-May-06, 00:13
 
 	// This is the header include file.
 	// It contains functions that provide the HTML header
@@ -100,12 +100,17 @@
 	// --------------------------------------------------------------------
 
 	// Displays the visible header:
-	function showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery)
+	function showPageHeader($HeaderString, $oldQuery)
 	{
 		global $officialDatabaseName; // these variables are defined in 'ini.inc.php'
-		global $hostInstitutionName;
 		global $hostInstitutionAbbrevName;
+		global $hostInstitutionName;
 		global $hostInstitutionURL;
+		global $helpResourcesURL;
+
+		global $loginWelcomeMsg; // these variables are globally defined in function 'showLogin()' in 'include.inc.php'
+		global $loginStatus;
+		global $loginLinks;
 ?>
 
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This holds the title logo and info">
