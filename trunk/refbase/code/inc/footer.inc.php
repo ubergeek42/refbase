@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/footer.inc.php
 	// Created:    28-Jul-02, 11:30
-	// Modified:   21-Feb-06, 02:55
+	// Modified:   27-May-06, 00:11
 
 	// This is the footer include file.
 	// It contains functions that build the footer
@@ -18,13 +18,30 @@
 
 	// --------------------------------------------------------------------
 
-	function displayfooter($oldQuery)
+	// Inserts the closing HTML </body> and </html> tags:
+	function displayHTMLfoot()
+	{
+?>
+
+</body>
+</html>
+<?php
+	}
+
+	// --------------------------------------------------------------------
+
+	// Displays the visible footer:
+	function showPageFooter($HeaderString, $oldQuery)
 	{
 		global $officialDatabaseName; // usage example: <a href="index.php">[? echo encodeHTML($officialDatabaseName); ?]</a>
 		global $hostInstitutionAbbrevName; // usage example: <a href="[? echo $hostInstitutionURL; ?]">[? echo encodeHTML($hostInstitutionAbbrevName); ?] Home</a>
 		global $hostInstitutionName; // (note: in the examples above, square brackets must be replaced by their respective angle brackets)
 		global $hostInstitutionURL;
 		global $helpResourcesURL;
+
+		global $loginWelcomeMsg; // these variables are globally defined in function 'showLogin()' in 'include.inc.php'
+		global $loginStatus;
+		global $loginLinks;
 ?>
 
 <hr align="center" width="95%">
