@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./export/bibutils/export_xml2ris.php
 	// Created:    28-Sep-04, 22:14
-	// Modified:   16-Dec-05, 18:00
+	// Modified:   31-May-06, 01:46
 
 	// This is an export format file (which must reside within the 'export/' sub-directory of your refbase root directory). It contains a version of the
 	// 'exportRecords()' function that outputs records according to the standard export format used e.g. by commercial bibliographic packages like 'Reference Manager' (http://www.refman.com).
@@ -21,7 +21,6 @@
 	//    - bibutils <http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html>
 	//    - ActiveLink PHP XML Package <http://www.active-link.com/software/>
 
-	include 'includes/execute.inc.php';
 	function exportRecords($result, $rowOffset, $showRows, $exportStylesheet, $displayType)
 	{
 		// function 'exportBibutils()' is defined in 'execute.inc.php'
