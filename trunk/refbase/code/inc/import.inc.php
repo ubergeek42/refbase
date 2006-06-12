@@ -9,7 +9,7 @@
 	//
 	// File:       ./includes/import.inc.php
 	// Created:    13-Jan-06, 21:00
-	// Modified:   28-Mar-06, 18:23
+	// Modified:   10-Jun-06, 19:35
 
 	// This file contains functions
 	// that are used when importing
@@ -811,7 +811,7 @@
 
 		// BibTeX format:
 		elseif (preg_match("/^@\w+\{[^ ,\r\n]* *, *[\r\n]/m", $sourceText)) // BibTeX records must at start with the "@" sign, followed by a type specifier and an optional cite key (such as in '@article{steffens1988,')
-			$sourceFormat = "Bibtex";
+			$sourceFormat = "BibTeX";
 
 		return $sourceFormat;
 	}
