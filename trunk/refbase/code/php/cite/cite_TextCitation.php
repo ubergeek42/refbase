@@ -3,11 +3,11 @@
 	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
 	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
 	//             Please see the GNU General Public License for more details.
-	// File:       ./cite/cite_TextCitation.php
+	// File:       ./cite/styles/cite_TextCitation.php
 	// Created:    28-Sep-04, 23:46
-	// Modified:   26-Feb-06, 13:58
+	// Modified:   11-Jun-06, 17:08
 
-	// This is a citation style file (which must reside within the 'cite/' sub-directory of your refbase root directory). It contains a
+	// This is a citation style file (which must reside within the 'cite/styles/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecord()' function that outputs a reference list from selected records according to the citation style defined
 	// by a user's custom text citation format (or by the default format given in '$defaultTextCitationFormat' in 'ini.inc.php').
 
@@ -21,7 +21,7 @@
 
 	// --- BEGIN CITATION STYLE ---
 
-	function citeRecord($row, $citeStyle)
+	function citeRecord($row, $citeStyle, $citeType, $markupPatternsArray, $encodeHTML)
 	{
 		global $defaultTextCitationFormat; // defined in 'ini.inc.php'
 		global $userOptionsArray; // '$userOptionsArray' is made globally available by function 'generateCitations()' in 'search.php'
@@ -40,12 +40,21 @@
 		// (eventually, the '$formVars' array should use the MySQL field names as names for its array keys)
 		$formVars = buildFormVarsArray($row); // function 'buildFormVarsArray()' is defined in 'include.inc.php'
 
+		if (eregi("RTF|LaTeX", $citeType))
+		{
+			$textCitationFormat = ereg_replace("([{}])", "\\\\1", $textCitationFormat); // in case of RTF or LaTeX output we need to escape braces in placeholder strings
+
+			$fallbackPlaceholderString = "<:authors[2| & | et al.]:>< :year:>< \{:recordIdentifier:\}>";
+		}
+		else
+			$fallbackPlaceholderString = "<:authors[2| & | et al.]:>< :year:>< {:recordIdentifier:}>";
+
 		// generate a text citation according to the given naming scheme:
-		$record = parsePlaceholderString($formVars, $textCitationFormat, "<:authors[2| & | et al.]:>< :year:>< {:recordIdentifier:}>"); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
+		$record = parsePlaceholderString($formVars, $textCitationFormat, $fallbackPlaceholderString); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
 
 
 		// Perform search & replace actions on the text:
-		$searchReplaceActionsArray = array('(et +al\.)' => '<i>\\1</i>'); // print 'et al.' in italic
+		$searchReplaceActionsArray["(et +al\.)"] = $markupPatternsArray["italic-prefix"] . "\\1" . $markupPatternsArray["italic-suffix"]; // print 'et al.' in italic
 
 		$record = searchReplaceText($searchReplaceActionsArray, $record, false); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
