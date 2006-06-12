@@ -3,11 +3,11 @@
 	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
 	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
 	//             Please see the GNU General Public License for more details.
-	// File:       ./cite/cite_DeepSeaRes.php
+	// File:       ./cite/styles/cite_DeepSeaRes.php
 	// Created:    28-Sep-04, 23:36
-	// Modified:   25-Feb-06, 15:25
+	// Modified:   11-Jun-06, 17:08
 
-	// This is a citation style file (which must reside within the 'cite/' sub-directory of your refbase root directory). It contains a
+	// This is a citation style file (which must reside within the 'cite/styles/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecord()' function that outputs a reference list from selected records according to the citation style used by
 	// the journal "Deep Sea Research".
 
@@ -21,7 +21,7 @@
 
 	// --- BEGIN CITATION STYLE ---
 
-	function citeRecord($row, $citeStyle)
+	function citeRecord($row, $citeStyle, $citeType, $markupPatternsArray, $encodeHTML)
 	{
 		$record = ""; // make sure that our buffer variable is empty
 
@@ -65,14 +65,14 @@
 															false, // 11.
 															true, // 12.
 															"", // 13.
-															" <i>and __NUMBER_OF_AUTHORS__ others</i>", // 14.
-															true); // 15.
+															" " . $markupPatternsArray["italic-prefix"] . "and __NUMBER_OF_AUTHORS__ others" . $markupPatternsArray["italic-suffix"], // 14.
+															$encodeHTML); // 15.
 
 						$record .= $author . ", ";
 					}
 
 				if (!empty($row['year']))				// year
-					$record .= "" . $row['year'] . ". ";
+					$record .= $row['year'] . ". ";
 
 				if (!empty($row['title']))			// title
 					{
@@ -118,8 +118,8 @@
 						{
 							if (!empty($row['volume'])||!empty($row['issue']))		// only add "," if either volume or issue isn't empty
 								$record .= ", ";
-							if (ereg("[0-9] *- *[0-9]", $row['pages'])) // if the 'pages' field contains a page range (like: "127-132")
-								$pagesDisplay = (ereg_replace("([0-9]+) *- *([0-9]+)", "\\1&#8211;\\2", $row['pages']));
+							if (ereg("[0-9] *[-–] *[0-9]", $row['pages'])) // if the 'pages' field contains a page range (like: "127-132")
+								$pagesDisplay = (ereg_replace("([0-9]+) *[-–] *([0-9]+)", "\\1" . $markupPatternsArray["endash"] . "\\2", $row['pages']));
 							else
 								$pagesDisplay = $row['pages'];
 							$record .= $pagesDisplay;
@@ -170,14 +170,14 @@
 															false, // 11.
 															true, // 12.
 															"", // 13.
-															" <i>and __NUMBER_OF_AUTHORS__ others</i>", // 14.
-															true); // 15.
+															" " . $markupPatternsArray["italic-prefix"] . "and __NUMBER_OF_AUTHORS__ others" . $markupPatternsArray["italic-suffix"], // 14.
+															$encodeHTML); // 15.
 
 						$record .= $author . ", ";
 					}
 
 				if (!empty($row['year']))				// year
-					$record .= "" . $row['year'] . ". ";
+					$record .= $row['year'] . ". ";
 
 				if (!empty($row['title']))			// title
 					{
@@ -223,8 +223,8 @@
 															false, // 11.
 															true, // 12.
 															"", // 13.
-															" <i>and __NUMBER_OF_AUTHORS__ others</i>", // 14.
-															true); // 15.
+															" " . $markupPatternsArray["italic-prefix"] . "and __NUMBER_OF_AUTHORS__ others" . $markupPatternsArray["italic-suffix"], // 14.
+															$encodeHTML); // 15.
 
 						$record .= "In: " . $editor;
 						if (ereg("^[^;\r\n]+(;[^;\r\n]+)+$", $row['editor'])) // there are at least two editors (separated by ';')
@@ -286,8 +286,8 @@
 
 				if (!empty($row['pages']))			// pages
 					{
-						if (ereg("[0-9] *- *[0-9]", $row['pages'])) // if the 'pages' field contains a page range (like: "127-132")
-							$pagesDisplay = (ereg_replace("([0-9]+) *- *([0-9]+)", "\\1&#8211;\\2", $row['pages']));
+						if (ereg("[0-9] *[-–] *[0-9]", $row['pages'])) // if the 'pages' field contains a page range (like: "127-132")
+							$pagesDisplay = (ereg_replace("([0-9]+) *[-–] *([0-9]+)", "\\1" . $markupPatternsArray["endash"] . "\\2", $row['pages']));
 						else
 							$pagesDisplay = $row['pages'];
 						$record .= "pp. " . $pagesDisplay;
@@ -339,14 +339,14 @@
 															false, // 11.
 															true, // 12.
 															"", // 13.
-															" <i>and __NUMBER_OF_AUTHORS__ others</i>", // 14.
-															true); // 15.
+															" " . $markupPatternsArray["italic-prefix"] . "and __NUMBER_OF_AUTHORS__ others" . $markupPatternsArray["italic-suffix"], // 14.
+															$encodeHTML); // 15.
 
 						$record .= $author . ", ";
 					}
 
 				if (!empty($row['year']))				// year
-					$record .= "" . $row['year'] . ". ";
+					$record .= $row['year'] . ". ";
 
 				if (!empty($row['title']))			// title
 					{
@@ -404,9 +404,9 @@
 
 				if (!empty($row['pages']))			// pages
 					{
-						if (ereg("[0-9] *- *[0-9]", $row['pages'])) // if the 'pages' field contains a page range (like: "127-132")
+						if (ereg("[0-9] *[-–] *[0-9]", $row['pages'])) // if the 'pages' field contains a page range (like: "127-132")
 							// Note that we'll check for page ranges here although for whole books the 'pages' field should NOT contain a page range but the total number of pages! (like: "623 pp")
-							$pagesDisplay = (ereg_replace("([0-9]+) *- *([0-9]+)", "\\1&#8211;\\2", $row['pages']));
+							$pagesDisplay = (ereg_replace("([0-9]+) *[-–] *([0-9]+)", "\\1" . $markupPatternsArray["endash"] . "\\2", $row['pages']));
 						else
 							$pagesDisplay = $row['pages'];
 						$record .= $pagesDisplay;

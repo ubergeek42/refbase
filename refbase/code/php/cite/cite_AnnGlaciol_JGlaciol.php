@@ -3,11 +3,11 @@
 	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
 	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
 	//             Please see the GNU General Public License for more details.
-	// File:       ./cite/cite_AnnGlaciol_JGlaciol.php
+	// File:       ./cite/styles/cite_AnnGlaciol_JGlaciol.php
 	// Created:    07-Sep-05, 14:53
-	// Modified:   25-Feb-06, 15:24
+	// Modified:   11-Jun-06, 17:08
 
-	// This is a citation style file (which must reside within the 'cite/' sub-directory of your refbase root directory). It contains a
+	// This is a citation style file (which must reside within the 'cite/styles/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecord()' function that outputs a reference list from selected records according to the citation style used by
 	// the journals "Annals of Glaciology" and "Journal of Glaciology" (International Glaciological Society, www.igsoc.org).
 
@@ -21,7 +21,7 @@
 
 	// --- BEGIN CITATION STYLE ---
 
-	function citeRecord($row, $citeStyle)
+	function citeRecord($row, $citeStyle, $citeType, $markupPatternsArray, $encodeHTML)
 	{
 		$record = ""; // make sure that our buffer variable is empty
 
@@ -65,8 +65,8 @@
 															true, // 11.
 															true, // 12.
 															"6", // 13.
-															" <i>and __NUMBER_OF_AUTHORS__ others</i>", // 14.
-															true); // 15.
+															" " . $markupPatternsArray["italic-prefix"] . "and __NUMBER_OF_AUTHORS__ others" . $markupPatternsArray["italic-suffix"], // 14.
+															$encodeHTML); // 15.
 
 						if (!ereg("\. *$", $author))
 							$record .= $author . ".";
@@ -96,18 +96,18 @@
 				// if this is not the case, the output string will begin with a space. However, any preceding/trailing whitespace will be removed at the cleanup stage (see below)
 
 				if (!empty($row['abbrev_journal']))		// abbreviated journal name
-					$record .= " <i>" . $row['abbrev_journal'] . "</i>";
+					$record .= " " . $markupPatternsArray["italic-prefix"] . $row['abbrev_journal'] . $markupPatternsArray["italic-suffix"];
 
 				// if there's no abbreviated journal name, we'll use the full journal name
 				elseif (!empty($row['publication']))	// publication (= journal) name
-					$record .= " <i>" . $row['publication'] . "</i>";
+					$record .= " " . $markupPatternsArray["italic-prefix"] . $row['publication'] . $markupPatternsArray["italic-suffix"];
 
 				if (!empty($row['volume']))			// volume
 					{
 						if (!empty($row['abbrev_journal']) || !empty($row['publication']))
 							$record .= ",";
 
-						$record .= " <b>" . $row['volume'] . "</b>";
+						$record .= " " . $markupPatternsArray["bold-prefix"] . $row['volume'] . $markupPatternsArray["bold-suffix"];
 					}
 
 				if (!empty($row['issue']))			// issue
@@ -142,8 +142,8 @@
 							if (!empty($row['volume']) || !empty($row['issue']) || !empty($row['abbrev_journal']) || !empty($row['publication']))		// only add "," if either volume, issue, abbrev_journal or publication isn't empty
 								$record .= ",";
 
-							if (ereg("[0-9] *- *[0-9]", $row['pages'])) // if the 'pages' field contains a page range (like: "127-132")
-								$record .= " " . (ereg_replace("([0-9]+) *- *([0-9]+)", "\\1&#8211;\\2", $row['pages']));
+							if (ereg("[0-9] *[-–] *[0-9]", $row['pages'])) // if the 'pages' field contains a page range (like: "127-132")
+								$record .= " " . (ereg_replace("([0-9]+) *[-–] *([0-9]+)", "\\1" . $markupPatternsArray["endash"] . "\\2", $row['pages']));
 							else
 								$record .= " " . $row['pages'];
 						}
@@ -193,8 +193,8 @@
 															true, // 11.
 															true, // 12.
 															"6", // 13.
-															" <i>and __NUMBER_OF_AUTHORS__ others</i>", // 14.
-															true); // 15.
+															" " . $markupPatternsArray["italic-prefix"] . "and __NUMBER_OF_AUTHORS__ others" . $markupPatternsArray["italic-suffix"], // 14.
+															$encodeHTML); // 15.
 
 						if (!ereg("\. *$", $author))
 							$record .= $author . ".";
@@ -259,19 +259,19 @@
 															true, // 11.
 															true, // 12.
 															"6", // 13.
-															" <i>and __NUMBER_OF_AUTHORS__ others</i>", // 14.
-															true); // 15.
+															" " . $markupPatternsArray["italic-prefix"] . "and __NUMBER_OF_AUTHORS__ others" . $markupPatternsArray["italic-suffix"], // 14.
+															$encodeHTML); // 15.
 
-						$record .= " <i>In</i> " . $editor;
+						$record .= " " . $markupPatternsArray["italic-prefix"] . "In" . $markupPatternsArray["italic-suffix"] . " " . $editor;
 						if (ereg("^[^;\r\n]+(;[^;\r\n]+)+$", $row['editor'])) // there are at least two editors (separated by ';')
-							$record .= ", <i>eds</i>.";
+							$record .= ", " . $markupPatternsArray["italic-prefix"] . "eds" . $markupPatternsArray["italic-suffix"] . ".";
 						else // there's only one editor (or the editor field is malformed with multiple editors but missing ';' separator[s])
-							$record .= ", <i>ed</i>.";
+							$record .= ", " . $markupPatternsArray["italic-prefix"] . "ed" . $markupPatternsArray["italic-suffix"] . ".";
 					}
 
 				$publication = ereg_replace("[ \r\n]*\(Eds?:[^\)\r\n]*\)", "", $row['publication']);
 				if (!empty($publication))			// publication
-					$record .= " <i>" . $publication . "</i>.";
+					$record .= " " . $markupPatternsArray["italic-prefix"] . $publication . $markupPatternsArray["italic-suffix"] . ".";
 
 				if (!empty($row['place']))			// place
 					$record .= " " . $row['place'];
@@ -289,8 +289,8 @@
 						if (!empty($row['place']) || !empty($row['publisher']))
 							$record .= ",";
 
-						if (ereg("[0-9] *- *[0-9]", $row['pages'])) // if the 'pages' field contains a page range (like: "127-132")
-							$record .= " " . (ereg_replace("([0-9]+) *- *([0-9]+)", "\\1&#8211;\\2", $row['pages'])); // replace hyphen with em dash
+						if (ereg("[0-9] *[-–] *[0-9]", $row['pages'])) // if the 'pages' field contains a page range (like: "127-132")
+							$record .= " " . (ereg_replace("([0-9]+) *[-–] *([0-9]+)", "\\1" . $markupPatternsArray["endash"] . "\\2", $row['pages'])); // replace hyphen with em dash
 						else
 							$record .= " " . $row['pages'];
 					}
@@ -364,16 +364,16 @@
 															true, // 11.
 															true, // 12.
 															"6", // 13.
-															" <i>and __NUMBER_OF_AUTHORS__ others</i>", // 14.
-															true); // 15.
+															" " . $markupPatternsArray["italic-prefix"] . "and __NUMBER_OF_AUTHORS__ others" . $markupPatternsArray["italic-suffix"], // 14.
+															$encodeHTML); // 15.
 
 						// if the author is actually the editor of the resource we'll append ', ed' (or ', eds') to the author string:
 						// [to distinguish editors from authors in the 'author' field, the 'modify.php' script does append ', ed' (or ', eds') if appropriate,
 						//  so we're just checking for these identifier strings here. Alternatively, we could check whether the editor field matches the author field]
 						if (ereg("[ \r\n]*\(ed\)", $row['author'])) // single editor
-							$author = $author . ", <i>ed</i>";
+							$author = $author . ", " . $markupPatternsArray["italic-prefix"] . "ed" . $markupPatternsArray["italic-suffix"];
 						elseif (ereg("[ \r\n]*\(eds\)", $row['author'])) // multiple editors
-							$author = $author . ", <i>eds</i>";
+							$author = $author . ", " . $markupPatternsArray["italic-prefix"] . "eds" . $markupPatternsArray["italic-suffix"];
 
 						if (!ereg("\. *$", $author))
 							$record .= $author . ".";
@@ -394,7 +394,7 @@
 						if (!empty($row['author']) || !empty($row['year']))
 							$record .= " ";
 
-						$record .= "<i>" . $row['title'] . "</i>";
+						$record .= $markupPatternsArray["italic-prefix"] . $row['title'] . $markupPatternsArray["italic-suffix"];
 						if (!ereg("[?!.]$", $row['title']))
 							$record .= ".";
 					}
@@ -422,8 +422,8 @@
 //								if (!empty($row['place']) || !empty($row['publisher']))
 //									$record .= ",";
 //		
-//								if (ereg("[0-9] *- *[0-9]", $row['pages'])) // if the 'pages' field contains a page range (like: "127-132")
-//									$record .= " " . (ereg_replace("([0-9]+) *- *([0-9]+)", "\\1&#8211;\\2", $row['pages'])); // replace hyphen with em dash
+//								if (ereg("[0-9] *[-–] *[0-9]", $row['pages'])) // if the 'pages' field contains a page range (like: "127-132")
+//									$record .= " " . (ereg_replace("([0-9]+) *[-–] *([0-9]+)", "\\1" . $markupPatternsArray["endash"] . "\\2", $row['pages'])); // replace hyphen with em dash
 //								else
 //									$record .= " " . $row['pages'];
 //							}
