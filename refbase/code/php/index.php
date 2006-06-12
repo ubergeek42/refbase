@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./index.php
 	// Created:    29-Jul-02, 16:45
-	// Modified:   28-Feb-06, 13:43
+	// Modified:   27-May-06, 00:15
 
 	// This script builds the main page.
 	// It provides login and quick search forms
@@ -82,7 +82,7 @@
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $loc["Home"], "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, $rssURLArray);
-	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
+	showPageHeader($HeaderString, "");
 
 	// Define variable holding common drop-down elements, i.e. build properly formatted <option> tag elements:
 	$dropDownFieldNameArray = array("author" => $loc["DropDownFieldName_Author"],
@@ -539,12 +539,11 @@ else
 
 	// --------------------------------------------------------------------
 
-	//	DISPLAY THE HTML FOOTER:
-	// call the 'displayfooter()' function from 'footer.inc.php')
-	displayfooter("");
+	// DISPLAY THE HTML FOOTER:
+	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
+	showPageFooter($HeaderString, "");
+
+	displayHTMLfoot();
 
 	// --------------------------------------------------------------------
 ?>
-
-</body>
-</html> 

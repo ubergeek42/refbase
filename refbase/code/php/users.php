@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 00:25
-	// Modified:   25-May-06, 17:46
+	// Modified:   27-May-06, 00:19
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -265,7 +265,7 @@
 	// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Manage Users", "noindex,nofollow", "Administration page that lists users of the " . encodeHTML($officialDatabaseName) . ", with links for adding, editing or deleting any users", "", true, "", $viewType, array());
 	if ($viewType != "Print") // Note: we ommit the visible header in print view! ('viewType=Print')
-		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
+		showPageHeader($HeaderString, "");
 
 	// (4b) DISPLAY results:
 	showUsers($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $citeStyle, $showMaxRow, $viewType, $displayType); // show all users
@@ -686,12 +686,11 @@
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
-	// call the 'displayfooter()' function from 'footer.inc.php')
-	if ($viewType != "Print") // Note: we ommit the footer in print view! ('viewType=Print')
-		displayfooter("");
+	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
+	if ($viewType != "Print") // Note: we ommit the visible footer in print view! ('viewType=Print')
+		showPageFooter($HeaderString, "");
+
+	displayHTMLfoot();
 
 	// --------------------------------------------------------------------
 ?>
-
-</body>
-</html>

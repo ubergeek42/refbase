@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import.php
 	// Created:    17-Feb-06, 20:57
-	// Modified:   25-Feb-06, 19:34
+	// Modified:   27-May-06, 00:14
 
 	// Import form that offers to import records from Cambridge Scientific Abstracts (CSA),
 	// Reference Manager (RIS), Endnote, BibTeX, ISI Web of Science, PubMed or COPAC.
@@ -148,7 +148,7 @@
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(encodeHTML($officialDatabaseName) . $pageTitle, "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
-	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
+	showPageHeader($HeaderString, "");
 
 	// (2b) Start <form> and <table> holding the form elements:
 	echo "\n<form action=\"import_modify.php\" method=\"POST\">";
@@ -265,11 +265,10 @@
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
-	// call the 'displayfooter()' function from 'footer.inc.php')
-	displayfooter("");
+	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
+	showPageFooter($HeaderString, "");
+
+	displayHTMLfoot();
 
 	// --------------------------------------------------------------------
 ?>
-
-</body>
-</html> 
