@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./receipt.php
 	// Created:    2-Jan-03, 22:43
-	// Modified:   19-Jan-06, 23:50
+	// Modified:   27-May-06, 00:16
 
 	// This php script will display a feedback page after any action of
 	// adding/editing/deleting a record. It will display links to the
@@ -90,7 +90,7 @@
 	// (4a) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Record Action Feedback", "noindex,nofollow", "Feedback page that confirms any adding, editing or deleting of records in the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
-	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
+	showPageHeader($HeaderString, $oldQuery);
 
 
 	// (4b) DISPLAY results:
@@ -138,11 +138,10 @@
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
-	// call the 'displayfooter()' function from 'footer.inc.php')
-	displayfooter($oldQuery);
+	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
+	showPageFooter($HeaderString, $oldQuery);
+
+	displayHTMLfoot();
 
 	// --------------------------------------------------------------------
 ?>
-
-</body>
-</html> 

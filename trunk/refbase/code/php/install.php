@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./install.php
 	// Created:    07-Jan-04, 22:00
-	// Modified:   04-May-05, 11:52
+	// Modified:   27-May-06, 00:15
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -162,7 +162,7 @@
 		// DISPLAY header:
 		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Installation", "index,follow", "Installation form for the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
-		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
+		showPageHeader($HeaderString, "");
 
 		// Start <form> and <table> holding the form elements:
 ?>
@@ -251,16 +251,13 @@
 		// --------------------------------------------------------------------
 
 		// DISPLAY THE HTML FOOTER:
-		// call the 'displayfooter()' function from 'footer.inc.php')
-		displayfooter("");
+		// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
+		showPageFooter($HeaderString, "");
+
+		displayHTMLfoot();
 
 		// --------------------------------------------------------------------
 
-?>
-
-</body>
-</html>
-<?php
 	}
 	else // some parameters have been passed, so let's validate the fields:
 	{
@@ -487,7 +484,7 @@
 		// DISPLAY header:
 		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Installation Feedback", "index,follow", "Installation feedback for the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
-		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
+		showPageHeader($HeaderString, "");
 
 		// Start a <table>:
 ?>
@@ -558,16 +555,13 @@
 		// --------------------------------------------------------------------
 
 		// DISPLAY THE HTML FOOTER:
-		// call the 'displayfooter()' function from 'footer.inc.php')
-		displayfooter("");
+		// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
+		showPageFooter($HeaderString, "");
+
+		displayHTMLfoot();
 
 		// --------------------------------------------------------------------
 
-?>
-
-</body>
-</html>
-<?php
 	}
 
 	// --------------------------------------------------------------------
