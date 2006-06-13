@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   25-May-06, 16:57
+	// Modified:   12-Jun-06, 12:43
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -22,8 +22,12 @@
 	include 'includes/results_header.inc.php'; // include results header
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
+	include 'includes/cite.inc.php'; // include citation functions
+	include 'includes/export.inc.php'; // include export functions
+	include 'includes/execute.inc.php'; // include functions that deal with execution of shell commands
 	include 'includes/modsxml.inc.php'; // include functions that deal with MODS XML
 	include 'includes/srwxml.inc.php'; // include functions that deal with SRW XML
+	include 'includes/odfxml.inc.php'; // include functions that deal with ODF XML
 	include 'initialize/ini.inc.php'; // include common variables
 
 	// --------------------------------------------------------------------
@@ -44,6 +48,13 @@
 
 	// [ Extract form variables sent through POST/GET by use of the '$_REQUEST' variable ]
 	// [ !! NOTE !!: for details see <http://www.php.net/release_4_2_1.php> & <http://www.php.net/manual/en/language.variables.predefined.php> ]
+
+	// Extract the ID of the client from which the query originated:
+	// Note: currently, this identifier is only used to identify queries that originated from the refbase command line client ("cli-refbase-1.0")
+	if (isset($_REQUEST['client']))
+		$client = $_REQUEST['client'];
+	else
+		$client = "";
 
 	// Extract the form used for searching:
 	$formType = $_REQUEST['formType'];
@@ -82,13 +93,20 @@
 	{
 		if (isset($_SESSION['user_permissions']) AND !ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain 'allow_details_view'...
 		{
-			// save an appropriate error message:
-			$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForDisplayDetails"]."!</span></b>";
+			if (eregi("^cli", $client)) 
+			{
+				echo $loc["NoPermission"]." ".$loc["NoPermission_ForDisplayDetails"]."!\n\n";
+			}
+			else
+			{
+				// save an appropriate error message:
+				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForDisplayDetails"]."!</span></b>";
 
-			// Write back session variables:
-			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+				// Write back session variables:
+				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 
-			header("Location: index.php"); // redirect to main page ('index.php')
+				header("Location: index.php"); // redirect to main page ('index.php')
+			}
 
 			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		}
@@ -97,16 +115,23 @@
 	{
 		if (isset($_SESSION['user_permissions']) AND !ereg("allow_cite", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain 'allow_cite'...
 		{
-			// save an appropriate error message:
-			$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForCite"]."!</span></b>";
-
-			// Write back session variables:
-			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-
-			if (ereg(".+extract.php", $referer)) // if the query was submitted by 'extract.php'
-				header("Location: " . $referer); // redirect to calling page
+			if (eregi("^cli", $client)) 
+			{
+				echo $loc["NoPermission"]." ".$loc["NoPermission_ForCite"]."!\n\n";
+			}
 			else
-				header("Location: index.php"); // redirect to main page ('index.php')
+			{
+				// save an appropriate error message:
+				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForCite"]."!</span></b>";
+
+				// Write back session variables:
+				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+
+				if (ereg(".+extract.php", $referer)) // if the query was submitted by 'extract.php'
+					header("Location: " . $referer); // redirect to calling page
+				else
+					header("Location: index.php"); // redirect to main page ('index.php')
+			}
 
 			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		}
@@ -115,16 +140,23 @@
 	{
 		if (isset($_SESSION['user_permissions']) AND !ereg("(allow_export|allow_batch_export)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain either 'allow_export' or 'allow_batch_export'...
 		{
-			// save an appropriate error message:
-			$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForExport"]."!</span></b>";
-
-			// Write back session variables:
-			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-
-			if (ereg(".+extract.php", $referer)) // if the query was submitted by 'extract.php'
-				header("Location: " . $referer); // redirect to calling page
+			if (eregi("^cli", $client)) 
+			{
+				echo $loc["NoPermission"]." ".$loc["NoPermission_ForExport"]."!\n\n";
+			}
 			else
-				header("Location: index.php"); // redirect to main page ('index.php')
+			{
+				// save an appropriate error message:
+				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForExport"]."!</span></b>";
+
+				// Write back session variables:
+				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+
+				if (ereg(".+extract.php", $referer)) // if the query was submitted by 'extract.php'
+					header("Location: " . $referer); // redirect to calling page
+				else
+					header("Location: index.php"); // redirect to main page ('index.php')
+			}
 
 			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		}
@@ -158,7 +190,7 @@
 	// For a given display type, extract the view type requested by the user (either 'Print', 'Web' or ''):
 	// ('' will produce the default 'Web' output style)
 	if (isset($_REQUEST['viewType']))
-		$viewType = $_REQUEST['viewType'];
+		$viewType = ucfirst(strtolower($_REQUEST['viewType'])); // we normalize the case of passed values
 	else
 		$viewType = "";
 
@@ -202,18 +234,19 @@
 		$rowOffset = 0;
 
 	// In order to generalize routines we have to query further variables here:
-	if (isset($_REQUEST['citeStyleSelector']))
+	if (isset($_REQUEST['citeStyleSelector']) AND !empty($_REQUEST['citeStyleSelector']))
 		$citeStyle = $_REQUEST['citeStyleSelector']; // get the cite style chosen by the user (only occurs in 'extract.php' form and in query result lists)
 	else
-		$citeStyle = "";
+		$citeStyle = $defaultCiteStyle; // if no cite style was given, we'll use the default cite style which is defined by the '$defaultCiteStyle' variable in 'ini.inc.php'
 	if (ereg("%20", $citeStyle)) // if '$citeStyle' still contains URL encoded data... ('%20' is the URL encoded form of a space, see note below!)
 		$citeStyle = rawurldecode($citeStyle); // ...URL decode 'citeStyle' statement (it was URL encoded before incorporation into a hidden tag of the 'sqlSearch' form to avoid any HTML syntax errors)
 													// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
 													//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
-	if (isset($_REQUEST['exportFormatSelector']))
+
+	if (isset($_REQUEST['exportFormatSelector']) AND !empty($_REQUEST['exportFormatSelector']))
 		$exportFormat = $_REQUEST['exportFormatSelector']; // get the export format style chosen by the user (only occurs in 'extract.php' form and in query result lists)
 	else
-		$exportFormat = "";
+		$exportFormat = $defaultExportFormat; // if no export format was given, we'll use the default export format which is defined by the '$defaultExportFormat' variable in 'ini.inc.php'
 	if (ereg("%20", $exportFormat)) // if '$exportFormat' still contains URL encoded data... ('%20' is the URL encoded form of a space, see note below!)
 		$exportFormat = rawurldecode($exportFormat); // ...URL decode 'exportFormat' statement (it was URL encoded before incorporation into a hidden tag of the 'sqlSearch' form to avoid any HTML syntax errors)
 													// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
@@ -224,6 +257,18 @@
 	else
 		$citeOrder = "";
 
+	// get information how citation data shall be returned:
+	// - 'html' => return citations as HTML with mime type 'text/html'
+	// - 'RTF' => return citations as RTF data with mime type 'application/rtf'
+	// - 'PDF' => return citations as PDF data with mime type 'application/pdf'
+	// - 'LaTeX' => return citations as LaTeX data with mime type 'application/x-latex'
+	// - 'Markdown' => return citations as Markdown TEXT data with mime type 'text/plain'
+	// - 'ASCII' => return citations as TEXT data with mime type 'text/plain'
+	if (isset($_REQUEST['citeType']) AND eregi("^(html|RTF|PDF|LaTeX|Markdown|ASCII)$", $_REQUEST['citeType']))
+		$citeType = $_REQUEST['citeType'];
+	else
+		$citeType = "html";
+
 	// get information how exported data shall be returned:
 	// - 'text' => return data with mime type 'text/plain'
 	// - 'html' => return data with mime type 'text/html'
@@ -231,10 +276,10 @@
 	// - 'rss' => return data with mime type 'application/rss+xml'
 	// - 'file' => return data as downloadable file
 	// - 'email' => send data as email (to the user's login email address)
-	if (isset($_REQUEST['exportType']))
+	if (isset($_REQUEST['exportType']) AND eregi("^(text|html|xml|rss|file|email)$", $_REQUEST['exportType']))
 		$exportType = $_REQUEST['exportType'];
 	else
-		$exportType = "";
+		$exportType = "html";
 
 	if (isset($_REQUEST['exportStylesheet']))
 		$exportStylesheet = $_REQUEST['exportStylesheet']; // extract any stylesheet information that has been specified for XML export formats
@@ -497,7 +542,7 @@
 	// Third, find out how many rows are available and (if there were rows found) seek to the current offset:
 	// Note that the 'seekInMySQLResultsToOffset()' function will also (re-)assign values to the variables
 	// '$rowOffset', '$showRows', '$rowsFound', '$previousOffset', '$nextOffset' and '$showMaxRow'.
-	list($result, $rowOffset, $showRows, $rowsFound, $previousOffset, $nextOffset, $showMaxRow) = seekInMySQLResultsToOffset($result, $rowOffset, $showRows, $displayType); // function 'seekInMySQLResultsToOffset()' is defined in 'include.inc.php'
+	list($result, $rowOffset, $showRows, $rowsFound, $previousOffset, $nextOffset, $showMaxRow) = seekInMySQLResultsToOffset($result, $rowOffset, $showRows, $displayType, $citeType); // function 'seekInMySQLResultsToOffset()' is defined in 'include.inc.php'
 
 	// Fourth, setup an array of arrays holding URL and title information for all RSS feeds available on this page:
 	// (appropriate <link...> tags will be included in the HTML header for every URL specified)
@@ -608,12 +653,15 @@
 
 
 	// Now, show the login status:
-	showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
+	showLogin(); // function 'showLogin()' is defined in 'include.inc.php'
 
-	// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Query Results", "index,follow", "Results from the " . encodeHTML($officialDatabaseName), "", true, "", $viewType, $rssURLArray);
-	if ($viewType != "Print") // Note: we ommit the visible header in print view! ('viewType=Print')
-		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
+	if (!eregi("^cli", $client) AND (!(($displayType == "Cite") AND (!eregi("^html$", $citeType))) OR ($rowsFound == 0))) // we exclude the HTML page header for citation formats other than HTML if something was found
+	{
+		// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
+		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Query Results", "index,follow", "Results from the " . encodeHTML($officialDatabaseName), "", true, "", $viewType, $rssURLArray);
+		if ($viewType != "Print") // Note: we ommit the visible header in print view! ('viewType=Print')
+			showPageHeader($HeaderString, $oldQuery);
+	}
 
 
 	// (4b) DISPLAY results:
@@ -621,7 +669,7 @@
 		displayDetails($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $showMaxRow, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $formType);
 
 	elseif ($displayType == "Cite") // build a proper citation for each of the selected records
-		generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $headerMsg, $userID, $viewType, $selectedRecordsArray);
+		generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType);
 
 	else // show all records in columnar style
 		displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $addCounterMax, $formType);
@@ -843,7 +891,7 @@
 						// for List view, we'll use the '$showLinkTypesInListView' array that's defined in 'ini.inc.php'
 						// to specify which links shall be displayed (if available and if 'showLinks == 1')
 						// (for links of type DOI/URL/ISBN/XREF, only one link will be printed; order of preference: DOI, URL, ISBN, XREF)
-						printLinks($showLinkTypesInListView, $row, $showQuery, $showLinks, $userID, $viewType, $orderBy);
+						echo printLinks($showLinkTypesInListView, $row, $showQuery, $showLinks, $userID, $viewType, $orderBy);
 
 						echo "\n\t</td>";
 					}
@@ -1307,6 +1355,9 @@
 	{
 		global $officialDatabaseName; // these variables are defined in 'ini.inc.php'
 		global $contentTypeCharset;
+		global $convertExportDataToUTF8;
+		global $defaultExportFormat;
+
 		global $userOptionsArray;
 
 		// get all user options for the current user:
@@ -1315,6 +1366,12 @@
 
 		// fetch the path/name of the export format file that's associated with the export format given in '$exportFormat':
 		$exportFormatFile = getFormatFile($exportFormat, "export"); // function 'getFormatFile()' is defined in 'include.inc.php()'
+
+		if (empty($exportFormatFile))
+		{
+			$exportFormat = $defaultExportFormat; // if the given export format could not be found, we'll use the default export format which is defined by the '$defaultExportFormat' variable in 'ini.inc.php'
+			$exportFormatFile = getFormatFile($exportFormat, "export");
+		}
 
 		// include the found export format file *once*:
 		include_once "export/" . $exportFormatFile; // instead of 'include_once' we could also use: 'if ($rowCounter == 0) { include "export/" . $exportFormatFile; }'
@@ -1347,18 +1404,23 @@
 
 				if (eregi("MODS", $exportFormat)) // if the export format name contains 'MODS'
 					$exportFileName = "mods_export.xml";
+
 				elseif (eregi("SRW", $exportFormat)) // if the export format name contains 'SRW'
 					$exportFileName = "srw_export.xml";
+
+				elseif (eregi("ODF|OpenDocument", $exportFormat)) // if the export format name contains 'ODF' or 'OpenDocument'
+					$exportFileName = "content.xml";
+
 				else
 					$exportFileName = "export.xml";
 			}
 
-			elseif (eregi("Endnote|RIS|Bibtex", $exportFormat)) // if the export format name contains either 'Endnote', 'Bibtex' or 'RIS'
+			elseif (eregi("Endnote|RIS|BibTeX", $exportFormat)) // if the export format name contains either 'Endnote', 'BibTeX' or 'RIS'
 			{
 				if (eregi("Endnote", $exportFormat))
 					$exportFileName = "endnote_export.enw";
 
-				elseif (eregi("Bibtex", $exportFormat))
+				elseif (eregi("BibTeX", $exportFormat))
 					$exportFileName = "bibtex_export.bib";
 
 				elseif (eregi("RIS", $exportFormat))
@@ -1369,7 +1431,20 @@
 				$exportFileName = "exported_records.txt"; // set the default download file name
 		}
 
-		// set the appropriate mimetype & set the character encoding to the one given in '$contentTypeCharset' (which is defined in 'ini.inc.php'):
+		// if variable '$convertExportDataToUTF8' is set to "yes" in 'ini.inc.php', we'll convert latin1 data to UTF-8
+		// when exporting to XML; therefore, we'll need to temporarily set the value of the global '$contentTypeCharset'
+		// variable to UTF-8 which will ensure proper HTML output
+		if (($convertExportDataToUTF8 == "yes") AND ($contentTypeCharset != "UTF-8"))
+		{
+			$oldContentTypeCharset = $contentTypeCharset; // remember the actual database charset
+			$oldOfficialDatabaseName = $officialDatabaseName; // remember the database name as originally encoded
+
+			// if the database charset is not "UTF-8" then we'll also need to temporarily convert any higher ASCII chars in variables which get included within the HTML output
+			$officialDatabaseName = convertToCharacterEncoding("UTF-8", "IGNORE", $officialDatabaseName); // function 'convertToCharacterEncoding()' is defined in 'include.inc.php'
+			$contentTypeCharset = "UTF-8"; // for XML output we'll temporarily set the value of '$contentTypeCharset' to "UTF-8"
+		}
+
+		// set the appropriate mimetype & set the character encoding to the one given in '$contentTypeCharset':
 		setHeaderContentType($exportContentType, $contentTypeCharset); // function 'setHeaderContentType()' is defined in 'include.inc.php'
 
 		if ($exportType == "file") // instruct the browser to download the resulting XML file:
@@ -1402,6 +1477,12 @@
 							. $exportText;
 		}
 
+		if (($convertExportDataToUTF8 == "yes") AND ($contentTypeCharset != "UTF-8"))
+		{
+			$contentTypeCharset = $oldContentTypeCharset; // restore the actual database charset
+			$officialDatabaseName = $oldOfficialDatabaseName; // restore the database name as originally encoded
+		}
+
 		// we'll present the output within the _same_ browser window:
 		// (note that we don't use a popup window here, since this may be blocked by particular browsers, and I think it's safe to assume that the user knows how to use the back button of his browser...)
 		echo $exportText;
@@ -1409,122 +1490,102 @@
 
 	// --------------------------------------------------------------------
 
-	// SHOW THE RESULTS IN AN HTML <TABLE> (citation layout)
-	function generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $headerMsg, $userID, $viewType, $selectedRecordsArray)
+	// CITE RECORDS using the specified citation style and format
+	function generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
 	{
-		global $searchReplaceActionsArray; // defined in 'ini.inc.php'
-		global $showLinkTypesInCitationView;
-		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
+		global $contentTypeCharset; // these variables are defined in 'ini.inc.php'
+		global $defaultCiteStyle;
+
+		global $client;
+
 		global $userOptionsArray;
 
 		// get all user options for the current user:
 		// (note that '$userOptionsArray' is made globally available)
 		$userOptionsArray = getUserOptions($userID); // function 'getUserOptions()' is defined in 'include.inc.php'
 
-		// If the query has results ...
+		// if the query has results ...
 		if ($rowsFound > 0)
 		{
-			// BEGIN RESULTS HEADER --------------------
-			// 1) First, initialize some variables that we'll need later on
-			// Calculate the number of all visible columns (which is needed as colspan value inside some TD tags)
-			if ($showLinks == "1" && $citeOrder == "year") // in citation layout, we simply set it to a fixed value (either '1' or '2', depending on the values of '$showLinks' and '$citeOrder')
-				$NoColumns = 2; // first column: literature citation, second column: 'display details' link
-			else
-				$NoColumns = 1;
+			// fetch the name of the citation style file that's associated with the style given in '$citeStyle':
+			$citeStyleFile = getStyleFile($citeStyle); // function 'getStyleFile()' is defined in 'include.inc.php'
 
-
-			// 2) Note: we ommit the 'Search Within Results' form in citation layout! (compare with 'displayColumns()' function)
-
-
-			// 3) Build a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages
-			//    call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
-			$BrowseLinks = buildBrowseLinks("search.php", $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "25", "sqlSearch", "Cite", $citeStyle, $citeOrder, $orderBy, $headerMsg, $viewType);
-			echo $BrowseLinks;
-
-			// 4) Start a TABLE
-			echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the database results for your query\">";
-			// END RESULTS HEADER ----------------------
-
-			// BEGIN RESULTS DATA COLUMNS --------------
-			$yearsArray = array(""); // initialize array variable
-
-			// Fetch one page of results (or less if on the last page)
-			// (i.e., upto the limit specified in $showRows) fetch a row into the $row array and ...
-			for ($rowCounter=0; (($rowCounter < $showRows) && ($row = @ mysql_fetch_array($result))); $rowCounter++)
+			If (empty($citeStyleFile))
 			{
-				foreach ($row as $rowFieldName => $rowFieldValue)
-				{
-					if (!ereg($rowFieldName, "^(author|editor)$")) // we HTML encode higher ASCII chars for all but the author & editor fields. The author & editor fields are excluded here
-						// since these fields must be passed *without* HTML entities to the 'reArrangeAuthorContents()' function (which will then handle the HTML encoding by itself)
-						$row[$rowFieldName] = encodeHTML($row[$rowFieldName]); // HTML encode higher ASCII characters within each of the fields
-
-					// apply search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$searchReplaceActionsArray' (which is defined in 'ini.inc.php'):
-					foreach ($searchReplaceActionsArray as $fieldActionsArray)
-						if (in_array($rowFieldName, $fieldActionsArray['fields']))
-							$row[$rowFieldName] = searchReplaceText($fieldActionsArray['actions'], $row[$rowFieldName], true); // function 'searchReplaceText()' is defined in 'include.inc.php'
-				}
-
-
-				$citeStyleFile = getStyleFile($citeStyle); // fetch the name of the citation style file that's associated with the style given in '$citeStyle'
-
-				// include the found citation style file *once*:
-				include_once "cite/" . $citeStyleFile; // instead of 'include_once' we could also use: 'if ($rowCounter == 0) { include "cite/" . $citeStyleFile; }'
-
-				// Order attributes according to the chosen output style & record type:
-				$record = citeRecord($row, $citeStyle); // function 'citeRecord()' is defined in the citation style file given in '$citeStyleFile' (which, in turn, must reside in the 'cite' directory of the refbase root directory)
-
-
-				// Print out the current record:
-				if (!empty($record)) // unless the record buffer is empty...
-				{
-					if ($citeOrder == "year") // list records in blocks sorted by year:
-						if (!in_array ($row['year'], $yearsArray)) // if this record's year hasn't occurred already
-						{
-							$yearsArray[] = $row['year']; // add it to the array of years
-							echo "\n<tr>";
-							echo "\n\t<td valign=\"top\" colspan=\"$NoColumns\"><h4>" . $row['year'] . "</h4></td>"; // print out a heading with the current year
-							echo "\n</tr>";
-
-						}
-
-					echo "\n<tr>";
-					echo "\n\t<td valign=\"top\">" . $record . "</td>"; // print out the record
-
-					if ($showLinks == "1") // display links:
-					{
-						echo "\n\t<td valign=\"top\" width=\"38\">";
-
-						// print out available links:
-						// for Citation view, we'll use the '$showLinkTypesInCitationView' array that's defined in 'ini.inc.php'
-						// to specify which links shall be displayed (if available and if 'showLinks == 1')
-						// (for links of type DOI/URL/ISBN/XREF, only one link will be printed; order of preference: DOI, URL, ISBN, XREF)
-						printLinks($showLinkTypesInCitationView, $row, $showQuery, $showLinks, $userID, $viewType, $orderBy);
-
-						echo "\n\t</td>";
-					}
-
-					echo "\n</tr>";
-				}
+				$citeStyle = $defaultCiteStyle; // if the given cite style could not be found, we'll use the default cite style which is defined by the '$defaultCiteStyle' variable in 'ini.inc.php'
+				$citeStyleFile = getStyleFile($citeStyle);
 			}
-			// Finish the table
-			echo "\n</table>";
-			// END RESULTS DATA COLUMNS ----------------
 
-			// BEGIN RESULTS FOOTER --------------------
-			// Note: we ommit the results footer in print view! ('viewType=Print')
-			if ($viewType != "Print")
+			// include the found citation style file *once*:
+			include_once "cite/" . $citeStyleFile;
+
+
+			// fetch the name of the citation format file that's associated with the format given in '$citeType':
+			$citeFormatFile = getFormatFile($citeType, "cite"); // function 'getFormatFile()' is defined in 'include.inc.php()'
+
+			If (empty($citeFormatFile))
 			{
-				// Again, insert the (already constructed) BROWSE LINKS
-				// (i.e., a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages)
-				echo $BrowseLinks;
+				if (eregi("^cli", $client)) // if the query originated from a command line client such as the "refbase" CLI client ("cli-refbase-1.0")
+					$citeType = "ASCII";
+				else
+					$citeType = "html";
+
+				$citeFormatFile = getFormatFile($citeType, "cite");
 			}
-			// END RESULTS FOOTER ----------------------
+
+			// include the found citation format file *once*:
+			include_once "cite/" . $citeFormatFile;
+
+
+			$citationData = citeRecords($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType); // function 'citeRecordsHTML()' is defined in 'cite.inc.php'
+
+
+			if ($citeType == "RTF") // output references as RTF file
+			{
+				$citeContentType = "application/rtf";
+				$citeFileName = "citations.rtf";
+			}
+			elseif ($citeType == "PDF") // output references as PDF file
+			{
+				$citeContentType = "application/pdf";
+				$citeFileName = "citations.pdf";
+			}
+			elseif ($citeType == "LaTeX") // output references as LaTeX file
+			{
+				$citeContentType = "application/x-latex";
+				$citeFileName = "citations.tex";
+			}
+			elseif ($citeType == "Markdown") // output references as Markdown TEXT (a plain text formatting syntax)
+			{
+				$citeContentType = "text/plain";
+				$citeFileName = "citations.txt";
+			}
+			elseif ($citeType == "ASCII") // output references as plain TEXT
+			{
+				$citeContentType = "text/plain";
+				$citeFileName = "citations.txt";
+			}
+			else // by default, we'll output references in HTML format
+			{
+				$citeContentType = "text/html";
+				$citeFileName = "citations.html";
+			}
+
+			if (!eregi("^html$", $citeType))
+				// set the appropriate mimetype & set the character encoding to the one given in '$contentTypeCharset' (which is defined in 'ini.inc.php'):
+				setHeaderContentType($citeContentType, $contentTypeCharset); // function 'setHeaderContentType()' is defined in 'include.inc.php'
+
+			if (eregi("^application", $citeContentType))
+				// instruct the browser to download the resulting output as file:
+				header('Content-Disposition: attachment; filename="' . $citeFileName . '"'); // Note that this doesn't seem to work with all browsers (notably not with Safari & OmniWeb on MacOSX Panther, but it does work with Mozilla & Camino as well as Safari on Tiger)
+
+			echo $citationData;
 		}
 		else
 		{
 			$nothingFoundFeedback = nothingFound($nothingChecked);
 			echo $nothingFoundFeedback;
-		}// end if $rowsFound body
+		}
 	}
 
 	// --------------------------------------------------------------------
@@ -1592,13 +1653,18 @@
 				else
 					$citeStyleDisabled = "";
 
+				if (!isset($_SESSION['user_cite_formats']))
+					$citeFormatDisabled = " disabled"; // disable the cite format popup if the session variable holding the user's cite formats isn't available
+				else
+					$citeFormatDisabled = "";
+
 				$ResultsFooterRow .= "\n\t\t<input type=\"submit\" name=\"submit\" value=\"Cite\" title=\"build a list of references for all selected records\"$citeStyleDisabled>&nbsp;&nbsp;&nbsp;"
 									. "\n\t\tusing style:&nbsp;&nbsp;"
 									. "\n\t\t<select name=\"citeStyleSelector\" title=\"choose the output style for your reference list\"$citeStyleDisabled>";
 
 				if (!isset($_SESSION['user_styles']))
 				{
-					$ResultsFooterRow .= "<option>(no styles available)</option>";
+					$ResultsFooterRow .= "\n\t\t\t<option>(no styles available)</option>";
 				}
 				else
 				{
@@ -1609,9 +1675,24 @@
 				$ResultsFooterRow .= "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
 									. "\n\t\tsort by:&nbsp;&nbsp;"
 									. "\n\t\t<select name=\"citeOrder\" title=\"choose the primary sort order for your reference list\"$citeStyleDisabled>"
-									. "\n\t\t\t<option>author</option>"
-									. "\n\t\t\t<option>year</option>"
-									. "\n\t\t</select>"
+									. "\n\t\t\t<option value=\"author\">author</option>"
+									. "\n\t\t\t<option value=\"year\">year</option>"
+									. "\n\t\t\t<option value=\"type\">type</option>"
+									. "\n\t\t\t<option value=\"type-year\">type, year</option>"
+									. "\n\t\t</select>&nbsp;&nbsp;&nbsp;";
+
+				$ResultsFooterRow .= "\n\t\treturn as:&nbsp;&nbsp;"
+									. "\n\t\t<select name=\"citeType\" title=\"choose how your reference list shall be returned\"$citeStyleDisabled$citeFormatDisabled>";
+
+				if (isset($_SESSION['user_cite_formats']))
+				{
+					$optionTags = buildSelectMenuOptions($_SESSION['user_cite_formats'], " *; *", "\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'user_cite_formats' session variable
+					$ResultsFooterRow .= $optionTags;
+				}
+				else
+					$ResultsFooterRow .= "\n\t\t\t<option>(no formats available)</option>";
+
+				$ResultsFooterRow .= "\n\t\t</select>"
 									. "\n\t</td>"
 
 									. "\n</tr>";
@@ -1677,8 +1758,8 @@
 
 										. "\n\t<td align=\"left\" valign=\"top\" colspan=\"" . ($NoColumns - 1) . "\">";
 
-					if (!isset($_SESSION['user_formats']))
-						$exportFormatDisabled = " disabled"; // disable the format popup if the session variable holding the user's formats isn't available
+					if (!isset($_SESSION['user_export_formats']))
+						$exportFormatDisabled = " disabled"; // disable the format popup if the session variable holding the user's export formats isn't available
 					else
 						$exportFormatDisabled = "";
 
@@ -1686,22 +1767,22 @@
 										. "\n\t\tusing format:&nbsp;&nbsp;"
 										. "\n\t\t<select name=\"exportFormatSelector\" title=\"choose the export format for your references\"$exportFormatDisabled>";
 
-					if (isset($_SESSION['user_formats']))
+					if (isset($_SESSION['user_export_formats']))
 					{
-						$optionTags = buildSelectMenuOptions($_SESSION['user_formats'], " *; *", "\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'user_formats' session variable
+						$optionTags = buildSelectMenuOptions($_SESSION['user_export_formats'], " *; *", "\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'user_export_formats' session variable
 						$ResultsFooterRow .= $optionTags;
 					}
 					else
-						$ResultsFooterRow .= "<option>(no formats available)</option>";
+						$ResultsFooterRow .= "\n\t\t\t<option>(no formats available)</option>";
 
 					$ResultsFooterRow .= "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
 										. "\n\t\treturn as:&nbsp;&nbsp;"
-										. "\n\t\t<select name=\"exportType\" title=\"choose how data shall be returned\"$exportFormatDisabled>"
-										. "\n\t\t\t<option>html</option>"
-										. "\n\t\t\t<option>text</option>"
-//										. "\n\t\t\t<option>xml</option>"
-										. "\n\t\t\t<option>file</option>"
-										. "\n\t\t\t<option>email</option>"
+										. "\n\t\t<select name=\"exportType\" title=\"choose how exported references shall be returned\"$exportFormatDisabled>"
+										. "\n\t\t\t<option value=\"html\">html</option>"
+										. "\n\t\t\t<option value=\"text\">text</option>"
+//										. "\n\t\t\t<option value=\"xml\">xml</option>"
+										. "\n\t\t\t<option value=\"file\">file</option>"
+										. "\n\t\t\t<option value=\"email\">email</option>"
 										. "\n\t\t</select>"
 										. "\n\t</td>"
 
@@ -4770,6 +4851,13 @@
 
 				if ($citeOrder == "year") // sort records first by year (descending), then in the usual way:
 					$query .= " ORDER BY year DESC, first_author, author_count, author, title";
+
+				elseif ($citeOrder == "type") // sort records first by record type (and thesis type), then in the usual way:
+					$query .= " ORDER BY type DESC, thesis DESC, first_author, author_count, author, year, title";
+
+				elseif ($citeOrder == "type-year") // sort records first by record type (and thesis type), then by year (descending), then in the usual way:
+					$query .= " ORDER BY type DESC, thesis DESC, year DESC, first_author, author_count, author, title";
+
 				else // if any other or no '$citeOrder' parameter is specified, we supply the default ORDER BY pattern (which is suitable for citation in a journal etc.):
 					$query .= " ORDER BY first_author, author_count, author, year, title";
 			}
@@ -5210,16 +5298,25 @@
 	// informs the user that no results were found for the current query/action
 	function nothingFound($nothingChecked)
 	{
-		$nothingFoundFeedback = "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the database results for your query\">";
+		global $client;
 
-		if ($nothingChecked)
-			// Inform the user that no records were selected:
-			$nothingFoundFeedback .= "\n<tr>\n\t<td valign=\"top\">No records selected! Please select one or more records by clicking the appropriate checkboxes.&nbsp;&nbsp;<a href=\"javascript:history.back()\">Go Back</a></td>\n</tr>";
-		else // $nothingChecked == false (i.e., the user did check some checkboxes) -OR- the query resulted from another script like 'show.php' (which has no checkboxes to mark!)
-			// Report that nothing was found:
-			$nothingFoundFeedback .= "\n<tr>\n\t<td valign=\"top\">Sorry, but your query didn't produce any results!&nbsp;&nbsp;<a href=\"javascript:history.back()\">Go Back</a></td>\n</tr>";
+		if (eregi("^cli", $client)) // if the query originated from a command line client such as the "refbase" CLI client ("cli-refbase-1.0")
+		{
+			$nothingFoundFeedback = "Nothing found!\n\n"; // return plain text
+		}
+		else // return HTML
+		{
+			$nothingFoundFeedback = "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the database results for your query\">";
 
-		$nothingFoundFeedback .= "\n</table>";
+			if ($nothingChecked)
+				// Inform the user that no records were selected:
+				$nothingFoundFeedback .= "\n<tr>\n\t<td valign=\"top\">No records selected! Please select one or more records by clicking the appropriate checkboxes.&nbsp;&nbsp;<a href=\"javascript:history.back()\">Go Back</a></td>\n</tr>";
+			else // $nothingChecked == false (i.e., the user did check some checkboxes) -OR- the query resulted from another script like 'show.php' (which has no checkboxes to mark!)
+				// Report that nothing was found:
+				$nothingFoundFeedback .= "\n<tr>\n\t<td valign=\"top\">Sorry, but your query didn't produce any results!&nbsp;&nbsp;<a href=\"javascript:history.back()\">Go Back</a></td>\n</tr>";
+
+			$nothingFoundFeedback .= "\n</table>";
+		}
 
 
 		return $nothingFoundFeedback;
@@ -5242,6 +5339,8 @@
 
 		// Note: for proper placement of links within the Links column we don't use the 'mergeLinks()' function here (as is done for Details view),
 		//       since spacing before links is handled individually for each link type
+
+		$links = ""; // make sure that our buffer variable is empty
 
 		// count the number of available link elements:
 		$linkElementCounterLoggedOut = 0;
@@ -5278,38 +5377,38 @@
 		{
 			// ... display a link that opens the Details view for this record:
 			if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
-				echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20cite_key%2C%20related%20"
-					. "FROM%20" . $tableRefs . "%20LEFT%20JOIN%20" . $tableUserData . "%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
+				$links .= "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20cite_key%2C%20related%20"
+						. "FROM%20" . $tableRefs . "%20LEFT%20JOIN%20" . $tableUserData . "%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
 			else // if NO user logged in, don't display any user specific fields:
-				echo "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%20"
-					. "FROM%20" . $tableRefs . "%20";
+				$links .= "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%20"
+						. "FROM%20" . $tableRefs . "%20";
 
-			echo "WHERE%20serial%20RLIKE%20%22%5E%28" . $row["serial"]
-				. "%29%24%22%20ORDER%20BY%20" . rawurlencode($orderBy)
-				. "&amp;showQuery=" . $showQuery
-				. "&amp;showLinks=" . $showLinks
-				. "&amp;formType=sqlSearch"
-				. "&amp;viewType=" . $viewType
-				. "&amp;submit=Display"
-				. "&amp;oldQuery=" . rawurlencode($oldQuery)
-				. "\"><img src=\"img/details.gif\" alt=\"details\" title=\"show details\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
+			$links .= "WHERE%20serial%20RLIKE%20%22%5E%28" . $row["serial"]
+					. "%29%24%22%20ORDER%20BY%20" . rawurlencode($orderBy)
+					. "&amp;showQuery=" . $showQuery
+					. "&amp;showLinks=" . $showLinks
+					. "&amp;formType=sqlSearch"
+					. "&amp;viewType=" . $viewType
+					. "&amp;submit=Display"
+					. "&amp;oldQuery=" . rawurlencode($oldQuery)
+					. "\"><img src=\"img/details.gif\" alt=\"details\" title=\"show details\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
 		}
 
 		if ((($linkElementCounterLoggedOut > 0) OR (isset($_SESSION['loginEmail']) AND $linkElementCounterLoggedIn > 0)) AND (in_array("details", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])))
-			echo "&nbsp;&nbsp;";
+			$links .= "&nbsp;&nbsp;";
 
 		if (in_array("edit", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_edit", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_edit'...
 			// ... display a link that opens the edit form for this record:
-			echo "\n\t\t<a href=\"record.php?serialNo=" . $row["serial"] . "&amp;recordAction=edit"
-				. "&amp;oldQuery=" . rawurlencode($oldQuery)
-				. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit record\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
+			$links .= "\n\t\t<a href=\"record.php?serialNo=" . $row["serial"] . "&amp;recordAction=edit"
+					. "&amp;oldQuery=" . rawurlencode($oldQuery)
+					. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit record\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
 
 		if ((($linkElementCounterLoggedOut > 1) OR (isset($_SESSION['loginEmail']) AND $linkElementCounterLoggedIn > 1)) AND (in_array("edit", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_edit", $_SESSION['user_permissions'])))
 		{
 			if (in_array("details", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions']))
-				echo "\n\t\t<br>";
+				$links .= "\n\t\t<br>";
 			else
-				echo "&nbsp;&nbsp;";
+				$links .= "&nbsp;&nbsp;";
 		}
 
 		// show a link to any corresponding file if one of the following conditions is met:
@@ -5327,19 +5426,19 @@
 					$URLprefix = $filesBaseURL; // use the base URL of the standard files directory as prefix ('$filesBaseURL' is defined in 'ini.inc.php')
 
 				if (eregi("\.pdf$", $row["file"])) // if the 'file' field contains a link to a PDF file
-					echo "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file_PDF.gif\" alt=\"pdf\" title=\"download PDF file\" width=\"17\" height=\"17\" hspace=\"0\" border=\"0\"></a>"; // display a PDF file icon as download link
+					$links .= "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file_PDF.gif\" alt=\"pdf\" title=\"download PDF file\" width=\"17\" height=\"17\" hspace=\"0\" border=\"0\"></a>"; // display a PDF file icon as download link
 				else
-					echo "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file.gif\" alt=\"file\" title=\"download file\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link
+					$links .= "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file.gif\" alt=\"file\" title=\"download file\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link
 			}
 		}
 
 		// if a DOI number exists for this record, we'll prefer it as link, otherwise we use the URL (if available):
 		// (note, that in List view, we'll use the same icon, no matter if the DOI or the URL is used for the link)
 		if (in_array("doi", $showLinkTypes) AND !empty($row["doi"]))
-			echo "\n\t\t<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/link.gif\" alt=\"doi\" title=\"goto web page (via DOI)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+			$links .= "\n\t\t<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/link.gif\" alt=\"doi\" title=\"goto web page (via DOI)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
 
 		elseif (in_array("url", $showLinkTypes) AND !empty($row["url"])) // 'htmlentities()' is used to convert any '&' into '&amp;'
-			echo "\n\t\t<a href=\"" . encodeHTML($row["url"]) . "\"><img src=\"img/link.gif\" alt=\"url\" title=\"goto web page\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+			$links .= "\n\t\t<a href=\"" . encodeHTML($row["url"]) . "\"><img src=\"img/link.gif\" alt=\"url\" title=\"goto web page\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
 
 		// if an ISBN number exists for the current record, provide a link to an ISBN resolver:
 		elseif (in_array("isbn", $showLinkTypes) AND !empty($isbnURLFormat) AND !empty($row["isbn"]))
@@ -5356,7 +5455,7 @@
 			$encodedURL = str_replace(" ", "%20", $encodedURL); // ensure that any spaces are also properly urlencoded
 
 			if (!empty($isbnURL))
-				echo "\n\t\t<a href=\"" . $encodedURL . "\"><img src=\"img/resolve.gif\" alt=\"isbn\" title=\"find book details (via ISBN)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+				$links .= "\n\t\t<a href=\"" . $encodedURL . "\"><img src=\"img/resolve.gif\" alt=\"isbn\" title=\"find book details (via ISBN)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
 		}
 
 		// if still no link was generated and the main bibliographic data do exist for the current record, we'll provide a link to an OpenURL resolver:
@@ -5374,8 +5473,10 @@
 			$encodedURL = str_replace(" ", "%20", $encodedURL); // ensure that any spaces are also properly urlencoded
 
 			if (!empty($openURL))
-				echo "\n\t\t<a href=\"" . $encodedURL . "\"><img src=\"img/resolve.gif\" alt=\"openurl\" title=\"find record details (via OpenURL)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+				$links .= "\n\t\t<a href=\"" . $encodedURL . "\"><img src=\"img/resolve.gif\" alt=\"openurl\" title=\"find record details (via OpenURL)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
 		}
+
+		return $links;
 	}
 
 	// --------------------------------------------------------------------
@@ -5416,12 +5517,14 @@
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
-	// call the 'displayfooter()' function from 'footer.inc.php')
-	if ($viewType != "Print") // Note: we ommit the footer in print view!
-		displayfooter($oldQuery);
+	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
+	if (!eregi("^cli", $client) AND (!(($displayType == "Cite") AND (!eregi("^html$", $citeType))) OR ($rowsFound == 0))) // we exclude the HTML page footer for citation formats other than HTML if something was found
+	{
+		if ($viewType != "Print") // Note: we ommit the visible footer in print view!
+			showPageFooter($HeaderString, $oldQuery);
+
+		displayHTMLfoot();
+	}
 
 	// --------------------------------------------------------------------
 ?>
-
-</body>
-</html>
