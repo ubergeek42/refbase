@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./record.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   04-Nov-05, 19:55
+	// Modified:   13-Jun-06, 13:22
 
 	// Form that offers to add
 	// records or edit/delete
@@ -66,7 +66,7 @@
 		$recordAction = ""; // if the 'recordAction' parameter wasn't set we set the '$recordAction' variable to the empty string ("") to prevent 'Undefined index: recordAction...' notification messages
 
 	if (isset($_REQUEST['mode']))
-		$mode = $_REQUEST['mode']; // check whether the user wants to add a record by use of an *import* form (e.g., the parameter "mode=import" will be set by 'import_csa.php')
+		$mode = $_REQUEST['mode']; // check whether the user wants to add a record by use of an *import* form (e.g., the parameter "mode=import" will be set by 'import.php' and 'import_csa.php')
 	else
 		$mode = ""; // if the 'mode' parameter wasn't set we set the '$mode' variable to the empty string ("") to prevent 'Undefined index: mode...' notification messages
 
@@ -152,9 +152,8 @@
 
 	if (isset($loginEmail)) // if a user is logged in
 	{
-		$loginEmailArray = split("@", $loginEmail); // split the login email address at '@'
-		$loginEmailUserName = $loginEmailArray[0]; // extract the user name (which is the first element of the array '$loginEmailArray')
-		$callNumberPrefix = $abbrevInstitution . " @ " . $loginEmailUserName; // we make use of the session variable '$abbrevInstitution' to construct a correct call number prefix, like: 'IPÖ @ msteffens'
+		// build a correct call number prefix for the currently logged-in user (e.g. 'IPÖ @ msteffens'):
+		$callNumberPrefix = getCallNumberPrefix(); // function 'getCallNumberPrefix()' is defined in 'include.inc.php'
 	}
 
 	// --------------------------------------------------------------------
@@ -227,6 +226,7 @@
 				$notesName = encodeHTML($row['notes']);
 				$approvedRadio = encodeHTML($row['approved']);
 				$locationName = encodeHTML($row['location']);
+				$rawLocationName = $row['location']; // we'll save the unencoded location string to a separate variable since it will be needed when generating the delete button
 				$callNumberName = $row['call_number']; // contents of the 'call_number' field will get encoded depending on who's logged in (normal user vs. admin)
 													// (for normal users being logged in, the field's contents won't get HTML encoded at all, since the data will
 													//  get *rawurlencoded* when including them within a hidden form tag; for the admin being logged in, the data
@@ -331,171 +331,186 @@
 		}
 	else // if ($recordAction == "add") -OR- ($recordAction == "edit" but there were some errors on submit)
 		{
-			if ($recordAction == "add" AND $mode == "import" AND empty($errors)) // if the user wants to import record data by use of an import form (like 'import_csa.php')
+			if ($recordAction == "add" AND $mode == "import" AND empty($errors)) // if the user wants to import record data by use of an import form (like 'import.php' or 'import_csa.php')
 			{
+
+				foreach($_REQUEST as $varname => $value)
+				{
+					// remove slashes from parameter values if 'magic_quotes_gpc = On':
+					$value = stripSlashesIfMagicQuotes($value); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
+
+					$_REQUEST[$varname] = preg_replace("/\\\\([\"'])/", "\\1", $value); // replace any \" with " and any \' with '
+				}
+
 				// read field data from a GET/POST request:
 				if (isset($_REQUEST['author']))
-					$authorName = $_REQUEST['author'];
+					$authorName = encodeHTML($_REQUEST['author']);
 				else
 					$authorName = "";
 
 				if (isset($_REQUEST['title']))
-					$titleName = $_REQUEST['title'];
+					$titleName = encodeHTML($_REQUEST['title']);
 				else
 					$titleName = "";
 
 				if (isset($_REQUEST['year']))
-					$yearNo = $_REQUEST['year'];
+					$yearNo = encodeHTML($_REQUEST['year']);
 				else
 					$yearNo = "";
 
 				if (isset($_REQUEST['publication']))
-					$publicationName = $_REQUEST['publication'];
+					$publicationName = encodeHTML($_REQUEST['publication']);
 				else
 					$publicationName = "";
 
 				if (isset($_REQUEST['abbrev_journal']))
-					$abbrevJournalName = $_REQUEST['abbrev_journal'];
+					$abbrevJournalName = encodeHTML($_REQUEST['abbrev_journal']);
 				else
 					$abbrevJournalName = "";
 
 				if (isset($_REQUEST['volume']))
-					$volumeNo = $_REQUEST['volume'];
+					$volumeNo = encodeHTML($_REQUEST['volume']);
 				else
 					$volumeNo = "";
 
 				if (isset($_REQUEST['issue']))
-					$issueNo = $_REQUEST['issue'];
+					$issueNo = encodeHTML($_REQUEST['issue']);
 				else
 					$issueNo = "";
 
 				if (isset($_REQUEST['pages']))
-					$pagesNo = $_REQUEST['pages'];
+					$pagesNo = encodeHTML($_REQUEST['pages']);
 				else
 					$pagesNo = "";
 
 				if (isset($_REQUEST['address']))
-					$addressName = $_REQUEST['address'];
+					$addressName = encodeHTML($_REQUEST['address']);
 				else
 					$addressName = "";
 
 				if (isset($_REQUEST['corporate_author']))
-					$corporateAuthorName = $_REQUEST['corporate_author'];
+					$corporateAuthorName = encodeHTML($_REQUEST['corporate_author']);
 				else
 					$corporateAuthorName = "";
 
 				if (isset($_REQUEST['keywords']))
-					$keywordsName = $_REQUEST['keywords'];
+					$keywordsName = encodeHTML($_REQUEST['keywords']);
 				else
 					$keywordsName = "";
 
 				if (isset($_REQUEST['abstract']))
-					$abstractName = $_REQUEST['abstract'];
+					$abstractName = encodeHTML($_REQUEST['abstract']);
 				else
 					$abstractName = "";
 
 				if (isset($_REQUEST['publisher']))
-					$publisherName = $_REQUEST['publisher'];
+					$publisherName = encodeHTML($_REQUEST['publisher']);
 				else
 					$publisherName = "";
 
 				if (isset($_REQUEST['place']))
-					$placeName = $_REQUEST['place'];
+					$placeName = encodeHTML($_REQUEST['place']);
 				else
 					$placeName = "";
 
 				if (isset($_REQUEST['editor']))
-					$editorName = $_REQUEST['editor'];
+					$editorName = encodeHTML($_REQUEST['editor']);
 				else
 					$editorName = "";
 
 				if (isset($_REQUEST['language']))
-					$languageName = $_REQUEST['language'];
+					$languageName = encodeHTML($_REQUEST['language']);
 				else
 					$languageName = "";
 
 				if (isset($_REQUEST['summary_language']))
-					$summaryLanguageName = $_REQUEST['summary_language'];
+					$summaryLanguageName = encodeHTML($_REQUEST['summary_language']);
 				else
 					$summaryLanguageName = "";
 
 				if (isset($_REQUEST['orig_title']))
-					$origTitleName = $_REQUEST['orig_title'];
+					$origTitleName = encodeHTML($_REQUEST['orig_title']);
 				else
 					$origTitleName = "";
 
 				if (isset($_REQUEST['series_editor']))
-					$seriesEditorName = $_REQUEST['series_editor'];
+					$seriesEditorName = encodeHTML($_REQUEST['series_editor']);
 				else
 					$seriesEditorName = "";
 
 				if (isset($_REQUEST['series_title']))
-					$seriesTitleName = $_REQUEST['series_title'];
+					$seriesTitleName = encodeHTML($_REQUEST['series_title']);
 				else
 					$seriesTitleName = "";
 
 				if (isset($_REQUEST['abbrev_series_title']))
-					$abbrevSeriesTitleName = $_REQUEST['abbrev_series_title'];
+					$abbrevSeriesTitleName = encodeHTML($_REQUEST['abbrev_series_title']);
 				else
 					$abbrevSeriesTitleName = "";
 
 				if (isset($_REQUEST['series_volume']))
-					$seriesVolumeNo = $_REQUEST['series_volume'];
+					$seriesVolumeNo = encodeHTML($_REQUEST['series_volume']);
 				else
 					$seriesVolumeNo = "";
 
 				if (isset($_REQUEST['series_issue']))
-					$seriesIssueNo = $_REQUEST['series_issue'];
+					$seriesIssueNo = encodeHTML($_REQUEST['series_issue']);
 				else
 					$seriesIssueNo = "";
 
 				if (isset($_REQUEST['edition']))
-					$editionNo = $_REQUEST['edition'];
+					$editionNo = encodeHTML($_REQUEST['edition']);
 				else
 					$editionNo = "";
 
 				if (isset($_REQUEST['issn']))
-					$issnName = $_REQUEST['issn'];
+					$issnName = encodeHTML($_REQUEST['issn']);
 				else
 					$issnName = "";
 
 				if (isset($_REQUEST['isbn']))
-					$isbnName = $_REQUEST['isbn'];
+					$isbnName = encodeHTML($_REQUEST['isbn']);
 				else
 					$isbnName = "";
 
 				$mediumName = "";
 
 				if (isset($_REQUEST['area']))
-					$areaName = $_REQUEST['area'];
+					$areaName = encodeHTML($_REQUEST['area']);
 				else
 					$areaName = "";
 
 				$expeditionName = "";
 
 				if (isset($_REQUEST['conference']))
-					$conferenceName = $_REQUEST['conference'];
+					$conferenceName = encodeHTML($_REQUEST['conference']);
 				else
 					$conferenceName = "";
 
 				if (isset($_REQUEST['notes']))
-					$notesName = $_REQUEST['notes'];
+					$notesName = encodeHTML($_REQUEST['notes']);
 				else
 					$notesName = "";
 
 				$approvedRadio = "";
 				$locationName = $locationName; // supply some generic info: "(...will be filled in automatically)" [as defined at the top of this script]
-				$callNumberName = "";
+				$rawLocationName = "";
+
+				if (isset($_REQUEST['call_number']))
+					$callNumberName = encodeHTML($_REQUEST['call_number']);
+				else
+					$callNumberName = "";
+
 				$callNumberNameUserOnly = "";
 				$serialNo = $serialNo; // supply some generic info: "(not assigned yet)" [as defined at the top of this script]
 
 				if (isset($_REQUEST['type']))
-					$typeName = $_REQUEST['type'];
+					$typeName = encodeHTML($_REQUEST['type']);
 				else
 					$typeName = "";
 
 				if (isset($_REQUEST['thesis']))
-					$thesisName = $_REQUEST['thesis'];
+					$thesisName = encodeHTML($_REQUEST['thesis']);
 				else
 					$thesisName = "";
 
@@ -511,12 +526,12 @@
 				$fileName = "";
 
 				if (isset($_REQUEST['url']))
-					$urlName = $_REQUEST['url'];
+					$urlName = encodeHTML($_REQUEST['url']);
 				else
 					$urlName = "";
 
 				if (isset($_REQUEST['doi']))
-					$doiName = $_REQUEST['doi'];
+					$doiName = encodeHTML($_REQUEST['doi']);
 				else
 					$doiName = "";
 
@@ -573,9 +588,15 @@
 					$approvedRadio = $formVars['approvedRadio'];
 
 					if ($recordAction == "edit")
+					{
 						$locationName = $formVars['locationName'];
+						$rawLocationName = $formVars['locationName'];
+					}
 					else
+					{
 						$locationName = $locationName; // supply some generic info: "(...will be filled in automatically)" [as defined at the top of this script]
+						$rawLocationName = "";
+					}
 
 					$callNumberName = $formVars['callNumberName'];
 					if (ereg("%40", $callNumberName)) // if '$callNumberName' still contains URL encoded data... ('%40' is the URL encoded form of the character '@', see note below!)
@@ -667,6 +688,7 @@
 					$notesName = "";
 					$approvedRadio = "";
 					$locationName = $locationName; // supply some generic info: "(...will be filled in automatically)" [as defined at the top of this script]
+					$rawLocationName = "";
 					$callNumberName = "";
 					$callNumberNameUserOnly = "";
 					$serialNo = $serialNo; // supply some generic info: "(not assigned yet)" [as defined at the top of this script]
@@ -704,11 +726,11 @@
 	// (4a) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $pageTitle, "index,follow", "Add, edit or delete a record in the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
-	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, $oldQuery);
+	showPageHeader($HeaderString, $oldQuery);
 
 	// (4b) DISPLAY results:
 	// Start <form> and <table> holding the form elements:
-	echo "\n<form enctype=\"multipart/form-data\" action=\"modify.php\" method=\"POST\">";
+	echo "\n<form enctype=\"multipart/form-data\" action=\"modify.php?proc=1\" method=\"POST\">";
 	echo "\n<input type=\"hidden\" name=\"formType\" value=\"record\">";
 	echo "\n<input type=\"hidden\" name=\"submit\" value=\"" . $pageTitle . "\">"; // provide a default value for the 'submit' form tag (then, hitting <enter> within a text entry field will act as if the user clicked the 'Add/Edit Record' button)
 	echo "\n<input type=\"hidden\" name=\"recordAction\" value=\"" . $recordAction . "\">";
@@ -1105,8 +1127,8 @@
 		if ($recordAction == "edit") // add a DELETE button (CAUTION: the delete button must be displayed *AFTER* the edit button, otherwise DELETE will be the default action if the user hits return!!)
 									// (this is since the first displayed submit button represents the default submit action in several browsers!! [like OmniWeb or Mozilla])
 		{
-			if (!isset($loginEmail) OR ((!ereg($loginEmail,$locationName) OR ereg(";",$row['location'])) AND ($loginEmail != $adminLoginEmail))) // if the user isn't logged in -OR- any normal user is logged in & the 'location' field doesn't list her email address -OR- if the 'location' field contains more than one user (which is indicated by a semicolon character)...
-				// Note that we use '$row['location']' instead of the '$locationName' variable for those tests that check for the existence of a semicolon since for '$locationName' high ASCII characters were converted into HTML entities.
+			if (!isset($loginEmail) OR ((!ereg($loginEmail,$locationName) OR ereg(";",$rawLocationName)) AND ($loginEmail != $adminLoginEmail))) // if the user isn't logged in -OR- any normal user is logged in & the 'location' field doesn't list her email address -OR- if the 'location' field contains more than one user (which is indicated by a semicolon character)...
+				// Note that we use '$rawLocationName' instead of the '$locationName' variable for those tests that check for the existence of a semicolon since for '$locationName' high ASCII characters were converted into HTML entities.
 				// E.g., the german umlaut 'ü' would be presented as '&uuml;', thus containing a semicolon character *within* the user's name!
 			{
 				// build an informative title string:
@@ -1116,12 +1138,12 @@
 				elseif (!ereg($loginEmail, $locationName)) // if any normal user is logged in & the 'location' field doesn't list her email address
 					$deleteTitle = "you can't delete this record since it doesn't belong to your personal literature data set";
 
-				elseif (ereg(";", $row['location'])) // if the 'location' field contains more than one user (which is indicated by a semicolon character)
+				elseif (ereg(";", $rawLocationName)) // if the 'location' field contains more than one user (which is indicated by a semicolon character)
 				{
 					// if we made it here, the current user is listed within the 'location' field of this record
-					if (ereg("^[^;]+;[^;]+$", $row['location'])) // the 'location' field does contain exactly one ';' => two authors, i.e., there's only one "other user" listed within the 'location' field
+					if (ereg("^[^;]+;[^;]+$", $rawLocationName)) // the 'location' field does contain exactly one ';' => two authors, i.e., there's only one "other user" listed within the 'location' field
 						$deleteTitle = "you can't delete this record since it also belongs to the personal literature data set of another user";
-					elseif (ereg("^[^;]+;[^;]+;[^;]+", $row['location'])) // the 'location' field does contain at least two ';' => more than two authors, i.e., there are two or more "other users" listed within the 'location' field
+					elseif (ereg("^[^;]+;[^;]+;[^;]+", $rawLocationName)) // the 'location' field does contain at least two ';' => more than two authors, i.e., there are two or more "other users" listed within the 'location' field
 						$deleteTitle = "you can't delete this record since it also belongs to the personal literature data set of other users";
 				}
 	
@@ -1157,11 +1179,10 @@
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
-	// call the 'displayfooter()' function from 'footer.inc.php')
-	displayfooter($oldQuery);
+	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
+	showPageFooter($HeaderString, $oldQuery);
+
+	displayHTMLfoot();
 
 	// --------------------------------------------------------------------
 ?>
-
-</body>
-</html> 
