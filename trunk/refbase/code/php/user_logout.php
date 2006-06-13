@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_logout.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   20-Jan-06, 13:47
+	// Modified:   10-Jun-06, 17:14
 
 	// This script logs a user out and redirects 
 	// to the calling page. If the script is called
@@ -62,8 +62,11 @@
 		if (isset($_SESSION['userQueries']))
 			deleteSessionVariable("userQueries"); // clear the user's saved queries (if any)
 
-		if (isset($_SESSION['user_formats']))
-			deleteSessionVariable("user_formats"); // clear the user's formats (if any)
+		if (isset($_SESSION['user_export_formats']))
+			deleteSessionVariable("user_export_formats"); // clear the user's export formats (if any)
+
+		if (isset($_SESSION['user_cite_formats']))
+			deleteSessionVariable("user_cite_formats"); // clear the user's cite formats (if any)
 
 		if (isset($_SESSION['user_styles']))
 			deleteSessionVariable("user_styles"); // clear the user's styles (if any)
