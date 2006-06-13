@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_options.php
 	// Created:    24-Oct-04, 19:31
-	// Modified:   30-Oct-05, 22:05
+	// Modified:   10-Jun-06, 16:43
 
 	// This script provides options which are individual for each user.
 	// 
@@ -156,7 +156,7 @@
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Options", "noindex,nofollow", "User options offered by the " . encodeHTML($officialDatabaseName), "\n\t<meta http-equiv=\"expires\" content=\"0\">", true, "", $viewType, array());
-	showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
+	showPageHeader($HeaderString, "");
 
 	// --------------------------------------------------------------------
 
@@ -203,8 +203,11 @@
 	// Get all citation styles that are available (admin logged in) or which were enabled for the current user (normal user logged in):
 	$styleOptionTags = returnFormatsStylesTypesAsOptionTags($userID, "style", "");
 
+	// Get all citation formats that are available (admin logged in) or which were enabled for the current user (normal user logged in):
+	$citeFormatOptionTags = returnFormatsStylesTypesAsOptionTags($userID, "format", "cite");
+
 	// Get all export formats that are available (admin logged in) or which were enabled for the current user (normal user logged in):
-	$formatOptionTags = returnFormatsStylesTypesAsOptionTags($userID, "format", "export");
+	$exportFormatOptionTags = returnFormatsStylesTypesAsOptionTags($userID, "format", "export");
 
 	if ($loginEmail == $adminLoginEmail) // if the admin is logged in
 		$selectListIdentifier = "Enabled";
@@ -327,10 +330,20 @@
 </tr>
 <tr>
 	<td align="left"></td>
+	<td align="left" valign="top"><?php echo $selectListIdentifier; ?> citation formats:</td>
+	<td valign="top"><?php echo fieldError("citationFormatSelector", $errors); ?>
+
+		<select name="citationFormatSelector[]" multiple><?php echo $citeFormatOptionTags; ?>
+
+		</select>
+	</td>
+</tr>
+<tr>
+	<td align="left"></td>
 	<td align="left" valign="top"><?php echo $selectListIdentifier; ?> export formats:</td>
 	<td valign="top"><?php echo fieldError("exportFormatSelector", $errors); ?>
 
-		<select name="exportFormatSelector[]" multiple><?php echo $formatOptionTags; ?>
+		<select name="exportFormatSelector[]" multiple><?php echo $exportFormatOptionTags; ?>
 
 		</select>
 	</td>
@@ -678,11 +691,10 @@
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
-	// call the 'displayfooter()' function from 'footer.inc.php')
-	displayfooter("");
+	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
+	showPageFooter($HeaderString, "");
+
+	displayHTMLfoot();
 
 	// --------------------------------------------------------------------
 ?>
-
-</body>
-</html>
