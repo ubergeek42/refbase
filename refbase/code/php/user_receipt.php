@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_receipt.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   26-Feb-06, 14:09
+	// Modified:   10-Jun-06, 23:00
 
 	// This script shows the user a receipt for their user UPDATE or INSERT.
 	// It carries out no database actions and can be bookmarked.
@@ -168,7 +168,7 @@
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Receipt", "noindex,nofollow", "Receipt page confirming correct submission of new user details to the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
-		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
+		showPageHeader($HeaderString, "");
 
 		$confirmationText = "Thanks for your interest in the " . encodeHTML($officialDatabaseName) . "!"
 					. "<br><br>The data you provided have been sent to our database admin."
@@ -228,7 +228,7 @@
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Receipt", "noindex,nofollow", "Receipt page confirming correct entry of user details and options for the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
-		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
+		showPageHeader($HeaderString, "");
 
 		// Start main table:
 		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays user account details and options\">";
@@ -375,6 +375,8 @@
 	
 				$citationStylesArray = getEnabledUserFormatsStylesTypes($userID, "style", "", false);
 			
+				$citationFormatsArray = getEnabledUserFormatsStylesTypes($userID, "format", "cite", false);
+			
 				$exportFormatsArray = getEnabledUserFormatsStylesTypes($userID, "format", "export", false);
 			}
 			else // if a normal user is logged in
@@ -387,6 +389,8 @@
 	
 				$citationStylesArray = getVisibleUserFormatsStylesTypes($userID, "style", "");
 			
+				$citationFormatsArray = getVisibleUserFormatsStylesTypes($userID, "format", "cite");
+	
 				$exportFormatsArray = getVisibleUserFormatsStylesTypes($userID, "format", "export");
 	
 				// Note: the function 'getVisibleUserFormatsStylesTypes()' will only update the appropriate session variables if
@@ -397,18 +401,54 @@
 			}
 		
 			echo "\n\t\t<tr valign=\"top\">"
-				. "\n\t\t\t<td>" . $ShowEnabledDescriptor . " reference types:</td>"
-				. "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>" . implode("</li>\n\t\t\t\t\t<li>", $userTypesArray) . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
+				. "\n\t\t\t<td>" . $ShowEnabledDescriptor . " reference types:</td>" // list types
+				. "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>";
+
+			if (empty($userTypesArray))
+				echo "(none)";
+			else
+				echo implode("</li>\n\t\t\t\t\t<li>", $userTypesArray);
+
+			echo "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
 				. "\n\t\t</tr>";
 
-			echo "\n\t\t<tr valign=\"top\">"
-				. "\n\t\t\t<td>" . $ShowEnabledDescriptor . " citation styles:</td>"
-				. "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>" . implode("</li>\n\t\t\t\t\t<li>", $citationStylesArray) . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
-				. "\n\t\t</tr>";
 
 			echo "\n\t\t<tr valign=\"top\">"
-				. "\n\t\t\t<td>" . $ShowEnabledDescriptor . " export formats:</td>"
-				. "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>" . implode("</li>\n\t\t\t\t\t<li>", $exportFormatsArray) . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
+				. "\n\t\t\t<td>" . $ShowEnabledDescriptor . " citation styles:</td>" // list styles
+				. "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>";
+
+			if (empty($citationStylesArray))
+				echo "(none)";
+			else
+				echo implode("</li>\n\t\t\t\t\t<li>", $citationStylesArray);
+
+			echo "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
+				. "\n\t\t</tr>";
+
+
+			echo "\n\t\t<tr valign=\"top\">"
+				. "\n\t\t\t<td>" . $ShowEnabledDescriptor . " citation formats:</td>" // list cite formats
+				. "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>";
+
+			if (empty($citationFormatsArray))
+				echo "(none)";
+			else
+				echo implode("</li>\n\t\t\t\t\t<li>", $citationFormatsArray);
+
+			echo "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
+				. "\n\t\t</tr>";
+
+
+			echo "\n\t\t<tr valign=\"top\">"
+				. "\n\t\t\t<td>" . $ShowEnabledDescriptor . " export formats:</td>" // list export formats
+				. "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>";
+
+			if (empty($exportFormatsArray))
+				echo "(none)";
+			else
+				echo implode("</li>\n\t\t\t\t\t<li>", $exportFormatsArray);
+
+			echo "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
 				. "\n\t\t</tr>";
 
 			if ($loginEmail == $adminLoginEmail) // if the admin is logged in
@@ -499,11 +539,10 @@
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
-	// call the 'displayfooter()' function from 'footer.inc.php')
-	displayfooter("");
+	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
+	showPageFooter($HeaderString, "");
+
+	displayHTMLfoot();
 
 	// --------------------------------------------------------------------
 ?>
-
-</body>
-</html>
