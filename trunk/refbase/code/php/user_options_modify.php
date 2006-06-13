@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_options_modify.php
 	// Created:    26-Oct-04, 20:57
-	// Modified:   05-Nov-05, 14:23
+	// Modified:   10-Jun-06, 17:55
 
 	// This script validates user options selected within the form provided by 'user_options.php'.
 	// If validation succeeds, it UPDATEs the corresponding table fields for that user and redirects to a receipt page;
@@ -102,6 +102,10 @@
 	// Validate the citation style selector
 	if (empty($formVars["citationStyleSelector"]))
 		$errors["citationStyleSelector"] = "You must choose at least one citation style:";
+
+	// Validate the cite format selector
+	if (empty($formVars["citationFormatSelector"]))
+		$errors["citationFormatSelector"] = "You must choose at least one citation format:";
 
 	// Validate the export format selector
 	if (empty($formVars["exportFormatSelector"]))
@@ -214,20 +218,20 @@
 			}
 	
 			// ---------------------
-			// d) update all entries for this user within the 'user_formats' table:
+			// d) update all cite entries for this user within the 'user_formats' table:
 
-			//     - first, get a list of IDs for all formats within the 'user_formats' table that are available and were enabled by the admin for the current user:
-			$enabledUserFormatsArray = getEnabledUserFormatsStylesTypes($userID, "format", "export", true); // function 'getEnabledUserFormatsStylesTypes()' is defined in 'include.inc.php'
+			//     - first, get a list of IDs for all cite formats within the 'user_formats' table that are available and were enabled by the admin for the current user:
+			$enabledUserFormatsArray = getEnabledUserFormatsStylesTypes($userID, "format", "cite", true); // function 'getEnabledUserFormatsStylesTypes()' is defined in 'include.inc.php'
 
-			$enabledUserFormatsInSelectedFormatsArray = array_intersect($enabledUserFormatsArray, $formVars["exportFormatSelector"]);
+			$enabledUserFormatsInSelectedFormatsArray = array_intersect($enabledUserFormatsArray, $formVars["citationFormatSelector"]);
 
-			$enabledUserFormatsNOTInSelectedFormatsArray = array_diff($enabledUserFormatsArray, $formVars["exportFormatSelector"]);
+			$enabledUserFormatsNOTInSelectedFormatsArray = array_diff($enabledUserFormatsArray, $formVars["citationFormatSelector"]);
 
-			$selectedFormatsNOTInEnabledUserFormatsArray = array_diff($formVars["exportFormatSelector"], $enabledUserFormatsArray);
+			$selectedFormatsNOTInEnabledUserFormatsArray = array_diff($formVars["citationFormatSelector"], $enabledUserFormatsArray);
 
 			if (!empty($enabledUserFormatsNOTInSelectedFormatsArray))
 			{
-				// - remove formats which do exist within the 'user_formats' table but were deselected by the admin:
+				// - remove cite formats which do exist within the 'user_formats' table but were deselected by the admin:
 				$enabledUserFormatsNOTInSelectedFormatsString = implode("|", $enabledUserFormatsNOTInSelectedFormatsArray); // join array of format IDs using a pipe as separator
 
 				$queryArray[] = "DELETE FROM $tableUserFormats "
@@ -236,7 +240,7 @@
 	
 			if (!empty($selectedFormatsNOTInEnabledUserFormatsArray))
 			{
-				// - insert formats that were selected by the admin but which do not yet exist within the 'user_formats' table:
+				// - insert cite formats that were selected by the admin but which do not yet exist within the 'user_formats' table:
 				$selectedFormatsNOTInEnabledUserFormatsString = implode("|", $selectedFormatsNOTInEnabledUserFormatsArray); // join array of format IDs using a pipe as separator
 
 				$insertFormatsQuery = "INSERT INTO $tableUserFormats VALUES ";
@@ -248,7 +252,41 @@
 			}
 
 			// ---------------------
-			// e) update all permission settings for this user within the 'user_permissions' table:
+			// e) update all export entries for this user within the 'user_formats' table:
+
+			//     - first, get a list of IDs for all export formats within the 'user_formats' table that are available and were enabled by the admin for the current user:
+			$enabledUserFormatsArray = getEnabledUserFormatsStylesTypes($userID, "format", "export", true); // function 'getEnabledUserFormatsStylesTypes()' is defined in 'include.inc.php'
+
+			$enabledUserFormatsInSelectedFormatsArray = array_intersect($enabledUserFormatsArray, $formVars["exportFormatSelector"]);
+
+			$enabledUserFormatsNOTInSelectedFormatsArray = array_diff($enabledUserFormatsArray, $formVars["exportFormatSelector"]);
+
+			$selectedFormatsNOTInEnabledUserFormatsArray = array_diff($formVars["exportFormatSelector"], $enabledUserFormatsArray);
+
+			if (!empty($enabledUserFormatsNOTInSelectedFormatsArray))
+			{
+				// - remove export formats which do exist within the 'user_formats' table but were deselected by the admin:
+				$enabledUserFormatsNOTInSelectedFormatsString = implode("|", $enabledUserFormatsNOTInSelectedFormatsArray); // join array of format IDs using a pipe as separator
+
+				$queryArray[] = "DELETE FROM $tableUserFormats "
+								. "WHERE user_id = $userID AND format_id RLIKE \"^(" . $enabledUserFormatsNOTInSelectedFormatsString . ")$\"";
+			}
+	
+			if (!empty($selectedFormatsNOTInEnabledUserFormatsArray))
+			{
+				// - insert export formats that were selected by the admin but which do not yet exist within the 'user_formats' table:
+				$selectedFormatsNOTInEnabledUserFormatsString = implode("|", $selectedFormatsNOTInEnabledUserFormatsArray); // join array of format IDs using a pipe as separator
+
+				$insertFormatsQuery = "INSERT INTO $tableUserFormats VALUES ";
+
+				foreach ($selectedFormatsNOTInEnabledUserFormatsArray as $newUserFormatID)
+					$insertFormatsQueryValues[] = "(NULL, $newUserFormatID, $userID, 'true')";
+
+				$queryArray[] = $insertFormatsQuery . implode(", ", $insertFormatsQueryValues) . ";";
+			}
+
+			// ---------------------
+			// f) update all permission settings for this user within the 'user_permissions' table:
 
 			// get all user permissions for the current user (as they were before submit of 'user_options.php'):
 			$userPermissionsArray = getPermissions($userID, "user", false); // function 'getPermissions()' is defined in 'include.inc.php'
@@ -296,16 +334,27 @@
 							. "show_style = \"false\" "
 							. "WHERE user_id = $userID AND style_id NOT RLIKE \"^(" . $styleIDString . ")$\"";
 	
-			// d) update all entries for this user within the 'user_formats' table:
-			$formatIDString = implode("|", $formVars["exportFormatSelector"]); // join array of format IDs using a pipe as separator
+			// d) update all cite entries for this user within the 'user_formats' table:
+			$citeFormatIDString = implode("|", $formVars["citationFormatSelector"]); // join array of format IDs using a pipe as separator
 	
 			$queryArray[] = "UPDATE $tableUserFormats SET "
 							. "show_format = \"true\" "
-							. "WHERE user_id = $userID AND format_id RLIKE \"^(" . $formatIDString . ")$\"";
+							. "WHERE user_id = $userID AND format_id RLIKE \"^(" . $citeFormatIDString . ")$\"";
 	
 			$queryArray[] = "UPDATE $tableUserFormats SET "
 							. "show_format = \"false\" "
-							. "WHERE user_id = $userID AND format_id NOT RLIKE \"^(" . $formatIDString . ")$\"";
+							. "WHERE user_id = $userID AND format_id NOT RLIKE \"^(" . $citeFormatIDString . ")$\"";
+	
+			// e) update all export entries for this user within the 'user_formats' table:
+			$exportFormatIDString = implode("|", $formVars["exportFormatSelector"]); // join array of format IDs using a pipe as separator
+	
+			$queryArray[] = "UPDATE $tableUserFormats SET "
+							. "show_format = \"true\" "
+							. "WHERE user_id = $userID AND format_id RLIKE \"^(" . $exportFormatIDString . ")$\"";
+	
+			$queryArray[] = "UPDATE $tableUserFormats SET "
+							. "show_format = \"false\" "
+							. "WHERE user_id = $userID AND format_id NOT RLIKE \"^(" . $exportFormatIDString . ")$\" AND format_id NOT RLIKE \"^(" . $citeFormatIDString . ")$\""; // we need to include '$citeFormatIDString' here, otherwise the user's selected cite formats would get deleted again
 		}
 
 		// ---------------------------------------------------------------
