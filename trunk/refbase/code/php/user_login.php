@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   20-Jan-06, 13:46
+	// Modified:   10-Jun-06, 17:55
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -179,8 +179,12 @@
 			getUserQueries($row2["user_id"]); // function 'getUserQueries()' is defined in 'include.inc.php'
 
 			// Get all export formats that were selected previously by the current user
-			// and (if some formats were found) save them as semicolon-delimited string to the session variable 'user_formats':
+			// and (if some formats were found) save them as semicolon-delimited string to the session variable 'user_export_formats':
 			getVisibleUserFormatsStylesTypes($row2["user_id"], "format", "export"); // function 'getVisibleUserFormatsStylesTypes()' is defined in 'include.inc.php'
+
+			// Get all citation formats that were selected previously by the current user
+			// and (if some formats were found) save them as semicolon-delimited string to the session variable 'user_cite_formats':
+			getVisibleUserFormatsStylesTypes($row2["user_id"], "format", "cite"); // function 'getVisibleUserFormatsStylesTypes()' is defined in 'include.inc.php'
 
 			// Get all citation styles that were selected previously by the current user
 			// and (if some styles were found) save them as semicolon-delimited string to the session variable 'user_styles':
@@ -259,7 +263,7 @@
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Login", "index,follow", "User login page. You must be logged in to the " . encodeHTML($officialDatabaseName) . " in order to add, edit or delete records", "", false, "", $viewType, array());
-		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
+		showPageHeader($HeaderString, "");
 
 		// Build the login form:
 		// Note: we use the fact here, that a page can have both, a GET and POST request.
@@ -299,11 +303,10 @@
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
-	// call the 'displayfooter()' function from 'footer.inc.php')
-	displayfooter("");
+	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
+	showPageFooter($HeaderString, "");
+
+	displayHTMLfoot();
 
 	// --------------------------------------------------------------------
 ?>
-
-</body>
-</html>
