@@ -12,12 +12,15 @@
 	//             Richard Karnesky <mailto:karnesky@northwestern.edu>
 	//
 	// Created:    17-May-05, 16:38
-	// Modified:   09-Sep-05, 01:49
+	// Modified:   09-Jun-06, 02:20
 
 	// This include file contains functions that'll export records to SRW XML.
 	// Requires ActiveLink PHP XML Package, which is available under the GPL from:
 	// <http://www.active-link.com/software/>. See 'sru.php' for more info.
 
+
+	// Incorporate some include files:
+	include_once 'includes/webservice.inc.php'; // include functions that are commonly used with the refbase webservices
 
 	// Import the ActiveLink Packages
 	require_once("classes/include.php");
@@ -29,12 +32,17 @@
 	// Return MODS XML records wrapped into SRW XML ('searchRetrieveResponse'):
 	function srwCollection($result, $rowOffset, $showRows, $exportStylesheet, $displayType)
 	{
-		global $contentTypeCharset; // defined in 'ini.inc.php'
+		global $contentTypeCharset; // these variables are defined in 'ini.inc.php'
+		global $convertExportDataToUTF8;
 
 		// Individual records are objects and collections of records are strings
 
 		$srwCollectionDoc = new XMLDocument();
-		$srwCollectionDoc->setEncoding($contentTypeCharset);
+
+		if (($convertExportDataToUTF8 == "yes") AND ($contentTypeCharset != "UTF-8"))
+			$srwCollectionDoc->setEncoding("UTF-8");
+		else
+			$srwCollectionDoc->setEncoding($contentTypeCharset);
 
 		$srwCollection = srwGenerateBaseTags("searchRetrieveResponse");
 
@@ -42,55 +50,42 @@
 
 		// Find out how many rows are available and (if there were rows found) seek to the current offset:
 		// function 'seekInMySQLResultsToOffset()' is defined in 'include.inc.php'
-		list($result, $rowOffset, $showRows, $rowsFound, $previousOffset, $nextOffset, $showMaxRow) = seekInMySQLResultsToOffset($result, $rowOffset, $showRows, $displayType);
+		list($result, $rowOffset, $showRows, $rowsFound, $previousOffset, $nextOffset, $showMaxRow) = seekInMySQLResultsToOffset($result, $rowOffset, $showRows, $displayType, "");
 
-		addNewBranch($srwCollection, "srw:numberOfRecords", array(), $rowsFound);
+		addNewBranch($srwCollection, "srw:numberOfRecords", array(), $rowsFound); // function 'addNewBranch()' is defined in 'webservice.inc.php'
 
 		// <srw:resultSetId> not supported
 		// <srw:resultSetIdleTime> not supported
 
 		$srwRecordsBranch = new XMLBranch("srw:records");
-	
+
 		if ($showRowsOriginal != 0) // we ommit the records list in the response if the SRU query did contain 'maximumRecords=0'
 		{
 			$exportArray = array(); // Array for individually exported records
-	
+
 			// Generate the export for each record and push them onto an array:
 			for ($rowCounter=0; (($rowCounter < $showRows) && ($row = @ mysql_fetch_array($result))); $rowCounter++)
 			{
-				// Convert special characters in each of the fields:
-				foreach ($row as $rowFieldName => $rowFieldValue)
-					// We only convert those special chars to entities which are supported by XML:
-					// (function 'encodeHTMLspecialchars()' is defined in 'include.inc.php')
-					$row[$rowFieldName] = encodeHTMLspecialchars($row[$rowFieldName]);
-	
-				// Note: except from the above conversion of angle brackets (i.e., '<'
-				//       and '>'), ampersands ('&') and quotes, data will be exported as
-				//       fetched from the MySQL database, i.e., there's NO conversion of:
-				//        - higher ASCII chars
-				//        - "human readable markup" that's used within plain text fields
-				//          of the database to define rich text characters like italics,
-				//          etc. (see '$markupSearchReplacePatterns' in 'ini.inc.php')
-	
-				$record = modsRecord($row); // Export the current record as MODS XML
-	
+				// Export the current record as MODS XML:
+				$record = modsRecord($row); // function 'modsRecord()' is defined in 'modsxml.inc.php'
+
 				if (!empty($record)) // unless the record buffer is empty...
 					array_push($exportArray, $record); // ...add it to an array of exports
 			}
-	
+
 			$i = $rowOffset; // initialize counter
-	
+
 			// for each of the MODS records in the result set...
 			foreach ($exportArray as $mods)
 			{
 				++$i; // increment $i by one, then return $i
-	
+
 				$srwRecordBranch = new XMLBranch("srw:record");
-	
+
 				srwGeneratePackingSchema($srwRecordBranch, "xml", "mods");
-	
+
 				$srwRecordDataBranch = new XMLBranch("srw:recordData");
-	
+
 				// NOTE: converting the MODS object into a string to perform search & replace actions
 				//       may be very clumsy but I don't know any better... ?:-/
 				$modsString = $mods->getXMLString();
@@ -99,16 +94,16 @@
 //				$modsString = preg_replace("#<(/)?#","<\\1mods:",$modsString);
 				$mods->removeAllBranches();
 				$mods->parseFromString($modsString);
-				
+
 				$srwRecordDataBranch->addXMLasBranch($mods);
 				$srwRecordBranch->addXMLBranch($srwRecordDataBranch);
-	
+
 				addNewBranch($srwRecordBranch, "srw:recordPosition", array(), $i);
 
 				$srwRecordsBranch->addXMLBranch($srwRecordBranch);
 			}
 		}
-	
+
 		$srwCollection->addXMLBranch($srwRecordsBranch);
 
 		if (($showRowsOriginal != 0) && ($showMaxRow < $rowsFound)) // show 'nextRecordPosition' if the SRU query did not contain 'maximumRecords=0' and if there are any remaining records to be displayed
@@ -147,7 +142,7 @@
 		$srwCollectionDoc->setEncoding($contentTypeCharset);
 
 		$srwCollection = srwGenerateBaseTags("explainResponse");
-		
+
 		$srwRecordBranch = new XMLBranch("srw:record");
 
 		srwGeneratePackingSchema($srwRecordBranch, "xml", "zeerex");
@@ -194,7 +189,7 @@
 		$srwServerInfoBranch->setTagContent($databaseHost, "serverInfo/host");
 		$srwServerInfoBranch->setTagContent("80", "serverInfo/port"); // NOTE: this should really be a variable in 'ini.inc.php' or such
 
-		addNewBranch($srwServerInfoBranch, "database", array("numRecs" => $recordCount, "lastUpdate" => $lastModified), $databasePathOnServer . "sru.php");
+		addNewBranch($srwServerInfoBranch, "database", array("numRecs" => $recordCount, "lastUpdate" => $lastModified), $databasePathOnServer . "sru.php"); // function 'addNewBranch()' is defined in 'webservice.inc.php'
 
 		// IMPORTANT: if you want to allow remote users who are NOT logged in (userID=0) to query the refbase database
 		//            via 'sru.php' then either the 'Export' or the 'Batch export' user permission needs to be
@@ -243,7 +238,7 @@
 
 		addNewBranch($srwDatabaseLinksBranch, "link", array("type" => "www"), $databaseBaseURL);
 		addNewBranch($srwDatabaseLinksBranch, "link", array("type" => "sru"), $databaseBaseURL . "sru.php");
-		addNewBranch($srwDatabaseLinksBranch, "link", array("type" => "rss"), $databaseBaseURL . "rss.php?where=serial%20RLIKE%20%22.%2B%22&amp;showRows=10");
+		addNewBranch($srwDatabaseLinksBranch, "link", array("type" => "rss"), $databaseBaseURL . "rss.php?where=serial%20RLIKE%20%22.%2B%22&amp;showRows=" . $defaultNumberOfRecords);
 		addNewBranch($srwDatabaseLinksBranch, "link", array("type" => "icon"), $databaseBaseURL . "img/logo.gif");
 
 		$srwDatabaseInfoBranch->addXMLBranch($srwDatabaseLinksBranch);
@@ -287,6 +282,11 @@
 											"_title" => "Abstract",
 											"_refbaseIndex" => "refbase-abstract");
 
+		$indexArray["dc.subject"] = array("_set" => "dc",
+										"_index" => "subject",
+										"_title" => "Keywords",
+										"_refbaseIndex" => "refbase-keywords");
+
 		$indexArray["dc.format"] = array("_set" => "dc",
 										"_index" => "format",
 										"_title" => "Format/Type of Material",
@@ -301,6 +301,18 @@
 											"_index" => "coverage",
 											"_title" => "Geographic or topographic area of research",
 											"_refbaseIndex" => "refbase-area");
+
+// Note: I'm note sure, if 'bath.name' can be also used to describe the author/creator ('dc.creator') of a publication
+//		$indexArray["bath.name"] = array("_set" => "bath",
+//										"_index" => "name",
+//										"_title" => "Author",
+//										"_refbaseIndex" => "refbase-author");
+
+// Note: Not sure again whether 'bath.topicalSubject' can be offered as synonym for 'dc.subject'
+//		$indexArray["bath.topicalSubject"] = array("_set" => "bath",
+//												"_index" => "topicalSubject",
+//												"_title" => "Keywords",
+//												"_refbaseIndex" => "refbase-keywords");
 
 		$indexArray["bath.issn"] = array("_set" => "bath",
 										"_index" => "issn",
@@ -347,24 +359,23 @@
 													"_title" => "User-specific cite key for the record",
 													"_refbaseIndex" => "refbase-cite_key");
 
-// 								"publication" => "Book title or journal name",
-// 								"abbrev_journal" => "Abbreviated journal name",
-// 								"volume" => "Publication volume",
-// 								"issue" => "Publication issue",
-// 								"pages" => "Range or total number of pages",
-// 								"editor" => "Editor",
-// 								"place" => "Place of publication",
-// 								"series_title" => "Series title",
-// 								"abbrev_series_title" => "Abbreviated series title",
-// 								"series_volume" => "Series volume",
-// 								"series_issue" => "Series issue",
-// 								"keywords" => "Keywords",
-// 								"abstract" => "Abstract",
-// 								"notes" => "Notes",
-// 								"thesis" => "Thesis",
-// 								"isbn" => "International standard book number",
-// 								"doi" => "Digital object identifier",
-// 								"url" => "Uniform resource locator",
+// Not sure how these fields can be mapped:
+// 		"publication" => "Book title or journal name",
+// 		"abbrev_journal" => "Abbreviated journal name",
+// 		"volume" => "Publication volume",
+// 		"issue" => "Publication issue",
+// 		"pages" => "Range or total number of pages",
+// 		"editor" => "Editor",
+// 		"place" => "Place of publication",
+// 		"series_title" => "Series title",
+// 		"abbrev_series_title" => "Abbreviated series title",
+// 		"series_volume" => "Series volume",
+// 		"series_issue" => "Series issue",
+// 		"notes" => "Notes",
+// 		"thesis" => "Thesis",
+// 		"isbn" => "International standard book number",
+// 		"doi" => "Digital object identifier",
+// 		"url" => "Uniform resource locator",
 
 		foreach ($indexArray as $indexKey => $index)
 		{
@@ -375,7 +386,7 @@
 			$srwIndexBranch->setTagAttribute("refb:index", $index["_refbaseIndex"]);
 
 			addNewBranch($srwIndexBranch, "title", array("lang" => "en"), $index["_title"]);
-	
+
 			$srwIndexMapBranch = new XMLBranch("map");
 
 			addNewBranch($srwIndexMapBranch, "name", array("set" => $index["_set"]), $index["_index"]);
@@ -501,12 +512,15 @@
 		$srwCollection = srwGenerateBaseTags("searchRetrieveResponse");
 
 		$diagnosticsBranch = new XMLBranch("srw:diagnostics");
-		$diagnosticsBranch->setTagAttribute("xmlns", "info:srw/schema/1/diagnostic-v1.1");
 
-		$diagnosticsBranch->setTagContent("info:srw/diagnostic/1/" . $diagCode, "srw:diagnostics/diagnostic/uri");
-		$diagnosticsBranch->setTagContent($diagMessage, "srw:diagnostics/diagnostic/message");
+		// since we've defined the 'diag' namespace in the <searchRetrieveResponse> element (see function 'srwGenerateBaseTags()'),
+		// we can simply use '<diag:diagnostic>' below; otherwise we should use '<diagnostic xmlns="http://www.loc.gov/zing/srw/diagnostic/">':
+		// addNewBranch($diagnosticsBranch, "diagnostic", array("xmlns" => "http://www.loc.gov/zing/srw/diagnostic/"), "");
+
+		$diagnosticsBranch->setTagContent("info:srw/diagnostic/1/" . $diagCode, "srw:diagnostics/diag:diagnostic/uri");
+		$diagnosticsBranch->setTagContent($diagMessage, "srw:diagnostics/diag:diagnostic/message");
 		if (!empty($diagDetails))
-			$diagnosticsBranch->setTagContent(encodeHTMLspecialchars($diagDetails), "srw:diagnostics/diagnostic/details");
+			$diagnosticsBranch->setTagContent(encodeHTMLspecialchars($diagDetails), "srw:diagnostics/diag:diagnostic/details");
 
 		$srwCollection->addXMLBranch($diagnosticsBranch);
 
@@ -535,7 +549,7 @@
 	//		$srwCollection->setTagAttribute("xmlns:zr", "http://explain.z3950.org/dtd/2.0/");
 	//	}
 
-		addNewBranch($srwCollection, "srw:version", array(), "1.1");
+		addNewBranch($srwCollection, "srw:version", array(), "1.1"); // function 'addNewBranch()' is defined in 'webservice.inc.php'
 
 		return $srwCollection;
 	}
@@ -547,7 +561,7 @@
 	{
 		// available schemas taken from <http://www.loc.gov/z3950/agency/zing/srw/record-schemas.html>
 		$srwSchemas = array("dc" => "info:srw/schema/1/dc-v1.1",
-							"diag" => "info:srw/schema/1/diagnostic-v1.1",
+							"diag" => "info:srw/schema/1/diagnostic-v1.1", // it says 'info:srw/schema/1/diagnostics-v1.1' at <http://www.loc.gov/standards/sru/diagnostics.html> ?:-/
 							"zeerex" => "http://explain.z3950.org/dtd/2.0/",
 							"mods" => "info:srw/schema/1/mods-v3.0",
 							"onix" => "info:srw/schema/1/onix-v2.0",
@@ -559,26 +573,8 @@
 							"server-choice" => "info:srw/schema/1/server-choice",
 							"xpath" => "info:srw/schema/1/xpath-1.0");
 
-		addNewBranch($thisObject, "srw:recordPacking", array(), $srwPacking);
+		addNewBranch($thisObject, "srw:recordPacking", array(), $srwPacking); // function 'addNewBranch()' is defined in 'webservice.inc.php'
 		addNewBranch($thisObject, "srw:recordSchema", array(), $srwSchemas[$srwSchema]);
-	}
-
-	// --------------------------------------------------------------------
-
-	// Add a new branch, optionally with a type attribute and tag content:
-	// (NOTE: this function should also accept arrays to add multiple content tags)
-	function addNewBranch(&$thisBranch, $elementName, $elementTypeArray, $elementValue)
-	{
-		$newBranch = new XMLBranch($elementName);
-
-		if (!empty($elementTypeArray))
-			foreach ($elementTypeArray as $elementTypeKey => $elementTypeValue)
-				$newBranch->setTagAttribute($elementTypeKey, $elementTypeValue);
-
-		if (!empty($elementValue))
-			$newBranch->setTagContent($elementValue);
-
-		$thisBranch->addXMLBranch($newBranch);
 	}
 
 	// --------------------------------------------------------------------
