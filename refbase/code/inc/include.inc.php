@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   25-May-06, 17:33
+	// Modified:   10-Jun-06, 20:15
 
 	// This file contains important
 	// functions that are shared
@@ -20,11 +20,9 @@
 	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
 	include 'initialize/ini.inc.php'; // include common variables
 
-	// include appropriate transliteration table:
-	if ($contentTypeCharset == "UTF-8") // variable '$contentTypeCharset' is defined in 'ini.inc.php'
-		include 'includes/transtab_unicode_ascii.inc.php'; // include unicode -> ascii transliteration table
-	else // we assume "ISO-8859-1" by default
-		include 'includes/transtab_latin1_ascii.inc.php'; // include latin1 -> ascii transliteration table
+	// include transliteration tables:
+	include 'includes/transtab_unicode_ascii.inc.php'; // include unicode -> ascii transliteration table
+	include 'includes/transtab_latin1_ascii.inc.php'; // include latin1 -> ascii transliteration table
 
 	// --------------------------------------------------------------------
 
@@ -60,6 +58,13 @@
 				saveSessionVariable("sessionID", $sessionID);
 		}
 
+		// Get the MySQL version and save it to a session variable:
+		if (!isset($_SESSION['mysqlVersion']))
+		{
+			$mysqlVersion = getMySQLversion();
+			saveSessionVariable("mysqlVersion", $mysqlVersion);
+		}
+
 		// Extract session variables (only necessary if register globals is OFF!):
 		if (isset($_SESSION['loginEmail']))
 		{
@@ -76,8 +81,12 @@
 			// (a 'user_id' of zero is used within these tables to indicate the default settings if the user isn't logged in)
 		{
 			// Get all export formats that were selected by the admin to be visible if a user isn't logged in
-			// and (if some formats were found) save them as semicolon-delimited string to the session variable 'user_formats':
+			// and (if some formats were found) save them as semicolon-delimited string to the session variable 'user_export_formats':
 			getVisibleUserFormatsStylesTypes(0, "format", "export");
+
+			// Get all citation formats that were selected by the admin to be visible if a user isn't logged in
+			// and (if some formats were found) save them as semicolon-delimited string to the session variable 'user_cite_formats':
+			getVisibleUserFormatsStylesTypes(0, "format", "cite");
 
 			// Get all citation styles that were selected by the admin to be visible if a user isn't logged in
 			// and (if some styles were found) save them as semicolon-delimited string to the session variable 'user_styles':
@@ -140,12 +149,15 @@
 				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 					showErrorMsg("The following error occurred while trying to connect to the host:", $oldQuery);
 
-			// (2) Set the connection character set:
+			// (2) Set the connection character set (if connected to MySQL 4.1.x or greater):
 			//     more info at <http://dev.mysql.com/doc/refman/5.1/en/charset-connection.html>
-			if ($contentTypeCharset == "UTF-8")
-				queryMySQLDatabase("SET NAMES utf8", ""); // set the character set for this connection to 'utf8'
-			else
-				queryMySQLDatabase("SET NAMES latin1", ""); // by default, we establish a 'latin1' connection
+			if (isset($_SESSION['mysqlVersion']) AND ereg("^(4\.1|5)", $_SESSION['mysqlVersion']))
+			{
+				if ($contentTypeCharset == "UTF-8")
+					queryMySQLDatabase("SET NAMES utf8", ""); // set the character set for this connection to 'utf8'
+				else
+					queryMySQLDatabase("SET NAMES latin1", ""); // by default, we establish a 'latin1' connection
+			}
 
 			// (3) SELECT the database:
 			//      (variables are set by include file 'db.inc.php'!)
@@ -161,11 +173,17 @@
 	function queryMySQLDatabase($query, $oldQuery)
 	{
 		global $connection;
+		global $client;
 
 		// (3) RUN the query on the database through the connection:
 		if (!($result = @ mysql_query ($query, $connection)))
 			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("Your query:\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
+			{
+				if (eregi("^cli", $client)) // if the query originated from a command line client such as the "refbase" CLI client ("cli-refbase-1.0")
+					showErrorMsg("Your query:\n\n" . $query . "\n\ncaused the following error:", $oldQuery);
+				else
+					showErrorMsg("Your query:\n<br>\n<br>\n<code>" . $query . "</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
+			}
 
 		return $result;
 	}
@@ -186,10 +204,29 @@
 
 	// --------------------------------------------------------------------
 
+	// Get MySQL version:
+	function getMySQLversion()
+	{
+		connectToMySQLDatabase("");
+
+		// CONSTRUCT SQL QUERY:
+		$query = "SELECT VERSION()";
+
+		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
+
+		$row = mysql_fetch_row($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
+		$mysqlVersionString = $row[0]; // extract the contents of the first (and only) row (returned version string will be something like "4.0.20-standard" etc.)
+		$mysqlVersion = preg_replace("/^(\d+\.\d+).+/", "\\1", $mysqlVersionString); // extract main version number (e.g. "4.0") from version string
+
+		return $mysqlVersion;
+	}
+
+	// --------------------------------------------------------------------
+
 	// Find out how many rows are available and (if there were rows found) seek to the current offset:
 	// Note that this function will also (re-)assign values to the variables '$rowOffset', '$showRows',
 	// '$rowsFound', '$previousOffset', '$nextOffset' and '$showMaxRow'.
-	function seekInMySQLResultsToOffset($result, $rowOffset, $showRows, $displayType)
+	function seekInMySQLResultsToOffset($result, $rowOffset, $showRows, $displayType, $citeType)
 	{
 		global $defaultNumberOfRecords; // defined in 'ini.inc.php'
 
@@ -199,15 +236,24 @@
 		{
 			// ... setup variables in order to facilitate "previous" & "next" browsing:
 			// a) Set '$rowOffset' to zero if not previously defined, or if a wrong number (<=0) was given
-			if (empty($rowOffset) || ($rowOffset <= 0) || (($displayType != "Export") && ($showRows >= $rowsFound))) // the third condition is only necessary if '$rowOffset' gets embedded within the 'displayOptions' form (see function 'buildDisplayOptionsElements()' in 'include.inc.php')
+			if (empty($rowOffset) || ($rowOffset <= 0) || ((($displayType != "Export") AND !($displayType == "Cite" AND (!eregi("^html$", $citeType)))) && ($showRows >= $rowsFound))) // the third condition is only necessary if '$rowOffset' gets embedded within the 'displayOptions' form (see function 'buildDisplayOptionsElements()' in 'include.inc.php')
 				$rowOffset = 0;
 
 			// Adjust the '$showRows' value if not previously defined, or if a wrong number (<=0 or float) was given
 			if (empty($showRows) || ($showRows <= 0) || !ereg("^[0-9]+$", $showRows))
 				$showRows = $defaultNumberOfRecords;
 
+			// Adjust '$rowOffset' if it's value exceeds the number of rows found:
+			if ($rowOffset > ($rowsFound - 1))
+			{
+				if ($rowsFound > $showRows)
+					$rowOffset = ($rowsFound - $showRows); // start display at first record of last page to be displayed
+				else
+					$rowOffset = 0; // start display at the very first record
+			}
 
-			if ($displayType != "Export") // we have to exclude '$displayType=Export' here since, for export, '$rowOffset' must always point to the first row number in the result set that should be returned
+
+			if (($displayType != "Export") AND !($displayType == "Cite" AND (!eregi("^html$", $citeType)))) // we have to exclude '$displayType=Export' here since, for export, '$rowOffset' must always point to the first row number in the result set that should be returned
 			{
 				// NOTE: The current value of '$rowOffset' is embedded as hidden tag within the 'displayOptions' form. By this, the current row offset can be re-applied
 				//       after the user pressed the 'Show'/'Hide' button within the 'displayOptions' form. But then, to avoid that browse links don't behave as expected,
@@ -253,9 +299,16 @@
 	// Show error (prepares error output and redirects it to 'error.php' which displays the error message):
 	function showErrorMsg($headerMsg, $oldQuery)
 	{
+		global $client;
+
 		$errorNo = mysql_errno();
 		$errorMsg = mysql_error();
-		header("Location: error.php?errorNo=" . $errorNo . "&errorMsg=" . rawurlencode($errorMsg) . "&headerMsg=" . rawurlencode($headerMsg) . "&oldQuery=" . rawurlencode($oldQuery));
+
+		if (eregi("^cli", $client)) // if the query originated from a command line client such as the "refbase" CLI client ("cli-refbase-1.0")
+			echo $headerMsg . "\n\nError " . $errorNo . ": " . $errorMsg . "\n\n";
+		else
+			header("Location: error.php?errorNo=" . $errorNo . "&errorMsg=" . rawurlencode($errorMsg) . "&headerMsg=" . rawurlencode($headerMsg) . "&oldQuery=" . rawurlencode($oldQuery));
+
 		exit;
 	}
 
@@ -934,8 +987,8 @@
 		elseif (($href != "help.php" AND $displayType != "Cite") OR ($href == "help.php" AND $displayType == "List"))
 		{
 			$BrowseLinks .= "\n\t<td align=\"left\" valign=\"bottom\" width=\"145\" class=\"small\">"
-							. "\n\t\t<a href=\"JavaScript:checkall(true,'marked[]')\" title=\"select all records on this page\">Select All</a>&nbsp;&nbsp;&nbsp;"
-							. "\n\t\t<a href=\"JavaScript:checkall(false,'marked[]')\" title=\"deselect all records on this page\">Deselect All</a>"
+							. "\n\t\t<a href=\"JavaScript:checkall(true,'marked%5B%5D')\" title=\"select all records on this page\">Select All</a>&nbsp;&nbsp;&nbsp;"
+							. "\n\t\t<a href=\"JavaScript:checkall(false,'marked%5B%5D')\" title=\"deselect all records on this page\">Deselect All</a>"
 							. "\n\t</td>";
 		}
 		// we don't show the select/deselect links in citation layout (since there aren't any checkboxes anyhow);
@@ -2373,7 +2426,7 @@ EOF;
 
 		$result = queryMySQLDatabase($query, $oldQuery); // RUN the query on the database through the connection
 
-		$foundSerialsArray = array(""); // initialize array variable (which will hold the serial numbers of all found records)
+		$foundSerialsArray = array(); // initialize array variable (which will hold the serial numbers of all found records)
 
 		$rowsFound = @ mysql_num_rows($result);
 		if ($rowsFound > 0) // If there were rows found ...
@@ -2537,7 +2590,7 @@ EOF;
 	// --------------------------------------------------------------------
 
 	// Get all available formats/styles/types:
-	function getAvailableFormatsStylesTypes($dataType, $formatType) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export' or 'import'
+	function getAvailableFormatsStylesTypes($dataType, $formatType) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export', 'import' or 'cite'
 	{
 		global $tableDepends, $tableFormats, $tableStyles, $tableTypes; // defined in 'db.inc.php'
 
@@ -2568,7 +2621,7 @@ EOF;
 	// --------------------------------------------------------------------
 
 	// Get all formats/styles/types that are available and were enabled by the admin for the current user:
-	function getEnabledUserFormatsStylesTypes($userID, $dataType, $formatType, $returnIDsAsValues) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export' or 'import'
+	function getEnabledUserFormatsStylesTypes($userID, $dataType, $formatType, $returnIDsAsValues) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export', 'import' or 'cite'
 	{
 		global $tableDepends, $tableFormats, $tableStyles, $tableTypes, $tableUserFormats, $tableUserStyles, $tableUserTypes; // defined in 'db.inc.php'
 
@@ -2604,8 +2657,8 @@ EOF;
 	// --------------------------------------------------------------------
 
 	// Get all user formats/styles/types that are available and enabled for the current user (by admins choice) AND which this user has choosen to be visible:
-	// and (if some formats/styles/types were found) save them each as semicolon-delimited string to the session variables 'user_formats', 'user_styles' or 'user_types', respectively:
-	function getVisibleUserFormatsStylesTypes($userID, $dataType, $formatType) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export' or 'import'
+	// and (if some formats/styles/types were found) save them each as semicolon-delimited string to the session variables 'user_export_formats', 'user_cite_formats', 'user_styles' or 'user_types', respectively:
+	function getVisibleUserFormatsStylesTypes($userID, $dataType, $formatType) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export', 'import' or 'cite'
 	{
 		global $loginEmail;
 		global $adminLoginEmail; // ('$adminLoginEmail' is specified in 'ini.inc.php')
@@ -2647,6 +2700,12 @@ EOF;
 
 		$userFormatsStylesTypesArray = array(); // initialize array variable
 
+		// generate the name of the session variable:
+		if (!empty($formatType))
+			$sessionVariableName = "user_" . $formatType . "_" . $dataType . "s"; // yields 'user_export_formats' or 'user_cite_formats'
+		else
+			$sessionVariableName = "user_" . $dataType . "s"; // yields 'user_styles' or 'user_types'
+
 		$rowsFound = @ mysql_num_rows($result);
 		if ($rowsFound > 0) // If there were rows found ...
 		{
@@ -2660,13 +2719,13 @@ EOF;
 				$userFormatsStylesTypesString = implode('; ', $userFormatsStylesTypesArray);
 
 				// Write the resulting string of user formats/styles/types into a session variable:
-				saveSessionVariable("user_" . $dataType . "s", $userFormatsStylesTypesString);
+				saveSessionVariable($sessionVariableName, $userFormatsStylesTypesString);
 			}
 		}
 		else // no user formats/styles/types found
 			// we'll only delete the appropriate session variable if either a normal user is logged in -OR- the admin is logged in and views his own user options page
 			if (($loginEmail != $adminLoginEmail) OR (($loginEmail == $adminLoginEmail) && ($userID == getUserID($loginEmail))))
-				deleteSessionVariable("user_" . $dataType . "s"); // delete any 'user_formats'/'user_styles'/'user_types' session variable (which is now outdated)
+				deleteSessionVariable($sessionVariableName); // delete any 'user_export_formats'/'user_cite_formats'/'user_styles'/'user_types' session variable (which is now outdated)
 
 		return $userFormatsStylesTypesArray;
 	}
@@ -2679,7 +2738,7 @@ EOF;
 	//     (with those items being selected which were _enabled_ by the admin for the current user)
 	//   - if a normal user is logged in, this function will return all formats/styles/types as <option> tags which were *enabled* by the admin for the current user
 	//     (with those items being selected which were choosen to be _visible_ by the current user)
-	function returnFormatsStylesTypesAsOptionTags($userID, $dataType, $formatType) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export' or 'import'
+	function returnFormatsStylesTypesAsOptionTags($userID, $dataType, $formatType) // '$dataType' must be one of the following: 'format', 'style', 'type'; '$formatType' must be either '', 'export', 'import' or 'cite'
 	{
 		global $loginEmail;
 		global $adminLoginEmail; // ('$adminLoginEmail' is specified in 'ini.inc.php')
@@ -2736,7 +2795,7 @@ EOF;
 	// --------------------------------------------------------------------
 
 	// Fetch the path/name of the format file that's associated with the format given in '$formatName'
-	function getFormatFile($formatName, $formatType) // '$formatType' must be either 'export' or 'import'
+	function getFormatFile($formatName, $formatType) // '$formatType' must be either 'export', 'import' or 'cite'
 	{
 		global $tableFormats; // defined in 'db.inc.php'
 
@@ -2988,8 +3047,8 @@ EOF;
 	{
 		global $defaultCiteKeyFormat; // defined in 'ini.inc.php'
 		global $handleNonASCIICharsInCiteKeysDefault;
-		global $userOptionsArray; // '$userOptionsArray' is made globally available by function 'generateExport()' in 'search.php'
-		global $citeKeysArray; // '$citeKeysArray' is made globally available by function 'modsCollection()' in 'modsxml.inc.php'
+		global $userOptionsArray; // '$userOptionsArray' is made globally available by functions 'generateExport()' and 'generateCitations()' in 'search.php'
+		global $citeKeysArray; // '$citeKeysArray' is made globally available by functions 'modsCollection()' in 'modsxml.inc.php' or 'odfSpreadsheet()' in 'odfxml.inc.php', respectively
 
 		// by default, we use any record-specific cite key that was entered manually by the user:
 		if (isset($formVars['citeKeyName']))
@@ -3034,7 +3093,7 @@ EOF;
 
 
 		// ensure that each cite key is unique:
-		if (!empty($userOptionsArray) AND ($userOptionsArray['export_cite_keys'] == "yes") AND ($userOptionsArray['uniquify_duplicate_cite_keys'] == "yes"))
+		if (!empty($citeKey) AND !empty($userOptionsArray) AND ($userOptionsArray['export_cite_keys'] == "yes") AND ($userOptionsArray['uniquify_duplicate_cite_keys'] == "yes"))
 		{
 			if (!isset($citeKeysArray[$citeKey])) // this cite key has not been seen so far
 				$citeKeysArray[$citeKey] = 1; // append the current cite key (together with its number of occurrence) to the array of known cite keys
@@ -3526,14 +3585,18 @@ EOF;
 	{
 		global $contentTypeCharset; // defined in 'ini.inc.php'
 
-		// Note: I couldn't get 'htmlentities()' to work properly with UTF-8. Apparently, versions before PHP 4.3.11 and
-		// PHP 5.0.4 had a partially incorrect utf8 to htmlentities mapping (see <http://bugs.php.net/28067>). Therefore,
-		// in case of UTF-8, we'll use 'mb_convert_encoding()' instead.
+		// Note: Using PHP 5.0.4, I couldn't get 'htmlentities()' to work properly with UTF-8. Apparently, versions before
+		// PHP 4.3.11 and PHP 5.0.4 had a partially incorrect utf8 to htmlentities mapping (see <http://bugs.php.net/28067>),
+		// however, PHP 5.0.4 still seems buggy to me. Therefore, in case of UTF-8, we'll use 'mb_convert_encoding()' instead.
 		// IMPORTANT: this requires multi-byte support enabled on your PHP server!
 		//            (i.e., PHP must be compiled with the '--enable-mbstring' configure option)
 		if ($contentTypeCharset == "UTF-8")
+		{
+			// encode HTML special chars
+			$sourceString = encodeHTMLspecialchars($sourceString);
 			// converts from 'UTF-8' to 'HTML-ENTITIES' (see: <http://php.net/manual/en/function.mb-convert-encoding.php>)
 			$encodedString = mb_convert_encoding($sourceString, 'HTML-ENTITIES', "$contentTypeCharset");
+		}
 		else
 			$encodedString = htmlentities($sourceString, ENT_COMPAT, "$contentTypeCharset");
 			// Notes from <http://www.php.net/manual/en/function.htmlentities.php>:
@@ -3559,7 +3622,8 @@ EOF;
 	// - ''' (single quote) becomes '&#039;' only when  ENT_QUOTES is set
 	// - '<' (less than) becomes '&lt;'
 	// - '>' (greater than) becomes '&gt;'
-	// Note that these (and only these!) entities are also supported by XML (which is why we use this function within the 'generateRSS()' function and leave all other higher ASCII chars unencoded)
+	// Note that these (and only these!) entities are also supported by XML (which is why we use this function within the XML generating functions
+	// 'generateRSS()' & 'modsRecord()' and leave all other higher ASCII chars unencoded)
 	function encodeHTMLspecialchars($sourceString)
 	{
 		global $contentTypeCharset; // defined in 'ini.inc.php'
@@ -3668,7 +3732,7 @@ EOF;
 				$sqlQuery = eregi_replace("FROM $tableRefs LEFT JOIN.+WHERE","FROM $tableRefs WHERE",$sqlQuery); // ...delete 'LEFT JOIN...' part from 'FROM' clause
 
 			// ... and any user-specific fields are part of the WHERE clause...
-			if ((eregi(".+search.php",$referer) OR $displayType == "RSS") AND (eregi("WHERE.+(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)",$sqlQuery))) // if a user who's NOT logged in tries to query user-specific fields (by use of 'sql_search.php')...
+			if ((eregi(".+search.php",$referer) OR eregi("^RSS$",$displayType)) AND (eregi("WHERE.+(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)",$sqlQuery))) // if a user who's NOT logged in tries to query user-specific fields (by use of 'sql_search.php')...
 			// Note that the script 'show.php' may query the user-specific field 'selected' (e.g., by URLs of the form: 'show.php?author=...&userID=...&only=selected')
 			// but since (in that case) the '$referer' variable is either empty or does not end with 'search.php' this if clause will not apply (which is ok since we want to allow 'show.php' to query the 'selected' field).
 			// The same applies in the case of 'sru.php' which may query the user-specific field 'cite_key' (e.g., by URLs like: 'sru.php?version=1.1&query=bib.citekey=...&x-info-2-auth1.0-authenticationToken=email=...')
@@ -3829,12 +3893,23 @@ EOF;
 		global $databaseBaseURL;
 		global $feedbackEmail;
 		global $defaultCiteStyle;
-		global $markupSearchReplacePatterns;
 		global $contentTypeCharset;
+
+		global $transtab_refbase_html; // defined in 'transtab_refbase_html.inc.php'
 
 		// Note that we only convert those entities that are supported by XML (by use of the 'encodeHTMLspecialchars()' function).
 		// All other higher ASCII chars are left unencoded and valid feed output is only possible if the '$contentTypeCharset' variable is set correctly in 'ini.inc.php'.
-		// (The only exception is the item description which will contain HTML tags & entities that were defined by '$markupSearchReplacePatterns' or by the 'reArrangeAuthorContents()' function)
+		// (The only exception is the item description which will contain HTML tags & entities that were defined by '$transtab_refbase_html' or by the 'reArrangeAuthorContents()' function)
+
+		// Define inline text markup to be used by the 'citeRecord()' function:
+		$markupPatternsArray = array("bold-prefix"     => "<b>",
+									"bold-suffix"      => "</b>",
+									"italic-prefix"    => "<i>",
+									"italic-suffix"    => "</i>",
+									"underline-prefix" => "<u>",
+									"underline-suffix" => "</u>",
+									"endash"           => "&#8211;",
+									"emdash"           => "&#8212;");
 
 		$currentDateTimeStamp = date('r'); // get the current date & time (in UNIX time stamp format => "date('D, j M Y H:i:s O')")
 
@@ -3865,8 +3940,8 @@ EOF;
 			$origTitle = $row['title']; // save the original title contents before applying any search & replace actions
 
 			// Perform search & replace actions on the text of the 'title' field:
-			// (the array '$markupSearchReplacePatterns' in 'ini.inc.php' defines which search & replace actions will be employed)
-			$row['title'] = searchReplaceText($markupSearchReplacePatterns, $row['title'], true); // function 'searchReplaceText()' is defined in 'include.inc.php'
+			// (the array '$transtab_refbase_html' in 'transtab_refbase_html.inc.php' defines which search & replace actions will be employed)
+			$row['title'] = searchReplaceText($transtab_refbase_html, $row['title'], true); // function 'searchReplaceText()' is defined in 'include.inc.php'
 			// this will provide for correct rendering of italic, super/sub-script and greek letters in item descriptions (which are enclosed by '<![CDATA[...]]>' to ensure well-formed XML);
 			// item titles are still served in raw format, though, since the use of HTML in item titles breaks many news readers
 
@@ -3876,7 +3951,7 @@ EOF;
 			include_once "cite/" . $citeStyleFile; // instead of 'include_once' we could also use: 'if ($rowCounter == 0) { include "cite/" . $citeStyleFile; }'
 
 			// Generate a proper citation for this record, ordering attributes according to the chosen output style & record type:
-			$record = citeRecord($row, $defaultCiteStyle); // function 'citeRecord()' is defined in the citation style file given in '$citeStyleFile' (which, in turn, must reside in the 'styles' directory of the refbase root directory)
+			$record = citeRecord($row, $defaultCiteStyle, "", $markupPatternsArray, true); // function 'citeRecord()' is defined in the citation style file given in '$citeStyleFile' (which, in turn, must reside in the 'styles' directory of the refbase root directory)
 
 			// append a RSS item for the current record:
 			$rssData .= "\n\n\t\t<item>"
