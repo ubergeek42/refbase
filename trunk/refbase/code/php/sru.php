@@ -5,11 +5,11 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sru.php
 	// Created:    17-May-05, 16:22
-	// Modified:   11-Jan-06, 23:17
+	// Modified:   05-Feb-06, 18:59
 
-	// This script serves as a (faceless) routing page which takes a SRU query
-	// and converts the query into a native refbase query
-	// which is then passed to 'search.php'.
+	// This script serves as a (faceless) routing page which takes a SRU query and
+	// converts the query into a native refbase query which is then passed to 'search.php'.
+	// More info is given at <http://wiki.refbase.net/index.php/Search/Retrieve_web_services>.
 
 	// Supports 'explain' and 'searchRetrieve' operations (but not 'scan') and outputs
 	// records as MODS XML wrapped into SRW XML. Allows to query all global refbase fields
@@ -60,7 +60,7 @@
 	// result sets are not supported and only SRW version 1.1 is recognized.
 
 	// For more on SRW/SRU, see:
-	//   <http://www.loc.gov/z3950/agency/zing/srw/>
+	//   <http://www.loc.gov/standards/sru>
 
 	// TODO: - proper parsing of CQL query string (currently, 'sru.php' allows only for a limited set of CQL queries)
 	//       - offer support for the boolean CQL operators 'and/or/not', masking characters ('*' and '?') and parentheses
@@ -72,6 +72,7 @@
 	include 'includes/include.inc.php'; // include common functions
 	include 'initialize/ini.inc.php'; // include common variables
 	include 'includes/srwxml.inc.php'; // include functions that deal with SRW XML
+	include_once 'includes/webservice.inc.php'; // include functions that are commonly used with the refbase webservices
 
 	// --------------------------------------------------------------------
 
@@ -116,17 +117,17 @@
 	else
 		$sruRecordPacking = "xml";
 
-	if (isset($_REQUEST['maximumRecords']))
+	if (isset($_REQUEST['maximumRecords'])) // contains the desired number of search results (OpenSearch equivalent: '{count}')
 		$showRows = $_REQUEST['maximumRecords'];
 	else
 		$showRows = $defaultNumberOfRecords; // '$defaultNumberOfRecords' is defined in 'ini.inc.php'
 
-	if (isset($_REQUEST['startRecord']))
+	if (isset($_REQUEST['startRecord'])) // contains the offset of the first search result, starting with one (OpenSearch equivalent: '{startIndex}')
 		$rowOffset = ($_REQUEST['startRecord']) - 1; // first row number in a MySQL result set is 0 (not 1)
 	else
-		$rowOffset = "";
+		$rowOffset = ""; // if no value to the 'startRecord' parameter is given, we'll output records starting with the first record in the result set
 
-	if (isset($_REQUEST['stylesheet']))
+	if (isset($_REQUEST['stylesheet'])) // contains the desired stylesheet to be returned for transformation of XML data
 		$exportStylesheet = $_REQUEST['stylesheet'];
 	else
 		$exportStylesheet = "srwmods2html.xsl"; // we provide a default stylesheet if no stylesheet was specified in the query
@@ -135,7 +136,7 @@
 	// import_request_variables function can generate legitimate variable names (and a . is not permissable
 	// in variable names in PHP). See the section labelled "Dots in incoming variable names" on this page:
 	// <http://uk.php.net/variables.external>. So "$_REQUEST['x-info-2-auth1_0-authenticationToken']" will catch
-	// the 'x-info-2-auth1.0-authenticationToken' parameter (thanks to Matthew J. Dovey for pointinmg this out!).
+	// the 'x-info-2-auth1.0-authenticationToken' parameter (thanks to Matthew J. Dovey for pointing this out!).
 	if (isset($_REQUEST['x-info-2-auth1_0-authenticationToken'])) // PHP converts the dot in 'x-info-2-auth1.0-authenticationToken' into a substring!
 		$authenticationToken = $_REQUEST['x-info-2-auth1_0-authenticationToken'];
 	else
@@ -206,7 +207,7 @@
 	// -------------------------------------------------------------------------------------------------------------------
 
 	// Parse CQL query:
-	$searchArray = parseCQL($sruQuery);
+	$searchArray = parseCQL($sruQuery); // function 'parseCQL()' is defined in 'webservice.inc.php'
 
 	// -------------------------------------------------------------------------------------------------------------------
 
@@ -285,7 +286,7 @@
 		// for users who aren't logged in if the query originates from 'sru.php'). For logged in users, the 'verifySQLQuery()' function would add a 'LEFT JOIN...'
 		// statement (if not present) containing the users *own* user ID. By adding the 'LEFT JOIN...' statement explicitly here (which won't get touched by
 		// 'verifySQLQuery()') we allow any user's 'cite_key' field to be queried by every user (e.g., by URLs like: 'sru.php?version=1.1&query=bib.citekey=...&x-info-2-auth1.0-authenticationToken=email=...').
-		// Note that if you enable other user-specific fields in function 'mapCQLIndexes()' then these fields will be allowed to be queried by everyone as well!
+		// Note that if you enable other user-specific fields in function 'mapCQLIndexes()' (in 'webservice.inc.php') then these fields will be allowed to be queried by everyone as well!
 		if (!empty($userID)) // the 'x-...authenticationToken' parameter was specified containing an email address that could be resolved to a user ID -> include user specific fields
 			$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = $userID"; // add FROM clause (including the 'LEFT JOIN...' part); '$tableRefs' and '$tableUserData' are defined in 'db.inc.php'
 		else
@@ -297,7 +298,7 @@
 			// Build WHERE clause:
 			$query .= " WHERE";
 
-			appendToWhereClause($searchArray);
+			appendToWhereClause($searchArray); // function 'appendToWhereClause()' is defined in 'webservice.inc.php'
 		}
 
 
@@ -316,30 +317,6 @@
 
 	// -------------------------------------------------------------------------------------------------------------------
 
-	// This function walks a '$searchArray' and appends its items to the WHERE clause:
-	// (the array hierarchy will be maintained, i.e. if the '_query' item is itself
-	//  an array of query items these sub-items will get properly nested in parentheses)
-	function appendToWhereClause($searchArray)
-	{
-		global $query;
-
-		foreach ($searchArray as $searchArrayItem)
-		{
-			if (is_array($searchArrayItem["_query"]))
-			{
-				$query .= " " . $searchArrayItem["_boolean"] . " (";
-				$query .= appendToWhereClause($searchArrayItem["_query"]);
-				$query .= " )";
-			}
-			else
-			{
-				$query .= " " . $searchArrayItem["_boolean"] . " " . $searchArrayItem["_query"];
-			}
-		}
-	}
-
-	// -------------------------------------------------------------------------------------------------------------------
-
 	// Return a diagnostic error message:
 	function returnDiagnostic($diagCode, $diagDetails)
 	{
@@ -352,306 +329,6 @@
 
 		// Return SRW diagnostics (i.e. SRW error information) wrapped into SRW XML ('searchRetrieveResponse'):
 		echo srwDiagnostics($diagCode, $diagDetails, $exportStylesheet); // function 'srwDiagnostics()' is defined in 'srwxml.inc.php'
-	}
-
-	// -------------------------------------------------------------------------------------------------------------------
-
-	// Parse CQL query:
-	// This function parses a CQL query into its elements (context set, index, relation and search term(s)),
-	// builds appropriate SQL search terms and returns a hierarchical array containing the converted search terms
-	// (this array, in turn, gets merged into a full sql WHERE clause by function 'appendToWhereClause()')
-	// NOTE: we don't provide a full CQL parser here but will (for now) concentrate on a rather limited feature
-	//       set that makes sense in conjunction with refbase. However, future versions should employ far better
-	//       CQL parsing logic.
-	function parseCQL($sruQuery)
-	{
-		// map CQL indexes to refbase field names:
-		$indexNamesArray = mapCQLIndexes();
-
-		$searchArray = array(); // intialize array that will hold information about context set, index name, relation and search value
-		$searchSubArray1 = array();
-
-		// check for presence of context set/index name and any of the main relations:
-		if (preg_match('/^[^\" <>=]+( +(all|any|exact|within) +| *(<>|<=|>=|<|>|=) *)/', $sruQuery))
-		{
-			// extract the context set:
-			if (preg_match('/^([^\" <>=.]+)\./', $sruQuery))
-				$contextSet = preg_replace('/^([^\" <>=.]+)\..*/', '\\1', $sruQuery);
-			else
-				$contextSet = ""; // use the default context set
-
-			// extract the index:
-			$indexName = preg_replace('/^(?:[^\" <>=.]+\.)?([^\" <>=.]+).*/', '\\1', $sruQuery);
-
-			// ----------------
-
-			// return a fatal diagnostic if the CQL query does contain an unrecognized 'set.index' identifier:
-			// (a) verify that the given context set (if any) is recognized:
-			if (!empty($contextSet))
-			{
-				$contextSetIndexConnector = ".";
-				$contextSetLabel = "context set '" . $contextSet . "'";
-
-				if (!ereg("^(dc|bath|rec|bib)$", $contextSet))
-				{
-					returnDiagnostic(15, $contextSet); // unsupported context set
-					exit;
-				}
-			}
-			else
-			{
-				$contextSetIndexConnector = "";
-				$contextSetLabel = "empty context set";
-			}
-
-			// (b) verify that the given 'set.index' term is recognized:
-			if (!isset($indexNamesArray[$contextSet . $contextSetIndexConnector . $indexName]))
-			{
-				if (isset($indexNamesArray[$indexName]) OR isset($indexNamesArray["dc." . $indexName]) OR isset($indexNamesArray["bath." . $indexName]) OR isset($indexNamesArray["rec." . $indexName]) OR isset($indexNamesArray["bib." . $indexName])) // this may be clumsy but I don't know any better, right now
-				{
-					returnDiagnostic(10, "Unsupported combination of " . $contextSetLabel . " with index '" . $indexName . "'"); // unsupported combination of context set & index
-				}
-				else
-				{
-					returnDiagnostic(16, $indexName); // unsupported index
-				}
-				exit;
-			}
-
-			// ----------------
-
-			// extract the main relation (relation modifiers aren't supported yet!):
-			$mainRelation = preg_replace('/^[^\" <>=]+( +(all|any|exact|within) +| *(<>|<=|>=|<|>|=) *).*/', '\\1', $sruQuery);
-			// remove any runs of leading or trailing whitespace:
-			$mainRelation = trim($mainRelation);
-
-			// ----------------
-
-			// extract the search term:
-			$searchTerm = preg_replace('/^[^\" <>=]+(?: +(?:all|any|exact|within) +| *(?:<>|<=|>=|<|>|=) *)(.*)/', '\\1', $sruQuery);
-
-			// remove slashes from search term if 'magic_quotes_gpc = On':
-			$searchTerm = stripSlashesIfMagicQuotes($searchTerm); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
-
-			// remove any leading or trailing quotes from the search term:
-			// (note that multiple query parts connected with boolean operators aren't supported yet!)
-			$searchTerm = preg_replace('/^\"/', '', $searchTerm);
-			$searchTerm = preg_replace('/\"$/', '', $searchTerm);
-
-			// escape meta characters (including '/' that is used as delimiter for the PCRE replace functions below and which gets passed as second argument):
-			$searchTerm = preg_quote($searchTerm, "/"); // escape special regular expression characters: . \ + * ? [ ^ ] $ ( ) { } = ! < > | :
-
-			// account for CQL anchoring ('^') and masking ('*' and '?') characters:
-			// NOTE: in the code block above we quote everything to escape possible meta characters,
-			//       so all special chars in the block below have to be matched in their escaped form!
-			//       (The expression '\\\\' in the patterns below describes only *one* backslash! -> '\'.
-			//        The reason for this is that before the regex engine can interpret the \\ into \, PHP interprets it.
-			//        Thus, you have to escape your backslashes twice: once for PHP, and once for the regex engine.)
-
-			// recognize any anchor at the beginning of a search term (like '^foo'):
-			$searchTerm = preg_replace('/(^| )\\\\\^/', '\\1^', $searchTerm);
-
-			// convert any anchor at the end of a search term (like 'foo^') to the correct MySQL variant ('foo$'):
-			$searchTerm = preg_replace('/\\\\\^( |$)/', '$\\1', $searchTerm);
-
-			// recognize any masking ('*' and '?') characters:
-			// (NOT DONE YET)
-
-			// ----------------
-
-			// construct the WHERE clause:
-			$whereClausePart = $indexNamesArray[$contextSet . $contextSetIndexConnector . $indexName]; // start WHERE clause with field name
-
-			if ($mainRelation == "all") // matches full words (not sub-strings)
-			{
-				if (ereg(" ", $searchTerm))
-				{
-					$searchTermArray = split(" +", $searchTerm);
-
-					foreach ($searchTermArray as $searchTermItem)
-						$whereClauseSubPartsArray[] = " RLIKE \"(^|[[:space:][:punct:]])" . $searchTermItem . "([[:space:][:punct:]]|$)\"";
-
-					// NOTE: For word-matching relations (like 'all', 'any' or '=') we could also use word boundaries which would be more (too?) restrictive:
-					// 
-					// [[:<:]] , [[:>:]]
-					// 
-					// They match the beginning and end of words, respectively. A word is a sequence of word characters that is not preceded by or
-					// followed by word characters. A word character is an alphanumeric character in the alnum class or an underscore (_).
-
-					$whereClausePart .= implode(" AND " . $indexNamesArray[$contextSet . $contextSetIndexConnector . $indexName], $whereClauseSubPartsArray);
-				}
-				else
-					$whereClausePart .= " RLIKE \"(^|[[:space:][:punct:]])" . $searchTerm . "([[:space:][:punct:]]|$)\"";
-			}
-
-			elseif ($mainRelation == "any") // matches full words (not sub-strings)
-			{
-				$searchTerm = splitAndMerge(" +", "|", $searchTerm); // function 'splitAndMerge()' is defined in 'include.inc.php'
-				$whereClausePart .= " RLIKE \"(^|[[:space:][:punct:]])(" . $searchTerm . ")([[:space:][:punct:]]|$)\"";
-			}
-
-			elseif ($mainRelation == "exact") // matches field contents exactly
-				$whereClausePart .= " = \"" . $searchTerm . "\"";
-
-			elseif ($mainRelation == "within") // matches a range (i.e. requires two space-separated dimensions)
-			{
-				if (preg_match("/[^ ]+ [^ ]+/", $searchTerm))
-				{
-					$searchTermArray = split(" +", $searchTerm);
-
-					$whereClausePart .= " >= \"" . $searchTermArray[0] . "\" AND " . $indexNamesArray[$contextSet . $contextSetIndexConnector . $indexName] . " <= \"" . $searchTermArray[1] . "\"";
-				}
-				else
-				{
-					returnDiagnostic(36, "Search term requires two space-separated dimensions. Example: dc.date within \"2004 2005\"");
-					exit;
-				}
-			}
-
-			elseif ($mainRelation == "=") // matches full words (not sub-strings)
-				$whereClausePart .= " RLIKE \"(^|[[:space:][:punct:]])" . $searchTerm . "([[:space:][:punct:]]|$)\"";
-
-			elseif ($mainRelation == "<>") // does this also match full words (and not sub-strings) ?:-/
-				$whereClausePart .= " NOT RLIKE \"(^|[[:space:][:punct:]])" . $searchTerm . "([[:space:][:punct:]]|$)\"";
-
-			elseif ($mainRelation == "<")
-				$whereClausePart .= " < \"" . $searchTerm . "\"";
-
-			elseif ($mainRelation == "<=")
-				$whereClausePart .= " <= \"" . $searchTerm . "\"";
-
-			elseif ($mainRelation == ">")
-				$whereClausePart .= " > \"" . $searchTerm . "\"";
-
-			elseif ($mainRelation == ">=")
-				$whereClausePart .= " >= \"" . $searchTerm . "\"";
-
-			$searchSubArray1[] = array("_boolean" => "",
-										"_query" => $whereClausePart);
-		}
-
-		else // no context set/index name and relation was given -> search the 'serial' field by default:
-		{
-			// NOTE: the following code block does not conform to CQL syntax rules!
-
-			// replace any non-digit chars with "|":
-			// (in doing so we'll ignore any 'and/or/not' booleans that were
-			//  present in the search term and assume an 'or' operator instead)
-			$serialsString = preg_replace("/\D+/", "|", $sruQuery);
-			// strip "|" from beginning/end of string (if any):
-			$serialsString = preg_replace("/^\|?(.*?)\|?$/", "\\1", $serialsString);
-
-			if (!empty($serialsString))
-				$searchSubArray1[] = array("_boolean" => "",
-											"_query" => "serial RLIKE \"^(" . $serialsString . ")$\"");
-		}
-
-
-		if (!empty($searchSubArray1))
-			$searchArray[] = array("_boolean" => "",
-									"_query" => $searchSubArray1);
-
-
-		return $searchArray;
-	}
-
-	// -------------------------------------------------------------------------------------------------------------------
-
-	// Map CQL indexes to refbase field names:
-	function mapCQLIndexes()
-	{
-		// NOTE: the CQL indexes 'creationDate' and 'lastModificationDate'
-		// contain both date & time info so this needs to be parsed into two
-		// refbase fields (which isn't done yet!).
-		$indexNamesArray = array("dc.creator" => "author", // "CQL context_set.index_name"  =>  "refbase field name"
-								"dc.title" => "title",
-								"dc.date" => "year",
-								"dc.language" => "language",
-								"dc.description" => "abstract",
-								"dc.format" => "medium",
-								"dc.publisher" => "publisher",
-								"dc.coverage" => "area",
-	
-								"bath.issn" => "issn",
-								"bath.corporateName" => "corporate_author",
-								"bath.conferenceName" => "conference",
-	
-								"rec.identifier" => "serial",
-								"rec.creationDate" => "created_date-created_time",
-								"rec.creationAgentName" => "created_by",
-								"rec.lastModificationDate" => "modified_date-modified_time",
-								"rec.lastModificationAgentName" => "modified_by",
-	
-								"bib.citekey" => "cite_key",
-	
-								"author" => "author", // for indexes that have no public context set we simply accept refbase field names
-								"title" => "title",
-								"year" => "year",
-								"publication" => "publication",
-								"abbrev_journal" => "abbrev_journal",
-								"volume" => "volume",
-								"issue" => "issue",
-								"pages" => "pages",
-	
-								"address" => "address",
-								"corporate_author" => "corporate_author",
-								"keywords" => "keywords",
-								"abstract" => "abstract",
-								"publisher" => "publisher",
-								"place" => "place",
-								"editor" => "editor",
-								"language" => "language",
-								"summary_language" => "summary_language",
-								"orig_title" => "orig_title",
-	
-								"series_editor" => "series_editor",
-								"series_title" => "series_title",
-								"abbrev_series_title" => "abbrev_series_title",
-								"series_volume" => "series_volume",
-								"series_issue" => "series_issue",
-								"edition" => "edition",
-	
-								"issn" => "issn",
-								"isbn" => "isbn",
-								"medium" => "medium",
-								"area" => "area",
-								"expedition" => "expedition",
-								"conference" => "conference",
-								"notes" => "notes",
-								"approved" => "approved",
-	
-								"location" => "location",
-								"call_number" => "call_number",
-								"serial" => "serial",
-								"type" => "type",
-								"thesis" => "thesis",
-	
-								"file" => "file",
-								"url" => "url",
-								"doi" => "doi",
-								"contribution_id" => "contribution_id",
-								"online_publication" => "online_publication",
-								"online_citation" => "online_citation",
-	
-								"created_date-created_time" => "created_date-created_time",
-								"created_by" => "created_by",
-								"modified_date-modified_time" => "modified_date-modified_time",
-								"modified_by" => "modified_by",
-	
-								"orig_record" => "orig_record",
-	
-//								"marked" => "marked", // querying for user-specific fields requires that the 'x-...authenticationToken' is given in the SRU query
-//								"copy" => "copy",
-//								"selected" => "selected",
-//								"user_keys" => "user_keys",
-//								"user_notes" => "user_notes",
-//								"user_file" => "user_file",
-//								"user_groups" => "user_groups",
-//								"related" => "related",
-								"cite_key" => "cite_key"); // currently, only the user-specific 'cite_key' field can be queried by every user using 'sru.php'
-
-
-		return $indexNamesArray;
 	}
 
 	// -------------------------------------------------------------------------------------------------------------------
