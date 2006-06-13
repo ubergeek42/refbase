@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   08-Apr-06, 00:01
+	// Modified:   10-Jun-06, 19:55
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -40,6 +40,13 @@
 	// Extract any generic parameters passed to the script:
 	// (they control how found records are presented on screen)
 
+	// Extract the ID of the client from which the query originated:
+	// Note: currently, this identifier is only used to identify queries that originated from the refbase command line client ("cli-refbase-1.0")
+	if (isset($_REQUEST['client']))
+		$client = $_REQUEST['client'];
+	else
+		$client = "";
+
 	// Extract the type of display requested by the user. Normally, this will be one of the following:
 	//  - '' => if the 'submit' parameter is empty, this will produce the default columnar output style ('displayColumns()' function)
 	//  - 'Display' => display details for all found records ('displayDetails()' function)
@@ -53,11 +60,6 @@
 	// Note that for 'show.php' we don't accept any other display types than '', 'Display', 'Cite', 'Export' and 'Browse',
 	// if any other types were specified, we'll use the default columnar output style instead:
 	if (!empty($displayType) AND !eregi("^(Display|Cite|Export|Browse)$", $displayType))
-		$displayType = "";
-
-	// If 'submit=Export' the 'exportFormat' parameter must be specified as well,
-	// otherwise we'll use the default columnar output style:
-	elseif ($displayType == "Export" AND !isset($_REQUEST['exportFormat']))
 		$displayType = "";
 
 	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
@@ -87,7 +89,7 @@
 	else
 		$rowOffset = ""; // if no value to the 'startRecord' parameter is given, we'll output records starting with the first record in the result set
 
-	if (isset($_REQUEST['citeStyle'])) // NOTE: while this parameter is normally called 'citeStyleSelector' (e.g. in 'search.php') we call it just 'citeStyle' here in an attempt to ease legibility of 'show.php' URLs
+	if (isset($_REQUEST['citeStyle']) AND !empty($_REQUEST['citeStyle'])) // NOTE: while this parameter is normally called 'citeStyleSelector' (e.g. in 'search.php') we call it just 'citeStyle' here in an attempt to ease legibility of 'show.php' URLs
 		$citeStyle = $_REQUEST['citeStyle']; // get cite style
 	else
 		$citeStyle = $defaultCiteStyle; // if no cite style was given, we'll use the default cite style which is defined by the '$defaultCiteStyle' variable in 'ini.inc.php'
@@ -97,18 +99,31 @@
 	else
 		$citeOrder = "";
 
-	if (isset($_REQUEST['exportFormat'])) // NOTE: while this parameter is normally called 'exportFormatSelector' (e.g. in 'search.php') we call it just 'exportFormat' here in an attempt to ease legibility of 'show.php' URLs
+	// for citation output, get information how citation data shall be returned:
+	// - 'html' => return citations as HTML with mime type 'text/html'
+	// - 'RTF' => return citations as RTF data with mime type 'application/rtf'
+	// - 'PDF' => return citations as PDF data with mime type 'application/pdf'
+	// - 'LaTeX' => return citations as LaTeX data with mime type 'application/x-latex'
+	// - 'Markdown' => return citations as Markdown TEXT data with mime type 'text/plain'
+	// - 'ASCII' => return citations as TEXT data with mime type 'text/plain'
+	if (isset($_REQUEST['citeType']) AND eregi("^(html|RTF|PDF|LaTeX|Markdown|ASCII)$", $_REQUEST['citeType']))
+		$citeType = $_REQUEST['citeType'];
+	else
+		$citeType = "html";
+
+	if (isset($_REQUEST['exportFormat']) AND !empty($_REQUEST['exportFormat'])) // NOTE: while this parameter is normally called 'exportFormatSelector' (e.g. in 'search.php') we call it just 'exportFormat' here in an attempt to ease legibility of 'show.php' URLs
 		$exportFormat = $_REQUEST['exportFormat']; // get export format style
 	else
-		$exportFormat = "";
+		$exportFormat = $defaultExportFormat; // if no export format was given, we'll use the default export format which is defined by the '$defaultExportFormat' variable in 'ini.inc.php'
 
 	// for export, get information how exported data shall be returned; possible values:
 	// - 'text' => return data with mime type 'text/plain'
 	// - 'html' => return data with mime type 'text/html
 	// - 'xml' => return data with mime type 'text/xml
+	// - 'rss' => return data with mime type 'application/rss+xml'
 	// - 'file' => return data as downloadable file
 	// - 'email' => send data as email (to the user's login email address)
-	if (isset($_REQUEST['exportType']))
+	if (isset($_REQUEST['exportType']) AND eregi("^(text|html|xml|rss|file|email)$", $_REQUEST['exportType']))
 		$exportType = $_REQUEST['exportType']; // get export type
 	else
 		$exportType = "html";
@@ -215,6 +230,16 @@
 	else
 		$title = "";
 
+	if (isset($_REQUEST['publication']))
+		$publication = $_REQUEST['publication']; // get publication
+	else
+		$publication = "";
+
+	if (isset($_REQUEST['abbrev_journal']))
+		$abbrevJournal = $_REQUEST['abbrev_journal']; // get abbreviated journal
+	else
+		$abbrevJournal = "";
+
 	if (isset($_REQUEST['keywords']))
 		$keywords = $_REQUEST['keywords']; // get keywords
 	else
@@ -229,6 +254,16 @@
 		$area = $_REQUEST['area']; // get area
 	else
 		$area = "";
+
+	if (isset($_REQUEST['notes']))
+		$notes = $_REQUEST['notes']; // get notes
+	else
+		$notes = "";
+
+	if (isset($_REQUEST['location']))
+		$location = $_REQUEST['location']; // get location
+	else
+		$location = "";
 
 	if (isset($_REQUEST['type']))
 		$type = $_REQUEST['type']; // get type
@@ -271,7 +306,7 @@
 	else								// IMPORTANT: We treat any 'call_number' query as specific to every user, i.e. a user can only query his own call numbers.
 		$callNumber = "";
 
-	if (isset($_REQUEST['userID']))
+	if (isset($_REQUEST['userID']) AND ereg("^[0-9]+$", $_REQUEST['userID']))
 		$userID = $_REQUEST['userID']; // when searching user specific fields (like the 'selected' or 'marked' field), this parameter specifies the user's user ID.
 									// I.e., the 'userID' parameter does only make sense when specified together with either the 'selected' or the 'marked' parameter. As an example,
 	else							// "show.php?author=...&selected=yes&userID=2" will show every record where the user who's identified by user ID "2" has set the selected bit to "yes".
@@ -281,6 +316,11 @@
 		$browseByField = $_REQUEST['by']; // get 'by' parameter
 	else
 		$browseByField = "";
+
+	if (isset($_REQUEST['where']))
+		$where = stripSlashesIfMagicQuotes($_REQUEST['where']); // get custom WHERE clause (and remove slashes from WHERE clause if 'magic_quotes_gpc = On'; function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php')
+	else
+		$where = "";
 
 	if (isset($_REQUEST['queryType']))
 		$queryType = $_REQUEST['queryType']; // get 'queryType' parameter
@@ -320,7 +360,7 @@
 
 
 	// Check the correct parameters have been passed:
-	if (empty($serial) AND empty($date) AND empty($time) AND empty($year) AND empty($author) AND empty($title) AND empty($keywords) AND empty($abstract) AND empty($area) AND empty($type) AND empty($contributionID) AND empty($thesis) AND empty($without) AND (empty($selected) OR (!empty($selected) AND empty($userID))) AND (empty($marked) OR (!empty($marked) AND empty($userID))) AND (empty($citeKey) OR (!empty($citeKey) AND empty($userID))) AND empty($callNumber) AND (empty($browseByField) OR (!empty($browseByField) AND $displayType != "Browse")))
+	if (empty($serial) AND empty($date) AND empty($time) AND empty($year) AND empty($author) AND empty($title) AND empty($publication) AND empty($abbrevJournal) AND empty($keywords) AND empty($abstract) AND empty($area) AND empty($notes) AND empty($location) AND empty($type) AND empty($contributionID) AND empty($thesis) AND empty($without) AND (empty($selected) OR (!empty($selected) AND empty($userID))) AND (empty($marked) OR (!empty($marked) AND empty($userID))) AND (empty($citeKey) OR (!empty($citeKey) AND empty($userID))) AND empty($callNumber) AND empty($where) AND (empty($browseByField) OR (!empty($browseByField) AND $displayType != "Browse")))
 	{
 		// if 'show.php' was called without any valid parameters, we'll present a form where a user can input a record serial number.
 		// Currently, this form will not present form elements for other supported options (like searching by date, year or author),
@@ -343,7 +383,7 @@
 		// DISPLAY header:
 		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $loc["Show"] . " " . $loc["Record"], "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
-		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
+		showPageHeader($HeaderString, "");
 
 		// Define variables holding drop-down elements, i.e. build properly formatted <option> tag elements:
 		$dropDownConditionalsArray = array("is equal to" => $loc["equal to"],
@@ -413,15 +453,12 @@
 		// --------------------------------------------------------------------
 
 		// DISPLAY THE HTML FOOTER:
-		// call the 'displayfooter()' function from 'footer.inc.php')
-		displayfooter("");
+		// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
+		showPageFooter($HeaderString, "");
+
+		displayHTMLfoot();
 
 		// --------------------------------------------------------------------
-?>
-
-</body>
-</html>
-<?php
 
 	}
 
@@ -429,7 +466,7 @@
 	// -------------------------------------------------------------------------------------------------------------------
 
 
-	else // the script was called with at least one of the following parameters: 'record', 'records', 'date', 'time', 'year', 'author', 'title', 'keywords', 'abstract', 'area', 'type', 'contribution_id', 'thesis', 'without', 'selected', 'marked', 'cite_key', 'call_number', 'by'
+	else // the script was called with at least one of the following parameters: 'record', 'records', 'date', 'time', 'year', 'author', 'title', 'publication', 'abbrev_journal', 'keywords', 'abstract', 'area', 'notes', 'location', 'type', 'contribution_id', 'thesis', 'without', 'selected', 'marked', 'cite_key', 'call_number', 'where', 'by'
 	{
 		// CONSTRUCT SQL QUERY:
 
@@ -498,13 +535,20 @@
 			// first, check if the user is allowed to display any record details:
 			if ($displayType == "Display" AND isset($_SESSION['user_permissions']) AND !ereg("allow_details_view", $_SESSION['user_permissions'])) // no, the 'user_permissions' session variable does NOT contain 'allow_details_view'...
 			{
-				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForDisplayDetails"]."!</span></b>";
+				if (eregi("^cli", $client)) 
+				{
+					echo $loc["NoPermission"]." ".$loc["NoPermission_ForDisplayDetails"]."!\n\n";
+				}
+				else
+				{
+					// save an appropriate error message:
+					$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForDisplayDetails"]."!</span></b>";
 
-				// Write back session variables:
-				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+					// Write back session variables:
+					saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 
-				header("Location: show.php"); // redirect back to 'show.php'
+					header("Location: show.php"); // redirect back to 'show.php'
+				}
 
 				exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			}
@@ -655,6 +699,20 @@
 			$query .= " title RLIKE \"" . $title . "\"";
 		}
 
+		if (!empty($publication)) // if the 'publication' parameter is present:
+		{
+			$query .= connectConditionals();
+
+			$query .= " publication RLIKE \"" . $publication . "\"";
+		}
+
+		if (!empty($abbrevJournal)) // if the 'abbrev_journal' parameter is present:
+		{
+			$query .= connectConditionals();
+
+			$query .= " abbrev_journal RLIKE \"" . $abbrevJournal . "\"";
+		}
+
 		if (!empty($keywords)) // if the 'keywords' parameter is present:
 		{
 			$query .= connectConditionals();
@@ -674,6 +732,20 @@
 			$query .= connectConditionals();
 
 			$query .= " area RLIKE \"" . $area . "\"";
+		}
+
+		if (!empty($notes)) // if the 'notes' parameter is present:
+		{
+			$query .= connectConditionals();
+
+			$query .= " notes RLIKE \"" . $notes . "\"";
+		}
+
+		if (!empty($location)) // if the 'location' parameter is present:
+		{
+			$query .= connectConditionals();
+
+			$query .= " location RLIKE \"" . $location . "\"";
 		}
 
 		if (!empty($type)) // if the 'type' parameter is present:
@@ -706,14 +778,14 @@
 		{
 			$query .= connectConditionals();
 
-			$query .= " selected = \"" . $selected . "\"";
+			$query .= " selected RLIKE \"" . $selected . "\""; // we use 'selected RLIKE "..."' instead of 'selected = "..."' to allow command line utilities to query for '-s=.+' which will display records with 'selected=yes' AND with 'selected=no'
 		}
 
 		if (!empty($marked) AND !empty($userID)) // if the 'ismarked' parameter is present (in order to search for user specific fields (like 'marked'), the 'userID' parameter must be given as well!):
 		{
 			$query .= connectConditionals();
 
-			$query .= " marked = \"" . $marked . "\"";
+			$query .= " marked RLIKE \"" . $marked . "\""; // regarding the use of RLIKE, see note for 'selected'
 		}
 
 		if (!empty($citeKey) AND !empty($userID)) // if the 'cite_key' parameter is present (in order to search for user specific fields (like 'cite_key'), the 'userID' parameter must be given as well!):
@@ -763,6 +835,13 @@
 				$query .= " call_number RLIKE \"" . $callNumberPrefix . " @ [^@;]*" . $callNumber . "[^@;]*\"";
 		}
 
+		if (!empty($where)) // if the 'where' parameter is present:
+		{
+			$query .= connectConditionals();
+
+			$query .= " (" . $where . ")"; // add custom WHERE clause
+		}
+
 		// If, for some odd reason, 'records=all' was passed together with other parameters (such as in '.../show.php?records=all&author=steffens') we'll remove again
 		// the generic WHERE clause part (i.e. ' serial RLIKE ".+"') from the query since its superfluous and would confuse other features (such as the "Seach within Results" functionality):
 		if (eregi('WHERE serial RLIKE "\.\+" AND', $query))
@@ -787,19 +866,30 @@
 			if ($citeOrder == "year")
 				$query .= " ORDER BY year DESC, first_author, author_count, author, title"; // sort records first by year (descending), then in the usual way
 	
+			elseif ($citeOrder == "type") // sort records first by record type (and thesis type), then in the usual way:
+				$query .= " ORDER BY type DESC, thesis DESC, first_author, author_count, author, year, title";
+
+			elseif ($citeOrder == "type-year") // sort records first by record type (and thesis type), then by year (descending), then in the usual way:
+				$query .= " ORDER BY type DESC, thesis DESC, year DESC, first_author, author_count, author, title";
+
 			else // if any other or no 'citeOrder' parameter is specified
 			{
 				if (!empty($recordIDSelector)) // if a record identifier (either 'serial', 'call_number' or 'cite_key') was entered via the 'show.php' web form
 					$query .= " ORDER BY " . $recordIDSelector . ", author, year DESC, publication"; // sort by the appropriate column
 	
 				else // supply the default ORDER BY clause:
-					$query .= " ORDER BY author, year DESC, publication";
+				{
+					if ($displayType == "Cite")
+						$query .= " ORDER BY first_author, author_count, author, year, title";
+					else
+						$query .= " ORDER BY author, year DESC, publication";
+				}
 			}
 		}
 
 		// Build the correct query URL:
 		// (we skip unnecessary parameters here since 'search.php' will use it's default values for them)
-		$queryURL = "sqlQuery=" . rawurlencode($query) . "&formType=sqlSearch&submit=" . $displayType . "&viewType=" . $viewType . "&showQuery=" . $showQuery . "&showLinks=" . $showLinks . "&showRows=" . $showRows . "&rowOffset=" . $rowOffset . "&citeOrder=" . $citeOrder . "&citeStyleSelector=" . rawurlencode($citeStyle) . "&exportFormatSelector=" . rawurlencode($exportFormat) . "&exportType=" . $exportType . "&headerMsg=" . rawurlencode($headerMsg);
+		$queryURL = "sqlQuery=" . rawurlencode($query) . "&client=" . $client ."&formType=sqlSearch&submit=" . $displayType . "&viewType=" . $viewType . "&showQuery=" . $showQuery . "&showLinks=" . $showLinks . "&showRows=" . $showRows . "&rowOffset=" . $rowOffset . "&citeOrder=" . $citeOrder . "&citeStyleSelector=" . rawurlencode($citeStyle) . "&exportFormatSelector=" . rawurlencode($exportFormat) . "&exportType=" . $exportType . "&citeType=" . $citeType . "&headerMsg=" . rawurlencode($headerMsg);
 
 		// call 'search.php' with the correct query URL in order to display record details:
 		header("Location: search.php?$queryURL");
