@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./modify.php
 	// Created:    18-Dec-02, 23:08
-	// Modified:   04-Nov-05, 19:57
+	// Modified:   13-Jun-06, 13:08
 
 	// This php script will perform adding, editing & deleting of records.
 	// It then calls 'receipt.php' which displays links to the modified/added record
@@ -29,7 +29,26 @@
 
 	// Clear any errors that might have been found previously:
 	$errors = array();
-	
+
+	// We check the '$_GET['proc']' variable in addition to '$_POST' in order to catch the case where the POSTed data are
+	// greater than the value given in 'post_max_size' (in 'php.ini'). This may happen if the user uploads a large file.
+	// Relevant quote from <http://de.php.net/ini.core>:
+	// "If the size of post data is greater than post_max_size, the $_POST and $_FILES superglobals are empty.
+	//  This can be tracked in various ways, e.g. by passing the $_GET variable to the script processing the data,
+	//  i.e. <form action="edit.php?processed=1">, and then checking if $_GET['processed'] is set."
+	if (isset($_GET['proc']) AND empty($_POST))
+	{
+		$maxPostDataSize = ini_get("post_max_size");
+		$HeaderString = "<b><span class=\"warning\">Post data size must not be greater than " . $maxPostDataSize . "!</span></b>"; // inform the user that the maximum post data size was exceeded
+
+		// Write back session variables:
+		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+		
+		header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to 'record.php'
+
+		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	}
+
 	// Write the (POST) form variables into an array:
 	foreach($_POST as $varname => $value)
 		$formVars[$varname] = trim($value); // remove any leading or trailing whitespace from the field's contents & copy the trimmed string to the '$formVars' array
@@ -175,7 +194,12 @@
 
 	// Extract all form values provided by 'record.php':
 	$authorName = $formVars['authorName'];
-	$isEditorCheckBox = $formVars['isEditorCheckBox'];
+
+	if (isset($formVars['isEditorCheckBox']))
+		$isEditorCheckBox = $formVars['isEditorCheckBox'];
+	else
+		$isEditorCheckBox = "";
+
 	$titleName = $formVars['titleName'];
 	$yearNo = $formVars['yearNo'];
 	$publicationName = $formVars['publicationName'];
@@ -210,12 +234,16 @@
 	$locationName = $formVars['locationName'];
 
 	$callNumberName = $formVars['callNumberName'];
-	if (ereg("%40", $callNumberName)) // if '$callNumberName' still contains URL encoded data... ('%40' is the URL encoded form of the character '@', see note below!)
+	if (ereg("%40|%20", $callNumberName)) // if '$callNumberName' still contains URL encoded data... ('%40' is the URL encoded form of the character '@', '%20' a space, see note below!)
 		$callNumberName = rawurldecode($callNumberName); // ...URL decode 'callNumberName' variable contents (it was URL encoded before incorporation into a hidden tag of the 'record' form to avoid any HTML syntax errors)
 														// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_POST'!
 														//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
 
-	$callNumberNameUserOnly = $formVars['callNumberNameUserOnly'];
+	if (isset($formVars['callNumberNameUserOnly']))
+		$callNumberNameUserOnly = $formVars['callNumberNameUserOnly'];
+	else
+		$callNumberNameUserOnly = "";
+
 	$serialNo = $formVars['serialNo'];
 	$typeName = $formVars['typeName'];
 	$thesisName = $formVars['thesisName'];
@@ -253,16 +281,54 @@
 	$doiName = $formVars['doiName'];
 	$contributionID = $formVars['contributionIDName'];
 	$contributionID = rawurldecode($contributionID); // URL decode 'contributionID' variable contents (it was URL encoded before incorporation into a hidden tag of the 'record' form to avoid any HTML syntax errors) [see above!]
-	$contributionIDCheckBox = $formVars['contributionIDCheckBox'];
-	$locationSelectorName = $formVars['locationSelectorName'];
-	$onlinePublicationCheckBox = $formVars['onlinePublicationCheckBox'];
+
+	if (isset($formVars['contributionIDCheckBox']))
+		$contributionIDCheckBox = $formVars['contributionIDCheckBox'];
+	else
+		$contributionIDCheckBox = "";
+
+	if (isset($formVars['locationSelectorName']))
+		$locationSelectorName = $formVars['locationSelectorName'];
+	else
+		$locationSelectorName = "";
+
+	if (isset($formVars['onlinePublicationCheckBox']))
+		$onlinePublicationCheckBox = $formVars['onlinePublicationCheckBox'];
+	else
+		$onlinePublicationCheckBox = "";
+
 	$onlineCitationName = $formVars['onlineCitationName'];
-	$createdDate = $formVars['createdDate'];
-	$createdTime = $formVars['createdTime'];
-	$createdBy = $formVars['createdBy'];
-	$modifiedDate = $formVars['modifiedDate'];
-	$modifiedTime = $formVars['modifiedTime'];
-	$modifiedBy = $formVars['modifiedBy'];
+
+	if (isset($formVars['createdDate']))
+		$createdDate = $formVars['createdDate'];
+	else
+		$createdDate = "";
+
+	if (isset($formVars['createdTime']))
+		$createdTime = $formVars['createdTime'];
+	else
+		$createdTime = "";
+
+	if (isset($formVars['createdBy']))
+		$createdBy = $formVars['createdBy'];
+	else
+		$createdBy = "";
+
+	if (isset($formVars['modifiedDate']))
+		$modifiedDate = $formVars['modifiedDate'];
+	else
+		$modifiedDate = "";
+
+	if (isset($formVars['modifiedTime']))
+		$modifiedTime = $formVars['modifiedTime'];
+	else
+		$modifiedTime = "";
+
+	if (isset($formVars['modifiedBy']))
+		$modifiedBy = $formVars['modifiedBy'];
+	else
+		$modifiedBy = "";
+
 	$origRecord = $formVars['origRecord'];
 
 	// check if a file was uploaded:
@@ -440,13 +506,11 @@
 	// CONSTRUCT SQL QUERY:
 
 	// First, setup some required variables:
-	$currentDate = date('Y-m-d'); // get the current date in a format recognized by mySQL (which is 'YYYY-MM-DD', e.g.: '2003-12-31')
-	$currentTime = date('H:i:s'); // get the current time in a format recognized by mySQL (which is 'HH:MM:SS', e.g.: '23:59:49')
-	$currentUser = $loginFirstName . " " . $loginLastName . " (" . $loginEmail . ")"; // here we use session variables to construct the user name, e.g.: 'Matthias Steffens (msteffens@ipoe.uni-kiel.de)'
+	// Get the current date (e.g. '2003-12-31'), time (e.g. '23:59:49') and user name & email address (e.g. 'Matthias Steffens (refbase@extracts.de)'):
+	list ($currentDate, $currentTime, $currentUser) = getCurrentDateTimeUser(); // function 'getCurrentDateTimeUser()' is defined in 'include.inc.php'
 
-	$loginEmailArray = split("@", $loginEmail); // split the login email address at '@'
-	$loginEmailUserName = $loginEmailArray[0]; // extract the user name (which is the first element of the array '$loginEmailArray')
-	$callNumberPrefix = $abbrevInstitution . " @ " . $loginEmailUserName; // again, we use session variables to construct a correct call number prefix, like: 'IPÖ @ msteffens'
+	// Build a correct call number prefix for the currently logged-in user (e.g. 'IPÖ @ msteffens'):
+	$callNumberPrefix = getCallNumberPrefix(); // function 'getCallNumberPrefix()' is defined in 'include.inc.php'
 
 
 	// provide some magic that figures out what do to depending on the state of the 'is Editor' check box
@@ -483,44 +547,10 @@
 	}
 	
 
-	// assign correct values to the calculation fields 'first_author', 'author_count', 'first_page', 'volume_numeric' and 'series_volume_numeric':
-	if (!empty($authorName))
-	{
-		$first_author = ereg_replace("^([^;]+).*","\\1",$authorName); // extract first author from 'author' field
-		$first_author = trim($first_author); // remove leading & trailing whitespace (if any)
-		$first_author = ereg_replace(" *\(eds?\)$","",$first_author); // remove any existing editor info from the 'first_author' string, i.e., kill any trailing " (ed)" or " (eds)"
-
-		if (!ereg(";", $authorName)) // if the 'author' field does NOT contain a ';' (which would delimit multiple authors) => single author
-			$author_count = "1"; // indicates a single author
-		elseif (ereg("^[^;]+;[^;]+$", $authorName)) // the 'author' field does contain exactly one ';' => two authors
-			$author_count = "2"; // indicates two authors
-		elseif (ereg("^[^;]+;[^;]+;[^;]+", $authorName)) // the 'author' field does contain at least two ';' => more than two authors
-			$author_count = "3"; // indicates three (or more) authors
-	}
-
-	if (!empty($pagesNo))
-	{
-		if (ereg("([0-9]+)",$pagesNo)) // if the 'pages' field contains any numeric value(s)
-			$first_page = ereg_replace("^[^0-9]*([0-9]+).*","\\1",$pagesNo); // extract first page from 'pages' field
-		else
-			$first_page = "0"; // will get transformed into 'NULL' further down...
-	}
-
-	if (!empty($volumeNo))
-	{
-		if (ereg("([0-9]+)",$volumeNo)) // if the 'volume' field contains any numeric value(s)
-			$volumeNumericNo = ereg_replace("^[^0-9]*([0-9]+).*","\\1",$volumeNo); // extract first number from 'volume' field
-		else
-			$volumeNumericNo = "0"; // will get transformed into 'NULL' further down...
-	}
-
-	if (!empty($seriesVolumeNo))
-	{
-		if (ereg("([0-9]+)",$seriesVolumeNo)) // if the 'series_volume' field contains any numeric value(s)
-			$seriesVolumeNumericNo = ereg_replace("^[^0-9]*([0-9]+).*","\\1",$seriesVolumeNo); // extract first number from 'series_volume' field
-		else
-			$seriesVolumeNumericNo = "0"; // will get transformed into 'NULL' further down...
-	}
+	// Assign correct values to the calculation fields 'first_author', 'author_count', 'first_page', 'volume_numeric' and 'series_volume_numeric':
+	// function 'generateCalculationFieldContent()' is defined in 'include.inc.php'
+	// NOTE: this function call won't be necessary anymore when we've also moved database INSERTs and DELETEs to dedicated functions (which would take care of calculation fields then) -> compare with 'addRecords()' function
+	list ($firstAuthor, $authorCount, $firstPage, $volumeNumericNo, $seriesVolumeNumericNo) = generateCalculationFieldContent($authorName, $pagesNo, $volumeNo, $seriesVolumeNo);
 
 
 	// manage 'location' field data:
@@ -528,7 +558,7 @@
 	// note: if the current user is NOT logged in -OR- if any normal user is logged in, the value for '$locationSelectorName' will be always '' when performing an INSERT,
 	//       since the popup is fixed to 'Add' and disabled (which, in turn, will result in an empty value to be returned)
 	{
-		if (ereg("^(\(your name &(amp;)? email address will be filled in automatically\))?$", $locationName)) // if the 'location' field is either completely empty -OR- does only contain the information string (that shows up on 'add' for normal users)
+		if (ereg("^(" . $loc["your name &amp; email address will be filled in automatically"] . ")?$", $locationName)) // if the 'location' field is either completely empty -OR- does only contain the information string (that shows up on 'add' for normal users)
 			$locationName = ereg_replace("^.*$", "$currentUser", $locationName);
 		else // if the 'location' field does already contain some user content:
 			$locationName = ereg_replace("^(.+)$", "\\1; $currentUser", $locationName);
@@ -645,6 +675,7 @@
 	$userKeysName = trimTextPattern($userKeysName, "( *; *)+", true, true);
 	$userGroupsName = trimTextPattern($userGroupsName, "( *; *)+", true, true);
 
+	$queryDeleted = ""; // initialize the '$queryDeleted' variable in order to prevent 'Undefined variable...' messages
 
 	// Is this an update?
 	if ($recordAction == "edit") // alternative method to check for an 'edit' action: if (ereg("^[0-9]+$",$serialNo)) // a valid serial number must be an integer
@@ -653,8 +684,8 @@
 			// UPDATE - construct queries to update the relevant record
 			$queryRefs = "UPDATE $tableRefs SET "
 					. "author = \"$authorName\", "
-					. "first_author = \"$first_author\", "
-					. "author_count = \"$author_count\", "
+					. "first_author = \"$firstAuthor\", "
+					. "author_count = \"$authorCount\", "
 					. "title = \"$titleName\", "
 					. "year = \"$yearNo\", "
 					. "publication = \"$publicationName\", "
@@ -663,7 +694,7 @@
 					. "volume_numeric = \"$volumeNumericNo\", "
 					. "issue = \"$issueNo\", "
 					. "pages = \"$pagesNo\", "
-					. "first_page = \"$first_page\", "
+					. "first_page = \"$firstPage\", "
 					. "address = \"$addressName\", "
 					. "corporate_author = \"$corporateAuthorName\", "
 					. "keywords = \"$keywordsName\", "
@@ -746,8 +777,8 @@
 			// INSERT - construct queries to add data as new record
 			$queryDeleted = "INSERT INTO $tableDeleted SET "
 					. "author = \"$authorName\", "
-					. "first_author = \"$first_author\", "
-					. "author_count = \"$author_count\", "
+					. "first_author = \"$firstAuthor\", "
+					. "author_count = \"$authorCount\", "
 					. "title = \"$titleName\", "
 					. "year = \"$yearNo\", "
 					. "publication = \"$publicationName\", "
@@ -756,7 +787,7 @@
 					. "volume_numeric = \"$volumeNumericNo\", "
 					. "issue = \"$issueNo\", "
 					. "pages = \"$pagesNo\", "
-					. "first_page = \"$first_page\", "
+					. "first_page = \"$firstPage\", "
 					. "address = \"$addressName\", "
 					. "corporate_author = \"$corporateAuthorName\", "
 					. "keywords = \"$keywordsName\", "
@@ -813,8 +844,8 @@
 			// INSERT - construct queries to add data as new record
 			$queryRefs = "INSERT INTO $tableRefs SET "
 					. "author = \"$authorName\", "
-					. "first_author = \"$first_author\", "
-					. "author_count = \"$author_count\", "
+					. "first_author = \"$firstAuthor\", "
+					. "author_count = \"$authorCount\", "
 					. "title = \"$titleName\", "
 					. "year = \"$yearNo\", "
 					. "publication = \"$publicationName\", "
@@ -823,7 +854,7 @@
 					. "volume_numeric = \"$volumeNumericNo\", "
 					. "issue = \"$issueNo\", "
 					. "pages = \"$pagesNo\", "
-					. "first_page = \"$first_page\", "
+					. "first_page = \"$firstPage\", "
 					. "address = \"$addressName\", "
 					. "corporate_author = \"$corporateAuthorName\", "
 					. "keywords = \"$keywordsName\", "
@@ -877,10 +908,10 @@
 		$queryRefs = ereg_replace("\"$volumeNumericNo\"", "NULL", $queryRefs);
 		$queryDeleted = ereg_replace("\"$volumeNumericNo\"", "NULL", $queryDeleted);
 	}
-	if (ereg("^$|^0$",$first_page))
+	if (ereg("^$|^0$",$firstPage))
 	{
-		$queryRefs = ereg_replace("\"$first_page\"", "NULL", $queryRefs);
-		$queryDeleted = ereg_replace("\"$first_page\"", "NULL", $queryDeleted);
+		$queryRefs = ereg_replace("\"$firstPage\"", "NULL", $queryRefs);
+		$queryDeleted = ereg_replace("\"$firstPage\"", "NULL", $queryDeleted);
 	}
 	if (ereg("^$|^0$",$seriesVolumeNumericNo))
 	{
@@ -961,27 +992,27 @@
 			//   2. pattern describing delimiter that separates author name & initials (within one author)
 			//   3. position of the author whose last name shall be extracted (e.g., "1" will return the 1st author's last name)
 			//   4. contents of the author field
-			$author_string = extractAuthorsLastName(" *; *", // get last name of first author
+			$authorString = extractAuthorsLastName(" *; *", // get last name of first author
 												" *, *",
 												1,
 												$authorName);
 	
-			if ($author_count == "2") // two authors
+			if ($authorCount == "2") // two authors
 			{
-				$author_string .= " & ";
-				$author_string .= extractAuthorsLastName(" *; *", // get last name of second author
+				$authorString .= " & ";
+				$authorString .= extractAuthorsLastName(" *; *", // get last name of second author
 													" *, *",
 													2,
 													$authorName);
 			}
 	
-			if ($author_count == "3") // at least three authors
-				$author_string .= " et al";		
+			if ($authorCount == "3") // at least three authors
+				$authorString .= " et al";		
 		
 			// send a notification email to the mailing list email address '$mailingListEmail' (specified in 'ini.inc.php'):
 			$emailRecipient = "Literature Database Announcement List <" . $mailingListEmail . ">";
 	
-			$emailSubject = "New entry: " . $author_string . " " . $yearNo;
+			$emailSubject = "New entry: " . $authorString . " " . $yearNo;
 			if (!empty($publicationName))
 			{
 				$emailSubject .= " (" . $publicationName;
