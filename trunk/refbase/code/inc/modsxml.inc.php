@@ -11,12 +11,15 @@
   // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
   //
   // Created:    02-Oct-04, 12:00
-  // Modified:   26-Feb-06, 14:08
+  // Modified:   04-Jun-06, 01:52
 
   // This include file contains functions that'll export records to MODS XML.
   // Requires ActiveLink PHP XML Package, which is available under the GPL from:
   // <http://www.active-link.com/software/>
 
+
+  // Incorporate some include files:
+  include_once 'includes/transtab_refbase_unicode.inc.php'; // include refbase markup -> Unicode search & replace patterns
 
   // Import the ActiveLink Packages
   require_once("classes/include.php");
@@ -145,7 +148,9 @@
 
   function modsCollection($result) {
  
-    global $contentTypeCharset; // defined in 'ini.inc.php'
+    global $contentTypeCharset; // these variables are defined in 'ini.inc.php'
+    global $convertExportDataToUTF8;
+
     global $citeKeysArray; // '$citeKeysArray' is made globally available from
                           // within this function
 
@@ -157,40 +162,25 @@
 
     // Generate the export for each record and push them onto an array:
     while ($row = @ mysql_fetch_array($result)) {
-      // Define an array of search & replace actions (to ensure that special
-      // characters are encoded with their entities)
-      // (Note that the order of array elements IS important since it defines
-      //  when a search/replace action gets executed)
-      $exportSearchReplacePatterns = array("&" => "&amp;",
-                                           "<" => "&lt;",
-                                           ">"  => "&gt;");
-
-      // Perform search & replace actions on each of the fields:
-      foreach ($row as $rowFieldName => $rowFieldValue)
-        // function 'searchReplaceText()' is defined in 'include.inc.php'
-        $row[$rowFieldName] = searchReplaceText($exportSearchReplacePatterns,
-                                                $row[$rowFieldName], false);
-
-      // Note: except from the above conversion of angle brackets (i.e., '<'
-      //       and '>') and ampersands ('&'), data will be exported as fetched
-      //       from the MySQL database, i.e., there's NO conversion of:
-      //        - higher ASCII chars
-      //        - "human readable markup" that's used within plain text fields
-      //          of the database to define rich text characters like italics,
-      //          etc. (see '$markupSearchReplacePatterns' in 'ini.inc.php')
-
-      $record = modsRecord($row); // Export the current record as MODS XML
+      // Export the current record as MODS XML
+      $record = modsRecord($row);
 
       if (!empty($record)) // unless the record buffer is empty...
         array_push($exportArray, $record); // ...add it to an array of exports
     }
 
     $modsCollectionDoc = new XMLDocument();
-    $modsCollectionDoc->setEncoding($contentTypeCharset);
+
+    if (($convertExportDataToUTF8 == "yes") AND ($contentTypeCharset != "UTF-8"))
+      $modsCollectionDoc->setEncoding("UTF-8");
+    else
+      $modsCollectionDoc->setEncoding($contentTypeCharset);
+
     $modsCollection = new XML("modsCollection");
     $modsCollection->setTagAttribute("xmlns", "http://www.loc.gov/mods/v3");
     foreach ($exportArray as $mods) 
       $modsCollection->addXMLasBranch($mods);
+
     $modsCollectionDoc->setXML($modsCollection);
     $modsCollectionString = $modsCollectionDoc->getXMLString();
 
@@ -201,6 +191,13 @@
 
   // Returns an XML object (mods) of a single record
   function modsRecord($row) {
+
+    global $contentTypeCharset; // these variables are defined in 'ini.inc.php'
+    global $convertExportDataToUTF8;
+
+    // The array '$transtab_refbase_unicode' contains search & replace patterns for conversion from refbase markup to Unicode entities.
+    global $transtab_refbase_unicode; // defined in 'transtab_refbase_unicode.inc.php'
+
     $exportPrivate = True;  // This will be a global variable or will be used
                             // when modsRow is called and will determine if we
                             // export user-specific data
@@ -215,6 +212,39 @@
 
     // generate or extract the cite key for this record
     $citeKey = generateCiteKey($formVars); // function 'generateCiteKey()' is defined in 'include.inc.php'
+
+    // Encode special chars and perform charset conversions:
+    foreach ($row as $rowFieldName => $rowFieldValue) {
+      // We only convert those special chars to entities which are supported by XML:
+      // function 'encodeHTMLspecialchars()' is defined in 'include.inc.php'
+      $row[$rowFieldName] = encodeHTMLspecialchars($row[$rowFieldName]);
+
+      // Convert field data to UTF-8:
+      // (if '$convertExportDataToUTF8' is set to "yes" in 'ini.inc.php' and character encoding is not UTF-8 already)
+      // (Note that charset conversion can only be done *after* the cite key has been generated, otherwise cite key
+      //  generation will produce garbled text!)
+      // function 'convertToCharacterEncoding()' is defined in 'include.inc.php'
+      if (($convertExportDataToUTF8 == "yes") AND ($contentTypeCharset != "UTF-8"))
+        $row[$rowFieldName] = convertToCharacterEncoding("UTF-8", "IGNORE", $row[$rowFieldName]);
+    }
+
+    // Defines field-specific search & replace 'actions' that will be applied to all those refbase fields that are listed in the corresponding 'fields' element:
+    // (If you don't want to perform any search and replace actions, specify an empty array, like: '$fieldSpecificSearchReplaceActionsArray = array();'.
+    //  Note that the search patterns MUST include the leading & trailing slashes -- which is done to allow for mode modifiers such as 'imsxU'.)
+    //                                              "/Search Pattern/"  =>  "Replace Pattern"
+    $fieldSpecificSearchReplaceActionsArray = array();
+
+    if ($convertExportDataToUTF8 == "yes")
+      $fieldSpecificSearchReplaceActionsArray[] = array(
+                                                          'fields'  => array("title", "address", "keywords", "abstract", "publication"),
+                                                          'actions' => $transtab_refbase_unicode
+                                                      );
+
+    // Apply field-specific search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$fieldSpecificSearchReplaceActionsArray':
+    foreach ($fieldSpecificSearchReplaceActionsArray as $fieldActionsArray)
+      foreach ($row as $rowFieldName => $rowFieldValue)
+        if (in_array($rowFieldName, $fieldActionsArray['fields']))
+          $row[$rowFieldName] = searchReplaceText($fieldActionsArray['actions'], $rowFieldValue, true); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
     // Create an XML object for a single record.
     $record = new XML("mods");
