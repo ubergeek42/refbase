@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./install_utf8.sql
 # Created:    02-Oct-04, 20:11
-# Modified:   06-Mar-06, 01:55
+# Modified:   10-Jun-06, 22:19
 
 # MySQL database structure & initial data (for use with 'utf8' character set)
 
@@ -33,7 +33,7 @@ CREATE TABLE `auth` (
   `email` varchar(50) NOT NULL default '',
   `password` varchar(15) NOT NULL default '',
   PRIMARY KEY  (`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) TYPE=MyISAM DEFAULT CHARSET=utf8;
 
 #
 # data for table `auth`
@@ -108,7 +108,7 @@ CREATE TABLE `deleted` (
   `deleted_time` time default NULL,
   `deleted_by` varchar(100) default NULL,
   PRIMARY KEY  (`serial`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) TYPE=MyISAM DEFAULT CHARSET=utf8;
 
 #
 # data for table `deleted`
@@ -127,7 +127,7 @@ CREATE TABLE `depends` (
   `depends_enabled` enum('true','false') NOT NULL default 'true',
   `depends_path` varchar(255) default NULL,
   PRIMARY KEY  (`depends_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) TYPE=MyISAM DEFAULT CHARSET=utf8;
 
 #
 # data for table `depends`
@@ -146,14 +146,14 @@ DROP TABLE IF EXISTS `formats`;
 CREATE TABLE `formats` (
   `format_id` mediumint(8) unsigned NOT NULL auto_increment,
   `format_name` varchar(100) default NULL,
-  `format_type` enum('export','import') NOT NULL default 'export',
+  `format_type` enum('export','import','cite') NOT NULL default 'export',
   `format_enabled` enum('true','false') NOT NULL default 'true',
   `format_spec` varchar(255) default NULL,
   `order_by` varchar(25) default NULL,
   `depends_id` mediumint(8) unsigned NOT NULL default '0',
   PRIMARY KEY  (`format_id`),
   KEY `format_name` (`format_name`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) TYPE=MyISAM DEFAULT CHARSET=utf8;
 
 #
 # data for table `formats`
@@ -162,8 +162,8 @@ CREATE TABLE `formats` (
 INSERT INTO `formats` VALUES (1, 'MODS XML', 'import', 'true', 'bibutils/import_modsxml2refbase.php', '06', 2), 
 (2, 'MODS XML', 'export', 'true', 'export_modsxml.php', '06', 1), 
 (3, 'Text (CSV)', 'export', 'false', 'export_textcsv.php', '07', 1), 
-(4, 'Bibtex', 'import', 'true', 'bibutils/import_bib2refbase.php', '01', 2), 
-(5, 'Bibtex', 'export', 'true', 'bibutils/export_xml2bib.php', '01', 2), 
+(4, 'BibTeX', 'import', 'true', 'bibutils/import_bib2refbase.php', '01', 2), 
+(5, 'BibTeX', 'export', 'true', 'bibutils/export_xml2bib.php', '01', 2), 
 (6, 'Endnote', 'import', 'true', 'bibutils/import_end2refbase.php', '02', 2), 
 (7, 'Endnote', 'export', 'true', 'bibutils/export_xml2end.php', '02', 2), 
 (8, 'Pubmed Medline', 'import', 'true', 'import_medline2refbase.php', '08', '1'),
@@ -174,7 +174,14 @@ INSERT INTO `formats` VALUES (1, 'MODS XML', 'import', 'true', 'bibutils/import_
 (13, 'CSA', 'import', 'true', 'import_csa2refbase.php', '05', '1'),
 (14, 'Copac', 'import', 'true', 'bibutils/import_copac2refbase.php', '10', '2'),
 (15, 'SRW XML', 'export', 'true', 'export_srwxml.php', '11', 1), 
-(16, 'OpenSearch RSS', 'export', 'true', 'export_osrss.php', '12', 1);
+(16, 'ODF XML', 'export', 'true', 'export_odfxml.php', '12', 1), 
+(17, 'OpenSearch RSS', 'export', 'true', 'export_osrss.php', '13', 1),
+(18, 'html', 'cite', 'true', 'formats/cite_html.php', '14', '1'),
+(19, 'RTF', 'cite', 'true', 'formats/cite_rtf.php', '15', '1'),
+(20, 'PDF', 'cite', 'true', 'formats/cite_pdf.php', '16', '1'),
+(21, 'LaTeX', 'cite', 'true', 'formats/cite_latex.php', '17', '1'),
+(22, 'Markdown', 'cite', 'true', 'formats/cite_markdown.php', '18', '1'),
+(23, 'ASCII', 'cite', 'true', 'formats/cite_ascii.php', '19', '1');
 
 # --------------------------------------------------------
 
@@ -190,7 +197,7 @@ CREATE TABLE `languages` (
   `order_by` varchar(25) default NULL,
   PRIMARY KEY  (`language_id`),
   KEY `language_name` (`language_name`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) TYPE=MyISAM DEFAULT CHARSET=utf8;
 
 #
 # data for table `languages`
@@ -222,7 +229,7 @@ CREATE TABLE `queries` (
   `last_execution` datetime default NULL,
   PRIMARY KEY  (`query_id`),
   KEY `user_id` (`user_id`,`query_name`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) TYPE=MyISAM DEFAULT CHARSET=utf8;
 
 #
 # data for table `queries`
@@ -297,7 +304,7 @@ CREATE TABLE `refs` (
   `modified_time` time default NULL,
   `modified_by` varchar(100) default NULL,
   PRIMARY KEY  (`serial`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) TYPE=MyISAM DEFAULT CHARSET=utf8;
 
 #
 # data for table `refs`
@@ -332,19 +339,19 @@ CREATE TABLE `styles` (
   `depends_id` mediumint(8) unsigned NOT NULL default '0',
   PRIMARY KEY  (`style_id`),
   KEY `style_name` (`style_name`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) TYPE=MyISAM DEFAULT CHARSET=utf8;
 
 #
 # data for table `styles`
 #
 
-INSERT INTO `styles` VALUES (1, 'Polar Biol', 'true', 'cite_PolarBiol_MarBiol_MEPS.php', '1', 1),
-(2, 'Mar Biol', 'true', 'cite_PolarBiol_MarBiol_MEPS.php', '2', 1),
-(3, 'MEPS', 'true', 'cite_PolarBiol_MarBiol_MEPS.php', '3', 1),
-(4, 'Deep Sea Res', 'true', 'cite_DeepSeaRes.php', '4', 1),
-(5, 'Ann Glaciol', 'true', 'cite_AnnGlaciol_JGlaciol.php', '5', 1),
-(6, 'J Glaciol', 'true', 'cite_AnnGlaciol_JGlaciol.php', '6', 1),
-(7, 'Text Citation', 'true', 'cite_TextCitation.php', '7', 1);
+INSERT INTO `styles` VALUES (1, 'Polar Biol', 'true', 'styles/cite_PolarBiol_MarBiol_MEPS.php', '1', 1),
+(2, 'Mar Biol', 'true', 'styles/cite_PolarBiol_MarBiol_MEPS.php', '2', 1),
+(3, 'MEPS', 'true', 'styles/cite_PolarBiol_MarBiol_MEPS.php', '3', 1),
+(4, 'Deep Sea Res', 'true', 'styles/cite_DeepSeaRes.php', '4', 1),
+(5, 'Ann Glaciol', 'true', 'styles/cite_AnnGlaciol_JGlaciol.php', '5', 1),
+(6, 'J Glaciol', 'true', 'styles/cite_AnnGlaciol_JGlaciol.php', '6', 1),
+(7, 'Text Citation', 'true', 'styles/cite_TextCitation.php', '7', 1);
 
 # --------------------------------------------------------
 
@@ -361,7 +368,7 @@ CREATE TABLE `types` (
   `order_by` varchar(25) default NULL,
   PRIMARY KEY  (`type_id`),
   KEY `type_name` (`type_name`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) TYPE=MyISAM DEFAULT CHARSET=utf8;
 
 #
 # data for table `types`
@@ -396,7 +403,7 @@ CREATE TABLE `user_data` (
   `related` text,
   PRIMARY KEY  (`data_id`),
   KEY `user_id` (`user_id`,`record_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) TYPE=MyISAM DEFAULT CHARSET=utf8;
 
 #
 # data for table `user_data`
@@ -429,7 +436,7 @@ CREATE TABLE `user_formats` (
   `show_format` enum('true','false') NOT NULL default 'true',
   PRIMARY KEY  (`user_format_id`),
   KEY `format_id` (`format_id`,`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) TYPE=MyISAM DEFAULT CHARSET=utf8;
 
 #
 # data for table `user_formats`
@@ -485,7 +492,7 @@ CREATE TABLE `user_options` (
   `text_citation_format` varchar(255) default NULL,
   PRIMARY KEY  (`option_id`),
   KEY `user_id` (`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) TYPE=MyISAM DEFAULT CHARSET=utf8;
 
 #
 # data for table `user_options`
@@ -525,7 +532,7 @@ CREATE TABLE `user_permissions` (
   `allow_edit_call_number` enum('no','yes') NOT NULL default 'no',
   PRIMARY KEY  (`user_permission_id`),
   KEY `user_id` (`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) TYPE=MyISAM DEFAULT CHARSET=utf8;
 
 #
 # data for table `user_permissions`
@@ -548,7 +555,7 @@ CREATE TABLE `user_styles` (
   `show_style` enum('true','false') NOT NULL default 'true',
   PRIMARY KEY  (`user_style_id`),
   KEY `style_id` (`style_id`,`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) TYPE=MyISAM DEFAULT CHARSET=utf8;
 
 #
 # data for table `user_styles`
@@ -577,7 +584,7 @@ CREATE TABLE `user_types` (
   `show_type` enum('true','false') NOT NULL default 'true',
   PRIMARY KEY  (`user_type_id`),
   KEY `type_id` (`type_id`,`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) TYPE=MyISAM DEFAULT CHARSET=utf8;
 
 #
 # data for table `user_types`
@@ -635,7 +642,7 @@ CREATE TABLE `users` (
   `modified_time` time default NULL,
   `modified_by` varchar(100) default NULL,
   PRIMARY KEY  (`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) TYPE=MyISAM DEFAULT CHARSET=utf8;
 
 #
 # data for table `users`

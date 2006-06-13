@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./update.sql
 # Created:    01-Mar-05, 16:54
-# Modified:   04-Mar-06, 14:33
+# Modified:   10-Jun-06, 22:19
 
 # This MySQL database structure file will update any refbase v0.8.0 database to v0.9.0
 
@@ -18,14 +18,14 @@ DROP TABLE IF EXISTS `formats`;
 CREATE TABLE `formats` (
   `format_id` mediumint(8) unsigned NOT NULL auto_increment,
   `format_name` varchar(100) default NULL,
-  `format_type` enum('export','import') NOT NULL default 'export',
+  `format_type` enum('export','import','cite') NOT NULL default 'export',
   `format_enabled` enum('true','false') NOT NULL default 'true',
   `format_spec` varchar(255) default NULL,
   `order_by` varchar(25) default NULL,
   `depends_id` mediumint(8) unsigned NOT NULL default '0',
   PRIMARY KEY  (`format_id`),
   KEY `format_name` (`format_name`)
-) ENGINE=MyISAM AUTO_INCREMENT=17 ;
+) TYPE=MyISAM AUTO_INCREMENT=24 ;
 
 #
 # data for table `formats`
@@ -34,8 +34,8 @@ CREATE TABLE `formats` (
 INSERT INTO `formats` VALUES (1, 'MODS XML', 'import', 'true', 'bibutils/import_modsxml2refbase.php', '06', 2), 
 (2, 'MODS XML', 'export', 'true', 'export_modsxml.php', '06', 1), 
 (3, 'Text (CSV)', 'export', 'false', 'export_textcsv.php', '07', 1), 
-(4, 'Bibtex', 'import', 'true', 'bibutils/import_bib2refbase.php', '01', 2), 
-(5, 'Bibtex', 'export', 'true', 'bibutils/export_xml2bib.php', '01', 2), 
+(4, 'BibTeX', 'import', 'true', 'bibutils/import_bib2refbase.php', '01', 2), 
+(5, 'BibTeX', 'export', 'true', 'bibutils/export_xml2bib.php', '01', 2), 
 (6, 'Endnote', 'import', 'true', 'bibutils/import_end2refbase.php', '02', 2), 
 (7, 'Endnote', 'export', 'true', 'bibutils/export_xml2end.php', '02', 2), 
 (8, 'Pubmed Medline', 'import', 'true', 'import_medline2refbase.php', '08', '1'),
@@ -46,7 +46,14 @@ INSERT INTO `formats` VALUES (1, 'MODS XML', 'import', 'true', 'bibutils/import_
 (13, 'CSA', 'import', 'true', 'import_csa2refbase.php', '05', '1'),
 (14, 'Copac', 'import', 'true', 'bibutils/import_copac2refbase.php', '10', '2'),
 (15, 'SRW XML', 'export', 'true', 'export_srwxml.php', '11', 1), 
-(16, 'OpenSearch RSS', 'export', 'true', 'export_osrss.php', '12', 1);
+(16, 'ODF XML', 'export', 'true', 'export_odfxml.php', '12', 1), 
+(17, 'OpenSearch RSS', 'export', 'true', 'export_osrss.php', '13', 1),
+(18, 'html', 'cite', 'true', 'formats/cite_html.php', '14', '1'),
+(19, 'RTF', 'cite', 'true', 'formats/cite_rtf.php', '15', '1'),
+(20, 'PDF', 'cite', 'true', 'formats/cite_pdf.php', '16', '1'),
+(21, 'LaTeX', 'cite', 'true', 'formats/cite_latex.php', '17', '1'),
+(22, 'Markdown', 'cite', 'true', 'formats/cite_markdown.php', '18', '1'),
+(23, 'ASCII', 'cite', 'true', 'formats/cite_ascii.php', '19', '1');
 
 # --------------------------------------------------------
 
@@ -62,8 +69,10 @@ INSERT INTO `languages` VALUES (NULL, 'fr', 'true', '3');
 # update table `styles`
 #
 
-INSERT INTO `styles` VALUES (NULL, 'Ann Glaciol', 'true', 'cite_AnnGlaciol_JGlaciol.php', '5', '1'),
-(NULL, 'J Glaciol', 'true', 'cite_AnnGlaciol_JGlaciol.php', '6', '1');
+UPDATE styles SET style_spec = REPLACE(style_spec,"cite_","styles/cite_") WHERE style_spec RLIKE "^cite_";
+
+INSERT INTO `styles` VALUES (NULL, 'Ann Glaciol', 'true', 'styles/cite_AnnGlaciol_JGlaciol.php', '5', '1'),
+(NULL, 'J Glaciol', 'true', 'styles/cite_AnnGlaciol_JGlaciol.php', '6', '1');
 
 UPDATE `styles` SET `order_by` = '7' WHERE `style_name` = 'Text Citation';
 
@@ -88,7 +97,7 @@ CREATE TABLE `user_options` (
   `text_citation_format` varchar(255) default NULL,
   PRIMARY KEY  (`option_id`),
   KEY `user_id` (`user_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=3 ;
+) TYPE=MyISAM AUTO_INCREMENT=3 ;
 
 #
 # data for table `user_options`
