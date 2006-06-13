@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   28-Jan-06, 13:55
+	// Modified:   10-Jun-06, 23:20
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -460,13 +460,24 @@
 		$queryArray[] = "INSERT INTO $tableUserPermissions VALUES (NULL, " . $userID . ", \"" . $defaultUserPermissionsString . "\")";
 
 
-		// Note: Refbase lets you define default export-formats/styles/types in 'ini.inc.php' by their name (and not by ID numbers) which means that
-		//       the export-format/style/type names within the 'formats/styles/types' table must be unique!
+		// Note: Refbase lets you define default formats/styles/types in 'ini.inc.php' by their name (and not by ID numbers) which means that
+		//       the format/style/type names within the 'formats/styles/types' table must be unique!
 
 		foreach($defaultUserExportFormats as $defaultUserExportFormat)
 		{
 			// get the 'format_id' for the record entry in table 'formats' whose 'format_name' matches that in '$defaultUserExportFormats' (defined in 'ini.inc.php'):
 			$query = "SELECT format_id FROM $tableFormats WHERE format_name = '$defaultUserExportFormat' AND format_type = 'export'";
+			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+			$row = mysql_fetch_array($result);
+
+			// Insert a row with the found format ID for this new user into the 'user_formats' table:
+			$queryArray[] = "INSERT INTO $tableUserFormats VALUES (NULL, " . $row["format_id"] . ", " . $userID . ", \"true\")";
+		}
+
+		foreach($defaultUserCiteFormats as $defaultUserCiteFormat)
+		{
+			// get the 'format_id' for the record entry in table 'formats' whose 'format_name' matches that in '$defaultUserCiteFormats' (defined in 'ini.inc.php'):
+			$query = "SELECT format_id FROM $tableFormats WHERE format_name = '$defaultUserCiteFormat' AND format_type = 'cite'";
 			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 			$row = mysql_fetch_array($result);
 
