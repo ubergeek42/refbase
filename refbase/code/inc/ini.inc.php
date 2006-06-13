@@ -71,9 +71,22 @@
 	// The character encoding that's used as content-type for HTML, RSS and email output:
 	// IMPORTANT NOTES: - the encoding type specified here must match the default character set you've
 	//                    chosen on install for your refbase MySQL database & tables!
-	//                  - plus, the character encoding of this file ('ini.inc.php') must match the
-	//                    encoding type specified here:
+	//                  - plus, the character encoding of this file ('ini.inc.php') MUST match the
+	//                    encoding type specified in '$contentTypeCharset'! This means, if you're going to
+	//                    use "UTF-8", you must re-save this file with encoding "Unicode (UTF-8, no BOM)".
 	$contentTypeCharset = "ISO-8859-1"; // possible values: "ISO-8859-1", "UTF-8"
+
+
+	// In case you're using a latin1-encoded database ('$contentTypeCharset=ISO-8859-1'), specify whether
+	// exported data (Bibtex/Endnote/RIS or MODS/SRW/ODF XML) shall be converted to Unicode (UTF-8, no BOM).
+	// Conversion of exported data to UTF-8 ('$convertExportDataToUTF8=yes') is required to correctly convert
+	// refbase markup such as super- and subscript or greek letters. If you set this variable to "no", then
+	// the relevant refbase markup will not get converted for a latin1 database(*) and output will be in
+	// ISO-8859-1 encoding.
+	// (*: as a notable exception, conversion of refbase markup such as super- and subscript or greek letters
+	//     will be done upon Bibtex export even if this variable is set to "no", in fact it may work better
+	//     since bibutils <= v3.24 does not convert all Unicode entities correctly)
+	$convertExportDataToUTF8 = "yes"; // possible values: "yes", "no"
 
 
 	// The path to the default CSS stylesheet which will be used for all page views except print view:
@@ -85,7 +98,8 @@
 
 
 	// The number of records that's returned by default:
-	// Note that this setting also controls how many records will be returned by default for RSS and SRU queries.
+	// Note that this setting also controls how many records will be returned by default for RSS, SRU and
+	// CLI queries.
 	$defaultNumberOfRecords = 5;
 
 
@@ -118,8 +132,16 @@
 	// The specified format names must have matching entries within the 'formats' MySQL table.
 	$defaultUserExportFormats = array("Endnote",
 										"RIS",
-										"Bibtex",
+										"BibTeX",
 										"MODS XML");
+
+
+	// When adding a new user, the following citation formats will be made available to the new user by default:
+	// The specified format names must have matching entries within the 'formats' MySQL table.
+	$defaultUserCiteFormats = array("html",
+									"RTF",
+									"PDF",
+									"LaTeX");
 
 
 	// When adding a new user, the following citation styles will be made available to the new user by default:
@@ -202,7 +224,13 @@
 	$defaultTextCitationFormat = "<:authors[2| & | et al.]:>< :year:>< {:recordIdentifier:}>"; // e.g. "<:authors[2| & | et al.]:>< :year:>< {:recordIdentifier:}>"
 
 
-	// The default language selection, can be overwritten by userdefined language
+	// The name of the default export format:
+	// This name must correspond to an entry within the 'formats' MySQL table (of 'format_type' = "export").
+	// It will be used when 'show.php' was called with 'submit=Export' but no 'exportFormat' parameter was specified.
+	$defaultExportFormat = "RIS";
+
+
+	// The default language selection, can be overwritten by user-defined language
 	$defaultLanguage = "en"; // e.g. "en", "de" or "fr"
 
 
@@ -424,95 +452,40 @@
 
 	// If your institution has access to particular databases of the "Cambridge Scientific Abstracts"
 	// (CSA) Internet Database Service (http://www.csa1.co.uk/csa/index.html), you can specify the
-	// direct URL to the database(s) below. Why that? The 'import_csa.php' script offers an import form
+	// direct URL to the database(s) below. Why that? The 'import.php' script offers an import form
 	// that enables a user to import records from the CSA Internet Database Service. The URL you specify
-	// here will appear as link within the explanatory text of 'import_csa.php' pointing your users
+	// here will appear as link within the explanatory text of 'import.php' pointing your users
 	// directly to the CSA databases you have access to.
 	// e.g. "http://www.csa1.co.uk/htbin/dbrng.cgi?username=...&amp;access=...&amp;cat=aquatic&amp;quick=1"
 	$importCSArecordsURL = "http://www.csa1.co.uk/csa/index.html";
 
 
-	// The following search & replace actions will be applied to the 'title', 'address', 'keywords' and
-	// 'abstract' fields (the list of fields can be modified below, see '$searchReplaceActionsArray').
-	// This feature is meant to provide richer text capabilities (like displaying italics or
-	// super-/subscript) from the plain text data delivered by the MySQL database. It works by means of
-	// "human readable markup" that's used within the plain text fields of the database to define rich
-	// text characters. E.g., if you enclose a particular word by substrings (like '_in-situ_') this
-	// word will be output in italics. Similarly, '**word**' will print the word in boldface,
-	// 'CO[sub:2]' will cause the number in 'CO2' to be set as subscript while '[delta]' will produce a
-	// proper delta symbol. Feel free to customize this markup scheme to your needs (the left column
-	// below represents regular expression patterns matching the human readable markup that's used in
-	// your database while the right column represents the equivalent HTML encoding). If you do not
-	// wish to perform any search and replace actions, just specify an empty array, like:
-	// '$markupSearchReplacePatterns = array();'. Search & replace patterns must be specified as
-	// perl-style regular expression (in this case, with the leading & trailing slashes) -> see note at
-	// the end of this file.
-	$markupSearchReplacePatterns = array("/_(.+?)_/"           =>  "<i>\\1</i>",
-										"/\\*\\*(.+?)\\*\\*/"  =>  "<b>\\1</b>",
-										"/\\[super:(.+?)\\]/i" =>  "<sup>\\1</sup>",
-										"/\\[sub:(.+?)\\]/i"   =>  "<sub>\\1</sub>",
-										"/\\[permil\\]/"       =>  "&permil;",
-										"/\\[infinity\\]/"     =>  "&infin;",
-										"/\\[alpha\\]/"        =>  "&alpha;",
-										"/\\[beta\\]/"         =>  "&beta;",
-										"/\\[gamma\\]/"        =>  "&gamma;",
-										"/\\[delta\\]/"        =>  "&delta;",
-										"/\\[epsilon\\]/"      =>  "&epsilon;",
-										"/\\[zeta\\]/"         =>  "&zeta;",
-										"/\\[eta\\]/"          =>  "&eta;",
-										"/\\[theta\\]/"        =>  "&theta;",
-										"/\\[iota\\]/"         =>  "&iota;",
-										"/\\[kappa\\]/"        =>  "&kappa;",
-										"/\\[lambda\\]/"       =>  "&lambda;",
-										"/\\[mu\\]/"           =>  "&mu;",
-										"/\\[nu\\]/"           =>  "&nu;",
-										"/\\[xi\\]/"           =>  "&xi;",
-										"/\\[omicron\\]/"      =>  "&omicron;",
-										"/\\[pi\\]/"           =>  "&pi;",
-										"/\\[rho\\]/"          =>  "&rho;",
-										"/\\[sigmaf\\]/"       =>  "&sigmaf;",
-										"/\\[sigma\\]/"        =>  "&sigma;",
-										"/\\[tau\\]/"          =>  "&tau;",
-										"/\\[upsilon\\]/"      =>  "&upsilon;",
-										"/\\[phi\\]/"          =>  "&phi;",
-										"/\\[chi\\]/"          =>  "&chi;",
-										"/\\[psi\\]/"          =>  "&psi;",
-										"/\\[omega\\]/"        =>  "&omega;",
-										"/\\[Alpha\\]/"        =>  "&Alpha;",
-										"/\\[Beta\\]/"         =>  "&Beta;",
-										"/\\[Gamma\\]/"        =>  "&Gamma;",
-										"/\\[Delta\\]/"        =>  "&Delta;",
-										"/\\[Epsilon\\]/"      =>  "&Epsilon;",
-										"/\\[Zeta\\]/"         =>  "&Zeta;",
-										"/\\[Eta\\]/"          =>  "&Eta;",
-										"/\\[Theta\\]/"        =>  "&Theta;",
-										"/\\[Iota\\]/"         =>  "&Iota;",
-										"/\\[Kappa\\]/"        =>  "&Kappa;",
-										"/\\[Lambda\\]/"       =>  "&Lambda;",
-										"/\\[Mu\\]/"           =>  "&Mu;",
-										"/\\[Nu\\]/"           =>  "&Nu;",
-										"/\\[Xi\\]/"           =>  "&Xi;",
-										"/\\[Omicron\\]/"      =>  "&Omicron;",
-										"/\\[Pi\\]/"           =>  "&Pi;",
-										"/\\[Rho\\]/"          =>  "&Rho;",
-										"/\\[Sigma\\]/"        =>  "&Sigma;",
-										"/\\[Tau\\]/"          =>  "&Tau;",
-										"/\\[Upsilon\\]/"      =>  "&Upsilon;",
-										"/\\[Phi\\]/"          =>  "&Phi;",
-										"/\\[Chi\\]/"          =>  "&Chi;",
-										"/\\[Psi\\]/"          =>  "&Psi;",
-										"/\\[Omega\\]/"        =>  "&Omega;");
+	// The search & replace actions defined in file 'includes/transtab_refbase_html.inc.php' will be
+	// applied to the 'title', 'address', 'keywords' and 'abstract' fields (the list of fields can be
+	// modified below, see '$searchReplaceActionsArray'). This feature is meant to provide richer text
+	// capabilities (like displaying italics or super-/subscript) from the plain text data delivered by
+	// the MySQL database. It works by means of "human readable markup" that's used within the plain
+	// text fields of the database to define rich text characters. E.g., if you enclose a particular
+	// word by substrings (like '_in-situ_') this word will be output in italics. Similarly, '**word**'
+	// will print the word in boldface, 'CO[sub:2]' will cause the number in 'CO2' to be set as
+	// subscript while '[delta]' will produce a greek delta letter. Feel free to customize this markup
+	// scheme to your needs (the left column of the array in 'transtab_refbase_html.inc.php' represents
+	// regular expression patterns matching the human readable markup that's used in your database while
+	// the right column represents the equivalent HTML encoding). If you do not wish to perform any
+	// search and replace actions, just specify an empty array, like: '$transtab_refbase_html =
+	// array();'.
+	include 'includes/transtab_refbase_html.inc.php'; // include refbase markup -> HTML search & replace patterns
 
 
-	// Defines search & replace 'actions' that will be applied to all those refbase fields that are listed in the corresponding 'fields'
-	// element. Search & replace patterns must be specified as perl-style regular expression (including the leading & trailing slashes)
+	// Defines search & replace 'actions' that will be applied to all those refbase fields that are listed in the corresponding 'fields' element
+	// upon WEB DISPLAY. Search & replace patterns must be specified as perl-style regular expression (including the leading & trailing slashes)
 	// and may include mode modifiers (such as '/.../i' to perform a case insensitive match) -> see note at the end of this file.
 	// If you don't want to perform any search and replace actions, specify an empty array, like: '$searchReplaceActionsArray = array();')
-	// 								"/Search Pattern/"  =>  "Replace Pattern"
+	// 								"/Search Pattern/"    =>  "Replace Pattern"
 	$searchReplaceActionsArray = array(
 										array(
 												'fields'  => array("title", "address", "keywords", "abstract"),
-												'actions' => $markupSearchReplacePatterns // perform search & replace actions that provide for human readable markup (as defined above)
+												'actions' => $transtab_refbase_html // perform search & replace actions that provide for human readable markup (as defined in 'includes/transtab_refbase_html.inc.php')
 											)
 //										,
 //										array(
