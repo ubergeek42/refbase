@@ -5,10 +5,10 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./rss.php
 	// Created:    25-Sep-04, 12:10
-	// Modified:   26-Apr-05, 12:34
+	// Modified:   05-Jun-06, 01:26
 
 	// This script will generate a dynamic RSS feed for the current query.
-	// Useage: Perform your query until you've got the desired results. Then, copy the "track" link in the header
+	// Usage: Perform your query until you've got the desired results. Then, copy the "RSS" link in the header
 	// message of any search results page and use this URL as feed URL when subscribing within your Newsreader.
 
 	/*
@@ -35,17 +35,27 @@
 	else
 		$queryWhereClause = "";
 
-	if (isset($_REQUEST['showRows']))
-		$showRows = $_REQUEST['showRows']; // get the number of records that shall be returned
+	if (isset($_REQUEST['showRows'])) // contains the desired number of search results (OpenSearch equivalent: '{count}')
+		$showRows = $_REQUEST['showRows'];
 	else
-		$showRows = 0; 
+		$showRows = 0;
+
+	if (isset($_REQUEST['startRecord'])) // contains the offset of the first search result, starting with one (OpenSearch equivalent: '{startIndex}')
+		$rowOffset = ($_REQUEST['startRecord']) - 1; // first row number in a MySQL result set is 0 (not 1)
+	else
+		$rowOffset = ""; // if no value to the 'startRecord' parameter is given, we'll output records starting with the first record in the result set
+
+	if (isset($_REQUEST['responseFormat'])) // contains the desired response format; currently, 'rss.php' will only recognize 'rss' (outputs RSS 2.0) or 'osrss' (outputs OpenSearch RSS 2.0), future versions may allow for 'atom' and 'osatom'
+		$responseFormat = $_REQUEST['responseFormat'];
+	else
+		$responseFormat = "rss"; // if no particular response format was requested we'll output found results as RSS 2.0
 
 
 	// Check the correct parameters have been passed:
 
 	// Adjust the '$showRows' value if not previously defined, or if a wrong number (<=0 or float) was given
 	if (empty($showRows) || ($showRows <= 0) || !ereg("^[0-9]+$", $showRows))
-		$showRows = 10; // by default, we'll return those 10 records matching the specified WHERE clause that were added most recently
+		$showRows = $defaultNumberOfRecords; // by default, we'll return as many records as defined in variable '$defaultNumberOfRecords' in 'ini.inc.php'
 
 	if (empty($queryWhereClause)) // if 'rss.php' was called without the 'where' parameter:
 	{
@@ -108,7 +118,8 @@
 	// --------------------------------------------------------------------
 
 	// (4) DISPLAY search results as RSS feed:
-	header('Content-type: application/rss+xml; charset=' . $contentTypeCharset); // set mimetype to 'application/rss+xml' and character encoding to the one given in '$contentTypeCharset' (which is defined in 'ini.inc.php')
+	// set mimetype to 'application/rss+xml' and character encoding to the one given in '$contentTypeCharset' (which is defined in 'ini.inc.php'):
+	setHeaderContentType("application/rss+xml", $contentTypeCharset); // function 'setHeaderContentType()' is defined in 'include.inc.php'
 
 	echo $rssFeed;
 
