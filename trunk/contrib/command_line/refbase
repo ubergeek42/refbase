@@ -6,7 +6,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./refbase
 # Created:    06-Jun-06, 18:00
-# Modified:   13-Jun-06, 13:46
+# Modified:   14-Jun-06, 13:21
 
 # REFBASE -- a refbase command line interface
 
@@ -16,6 +16,12 @@
 # Help:       For help with the syntax type 'refbase -h'
 #             To view some usage examples type 'refbase -X'
 #             Further information is available at <http://cli.refbase.net/>
+
+# Version:    1.0.1
+
+# Requires:   - a shell with Perl execution capabilities
+#             - the Perl CPAN modules LWP::Simple and URI::URL
+#             - access to an up-to-date refbase CVS version
 
 # Limits:     - Currently, this utility supports search & retrieve, but does not support update actions such as add, edit or delete.
 #             - This script is currently just an interface to 'show.php', which for example does not support arbitrary sort orders.
@@ -28,12 +34,21 @@
 
 # --------------------------------------------------------------------------------------------------------------
 
+my $version = "1.0.1";
+
 # Configure variables:
 
-# specify the URL to the refbase server that shall be queried:
-my $host = 'http://localhost/refs/'; # e.g. 'http://polaris.ipoe.uni-kiel.de/refs/'
+# Specify the full URLs to any refbase servers that shall be queried:
+# Notes: - the given hash keys will work as shortcuts, e.g. '--host=local' would query
+#          your local refbase installation; one hash key must be named 'default',
+#          all other keys can be freely chosen
+#        - by default, the server labeled with key 'default' will be queried
+my %hosts = (
+				'default' => 'http://polaris.ipoe.uni-kiel.de/refs/',
+				'local'   => 'http://localhost/refs/'
+);
 
-# specify the default values for all options that are not explicitly specified:
+# Specify the default values for all options that are not explicitly specified:
 my %params = (
 				# query options:
 				'author'          => '',    # -a|--author
@@ -71,7 +86,7 @@ my %params = (
 
 				# fixed parameters:
 				'submit'      => 'Cite',    # display type for HTML output; must be 'Display', 'Cite', 'Export', or '' (the empty string '' will produce the default 'columnar' output style); this param's value will get adopted below based on the chosen '--format'
-				'client'      => "cli-refbase-1.0" # the client ID of this command line utility
+				'client'      => "cli-refbase-" . $version # the client ID of this command line utility
 
 );
 
@@ -80,6 +95,7 @@ my %params = (
 use LWP::Simple; # more info: <http://search.cpan.org/~gaas/libwww-perl-5.805/lib/LWP/Simple.pm>
 use URI::URL; # more info: <http://search.cpan.org/~gaas/URI-1.35/URI/URL.pm>
 
+my $host = $hosts{'default'};
 my $optCt = 0;
 
 # Extract options:
@@ -126,6 +142,14 @@ else {
 		elsif ($_ =~ /^(?:-S|--start)=(.+)$/) { $params{'startRecord'} = $1; }
 		elsif ($_ =~ /^(?:-V|--view)=(.+)$/) { $params{'viewType'} = $1; }
 	}
+}
+
+# resolve any host shortcuts:
+if (exists($hosts{$host})) {
+	$host = $hosts{$host};
+}
+elsif ($host !~ /^https?:\/\//i) {
+	$host = $hosts{'default'}; # can't resolve given host, reset back to default
 }
 
 # if any query option other than the 'serial' parameter was explicitly set,
@@ -190,7 +214,7 @@ sub usage
 {
 	local ($status) = @_;
 
-	print "\nrefbase command line client, v1.0 by Matthias Steffens, http://cli.refbase.net/\n\n"
+	print "\nrefbase command line client, v" . $version . " by Matthias Steffens, http://cli.refbase.net/\n\n"
 
 			. "Usage:   refbase [OPTIONS]\n\n"
 
@@ -257,7 +281,8 @@ sub usage
 sub version
 {
 	local ($status) = @_;
-	print "\nrefbase command line client, version 1.0\ncheck for updates at http://cli.refbase.net/\n\n";
+	print "\nrefbase command line client, version " . $version
+		. "\ncheck for updates at http://cli.refbase.net/\n\n";
 	exit $status;
 }
 
