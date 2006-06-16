@@ -12,7 +12,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
   //
   // Created:    15-Dec-05, 19:34
-  // Modified:   05-Mar-06, 15:30
+  // Modified:   16-Jun-06, 23:13
 
   // TO DO: * modify cp to handle globs
   //        * modify cp to do file -> dir copies
@@ -24,7 +24,7 @@
   // After you've checked refbase out from CVS, this script will copy files to
   // where they should be for deployment or packaging.
 
-  
+
   if ($argc > 2 || in_array($argv[1], array('--help', '-help', '-h', '-?'))) {
     ?>
 
@@ -36,7 +36,7 @@
 
     <destination> is the destination directory (defaults to
     '/usr/local/www/refbase-cvs').
-    
+
     With the --help, -help, -h, or -? options, you can get this help.
 
 <?php
@@ -48,21 +48,28 @@
     }
     $source = getcwd();
 
+    // note that realpath() will chop
+    // any trailing delimiter like \ or /
     $dest = realpath($d);
 
     // OVERWRITES!!!!
-    if($dest!=FALSE){
-      $backup = $dest."-old";
-      mkdir($backup);
-      cp($dest,$backup);
-      rm($dest);
+    if(($dest!=FALSE) && (is_dir($dest))){
+      $matching = glob("$dest/*");
+      if($matching!=FALSE){
+        $backup = $dest."-old";
+        mkdir($backup);
+        cp($dest,$backup);
+        rm($dest);
+      }
     }
     else{
-      $dest = $d;
+      $dest = ereg_replace("[\/]?$", "", $d);
     }
 
     // make directories (clean this up later)
-    mkdir($dest);
+    if (!is_dir($dest)){
+      mkdir($dest);
+    }
     mkdir($dest."/css");
     mkdir($dest."/img");
     mkdir($dest."/includes");
@@ -80,9 +87,17 @@
       $s=$source.'/'.$key;
       $d=$dest.'/'.$value;
       if((is_dir($s))||(is_file($s))){
-      cp($s,$d);
+        cp($s,$d);
       }
     }
+
+    // move citation style files from 'cite' to 'cite/styles'
+    mkdir($dest."/cite/styles");
+    $matching = glob($dest."/cite/cite_*");
+    foreach ($matching as $match){
+      cp($match,$dest."/cite/styles/".basename($match));
+    }
+    array_map('rm', $matching);
   }
 
   function cp($source,$dest) {
@@ -128,7 +143,7 @@
             $messages[]='Directory created: '.$to;
           } else
             $errors[]='cannot create directory '.$to;
-          cp($from,$to,$printerror);
+          cp($from,$to);
         }
       }
       closedir($handle);
@@ -144,6 +159,8 @@
       if (is_file($fileglob)) {
         return unlink($fileglob);
       } else if (is_dir($fileglob)) {
+        // note that on UNIX, * as the pattern will
+        // NOT match dot-files and dot-directories
         $ok = rm("$fileglob/*");
         if (! $ok) {
           return false;
