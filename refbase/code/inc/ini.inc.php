@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   28-Feb-06, 02:23
+	// Modified:   22-Jun-06, 17:46
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -55,6 +55,7 @@
 
 
 	// The URL to any (custom) help resources for this literature database:
+	// (specify an empty string if you don't want a help link: '$helpResourcesURL = "";')
 	$helpResourcesURL = "http://wiki.refbase.net/"; // e.g. "http://wiki.refbase.net/"
 
 
@@ -133,7 +134,8 @@
 	$defaultUserExportFormats = array("Endnote",
 										"RIS",
 										"BibTeX",
-										"MODS XML");
+										"MODS XML",
+										"ODF XML");
 
 
 	// When adding a new user, the following citation formats will be made available to the new user by default:
