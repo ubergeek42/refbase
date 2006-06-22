@@ -3,9 +3,9 @@
 	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
 	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
 	//             Please see the GNU General Public License for more details.
-	// File:       ./results_header.inc.php
+	// File:       ./includes/results_header.inc.php
 	// Created:    07-May-04, 14:38
-	// Modified:   04-May-05, 11:51
+	// Modified:   18-Jan-06, 15:05
 
 	// This is the results header include file.
 	// It contains functions that build the results header
