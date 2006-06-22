@@ -4,8 +4,8 @@
 	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
 	//             Please see the GNU General Public License for more details.
 	// File:       ./receipt.php
-	// Created:    2-Jan-03, 22:43
-	// Modified:   27-May-06, 00:16
+	// Created:    02-Jan-03, 22:43
+	// Modified:   21-Jun-06, 12:41
 
 	// This php script will display a feedback page after any action of
 	// adding/editing/deleting a record. It will display links to the
@@ -28,6 +28,12 @@
 	// START A SESSION:
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
 	start_session(true);
+
+	// --------------------------------------------------------------------
+
+	// Initialize preferred display language:
+	// (note that 'locales.inc.php' has to be included *after* the call to the 'start_session()' function)
+	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
