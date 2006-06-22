@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./extract.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   27-May-06, 00:09
+	// Modified:   22-Jun-06, 01:52
 
 	// Search form that offers to extract
 	// literature cited within a text and build
@@ -27,6 +27,12 @@
 	// START A SESSION:
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
 	start_session(true);
+
+	// --------------------------------------------------------------------
+
+	// Initialize preferred display language:
+	// (note that 'locales.inc.php' has to be included *after* the call to the 'start_session()' function)
+	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
@@ -66,7 +72,12 @@
 		$citeStyleDisabled = " disabled"; // disable the style popup (and other form elements) if the session variable holding the user's styles isn't available
 	else
 		$citeStyleDisabled = "";
-		
+
+	if (!isset($_SESSION['user_cite_formats']))
+		$citeFormatDisabled = " disabled"; // disable the cite format popup if the session variable holding the user's cite formats isn't available
+	else
+		$citeFormatDisabled = "";
+
 	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the search form\">"
 			. "\n<tr>\n\t<td width=\"58\" valign=\"top\"><b>Extract Citations From:</b></td>\n\t<td width=\"10\">&nbsp;</td>"
 			. "\n\t<td><textarea name=\"sourceText\" rows=\"6\" cols=\"60\"$citeStyleDisabled>Paste your text here...</textarea></td>"
@@ -113,14 +124,28 @@
 		echo $optionTags;
 	}
 	else
-		echo "<option>(no styles available)</option>";
+		echo "\n\t\t\t<option>(no styles available)</option>";
 
 	echo "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
 			. "\n\t\tsort by:&nbsp;&nbsp;"
 			. "\n\t\t<select name=\"citeOrder\" title=\"choose the primary sort order for your reference list\"$citeStyleDisabled>"
-			. "\n\t\t\t<option>author</option>"
-			. "\n\t\t\t<option>year</option>"
-			. "\n\t\t</select>\n\t</td>"
+			. "\n\t\t\t<option value=\"author\">author</option>"
+			. "\n\t\t\t<option value=\"year\">year</option>"
+			. "\n\t\t\t<option value=\"type\">type</option>"
+			. "\n\t\t\t<option value=\"type-year\">type, year</option>"
+			. "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
+			. "\n\t\treturn as:&nbsp;&nbsp;"
+			. "\n\t\t<select name=\"citeType\" title=\"choose how your reference list shall be returned\"$citeStyleDisabled$citeFormatDisabled>";
+
+	if (isset($_SESSION['user_cite_formats']))
+	{
+		$optionTags = buildSelectMenuOptions($_SESSION['user_cite_formats'], " *; *", "\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'user_cite_formats' session variable
+		echo $optionTags;
+	}
+	else
+		echo "\n\t\t\t<option>(no formats available)</option>";
+
+	echo "\n\t\t</select>\n\t</td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td align=\"center\" colspan=\"3\">&nbsp;</td>"
 			. "\n</tr>"
