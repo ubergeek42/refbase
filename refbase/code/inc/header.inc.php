@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/header.inc.php
 	// Created:    28-Jul-02, 11:21
-	// Modified:   27-May-06, 00:13
+	// Modified:   21-Jun-06, 01:10
 
 	// This is the header include file.
 	// It contains functions that provide the HTML header
@@ -111,6 +111,8 @@
 		global $loginWelcomeMsg; // these variables are globally defined in function 'showLogin()' in 'include.inc.php'
 		global $loginStatus;
 		global $loginLinks;
+
+		global $loc; // '$loc' is made globally available in 'core.php'
 ?>
 
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This holds the title logo and info">
@@ -119,10 +121,10 @@
 	<td>
 		<h2><?php echo encodeHTML($officialDatabaseName); ?></h2>
 		<span class="smallup">
-			<a href="index.php" title="goto main page">Home</a>&nbsp;|&nbsp;
-			<a href="show.php?records=all" title="show all records in the database">Show All</a>&nbsp;|&nbsp;
-			<a href="simple_search.php" title="search the main fields of the database">Simple Search</a>&nbsp;|&nbsp;
-			<a href="advanced_search.php" title="search all fields of the database">Advanced Search</a><?php
+			<a href="index.php" title="<?php echo $loc["LinkTitle_Home"]; ?>"><?php echo $loc["Home"]; ?></a>&nbsp;|&nbsp;
+			<a href="show.php?records=all" title="<?php echo $loc["LinkTitle_ShowAll"]; ?>"><?php echo $loc["ShowAll"]; ?></a>&nbsp;|&nbsp;
+			<a href="simple_search.php" title="<?php echo $loc["LinkTitle_SimpleSearch"]; ?>"><?php echo $loc["Simple"]; ?> <?php echo $loc["Search"]; ?></a>&nbsp;|&nbsp;
+			<a href="advanced_search.php" title="<?php echo $loc["LinkTitle_AdvancedSearch"]; ?>"><?php echo $loc["Advanced"]; ?> <?php echo $loc["Search"]; ?></a><?php
 
 		// -------------------------------------------------------
 		if (isset($_SESSION['user_permissions']) AND ereg("allow_add", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_add'...
@@ -130,7 +132,7 @@
 		// ... include a link to 'record.php?recordAction=add...':
 ?>
 
-			&nbsp;|&nbsp;<a href="record.php?recordAction=add&amp;oldQuery=<?php echo rawurlencode($oldQuery); ?>" title="add a record to the database">Add Record</a><?php
+			&nbsp;|&nbsp;<a href="record.php?recordAction=add&amp;oldQuery=<?php echo rawurlencode($oldQuery); ?>" title="<?php echo $loc["LinkTitle_AddRecord"]; ?>"><?php echo $loc["AddRecord"]; ?></a><?php
 		}
 
 		// -------------------------------------------------------
@@ -139,7 +141,7 @@
 		// ... include a link to 'import.php':
 ?>
 
-			&nbsp;|&nbsp;<a href="import.php" title="import records into the database">Import</a><?php
+			&nbsp;|&nbsp;<a href="import.php" title="<?php echo $loc["LinkTitle_Import"]; ?>"><?php echo $loc["Import"]; ?></a><?php
 		}
 
 		// -------------------------------------------------------
