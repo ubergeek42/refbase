@@ -31,29 +31,29 @@ CREATE TABLE `formats` (
 # data for table `formats`
 #
 
-INSERT INTO `formats` VALUES (1, 'MODS XML', 'import', 'true', 'bibutils/import_modsxml2refbase.php', '06', 2), 
-(2, 'MODS XML', 'export', 'true', 'export_modsxml.php', '06', 1), 
-(3, 'Text (CSV)', 'export', 'false', 'export_textcsv.php', '07', 1), 
-(4, 'BibTeX', 'import', 'true', 'bibutils/import_bib2refbase.php', '01', 2), 
-(5, 'BibTeX', 'export', 'true', 'bibutils/export_xml2bib.php', '01', 2), 
-(6, 'Endnote', 'import', 'true', 'bibutils/import_end2refbase.php', '02', 2), 
-(7, 'Endnote', 'export', 'true', 'bibutils/export_xml2end.php', '02', 2), 
-(8, 'Pubmed Medline', 'import', 'true', 'import_medline2refbase.php', '08', '1'),
-(9, 'Pubmed XML', 'import', 'true', 'bibutils/import_med2refbase.php', '09', 2), 
-(10, 'RIS', 'import', 'true', 'import_ris2refbase.php', '03', 1), 
-(11, 'RIS', 'export', 'true', 'bibutils/export_xml2ris.php', '03', 2), 
-(12, 'ISI', 'import', 'true', 'import_isi2refbase.php', '04', 1), 
-(13, 'CSA', 'import', 'true', 'import_csa2refbase.php', '05', '1'),
-(14, 'Copac', 'import', 'true', 'bibutils/import_copac2refbase.php', '10', '2'),
-(15, 'SRW XML', 'export', 'true', 'export_srwxml.php', '11', 1), 
-(16, 'ODF XML', 'export', 'true', 'export_odfxml.php', '12', 1), 
+INSERT INTO `formats` VALUES (1, 'MODS XML', 'import', 'true', 'bibutils/import_modsxml2refbase.php', '06', 2),
+(2, 'MODS XML', 'export', 'true', 'export_modsxml.php', '06', 1),
+(3, 'Text (CSV)', 'export', 'false', 'export_textcsv.php', '07', 1),
+(4, 'BibTeX', 'import', 'true', 'bibutils/import_bib2refbase.php', '01', 2),
+(5, 'BibTeX', 'export', 'true', 'bibutils/export_xml2bib.php', '01', 2),
+(6, 'Endnote', 'import', 'true', 'bibutils/import_end2refbase.php', '02', 2),
+(7, 'Endnote', 'export', 'true', 'bibutils/export_xml2end.php', '02', 2),
+(8, 'Pubmed Medline', 'import', 'true', 'import_medline2refbase.php', '08', 1),
+(9, 'Pubmed XML', 'import', 'true', 'bibutils/import_med2refbase.php', '09', 2),
+(10, 'RIS', 'import', 'true', 'import_ris2refbase.php', '03', 1),
+(11, 'RIS', 'export', 'true', 'bibutils/export_xml2ris.php', '03', 2),
+(12, 'ISI', 'import', 'true', 'import_isi2refbase.php', '04', 1),
+(13, 'CSA', 'import', 'true', 'import_csa2refbase.php', '05', 1),
+(14, 'Copac', 'import', 'true', 'bibutils/import_copac2refbase.php', '10', 2),
+(15, 'SRW XML', 'export', 'true', 'export_srwxml.php', '11', 1),
+(16, 'ODF XML', 'export', 'true', 'export_odfxml.php', '12', 1),
 (17, 'OpenSearch RSS', 'export', 'true', 'export_osrss.php', '13', 1),
-(18, 'html', 'cite', 'true', 'formats/cite_html.php', '14', '1'),
-(19, 'RTF', 'cite', 'true', 'formats/cite_rtf.php', '15', '1'),
-(20, 'PDF', 'cite', 'true', 'formats/cite_pdf.php', '16', '1'),
-(21, 'LaTeX', 'cite', 'true', 'formats/cite_latex.php', '17', '1'),
-(22, 'Markdown', 'cite', 'true', 'formats/cite_markdown.php', '18', '1'),
-(23, 'ASCII', 'cite', 'true', 'formats/cite_ascii.php', '19', '1');
+(18, 'html', 'cite', 'true', 'formats/cite_html.php', '14', 1),
+(19, 'RTF', 'cite', 'true', 'formats/cite_rtf.php', '15', 1),
+(20, 'PDF', 'cite', 'true', 'formats/cite_pdf.php', '16', 1),
+(21, 'LaTeX', 'cite', 'true', 'formats/cite_latex.php', '17', 1),
+(22, 'Markdown', 'cite', 'true', 'formats/cite_markdown.php', '18', 1),
+(23, 'ASCII', 'cite', 'true', 'formats/cite_ascii.php', '19', 1);
 
 # --------------------------------------------------------
 
@@ -71,8 +71,8 @@ INSERT INTO `languages` VALUES (NULL, 'fr', 'true', '3');
 
 UPDATE styles SET style_spec = REPLACE(style_spec,"cite_","styles/cite_") WHERE style_spec RLIKE "^cite_";
 
-INSERT INTO `styles` VALUES (NULL, 'Ann Glaciol', 'true', 'styles/cite_AnnGlaciol_JGlaciol.php', '5', '1'),
-(NULL, 'J Glaciol', 'true', 'styles/cite_AnnGlaciol_JGlaciol.php', '6', '1');
+INSERT INTO `styles` VALUES (NULL, 'Ann Glaciol', 'true', 'styles/cite_AnnGlaciol_JGlaciol.php', '5', 1),
+(NULL, 'J Glaciol', 'true', 'styles/cite_AnnGlaciol_JGlaciol.php', '6', 1);
 
 UPDATE `styles` SET `order_by` = '7' WHERE `style_name` = 'Text Citation';
 
