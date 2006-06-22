@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   12-Jun-06, 12:43
+	// Modified:   22-Jun-06, 02:09
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -95,12 +95,12 @@
 		{
 			if (eregi("^cli", $client)) 
 			{
-				echo $loc["NoPermission"]." ".$loc["NoPermission_ForDisplayDetails"]."!\n\n";
+				echo $loc["NoPermission"] . $loc["NoPermission_ForDisplayDetails"]."!\n\n";
 			}
 			else
 			{
 				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForDisplayDetails"]."!</span></b>";
+				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForDisplayDetails"]."!</span></b>";
 
 				// Write back session variables:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -117,12 +117,12 @@
 		{
 			if (eregi("^cli", $client)) 
 			{
-				echo $loc["NoPermission"]." ".$loc["NoPermission_ForCite"]."!\n\n";
+				echo $loc["NoPermission"] . $loc["NoPermission_ForCite"]."!\n\n";
 			}
 			else
 			{
 				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForCite"]."!</span></b>";
+				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForCite"]."!</span></b>";
 
 				// Write back session variables:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -142,12 +142,12 @@
 		{
 			if (eregi("^cli", $client)) 
 			{
-				echo $loc["NoPermission"]." ".$loc["NoPermission_ForExport"]."!\n\n";
+				echo $loc["NoPermission"] . $loc["NoPermission_ForExport"]."!\n\n";
 			}
 			else
 			{
 				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForExport"]."!</span></b>";
+				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForExport"]."!</span></b>";
 
 				// Write back session variables:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -171,7 +171,7 @@
 			if ($formType == "sqlSearch" AND !ereg(".+/search.php", $referer)) // if the calling URL contained 'formType=sqlSearch' but wasn't sent by 'search.php' (but, e.g., by 'sql_search.php')
 			{
 				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForSQL"]."!</span></b>";
+				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForSQL"]."!</span></b>";
 
 				// Write back session variables:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -689,6 +689,8 @@
 		global $showLinkTypesInListView;
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
+		global $loc; // '$loc' is made globally available in 'core.php'
+
 		if (eregi(".+LIMIT *[0-9]+",$query)) // query does contain the 'LIMIT' parameter
 			$orderBy = eregi_replace(".+ORDER BY (.+) LIMIT.+","\\1",$query); // extract 'ORDER BY'... parameter (without including any 'LIMIT' parameter)
 		else // query does not contain the 'LIMIT' parameter
@@ -816,7 +818,7 @@
 					$HTMLafterLink = "</th>"; // close the table header tag
 					// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
 					// as well as the URL encoded query with the appropriate ORDER clause:
-					$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", $displayType, "Links", "url", $viewType);
+					$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", $displayType, $loc["Links"], "url", $viewType);
 					echo $tableHeaderLink; // print the attribute name as link
 				}
 				elseif (($showLinks == "1") AND ($displayType == "Browse"))
@@ -865,11 +867,19 @@
 					// in that row as a separate TD (Table Data)
 					for ($i=0; $i<$fieldsToDisplay; $i++)
 					{
-						$encodedRowAttribute = encodeHTML($row[$i]); // HTML encode higher ASCII characters (we write the data into a new variable since we still need unencoded data when including them into a link for Browse view)
-
 						// the following two lines will fetch the current attribute name:
 						$info = mysql_fetch_field ($result, $i); // get the meta-data for the attribute
 						$orig_fieldname = $info->name; // get the attribute name
+
+						if (!empty($row[$i]))
+						{
+							if (ereg("^(thesis|approved|marked|copy|selected)$", $orig_fieldname)) // for the fields 'thesis', 'approved', 'marked', 'copy' and 'selected', we'll use localized field values (e.g., in case of german we display 'ja' instead of 'yes', etc)
+								$encodedRowAttribute = ereg_replace(".+", $loc[$row[$i]], $row[$i]); // note that the locales in '$loc' are already HTML encoded
+							else
+								$encodedRowAttribute = encodeHTML($row[$i]); // HTML encode higher ASCII characters (we write the data into a new variable since we still need unencoded data when including them into a link for Browse view)
+						}
+						else
+							$encodedRowAttribute = "";
 
 						if (($displayType == "Browse") AND ($i == 0)) // in Browse view we save the first field name to yet another variable (since it'll be needed when generating correct queries in the Links column)
 							$browseFieldName = $orig_fieldname;
@@ -994,6 +1004,8 @@
 		global $openURLFormat;
 		global $isbnURLFormat;
 
+		global $loc; // '$loc' is made globally available in 'core.php'
+
 		if (($formType != "queryResults") OR (($formType == "queryResults") AND !($nothingChecked))) // some checkboxes were marked within the 'queryResults' form (or the request stems from a different script without checkboxes)
 		{
 			// If the query has results ...
@@ -1058,9 +1070,9 @@
 
 				// ... print a record header
 				if (($showMaxRow-$rowOffset) == "1") // '$showMaxRow-$rowOffset' gives the number of displayed records for a particular page) // '($rowsFound == "1" || $showRows == "1")' wouldn't trap the case of a single record on the last of multiple results pages!
-						$recordHeader = "Record"; // use singular form if there's only one record to display
+						$recordHeader = $loc["Record"]; // use singular form if there's only one record to display
 				else
-						$recordHeader = "Records"; // use plural form if there are multiple records to display
+						$recordHeader = $loc["Records"]; // use plural form if there are multiple records to display
 				echo "\n\t<th align=\"left\" valign=\"top\" colspan=\"6\">$recordHeader</th>";
 
 				if ($showLinks == "1")
@@ -1071,7 +1083,7 @@
 						$HTMLafterLink = "</th>"; // close the table header tag
 						// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
 						// as well as the URL encoded query with the appropriate ORDER clause:
-						$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, $newORDER, $result, "", $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "Display", "Links", "url", $viewType);
+						$tableHeaderLink = buildFieldNameLinks("search.php", $query, $oldQuery, $newORDER, $result, "", $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", "Display", $loc["Links"], "url", $viewType);
 						echo $tableHeaderLink; // print the attribute name as link
 					}
 
@@ -1156,9 +1168,15 @@
 							if (ereg("^(author|title|year)$", $orig_fieldname)) // print author, title & year fields in bold
 								$recordData .= "<b>";
 
-							$row[$i] = encodeHTML($row[$i]); // HTML encode higher ASCII characters
+							if (!empty($row[$i]))
+							{
+								if (ereg("^(thesis|approved|marked|copy|selected)$", $orig_fieldname)) // for the fields 'thesis', 'approved', 'marked', 'copy' and 'selected', we'll use localized field values (e.g., in case of german we display 'ja' instead of 'yes', etc)
+									$row[$i] = ereg_replace(".+", $loc[$row[$i]], $row[$i]); // note that the locales in '$loc' are already HTML encoded
+								else
+									$row[$i] = encodeHTML($row[$i]); // HTML encode higher ASCII characters
+							}
 
-							if (ereg("^abstract$", $orig_fieldname)) // for the abstract field, transform newline ('\n') characters into <br> tags
+							if (ereg("^abstract$", $orig_fieldname)) // for the 'abstract' field, transform newline ('\n') characters into <br> tags
 								$row[$i] = ereg_replace("\n", "<br>", $row[$i]);
 
 							// apply search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$searchReplaceActionsArray' (which is defined in 'ini.inc.php'):
@@ -4981,6 +4999,13 @@
 		// add ORDER BY clause:
 		if ($citeOrder == "year") // sort records first by year (descending), then in the usual way:
 			$query .= " ORDER BY year DESC, first_author, author_count, author, title";
+
+		elseif ($citeOrder == "type") // sort records first by record type (and thesis type), then in the usual way:
+			$query .= " ORDER BY type DESC, thesis DESC, first_author, author_count, author, year, title";
+
+		elseif ($citeOrder == "type-year") // sort records first by record type (and thesis type), then by year (descending), then in the usual way:
+			$query .= " ORDER BY type DESC, thesis DESC, year DESC, first_author, author_count, author, title";
+
 		else // if any other or no '$citeOrder' parameter is specified, we supply the default ORDER BY pattern (which is suitable for citation in a journal etc.):
 			$query .= " ORDER BY first_author, author_count, author, year, title";
 
