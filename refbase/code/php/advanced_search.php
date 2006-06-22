@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./advanced_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   27-May-06, 00:09
+	// Modified:   18-Jun-06, 17:25
 
 	// Search form providing access to all fields of the database.
 	// It offers some output options (like how many records to display per page)
@@ -1308,7 +1308,7 @@
 	<td valign="middle"><input type="checkbox" name="showApproved" value="1"></td>
 	<td><b><?php echo $loc["Approved"]; ?>:</b></td>
 	<td>&nbsp;</td>
-	<td><input type="radio" name="approvedRadio" value="1">&nbsp;&nbsp;<?php echo $loc["Yes"]; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="approvedRadio" value="0">&nbsp;&nbsp;<?php echo $loc["No"]; ?></td>
+	<td><input type="radio" name="approvedRadio" value="1">&nbsp;&nbsp;<?php echo $loc["Yes"]; ?>&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="approvedRadio" value="0">&nbsp;&nbsp;<?php echo $loc["No"]; ?></td>
 	<td>&nbsp;</td>
 </tr>
 <tr>
@@ -1511,7 +1511,7 @@
 	<td valign="middle"><input type="checkbox" name="showMarked" value="1"></td>
 	<td><b><?php echo $loc["Marked"]; ?>:</b></td>
 	<td>&nbsp;</td>
-	<td><input type="radio" name="markedRadio" value="1">&nbsp;&nbsp;<?php echo $loc["Yes"]; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="markedRadio" value="0">&nbsp;&nbsp;<?php echo $loc["No"]; ?></td>
+	<td><input type="radio" name="markedRadio" value="1">&nbsp;&nbsp;<?php echo $loc["Yes"]; ?>&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="markedRadio" value="0">&nbsp;&nbsp;<?php echo $loc["No"]; ?></td>
 	<td>&nbsp;</td>
 </tr>
 <tr>
@@ -1538,7 +1538,7 @@
 	<td valign="middle"><input type="checkbox" name="showSelected" value="1"></td>
 	<td><b><?php echo $loc["Selected"]; ?>:</b></td>
 	<td>&nbsp;</td>
-	<td><input type="radio" name="selectedRadio" value="1">&nbsp;&nbsp;<?php echo $loc["Yes"]; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="selectedRadio" value="0">&nbsp;&nbsp;<?php echo $loc["No"]; ?></td>
+	<td><input type="radio" name="selectedRadio" value="1">&nbsp;&nbsp;<?php echo $loc["Yes"]; ?>&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="selectedRadio" value="0">&nbsp;&nbsp;<?php echo $loc["No"]; ?></td>
 	<td>&nbsp;</td>
 </tr>
 <tr>
