@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   10-Jun-06, 17:55
+	// Modified:   22-Jun-06, 22:10
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -28,6 +28,12 @@
 	// START A SESSION:
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
 	start_session(true);
+
+	// --------------------------------------------------------------------
+
+	// Initialize preferred display language:
+	// (note that 'locales.inc.php' has to be included *after* the call to the 'start_session()' function)
+	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
