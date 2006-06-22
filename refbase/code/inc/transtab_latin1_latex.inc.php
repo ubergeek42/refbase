@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/transtab_latin1_latex.inc.php
 	// Created:    28-May-06, 12:39
-	// Modified:   30-May-06, 23:40
+	// Modified:   17-Jun-06, 13:48
 
 	// This is a translation table for conversion from ISO-8859-1 to LaTeX entities. It contains a list of substitution strings for 'ISO-8859-1 West European' characters,
 	// which can be used with the 'T1' font encoding. Uses commands from the 'textcomp' package. Adopted from 'transtab' by Markus Kuhn
@@ -14,7 +14,7 @@
 	$transtab_latin1_latex = array(
 
 		// NUMBER SIGN
-		"#" => "$\\#$",
+		"#" => '$\\#$',
 		// <U0023> <U0023>
 
 		// PERCENT SIGN
