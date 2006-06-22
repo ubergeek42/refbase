@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   10-Jun-06, 20:15
+	// Modified:   21-Jun-06, 23:36
 
 	// This file contains important
 	// functions that are shared
@@ -850,57 +850,133 @@
 	// --------------------------------------------------------------------
 
 	// BUILD FIELD NAME LINKS
-	// (i.e., build clickable column headers for each available column based on the field names of the relevant mysql table)
+	// (i.e., build clickable column headers for each available column)
 	function buildFieldNameLinks($href, $query, $oldQuery, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $HTMLbeforeLink, $HTMLafterLink, $formType, $submitType, $linkName, $orig_fieldname, $viewType)
 	{
-		if ("$orig_fieldname" == "") // if there's no fixed original fieldname specified (as is the case for all fields but the 'Links' column)
-			{
-				// Get the meta-data for the attribute
-				$info = mysql_fetch_field ($result, $i);
-				// Get the attribute name:
-				$orig_fieldname = $info->name;
-			}
-		// Replace substrings with spaces:
-		$fieldname = str_replace("_"," ",$orig_fieldname);
-		// Form words (i.e., make the first char of a word uppercase):
-		$fieldname = ucwords($fieldname);
+		global $loc; // '$loc' is made globally available in 'core.php'
+		global $fieldNamesArray; // '$fieldNamesArray' is made globally available from within this function
 
-		if ($linkName == "") // if there's no fixed link name specified (as is the case for all fields but the 'Links' column)...
-			$linkName = $fieldname; // ...use the attribute's name as link name
+		if (!isset($fieldNamesArray))
+			// map MySQL field names to localized column names:
+			$fieldNamesArray = array (
+										"author"                => $loc["Author"],
+										"author_count"          => $loc["AuthorCount"],
+										"first_author"          => $loc["AuthorFirst"],
+										"address"               => $loc["Address"],
+										"corporate_author"      => $loc["CorporateAuthor"],
+										"thesis"                => $loc["Thesis"],
+										"title"                 => $loc["Title"],
+										"orig_title"            => $loc["TitleOriginal"],
+										"year"                  => $loc["Year"],
+										"publication"           => $loc["Publication"],
+										"abbrev_journal"        => $loc["JournalAbbr"],
+										"editor"                => $loc["Editor"],
+										"volume"                => $loc["Volume"],
+										"volume_numeric"        => $loc["VolumeNumeric"],
+										"issue"                 => $loc["Issue"],
+										"pages"                 => $loc["Pages"],
+										"first_page"            => $loc["PagesFirst"],
+										"series_title"          => $loc["TitleSeries"],
+										"abbrev_series_title"   => $loc["TitleSeriesAbbr"],
+										"series_editor"         => $loc["SeriesEditor"],
+										"series_volume"         => $loc["SeriesVolume"],
+										"series_volume_numeric" => $loc["SeriesVolumeNumeric"],
+										"series_issue"          => $loc["SeriesIssue"],
+										"publisher"             => $loc["Publisher"],
+										"place"                 => $loc["PublisherPlace"],
+										"edition"               => $loc["Edition"],
+										"medium"                => $loc["Medium"],
+										"issn"                  => $loc["ISSN"],
+										"isbn"                  => $loc["ISBN"],
+										"language"              => $loc["Language"],
+										"summary_language"      => $loc["LanguageSummary"],
+										"keywords"              => $loc["Keywords"],
+										"abstract"              => $loc["Abstract"],
+										"area"                  => $loc["Area"],
+										"expedition"            => $loc["Expedition"],
+										"conference"            => $loc["Conference"],
+										"doi"                   => $loc["DOI"],
+										"url"                   => $loc["URL"],
+										"file"                  => $loc["File"],
+										"notes"                 => $loc["Notes"],
+										"location"              => $loc["Location"],
+										"call_number"           => $loc["CallNumber"],
+										"serial"                => $loc["Serial"],
+										"type"                  => $loc["Type"],
+										"approved"              => $loc["Approved"],
+										"created_date"          => $loc["CreationDate"],
+										"created_time"          => $loc["CreationTime"],
+										"created_by"            => $loc["Creator"],
+										"modified_date"         => $loc["ModifiedDate"],
+										"modified_time"         => $loc["ModifiedTime"],
+										"modified_by"           => $loc["Modifier"],
+										"marked"                => $loc["Marked"],
+										"copy"                  => $loc["Copy"],
+										"selected"              => $loc["Selected"],
+										"user_keys"             => $loc["UserKeys"],
+										"user_notes"            => $loc["UserNotes"],
+										"user_file"             => $loc["UserFile"],
+										"user_groups"           => $loc["UserGroups"],
+										"cite_key"              => $loc["CiteKey"],
+										"related"               => $loc["Related"]
+			);
+
+		if (empty($orig_fieldname)) // if there's no fixed original fieldname specified (as is the case for all fields but the 'Links' column)
+		{
+			// Get the meta-data for the attribute
+			$info = mysql_fetch_field ($result, $i);
+			// Get the attribute name:
+			$orig_fieldname = $info->name;
+		}
+
+		if (empty($linkName)) // if there's no fixed link name specified (as is the case for all fields but the 'Links' column)...
+		{
+			if (isset($fieldNamesArray[$orig_fieldname]))
+			{
+				$linkName = $fieldNamesArray[$orig_fieldname]; // ...use the attribute's localized name as link name
+			}
+			else // ...use MySQL field name as fall back:
+			{
+				// Replace substrings with spaces:
+				$linkName = str_replace("_"," ",$orig_fieldname);
+				// Form words (i.e., make the first char of a word uppercase):
+				$linkName = ucwords($linkName);
+			}
+		}
 
 		// Setup some variables (in order to enable sorting by clicking on column titles)
 		// NOTE: Column sorting with any queries that include the 'LIMIT'... parameter
 		//       will (technically) work. However, every new query will limit the selection to a *different* list of records!! ?:-/
-		if ("$newORDER" == "") // if there's no fixed ORDER BY string specified (as is the case for all fields but the 'Links' column)
-			{
-				if ($info->numeric == "1") // Check if the field's data type is numeric (if so we'll append " DESC" to the ORDER clause)
-					$newORDER = ("ORDER BY " . $orig_fieldname . " DESC"); // Build the appropriate ORDER BY clause (sort numeric fields in DESCENDING order)
-				else
-					$newORDER = ("ORDER BY " . $orig_fieldname); // Build the appropriate ORDER BY clause
-			}
+		if (empty($newORDER)) // if there's no fixed ORDER BY string specified (as is the case for all fields but the 'Links' column)
+		{
+			if ($info->numeric == "1") // Check if the field's data type is numeric (if so we'll append " DESC" to the ORDER clause)
+				$newORDER = ("ORDER BY " . $orig_fieldname . " DESC"); // Build the appropriate ORDER BY clause (sort numeric fields in DESCENDING order)
+			else
+				$newORDER = ("ORDER BY " . $orig_fieldname); // Build the appropriate ORDER BY clause
+		}
 
-		if ("$orig_fieldname" == "pages") // when original field name = 'pages' then...
-			{
-				$newORDER = eregi_replace("ORDER BY pages", "ORDER BY first_page DESC", $newORDER); // ...sort by 'first_page' instead
-				$orig_fieldname = "first_page"; // adjust '$orig_fieldname' variable accordingly
-			}
+		if ($orig_fieldname == "pages") // when original field name = 'pages' then...
+		{
+			$newORDER = eregi_replace("ORDER BY pages", "ORDER BY first_page DESC", $newORDER); // ...sort by 'first_page' instead
+			$orig_fieldname = "first_page"; // adjust '$orig_fieldname' variable accordingly
+		}
 
-		if ("$orig_fieldname" == "volume") // when original field name = 'volume' then...
-			{
-				$newORDER = eregi_replace("ORDER BY volume", "ORDER BY volume_numeric DESC", $newORDER); // ...sort by 'volume_numeric' instead
-				$orig_fieldname = "volume_numeric"; // adjust '$orig_fieldname' variable accordingly
-			}
+		if ($orig_fieldname == "volume") // when original field name = 'volume' then...
+		{
+			$newORDER = eregi_replace("ORDER BY volume", "ORDER BY volume_numeric DESC", $newORDER); // ...sort by 'volume_numeric' instead
+			$orig_fieldname = "volume_numeric"; // adjust '$orig_fieldname' variable accordingly
+		}
 
-		if ("$orig_fieldname" == "series_volume") // when original field name = 'series_volume' then...
-			{
-				$newORDER = eregi_replace("ORDER BY series_volume", "ORDER BY series_volume_numeric DESC", $newORDER); // ...sort by 'series_volume_numeric' instead
-				$orig_fieldname = "series_volume_numeric"; // adjust '$orig_fieldname' variable accordingly
-			}
+		if ($orig_fieldname == "series_volume") // when original field name = 'series_volume' then...
+		{
+			$newORDER = eregi_replace("ORDER BY series_volume", "ORDER BY series_volume_numeric DESC", $newORDER); // ...sort by 'series_volume_numeric' instead
+			$orig_fieldname = "series_volume_numeric"; // adjust '$orig_fieldname' variable accordingly
+		}
 
-		if ("$orig_fieldname" == "marked") // when original field name = 'marked' then...
+		if ($orig_fieldname == "marked") // when original field name = 'marked' then...
 			$newORDER = eregi_replace("ORDER BY marked", "ORDER BY marked DESC", $newORDER); // ...sort 'marked' column in DESCENDING order (so that 'yes' sorts before 'no')
 
-		if ("$orig_fieldname" == "last_login") // when original field name = 'last_login' (defined in 'users' table) then...
+		if ($orig_fieldname == "last_login") // when original field name = 'last_login' (defined in 'users' table) then...
 			$newORDER = eregi_replace("ORDER BY last_login", "ORDER BY last_login DESC", $newORDER); // ...sort 'last_login' column in DESCENDING order (so that latest date+time sorts first)
 
 		$orderBy = eregi_replace("ORDER BY ", "", $newORDER); // remove 'ORDER BY ' phrase in order to store just the 'ORDER BY' field spec within the 'orderBy' variable
@@ -962,6 +1038,8 @@
 	// (i.e., build a TABLE row with links for "previous" & "next" browsing, as well as links to intermediate pages)
 	function buildBrowseLinks($href, $query, $oldQuery, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, $maxPageNo, $formType, $displayType, $citeStyle, $citeOrder, $orderBy, $headerMsg, $viewType)
 	{
+		global $loc; // '$loc' is made globally available in 'core.php'
+
 		// First, calculate the offset page number:
 		$pageOffset = ($rowOffset / $showRows);
 		// workaround for always rounding upward (since I don't know better! :-/):
@@ -983,18 +1061,18 @@
 		$BrowseLinks .= "\n<tr>";
 
 		if ($viewType == "Print")
-			$BrowseLinks .= "\n\t<td align=\"left\" valign=\"bottom\" width=\"145\"><a href=\"index.php\">Home</a></td>";
+			$BrowseLinks .= "\n\t<td align=\"left\" valign=\"bottom\" width=\"187\"><a href=\"index.php\" title=\"" . $loc["LinkTitle_Home"] . "\">" . $loc["Home"] . "</a></td>";
 		elseif (($href != "help.php" AND $displayType != "Cite") OR ($href == "help.php" AND $displayType == "List"))
 		{
-			$BrowseLinks .= "\n\t<td align=\"left\" valign=\"bottom\" width=\"145\" class=\"small\">"
-							. "\n\t\t<a href=\"JavaScript:checkall(true,'marked%5B%5D')\" title=\"select all records on this page\">Select All</a>&nbsp;&nbsp;&nbsp;"
-							. "\n\t\t<a href=\"JavaScript:checkall(false,'marked%5B%5D')\" title=\"deselect all records on this page\">Deselect All</a>"
+			$BrowseLinks .= "\n\t<td align=\"left\" valign=\"bottom\" width=\"187\" class=\"small\">"
+							. "\n\t\t<a href=\"JavaScript:checkall(true,'marked%5B%5D')\" title=\"select all records on this page\">" . $loc["SelectAll"] . "</a>&nbsp;&nbsp;&nbsp;"
+							. "\n\t\t<a href=\"JavaScript:checkall(false,'marked%5B%5D')\" title=\"deselect all records on this page\">" . $loc["DeselectAll"] . "</a>"
 							. "\n\t</td>";
 		}
 		// we don't show the select/deselect links in citation layout (since there aren't any checkboxes anyhow);
 		// similarly, we ommit these links on 'help.php' in 'Display' mode:
 		else // citation layout
-			$BrowseLinks .= "\n\t<td align=\"left\" valign=\"bottom\" width=\"145\">&nbsp;</td>";
+			$BrowseLinks .= "\n\t<td align=\"left\" valign=\"bottom\" width=\"187\">&nbsp;</td>";
 
 
 		$BrowseLinks .= "\n\t<td align=\"center\" valign=\"bottom\">";
@@ -1127,7 +1205,7 @@
 
 		$BrowseLinks .= "\n\t</td>";
 
-		$BrowseLinks .= "\n\t<td align=\"right\" valign=\"bottom\" width=\"145\">";
+		$BrowseLinks .= "\n\t<td align=\"right\" valign=\"bottom\" width=\"187\">";
 
 		if ($viewType == "Print")
 			// f) create a 'Web View' link that will show the currently displayed result set in web view:
