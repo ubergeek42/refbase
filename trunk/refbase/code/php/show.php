@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   10-Jun-06, 19:55
+	// Modified:   19-Jun-06, 13:34
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -537,12 +537,12 @@
 			{
 				if (eregi("^cli", $client)) 
 				{
-					echo $loc["NoPermission"]." ".$loc["NoPermission_ForDisplayDetails"]."!\n\n";
+					echo $loc["NoPermission"] . $loc["NoPermission_ForDisplayDetails"]."!\n\n";
 				}
 				else
 				{
 					// save an appropriate error message:
-					$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"]." ".$loc["NoPermission_ForDisplayDetails"]."!</span></b>";
+					$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForDisplayDetails"]."!</span></b>";
 
 					// Write back session variables:
 					saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
