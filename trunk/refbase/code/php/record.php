@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./record.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   13-Jun-06, 13:22
+	// Modified:   21-Jun-06, 17:48
 
 	// Form that offers to add
 	// records or edit/delete
@@ -97,10 +97,10 @@
 		{
 			$errors = array(); // re-assign an empty array (in order to prevent 'Undefined variable "errors"...' messages when calling the 'fieldError' function later on)
 			if ($recordAction == "edit") // *edit* record
-				$HeaderString = $loc["EditRecordLinkTitle"];
+				$HeaderString = $loc["EditRecordHeaderText"] . ":";
 			else // *add* record will be the default action if no parameter is given
 			{
-				$HeaderString = $loc["AddRecordLinkTitle"];
+				$HeaderString = $loc["AddRecordHeaderText"];
 				if (isset($_REQUEST['source'])) // when importing data, we display the original source data if the 'source' parameters is present:
 					$HeaderString .= ". Original source data:\n<br>\n<br>\n<code>" . $_REQUEST['source'] . "</code>"; // the 'source' parameter gets passed by 'import_csa.php'
 				else
@@ -127,25 +127,33 @@
 
 	// if the user isn't logged in -OR- any normal user is logged in (not the admin)...
 	if ((!isset($loginEmail)) OR ((isset($loginEmail)) AND ($loginEmail != $adminLoginEmail)))
+	{
 		$fieldLock = " readonly"; // ... lock the 'location' & 'file' fields
+		$fieldLockLabel = " (" . $loc["readonly"] . ")"; // ... append a " (readonly)" indicator to the field description of the 'location' & 'file' fields
+	}
 	else // if the admin is logged in...
+	{
 		$fieldLock = ""; // ...the 'location' & 'file' fields won't be locked (since the admin should be able to freely add or edit any records)
+		$fieldLockLabel = "";
+	}
 
 	if ($recordAction == "edit") // *edit* record
 	{
 		$pageTitle = $loc["EditRecord"]; // set the correct page title
+		$addEditButtonTitle = $loc["ButtonTitle_EditRecord"]; // set the button name of the (default) submit button ('Edit Record')
 	}
 	else
 	{
 		$recordAction = "add"; // *add* record will be the default action if no parameter is given
-		$pageTitle = $loc["Save"]; // set the correct page title
+		$pageTitle = $loc["AddRecord"]; // set the correct page title
+		$addEditButtonTitle = $loc["ButtonTitle_AddRecord"]; // set the button name of the (default) submit button ('Add Record')
 		$serialNo = $loc["not assigned yet"];
 
 		// if the user isn't logged in -OR- any normal user is logged in (not the admin)...
 		if ((!isset($loginEmail)) OR ((isset($loginEmail)) AND ($loginEmail != $adminLoginEmail)))
 			// ...provide a generic info string within the (locked) 'location' field that informs the user about the automatic fill in of his user name & email address
 			// (IMPORTANT: if you change this information string you must also edit the corresponding 'ereg(...)' pattern in 'modify.php'!)
-			$locationName = $loc["your name &amp; email address will be filled in automatically"];
+			$locationName = $loc["your name & email address will be filled in automatically"];
 		else // if the admin is logged in...
 			$locationName = ""; // ...keep the 'location' field empty
 	}
@@ -550,6 +558,14 @@
 			{
 				if (!empty($errors)) // ...there were some errors on submit. -> Re-load the data that were submitted by the user:
 				{
+					foreach($formVars as $varname => $value)
+					{
+						// remove slashes from parameter values if 'magic_quotes_gpc = On':
+						$value = stripSlashesIfMagicQuotes($value); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
+
+						$formVars[$varname] = preg_replace("/\\\\([\"'])/", "\\1", $value); // replace any \" with " and any \' with '
+					}
+
 					$authorName = $formVars['authorName'];
 
 					if (isset($formVars['isEditorCheckBox'])) // the user did mark the "is Editor" checkbox
@@ -730,9 +746,9 @@
 
 	// (4b) DISPLAY results:
 	// Start <form> and <table> holding the form elements:
-	echo "\n<form enctype=\"multipart/form-data\" action=\"modify.php?proc=1\" method=\"POST\">";
+	echo "\n<form enctype=\"multipart/form-data\" action=\"modify.php?proc=1\" method=\"POST\" accept-charset=\"" . $contentTypeCharset . "\">"; // '$contentTypeCharset' is defined in 'ini.inc.php'
 	echo "\n<input type=\"hidden\" name=\"formType\" value=\"record\">";
-	echo "\n<input type=\"hidden\" name=\"submit\" value=\"" . $pageTitle . "\">"; // provide a default value for the 'submit' form tag (then, hitting <enter> within a text entry field will act as if the user clicked the 'Add/Edit Record' button)
+	echo "\n<input type=\"hidden\" name=\"submit\" value=\"" . $addEditButtonTitle . "\">"; // provide a default value for the 'submit' form tag (then, hitting <enter> within a text entry field will act as if the user clicked the 'Add/Edit Record' button)
 	echo "\n<input type=\"hidden\" name=\"recordAction\" value=\"" . $recordAction . "\">";
 	echo "\n<input type=\"hidden\" name=\"oldQuery\" value=\"" . rawurlencode($oldQuery) . "\">"; // we include a link to the formerly displayed results page as hidden form tag so that it's available on the subsequent receipt page that follows any add/edit/delete action!
 	echo "\n<input type=\"hidden\" name=\"contributionIDName\" value=\"" . rawurlencode($contributionID) . "\">";
@@ -778,14 +794,14 @@
 	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" width=\"600\" summary=\"This table holds a form that offers to add records or edit existing ones\">"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"mainfieldsbg\"><b>". $loc["Author"]."</b></td>"
-			. "\n\t<td colspan=\"5\" class=\"mainfieldsbg\">" . fieldError("authorName", $errors) . "<input type=\"text\" name=\"authorName\" value=\"$authorName\" size=\"70\" title=\"". $loc["DescriptionAuthor"]."\">";
+			. "\n\t<td colspan=\"4\" class=\"mainfieldsbg\">" . fieldError("authorName", $errors) . "<input type=\"text\" name=\"authorName\" value=\"$authorName\" size=\"63\" title=\"". $loc["DescriptionAuthor"]."\"></td>";
 
 	if ($isEditorCheckBox == "1" OR ereg(" *\(eds?\)$", $authorName)) // if the '$isEditorCheckBox' variable is set to 1 -OR- if 'author' field ends with either " (ed)" or " (eds)"
 		$isEditorCheckBoxIsChecked = " checked"; // mark the 'is Editor' checkbox
 	else
 		$isEditorCheckBoxIsChecked = ""; // don't mark the 'is Editor' checkbox
 
-	echo "\n\t&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"checkbox\" name=\"isEditorCheckBox\" value=\"1\"$isEditorCheckBoxIsChecked title=\"". $loc["DescriptionEditorCheckBox"]."\">&nbsp;&nbsp;<b>". $loc["is"]." ". $loc["Editor"]."</b></td>"
+	echo "\n\t<td align=\"right\" class=\"mainfieldsbg\"><input type=\"checkbox\" name=\"isEditorCheckBox\" value=\"1\"$isEditorCheckBoxIsChecked title=\"". $loc["DescriptionEditorCheckBox"]."\">&nbsp;&nbsp;<b>". $loc["is"]." ". $loc["Editor"]."</b></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"mainfieldsbg\"><b>". $loc["Title"]."</b></td>"
@@ -854,9 +870,9 @@
 			. "\n\t<td colspan=\"3\" class=\"otherfieldsbg\"><input type=\"text\" name=\"corporateAuthorName\" value=\"$corporateAuthorName\" size=\"48\" title=\"". $loc["DescriptionCorporate"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Thesis"]."</b></td>";
 
-	$thesisType = "\n\t<td align=\"right\" class=\"otherfieldsbg\">\n\t\t<select name=\"thesisName\" title=\"". $loc["DescriptionThesis"]."\">\n\t\t\t<option></option>\n\t\t\t<option>Bachelor's thesis</option>\n\t\t\t<option>Master's thesis</option>\n\t\t\t<option>Ph.D. thesis</option>\n\t\t\t<option>Diploma thesis</option>\n\t\t\t<option>Doctoral thesis</option>\n\t\t\t<option>Habilitation thesis</option>\n\t\t</select>\n\t</td>";
+	$thesisType = "\n\t<td align=\"right\" class=\"otherfieldsbg\">\n\t\t<select name=\"thesisName\" title=\"". $loc["DescriptionThesis"]."\">\n\t\t\t<option></option>\n\t\t\t<option value=\"Bachelor's thesis\">" . $loc["Bachelor's thesis"] . "</option>\n\t\t\t<option value=\"Master's thesis\">" . $loc["Master's thesis"] . "</option>\n\t\t\t<option value=\"Ph.D. thesis\">" . $loc["Ph.D. thesis"] . "</option>\n\t\t\t<option value=\"Diploma thesis\">" . $loc["Diploma thesis"] . "</option>\n\t\t\t<option value=\"Doctoral thesis\">" . $loc["Doctoral thesis"] . "</option>\n\t\t\t<option value=\"Habilitation thesis\">" . $loc["Habilitation thesis"] . "</option>\n\t\t</select>\n\t</td>";
 	if (!empty($thesisName))
-		$thesisType = ereg_replace("<option>$thesisName", "<option selected>$thesisName", $thesisType);
+		$thesisType = preg_replace("/<option (value=\"" . $thesisName . "\")>/", "<option \\1 selected>", $thesisType);
 
 	echo "$thesisType"
 			. "\n</tr>"
@@ -925,7 +941,7 @@
 			. "\n\t<td colspan=\"3\" class=\"otherfieldsbg\"><input type=\"text\" name=\"notesName\" value=\"$notesName\" size=\"48\" title=\"". $loc["DescriptionNotes"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Approved"]."</b></td>";
 
-	$approved = "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"radio\" name=\"approvedRadio\" value=\"yes\" title=\"". $loc["DescriptionApproved"]."\">&nbsp;&nbsp;". $loc["yes"]."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"approvedRadio\" value=\"no\" title=\"". $loc["DescriptionApproved"]."\">&nbsp;&nbsp;". $loc["no"]."</td>";
+	$approved = "\n\t<td align=\"right\" class=\"otherfieldsbg\"><input type=\"radio\" name=\"approvedRadio\" value=\"yes\" title=\"". $loc["DescriptionApproved"]."\">&nbsp;&nbsp;". $loc["yes"]."&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"approvedRadio\" value=\"no\" title=\"". $loc["DescriptionApproved"]."\">&nbsp;&nbsp;". $loc["no"]."</td>";
 	if ($approvedRadio == "yes")
 		$approved = ereg_replace("name=\"approvedRadio\" value=\"yes\"", "name=\"approvedRadio\" value=\"yes\" checked", $approved);
 	else // ($approvedRadio == "no")
@@ -935,7 +951,7 @@
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Location"]."</b></td>"
-			. "\n\t<td colspan=\"5\" class=\"otherfieldsbg\"><input type=\"text\" name=\"locationName\" value=\"$locationName\" size=\"85\" title=\"". $loc["DescriptionLocation"].".$fieldLock\"$fieldLock></td>"
+			. "\n\t<td colspan=\"5\" class=\"otherfieldsbg\"><input type=\"text\" name=\"locationName\" value=\"$locationName\" size=\"85\" title=\"". $loc["DescriptionLocation"]."$fieldLockLabel\"$fieldLock></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"mainfieldsbg\"><b>". $loc["CallNumber"]."</b></td>";
@@ -952,9 +968,9 @@
 			. "\n\t<td align=\"right\" class=\"mainfieldsbg\"><input type=\"text\" name=\"serialNo\" value=\"$serialNo\" size=\"14\" title=\"". $loc["DescriptionSerial"]."\" readonly></td>"
 			. "\n</tr>"
 			. "\n<tr>"
-			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>". $loc["marked"]."</b></td>";
+			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>". $loc["Marked"]."</b></td>";
 
-	$marked = "\n\t<td class=\"userfieldsbg\"><input type=\"radio\" name=\"markedRadio\" value=\"yes\" title=\"". $loc["DescriptionMarked"]."\">&nbsp;&nbsp;". $loc["yes"]."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"markedRadio\" value=\"no\" title=\"". $loc["DescriptionMarked"]."\">&nbsp;&nbsp;". $loc["no"]."</td>";
+	$marked = "\n\t<td class=\"userfieldsbg\"><input type=\"radio\" name=\"markedRadio\" value=\"yes\" title=\"". $loc["DescriptionMarked"]."\">&nbsp;&nbsp;". $loc["yes"]."&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"markedRadio\" value=\"no\" title=\"". $loc["DescriptionMarked"]."\">&nbsp;&nbsp;". $loc["no"]."</td>";
 	if ($markedRadio == "yes")
 		$marked = ereg_replace("name=\"markedRadio\" value=\"yes\"", "name=\"markedRadio\" value=\"yes\" checked", $marked);
 	else // ($markedRadio == "no")
@@ -963,14 +979,14 @@
 	echo "$marked"
 			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>". $loc["Copy"]."</b></td>";
 	
-	$copy = "\n\t<td class=\"userfieldsbg\">\n\t\t<select name=\"copyName\" title=\"". $loc["DescriptionCopy"]."\">\n\t\t\t<option>". $loc["true"]."</option>\n\t\t\t<option>". $loc["fetch"]."</option>\n\t\t\t<option>". $loc["ordered"]."</option>\n\t\t\t<option>". $loc["false"]."</option>\n\t\t</select>\n\t</td>";
+	$copy = "\n\t<td class=\"userfieldsbg\">\n\t\t<select name=\"copyName\" title=\"". $loc["DescriptionCopy"]."\">\n\t\t\t<option value=\"true\">". $loc["true"]."</option>\n\t\t\t<option value=\"fetch\">". $loc["fetch"]."</option>\n\t\t\t<option value=\"ordered\">". $loc["ordered"]."</option>\n\t\t\t<option value=\"false\">". $loc["false"]."</option>\n\t\t</select>\n\t</td>";
 	if (!empty($copyName))
-		$copy = ereg_replace("<option>$copyName", "<option selected>$copyName", $copy);
+		$copy = preg_replace("/<option(.*?)>" . $loc[$copyName] . "/", "<option\\1 selected>" . $loc[$copyName], $copy);
 	
 	echo "$copy"
-			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>". $loc["selected"]."</b></td>";
+			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>". $loc["Selected"]."</b></td>";
 
-	$selected = "\n\t<td align=\"right\" class=\"userfieldsbg\"><input type=\"radio\" name=\"selectedRadio\" value=\"yes\" title=\"". $loc["DescriptionSelected"]."\">&nbsp;&nbsp;". $loc["yes"]."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"selectedRadio\" value=\"no\" title=\"". $loc["DescriptionSelected"]."\">&nbsp;&nbsp;". $loc["no"]."</td>";
+	$selected = "\n\t<td align=\"right\" class=\"userfieldsbg\"><input type=\"radio\" name=\"selectedRadio\" value=\"yes\" title=\"". $loc["DescriptionSelected"]."\">&nbsp;&nbsp;". $loc["yes"]."&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"radio\" name=\"selectedRadio\" value=\"no\" title=\"". $loc["DescriptionSelected"]."\">&nbsp;&nbsp;". $loc["no"]."</td>";
 	if ($selectedRadio == "yes")
 		$selected = ereg_replace("name=\"selectedRadio\" value=\"yes\"", "name=\"selectedRadio\" value=\"yes\" checked", $selected);
 	else // ($selectedRadio == "no")
@@ -1000,7 +1016,7 @@
 	else
 	{
 		$userGroupsFieldLock = " disabled"; // it would be more consistent to remove the user groups field completely from the form if the user has no permission to use the user groups feature; but since this would complicate the processing quite a bit, we just disable the field (for now)
-		$userGroupsTitle = $loc["DescriptionUserGroupsDisabled"];
+		$userGroupsTitle = $loc["NoPermission"] . $loc["NoPermission_ForUserGroups"];
 	}
 
 	echo "\n\t<td colspan=\"3\" class=\"userfieldsbg\"><input type=\"text\" name=\"userGroupsName\" value=\"$userGroupsName\" size=\"48\"$userGroupsFieldLock title=\"$userGroupsTitle\"></td>"
@@ -1008,7 +1024,7 @@
 			. "\n\t<td align=\"right\" class=\"userfieldsbg\"><input type=\"text\" name=\"citeKeyName\" value=\"$citeKeyName\" size=\"14\" title=\"". $loc["DescriptionCiteKey"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
-			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>". $loc["related"]."</b></td>"
+			. "\n\t<td width=\"74\" class=\"userfieldsbg\"><b>". $loc["Related"]."</b></td>"
 			. "\n\t<td colspan=\"5\" class=\"userfieldsbg\"><input type=\"text\" name=\"relatedName\" value=\"$relatedName\" size=\"85\" title=\"". $loc["DescriptionRelated"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
@@ -1024,7 +1040,7 @@
 	else
 	{
 		$uploadButtonLock = " disabled"; // disabling of the upload button doesn't seem to work in all browsers (e.g., it doesn't work in Safari on MacOSX Panther, but does work with Mozilla & Camino) ?:-/
-		$uploadTitle = $loc["DescriptionFileUploadDisabled"]; // similarily, not all browsers will show title strings for disabled buttons (Safari does, Mozilla & Camino do not)
+		$uploadTitle = $loc["NoPermission"] . $loc["NoPermission_ForFileUpload"]; // similarily, not all browsers will show title strings for disabled buttons (Safari does, Mozilla & Camino do not)
 	}
 
 	echo "\n\t<td valign=\"bottom\" colspan=\"2\" class=\"otherfieldsbg\">" . fieldError("uploadFile", $errors) . "<input type=\"file\" name=\"uploadFile\" size=\"17\"$uploadButtonLock title=\"$uploadTitle\"></td>"
@@ -1060,7 +1076,7 @@
 			$contributionIDCheckBoxLock = "";
 
 		echo "\n\t<td colspan=\"2\" class=\"otherfieldsbg\">\n\t\t<input type=\"checkbox\" name=\"contributionIDCheckBox\" value=\"1\"$contributionIDCheckBoxIsChecked title=\"". $loc["DescriptionOwnPublication"]."\"$contributionIDCheckBoxLock>&nbsp;"
-				. "\n\t\t". $loc["Publication"]." ". $loc["of"]. " " . encodeHTML($abbrevInstitution) . ".\n\t</td>"; // we make use of the session variable '$abbrevInstitution' here
+				. "\n\t\t". encodeHTML($abbrevInstitution) . " " . $loc["publication"] . "\n\t</td>"; // we make use of the session variable '$abbrevInstitution' here
 	}
 	else
 	{
@@ -1076,14 +1092,14 @@
 	echo "\n<tr>"
 			. "\n\t<td width=\"74\">". $loc["Location Field"].":</td>";
 
-	$locationSelector = "\n\t<td colspan=\"3\">\n\t\t<select name=\"locationSelectorName\" title=\"". $loc["DescriptionLocationSelector"]."\">\n\t\t\t<option>". $loc["don't touch"]."</option>\n\t\t\t<option>". $loc["add"]."</option>\n\t\t\t<option>". $loc["remove"]."</option>\n\t\t</select>&nbsp;&nbsp;\n\t\t". $loc["Name"]." ". $loc["and"]." ". $loc["EmailAddress"]."\n\t</td>";
+	$locationSelector = "\n\t<td colspan=\"3\">\n\t\t<select name=\"locationSelectorName\" title=\"". $loc["DescriptionLocationSelector"]."\">\n\t\t\t<option value=\"don't touch\">". $loc["don't touch"]."</option>\n\t\t\t<option value=\"add\">". $loc["add"]."</option>\n\t\t\t<option value=\"remove\">". $loc["remove"]."</option>\n\t\t</select>&nbsp;&nbsp;\n\t\t". $loc["my name & email address"]."\n\t</td>";
 	if ($recordAction == "edit" AND !empty($locationSelectorName))
-		$locationSelector = ereg_replace("<option>$locationSelectorName", "<option selected>$locationSelectorName", $locationSelector);
+		$locationSelector = preg_replace("/<option(.*?)>" . $loc[$locationSelectorName] . "/", "<option\\1 selected>" . $loc[$locationSelectorName], $locationSelector);
 	elseif ($recordAction == "add")
 	{
-		$locationSelector = ereg_replace("<option>Add", "<option selected>Add", $locationSelector); // select the appropriate menu entry ...
+		$locationSelector = preg_replace("/<option(.*?)>" . $loc["add"] . "/", "<option\\1 selected>" . $loc["add"], $locationSelector); // select the appropriate menu entry ...
 		if ((!isset($loginEmail)) OR ((isset($loginEmail)) AND ($loginEmail != $adminLoginEmail))) // ... and if the user isn't logged in -OR- any normal user is logged in (not the admin) ...
-			$locationSelector = ereg_replace("<select", "<select disabled", $locationSelector); // ... disable the popup menu. This is, since the current user & email address will be always written to the location field when adding new records. An orphaned record would be produced if the user could chose anything other than 'Add'! (Note that the admin is permitted to override this behaviour)
+			$locationSelector = ereg_replace("<select", "<select disabled", $locationSelector); // ... disable the popup menu. This is, since the current user & email address will be always written to the location field when adding new records. An orphaned record would be produced if the user could chose anything other than 'add'! (Note that the admin is permitted to override this behaviour)
 	}
 
 	echo "$locationSelector"
@@ -1096,12 +1112,12 @@
 		if (isset($_SESSION['user_permissions']) AND ereg("allow_edit", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_edit'...
 		{
 			$addEditButtonLock = "";
-			$addEditTitle = "submit your changes to this record";
+			$addEditTitle = $loc["DescriptionEditButton"];
 		}
 		else
 		{
 			$addEditButtonLock = " disabled";
-			$addEditTitle = "not available since you have no permission to edit any records";
+			$addEditTitle = $loc["NoPermission"] . $loc["NoPermission_ForEditRecords"];
 		}
 	}
 	else // if ($recordAction == "add") // adjust the title string for the add button
@@ -1109,17 +1125,17 @@
 		if (isset($_SESSION['user_permissions']) AND ereg("allow_add", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_add'...
 		{
 			$addEditButtonLock = "";
-			$addEditTitle = "add this record to the database";
+			$addEditTitle = $loc["DescriptionAddButton"];
 		}
 		else
 		{
 			$addEditButtonLock = " disabled";
-			$addEditTitle = "not available since you have no permission to add any records";
+			$addEditTitle = $loc["NoPermission"] . $loc["NoPermission_ForAddRecords"];
 		}
 	}
 
 	// display an ADD/EDIT button:
-	echo "<input type=\"submit\" name=\"submit\" value=\"$pageTitle\"$addEditButtonLock title=\"$addEditTitle\">";
+	echo "<input type=\"submit\" name=\"submit\" value=\"$addEditButtonTitle\"$addEditButtonLock title=\"$addEditTitle\">";
 
 	if (isset($_SESSION['user_permissions']) AND ereg("allow_delete", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_delete'...
 	// ... display a delete button:
@@ -1133,29 +1149,29 @@
 			{
 				// build an informative title string:
 				if (!isset($loginEmail)) // if the user isn't logged in
-					$deleteTitle = "you can't delete this record since you're not logged in";
+					$deleteTitle = $loc["DescriptionDeleteButtonDisabled"] . $loc["DescriptionDeleteButtonDisabledNotLoggedIn"];
 
 				elseif (!ereg($loginEmail, $locationName)) // if any normal user is logged in & the 'location' field doesn't list her email address
-					$deleteTitle = "you can't delete this record since it doesn't belong to your personal literature data set";
+					$deleteTitle = $loc["DescriptionDeleteButtonDisabled"] . $loc["DescriptionDeleteButtonDisabledNotYours"];
 
 				elseif (ereg(";", $rawLocationName)) // if the 'location' field contains more than one user (which is indicated by a semicolon character)
 				{
 					// if we made it here, the current user is listed within the 'location' field of this record
 					if (ereg("^[^;]+;[^;]+$", $rawLocationName)) // the 'location' field does contain exactly one ';' => two authors, i.e., there's only one "other user" listed within the 'location' field
-						$deleteTitle = "you can't delete this record since it also belongs to the personal literature data set of another user";
+						$deleteTitle = $loc["DescriptionDeleteButtonDisabled"] . $loc["DescriptionDeleteButtonDisabledOtherUser"];
 					elseif (ereg("^[^;]+;[^;]+;[^;]+", $rawLocationName)) // the 'location' field does contain at least two ';' => more than two authors, i.e., there are two or more "other users" listed within the 'location' field
-						$deleteTitle = "you can't delete this record since it also belongs to the personal literature data set of other users";
+						$deleteTitle = $loc["DescriptionDeleteButtonDisabled"] . $loc["DescriptionDeleteButtonDisabledOtherUsers"];
 				}
 	
 				$deleteButtonLock = " disabled"; // ...we lock the delete button (since a normal user shouldn't be allowed to delete records that belong to other users)
 			}
 			else
 			{
-				$deleteTitle = "pressing this button will remove this record from the database";
+				$deleteTitle = $loc["DescriptionDeleteButton"];
 				$deleteButtonLock = "";
 			}
 	
-			echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"submit\" name=\"submit\" value=\"Delete Record\"$deleteButtonLock title=\"$deleteTitle\">";
+			echo "&nbsp;&nbsp;&nbsp;<input type=\"submit\" name=\"submit\" value=\"" . $loc["ButtonTitle_DeleteRecord"] . "\"$deleteButtonLock title=\"$deleteTitle\">";
 		}
 	}
 
