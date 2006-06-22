@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/transtab_unicode_latex.inc.php
 	// Created:    28-May-06, 12:39
-	// Modified:   02-Jun-06, 23:49
+	// Modified:   17-Jun-06, 13:47
 
 	// This is a translation table for best-effort conversion from Unicode to LaTeX entities. It contains a comprehensive list of substitution strings for Unicode characters,
 	// which can be used with the 'T1' font encoding. Uses commands from the 'textcomp' package. Characters that can't be matched are converted to ASCII equivalents.
@@ -15,7 +15,7 @@
 	$transtab_unicode_latex = array(
 
 		// NUMBER SIGN
-		"#" => "$\\#$",
+		"#" => '$\\#$',
 		// <U0023> <U0023>
 
 		// PERCENT SIGN
@@ -1299,115 +1299,115 @@
 		// <U204A> <U0037>
 
 		// SUPERSCRIPT ZERO
-		"⁰" => "$^{0}$", // "0"
+		"⁰" => '$^{0}$', // "0"
 		// <U2070> "<U005E><U0030>";<U0030>
 
 		// SUPERSCRIPT FOUR
-		"⁴" => "$^{4}$", // "4"
+		"⁴" => '$^{4}$', // "4"
 		// <U2074> "<U005E><U0034>";<U0034>
 
 		// SUPERSCRIPT FIVE
-		"⁵" => "$^{5}$", // "5"
+		"⁵" => '$^{5}$', // "5"
 		// <U2075> "<U005E><U0035>";<U0035>
 
 		// SUPERSCRIPT SIX
-		"⁶" => "$^{6}$", // "6"
+		"⁶" => '$^{6}$', // "6"
 		// <U2076> "<U005E><U0036>";<U0036>
 
 		// SUPERSCRIPT SEVEN
-		"⁷" => "$^{7}$", // "7"
+		"⁷" => '$^{7}$', // "7"
 		// <U2077> "<U005E><U0037>";<U0037>
 
 		// SUPERSCRIPT EIGHT
-		"⁸" => "$^{8}$", // "8"
+		"⁸" => '$^{8}$', // "8"
 		// <U2078> "<U005E><U0038>";<U0038>
 
 		// SUPERSCRIPT NINE
-		"⁹" => "$^{9}$", // "9"
+		"⁹" => '$^{9}$', // "9"
 		// <U2079> "<U005E><U0039>";<U0039>
 
 		// SUPERSCRIPT PLUS SIGN
-		"⁺" => "$^{+}$", // "+"
+		"⁺" => '$^{+}$', // "+"
 		// <U207A> "<U005E><U002B>";<U002B>
 
 		// SUPERSCRIPT MINUS
-		"⁻" => "$^{-}$", // "-"
+		"⁻" => '$^{-}$', // "-"
 		// <U207B> "<U005E><U002D>";<U002D>
 
 		// SUPERSCRIPT EQUALS SIGN
-		"⁼" => "$^{=}$", // "="
+		"⁼" => '$^{=}$', // "="
 		// <U207C> "<U005E><U003D>";<U003D>
 
 		// SUPERSCRIPT LEFT PARENTHESIS
-		"⁽" => "$^{(}$", // "("
+		"⁽" => '$^{(}$', // "("
 		// <U207D> "<U005E><U0028>";<U0028>
 
 		// SUPERSCRIPT RIGHT PARENTHESIS
-		"⁾" => "$^{)}$", // ")"
+		"⁾" => '$^{)}$', // ")"
 		// <U207E> "<U005E><U0029>";<U0029>
 
 		// SUPERSCRIPT LATIN SMALL LETTER N
-		"ⁿ" => "$^{n}$", // "n"
+		"ⁿ" => '$^{n}$', // "n"
 		// <U207F> "<U005E><U006E>";<U006E>
 
 		// SUBSCRIPT ZERO
-		"₀" => "$_{0}$", // "0"
+		"₀" => '$_{0}$', // "0"
 		// <U2080> "<U005F><U0030>";<U0030>
 
 		// SUBSCRIPT ONE
-		"₁" => "$_{1}$", // "1"
+		"₁" => '$_{1}$', // "1"
 		// <U2081> "<U005F><U0031>";<U0031>
 
 		// SUBSCRIPT TWO
-		"₂" => "$_{2}$", // "2"
+		"₂" => '$_{2}$', // "2"
 		// <U2082> "<U005F><U0032>";<U0032>
 
 		// SUBSCRIPT THREE
-		"₃" => "$_{3}$", // "3"
+		"₃" => '$_{3}$', // "3"
 		// <U2083> "<U005F><U0033>";<U0033>
 
 		// SUBSCRIPT FOUR
-		"₄" => "$_{4}$", // "4"
+		"₄" => '$_{4}$', // "4"
 		// <U2084> "<U005F><U0034>";<U0034>
 
 		// SUBSCRIPT FIVE
-		"₅" => "$_{5}$", // "5"
+		"₅" => '$_{5}$', // "5"
 		// <U2085> "<U005F><U0035>";<U0035>
 
 		// SUBSCRIPT SIX
-		"₆" => "$_{6}$", // "6"
+		"₆" => '$_{6}$', // "6"
 		// <U2086> "<U005F><U0036>";<U0036>
 
 		// SUBSCRIPT SEVEN
-		"₇" => "$_{7}$", // "7"
+		"₇" => '$_{7}$', // "7"
 		// <U2087> "<U005F><U0037>";<U0037>
 
 		// SUBSCRIPT EIGHT
-		"₈" => "$_{8}$", // "8"
+		"₈" => '$_{8}$', // "8"
 		// <U2088> "<U005F><U0038>";<U0038>
 
 		// SUBSCRIPT NINE
-		"₉" => "$_{9}$", // "9"
+		"₉" => '$_{9}$', // "9"
 		// <U2089> "<U005F><U0039>";<U0039>
 
 		// SUBSCRIPT PLUS SIGN
-		"₊" => "$_{+}$", // "+"
+		"₊" => '$_{+}$', // "+"
 		// <U208A> "<U005F><U002B>";<U002B>
 
 		// SUBSCRIPT MINUS
-		"₋" => "$_{-}$", // "-"
+		"₋" => '$_{-}$', // "-"
 		// <U208B> "<U005F><U002D>";<U002D>
 
 		// SUBSCRIPT EQUALS SIGN
-		"₌" => "$_{=}$", // "="
+		"₌" => '$_{=}$', // "="
 		// <U208C> "<U005F><U003D>";<U003D>
 
 		// SUBSCRIPT LEFT PARENTHESIS
-		"₍" => "$_{(}$", // "("
+		"₍" => '$_{(}$', // "("
 		// <U208D> "<U005F><U0028>";<U0028>
 
 		// SUBSCRIPT RIGHT PARENTHESIS
-		"₎" => "$_{)}$", // ")"
+		"₎" => '$_{)}$', // ")"
 		// <U208E> "<U005F><U0029>";<U0029>
 
 		// EURO SIGN
@@ -1715,7 +1715,7 @@
 		// <U2219> <U00B7>
 
 		// INFINITY
-		"∞" => "$\\infty$",
+		"∞" => '$\\infty$',
 		// <U221E> "<U0069><U006E><U0066>"
 
 		// DIVIDES
@@ -1807,7 +1807,7 @@
 		// <U22C6> <U002A>
 
 		// EQUAL AND PARALLEL TO
-		"⋕" => "$\\#$",
+		"⋕" => '$\\#$',
 		// <U22D5> <U0023>
 
 		// VERY MUCH LESS-THAN
@@ -3059,23 +3059,23 @@
 		// <U266D> <U0062>
 
 		// MUSIC SHARP SIGN
-		"♯" => "$\\#$",
+		"♯" => '$\\#$',
 		// <U266F> <U0023>
 
 		// UPPER BLADE SCISSORS
-		"✁" => "$\\%<$",
+		"✁" => '$\\%<$',
 		// <U2701> "<U0025><U003C>"
 
 		// BLACK SCISSORS
-		"✂" => "$\\%<$",
+		"✂" => '$\\%<$',
 		// <U2702> "<U0025><U003C>"
 
 		// LOWER BLADE SCISSORS
-		"✃" => "$\\%<$",
+		"✃" => '$\\%<$',
 		// <U2703> "<U0025><U003C>"
 
 		// WHITE SCISSORS
-		"✄" => "$\\%<$",
+		"✄" => '$\\%<$',
 		// <U2704> "<U0025><U003C>"
 
 		// VICTORY HAND
