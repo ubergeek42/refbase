@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./index.php
 	// Created:    29-Jul-02, 16:45
-	// Modified:   27-May-06, 00:15
+	// Modified:   21-Jun-06, 22:24
 
 	// This script builds the main page.
 	// It provides login and quick search forms
@@ -129,7 +129,7 @@ else
 			<ul type="circle">
 				<li><?php echo $loc["Features_ComprehensiveDataset"]; 
 					// report the total number of records:
-					echo ", ". $loc["currently featuring"]; ?><a href="show.php?records=all" title="<?php echo $loc["show"] . " " . $loc["ShowAll"]; ?>"><?php echo $recordCount . " " . $loc["records"]; ?></a></li>
+					echo ", ". $loc["currently featuring"]; ?><a href="show.php?records=all" title="<?php echo $loc["LinkTitle_ShowAll"]; ?>"><?php echo $recordCount . " " . $loc["records"]; ?></a></li>
 				<li><?php echo $loc["Features_StandardizedInterface"]; ?></li>
 				<li><?php echo $loc["Features_SearchOptions"]; ?></li>
 				<li><?php echo $loc["Features_DisplayCiteExportOptions"]; ?></li>
@@ -148,7 +148,7 @@ else
 
 				// -------------------------------------------------------
 
-				echo $loc["ImportLinkTitle"]; ?></li>
+				echo $loc["ImportLinkText"]; ?></li>
 			</ul>
 		</td>
 		<td width="182" valign="top">
@@ -467,14 +467,14 @@ if (isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSIO
 	{
 ?>
 
-				<li><a href="show.php"><?php echo $loc["SearchSerialLinkText"]; ?></a><?php echo $loc["SearchSerial"]; ?></li><?php
+				<li><a href="show.php"><?php echo $loc["SearchSerial"]; ?></a><?php echo $loc["SearchSerialLinkText"]; ?></li><?php
 	}
 
 if (isset($_SESSION['user_permissions']) AND ereg("allow_cite", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_cite'...
 	{
 ?>
 
-				<li><a href="extract.php"><?php echo $loc["ExtractCitationsLinkText"]; ?></a><?php echo $loc["ExtractCitations"]; ?></li><?php
+				<li><a href="extract.php"><?php echo $loc["extractCitations"]; ?></a><?php echo $loc["ExtractCitationsLinkText"]; ?></li><?php
 	}
 ?>
 
