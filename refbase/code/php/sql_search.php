@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sql_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   27-May-06, 00:17
+	// Modified:   19-Jun-06, 13:31
 
 	// Search form that offers to specify a custom sql query.
 	// It offers some output options (like how many records to display per page)
@@ -175,7 +175,7 @@
 	else // Note, that disabling the submit button is just a cosmetic thing -- the user can still submit the form by pressing enter or by building the correct URL from scratch!
 	{
 		$sqlSearchButtonLock = " disabled";
-		$sqlSearchTitle = $loc["NoPermission"]." ".$loc["NoPermission_ForSQL"];
+		$sqlSearchTitle = $loc["NoPermission"] . $loc["NoPermission_ForSQL"];
 	}
 ?>
 
