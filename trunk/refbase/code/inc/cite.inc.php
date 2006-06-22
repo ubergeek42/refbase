@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/cite.inc.php
 	// Created:    25-May-06, 15:19
-	// Modified:   11-Jun-06, 01:15
+	// Modified:   22-Jun-06, 17:11
 
 	// This file contains functions
 	// that are used when outputting
@@ -77,19 +77,26 @@
 	// Assign an appropriate title to a given record or thesis type:
 	function generateTypeTitle($recordType, $thesis)
 	{
+		global $contentTypeCharset; // defined in 'ini.inc.php'
+
+		global $citeType;
 		global $loc;
+
+		global $availableTypeTitlesArray; // these variables are made globally available from within this function
+		global $availableThesisTitlesArray;
 
 		if (empty($thesis))
 		{
-			// Map record types with items of the global localization array ('$loc'):
-			$availableTypeTitlesArray = array(
-												"Journal Article" => "JournalArticles",
-												"Book Chapter"    => "BookContributions",
-												"Book Whole"      => "Monographs",
-												"Journal"         => "Journals",
-												"Manuscript"      => "Manuscripts",
-												"Map"             => "Maps"
-											);
+			if (!isset($availableTypeTitlesArray))
+				// Map record types with items of the global localization array ('$loc'):
+				$availableTypeTitlesArray = array(
+													"Journal Article" => "JournalArticles",
+													"Book Chapter"    => "BookContributions",
+													"Book Whole"      => "Monographs",
+													"Journal"         => "Journals",
+													"Manuscript"      => "Manuscripts",
+													"Map"             => "Maps"
+												);
 
 			if (isset($recordType, $availableTypeTitlesArray))
 				$typeTitle = $loc[$availableTypeTitlesArray[$recordType]];
@@ -98,15 +105,16 @@
 		}
 		else
 		{
-			// Map thesis types with items of the global localization array ('$loc'):
-			$availableThesisTitlesArray = array(
-												"Bachelor's thesis"   => "Theses_Bachelor",
-												"Master's thesis"     => "Theses_Master",
-												"Ph.D. thesis"        => "Theses_PhD",
-												"Diploma thesis"      => "Theses_Diploma",
-												"Doctoral thesis"     => "Theses_Doctoral",
-												"Habilitation thesis" => "Theses_Habilitation"
-											);
+			if (!isset($availableThesisTitlesArray))
+				// Map thesis types with items of the global localization array ('$loc'):
+				$availableThesisTitlesArray = array(
+													"Bachelor's thesis"   => "Theses_Bachelor",
+													"Master's thesis"     => "Theses_Master",
+													"Ph.D. thesis"        => "Theses_PhD",
+													"Diploma thesis"      => "Theses_Diploma",
+													"Doctoral thesis"     => "Theses_Doctoral",
+													"Habilitation thesis" => "Theses_Habilitation"
+												);
 
 			if (isset($thesis, $availableThesisTitlesArray))
 				$typeTitle = $loc[$availableThesisTitlesArray[$thesis]];
@@ -114,6 +122,12 @@
 				$typeTitle = $loc["Theses_Other"];
 		}
 
-		return encodeHTML($typeTitle); // function 'encodeHTML()' is defined in 'include.inc.php'
+		if (!eregi("^html$", $citeType)) // for citation formats other than HTML:
+			// apply dirty hack that reverses the HTML encoding of locales (which were HTML encoded globally in 'core.inc.php');
+			// note that function 'html_entity_decode' doesn't support multibyte character sets (such as UTF-8) in PHP versions < 5
+			// (see <http://www.php.net/manual/en/function.html-entity-decode.php>)
+			$typeTitle = html_entity_decode($typeTitle, ENT_QUOTES, $contentTypeCharset);
+
+		return $typeTitle;
 	}
 ?>
