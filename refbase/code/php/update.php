@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./update.php
 	// Created:    01-Mar-05, 20:47
-	// Modified:   27-May-06, 00:17
+	// Modified:   21-Jun-06, 23:08
 
 	// This file will update any refbase MySQL database installation from v0.7 to v0.8.
 	// (Note that this script currently doesn't offer any conversion from 'latin1' to 'utf8')
@@ -22,6 +22,18 @@
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
 	include 'initialize/ini.inc.php'; // include common variables
+
+	// --------------------------------------------------------------------
+
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session(true);
+
+	// --------------------------------------------------------------------
+
+	// Initialize preferred display language:
+	// (note that 'locales.inc.php' has to be included *after* the call to the 'start_session()' function)
+	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
@@ -59,12 +71,6 @@
 //		$defaultCharacterSet = $_POST['defaultCharacterSet'];
 //	else
 //		$defaultCharacterSet = "";
-
-	// --------------------------------------------------------------------
-
-	// START A SESSION:
-	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
-	start_session(false);
 
 	// --------------------------------------------------------------------
 
