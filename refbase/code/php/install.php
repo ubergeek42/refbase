@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./install.php
 	// Created:    07-Jan-04, 22:00
-	// Modified:   27-May-06, 00:15
+	// Modified:   22-Jun-06, 01:16
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -22,6 +22,18 @@
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
 	include 'initialize/ini.inc.php'; // include common variables
+
+	// --------------------------------------------------------------------
+
+	// START A SESSION:
+	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
+	start_session(false);
+
+	// --------------------------------------------------------------------
+
+	// Initialize preferred display language:
+	// (note that 'locales.inc.php' has to be included *after* the call to the 'start_session()' function)
+	include 'includes/locales.inc.php'; // include the locales
 
 	// --------------------------------------------------------------------
 
@@ -59,12 +71,6 @@
 		$defaultCharacterSet = $_POST['defaultCharacterSet'];
 	else
 		$defaultCharacterSet = "";
-
-	// --------------------------------------------------------------------
-
-	// START A SESSION:
-	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
-	start_session(false);
 
 	// --------------------------------------------------------------------
 
@@ -109,12 +115,12 @@
 			$bibutilsLocations = array("/usr/bin", "/usr/local/bin", ".", "./refbase") + explode($sep, getenv("PATH"));
 			// We'll only check for one program to save time (and because, we currently don't allow the script to have a subset of the functionality provided by bibutils)
 			$bibutilsNames = array("xml2bib", "xml2bib.exe");
-			foreach ($bibutilsLocations as $loc)
+			foreach ($bibutilsLocations as $location)
 			{
 				foreach  ($bibutilsNames as $exe)
 				{
-					if(file_exists("$loc/$exe"))
-						$formVars["pathToBibutils"] = realpath($loc)."/";
+					if(file_exists("$location/$exe"))
+						$formVars["pathToBibutils"] = realpath($location)."/";
 				}
 			}
 
@@ -178,7 +184,7 @@
 	<tr>
 		<td width="190" valign="top"><b>Important Note:</b></td>
 		<td valign="top" colspan="2">
-			Before executing this script, it is highly recommended to <span class="warning">open the include file <em>db.inc.php</em></span> in a text editor and edit the values of the variables <em>$databaseName</em>, <em>$username</em> and <em>$password</em> to suit your setup! Then, proceed with this form:
+			Before executing this script, it is highly recommended to <span class="warning">open the include file <em>initialize/db.inc.php</em></span> in a text editor and edit the values of the variables <em>$databaseName</em>, <em>$username</em> and <em>$password</em> to suit your setup! Then, proceed with this form:
 		</td>
 	</tr>
 	<tr>
@@ -383,17 +389,7 @@
 
 		// First, check if we're a dealing with MySQL version 4.1.x or greater:
 		// (MySQL 4.1.x is required if the refbase MySQL database/tables shall be installed using Unicode/UTF-8 as default character set)
-		$queryCheckVersion = "SELECT VERSION()";
-
-		// (2) Run the version check query on the mysql database through the connection:
-		if (!($result = @ mysql_query ($queryCheckVersion, $connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("The following error occurred while trying to query the database:", "");
-
-		// (3) Extract result:
-		$row = mysql_fetch_row($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
-		$mysqlVersionString = $row[0]; // extract the contents of the first (and only) row (returned version string will be something like "4.0.20-standard" etc.)
-		$mysqlVersion = preg_replace("/^(\d+\.\d+).+/", "\\1", $mysqlVersionString); // extract main version number (e.g. "4.0") from version string
+		$mysqlVersion = $_SESSION['mysqlVersion']; // the MySQL version is saved to a session variable in function 'start_session()'
 
 		// --------------------------------------------------------------------
 
@@ -404,8 +400,14 @@
 
 		$queryCreateDB = "CREATE DATABASE IF NOT EXISTS " . $databaseName; // by default, 'latin1' will be used as default character set
 
-		if ($mysqlVersion >= 4.1) // if MySQL 4.1.x (or greater) is installed, we'll add the default character set chosen by the user:
-			$queryCreateDB = $queryCreateDB . " DEFAULT CHARACTER SET " . $defaultCharacterSet;
+		if ($mysqlVersion >= 4.1) // if MySQL 4.1.x (or greater) is installed...
+		{
+			$queryCreateDB = $queryCreateDB . " DEFAULT CHARACTER SET " . $defaultCharacterSet; // ...add the default character set chosen by the user
+
+			if ($defaultCharacterSet == "utf8") // ...in case of UTF-8, adjust the path to the default database structure file if necessary
+				if ($databaseStructureFile == "./install.sql")
+					$databaseStructureFile = "./install_utf8.sql";
+		}
 
 		if (!empty($pathToBibutils)) // we'll only update the bibutils path if '$pathToBibutils' isn't empty (installation of bibutils is optional)
 			$queryUpdateDependsTable = "UPDATE " . $databaseName . ".depends SET depends_path = \"" . $pathToBibutils . "\" WHERE depends_external = \"bibutils\""; // update the bibutils path spec
