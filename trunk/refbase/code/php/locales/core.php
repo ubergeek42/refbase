@@ -11,10 +11,15 @@
 	// Author:     Jochen Wendebaum <mailto:wendebaum@users.sourceforge.net>
 	//
 	// Created:    01-Oct-04, 12:00
-	// Modified:   05-Jun-06, 16:06
+	// Modified:   22-Jun-06, 02:56
 
-	$f = "locales/".$locale."/common.inc"; // get filename
+	// Get filename:
+	if ($contentTypeCharset == "UTF-8") // variable '$contentTypeCharset' is defined in 'ini.inc.php'
+		$f = "locales/".$locale."/common_utf8.inc";
+	else
+		$f = "locales/".$locale."/common.inc";
 
+	// Get locales:
 	ob_start();
 		readfile( $f ); // read the file contents
 		$s = "\$loc=array(".ob_get_contents().");"; 
