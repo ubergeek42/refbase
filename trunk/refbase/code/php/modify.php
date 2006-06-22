@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./modify.php
 	// Created:    18-Dec-02, 23:08
-	// Modified:   13-Jun-06, 13:08
+	// Modified:   20-Jun-06, 13:24
 
 	// This php script will perform adding, editing & deleting of records.
 	// It then calls 'receipt.php' which displays links to the modified/added record
@@ -26,6 +26,14 @@
 	// START A SESSION:
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
 	start_session(true);
+
+	// --------------------------------------------------------------------
+
+	// Initialize preferred display language:
+	// (note that 'locales.inc.php' has to be included *after* the call to the 'start_session()' function)
+	include 'includes/locales.inc.php'; // include the locales
+
+	// --------------------------------------------------------------------
 
 	// Clear any errors that might have been found previously:
 	$errors = array();
@@ -130,8 +138,8 @@
 	// '$submitAction' is only used to determine any 'delet' action! (where '$submitAction' = 'Delete Record')
 	// (otherwise, only '$recordAction' controls how to proceed)
 	$submitAction = $formVars['submit'];
-	if ($submitAction == "Delete Record") // *delete* record
-		$recordAction = "delet";
+	if (encodeHTML($submitAction) == $loc["ButtonTitle_DeleteRecord"]) // note that we need to HTML encode '$submitAction' for comparison with the HTML encoded locales
+		$recordAction = "delet"; // *delete* record
 
 
 	// now, check if the (logged in) user is allowed to perform the current record action (i.e., add, edit or delete a record):
@@ -363,8 +371,8 @@
 	// Validate the 'Call Number' field:
 	if (ereg("[@;]", $callNumberNameUserOnly))
 		$errors["callNumberNameUserOnly"] = "Your call number cannot contain the characters '@' and ';' (since they function as delimiters):"; // the user's personal reference ID cannot contain the characters '@' and ';' since they are used as delimiters (within or between call numbers)
-	elseif ($recordAction == "edit" AND !empty($callNumberNameUserOnly) AND !ereg("$loginEmail", $locationName) AND !ereg("^(Add|Remove)$", $locationSelectorName)) // if the user specified some reference ID within an 'edit' action -BUT- there's no existing call number for this user within the contents of the 'location' field -AND- the user doesn't want to add it either...
-		$errors["callNumberNameUserOnly"] = "You cannot specify a call number unless you add this record to your personal literature set! This can be done by setting the 'Location Field' popup below to 'Add'."; // warn the user that he/she has to set the Location Field popup to 'Add' if he want's to add this record to his personal literature set
+	elseif ($recordAction == "edit" AND !empty($callNumberNameUserOnly) AND !ereg("$loginEmail", $locationName) AND !ereg("^(add|remove)$", $locationSelectorName)) // if the user specified some reference ID within an 'edit' action -BUT- there's no existing call number for this user within the contents of the 'location' field -AND- the user doesn't want to add it either...
+		$errors["callNumberNameUserOnly"] = "You cannot specify a call number unless you add this record to your personal literature set! This can be done by setting the 'Location Field' popup below to 'add'."; // warn the user that he/she has to set the Location Field popup to 'add' if he want's to add this record to his personal literature set
 
 	// Validate the 'uploadFile' field:
 	// (whose file name characters must be within [a-zA-Z0-9+_.-] and which must not exceed
@@ -554,22 +562,23 @@
 
 
 	// manage 'location' field data:
-	if ((($locationSelectorName == "Add") OR ($locationSelectorName == "")) AND (!ereg("$loginEmail", $locationName))) // add the current user to the 'location' field (if he/she isn't listed already within the 'location' field):
+	if ((($locationSelectorName == "add") OR ($locationSelectorName == "")) AND (!ereg("$loginEmail", $locationName))) // add the current user to the 'location' field (if he/she isn't listed already within the 'location' field):
 	// note: if the current user is NOT logged in -OR- if any normal user is logged in, the value for '$locationSelectorName' will be always '' when performing an INSERT,
-	//       since the popup is fixed to 'Add' and disabled (which, in turn, will result in an empty value to be returned)
+	//       since the popup is fixed to 'add' and disabled (which, in turn, will result in an empty value to be returned)
 	{
-		if (ereg("^(" . $loc["your name &amp; email address will be filled in automatically"] . ")?$", $locationName)) // if the 'location' field is either completely empty -OR- does only contain the information string (that shows up on 'add' for normal users)
+		// if the 'location' field is either completely empty -OR- does only contain the information string (that shows up on 'add' for normal users):
+		if (ereg("^(" . $loc["your name & email address will be filled in automatically"] . ")?$", encodeHTML($locationName))) // note that we need to HTML encode '$locationName' for comparison with the HTML encoded locales
 			$locationName = ereg_replace("^.*$", "$currentUser", $locationName);
 		else // if the 'location' field does already contain some user content:
 			$locationName = ereg_replace("^(.+)$", "\\1; $currentUser", $locationName);
 	}
-	elseif ($locationSelectorName == "Remove") // remove the current user from the 'location' field:
+	elseif ($locationSelectorName == "remove") // remove the current user from the 'location' field:
 	{ // the only pattern that's really unique is the users email address, the user's name may change (since it can be modified by the user). This is why we dont use '$currentUser' here:
 		$locationName = ereg_replace("^[^;]*\( *$loginEmail *\) *; *", "", $locationName); // the current user is listed at the very beginning of the 'location' field
 		$locationName = ereg_replace(" *;[^;]*\( *$loginEmail *\) *", "", $locationName); // the current user occurs after some other user within the 'location' field
 		$locationName = ereg_replace("^[^;]*\( *$loginEmail *\) *$", "", $locationName); // the current user is the only one listed within the 'location' field
 	}
-	// else if '$locationSelectorName' == "Don't touch" -OR- if the user is already listed within the 'location' field, we just accept the contents of the 'location' field as entered by the user
+	// else if '$locationSelectorName' == "don't touch" -OR- if the user is already listed within the 'location' field, we just accept the contents of the 'location' field as entered by the user
 
 
 	// manage 'call_number' field data:
@@ -577,9 +586,9 @@
 	{
 		if (ereg("$loginEmail", $locationName)) // we only process the user's call number information if the current user is listed within the 'location' field:
 		{
-			// Note that, for normal users, we process the user's call number information even if the '$locationSelectorName' is NOT set to 'Add'.
-			// This is done, since the user should be able to update his/her personal reference ID while the '$locationSelectorName' is set to 'Don't touch'.
-			// If the '$locationSelectorName' is set to 'Remove', then any changes made to the personal reference ID will be discarded anyhow.
+			// Note that, for normal users, we process the user's call number information even if the '$locationSelectorName' is NOT set to 'add'.
+			// This is done, since the user should be able to update his/her personal reference ID while the '$locationSelectorName' is set to 'don't touch'.
+			// If the '$locationSelectorName' is set to 'remove', then any changes made to the personal reference ID will be discarded anyhow.
 	
 			// build a correct call number string for the current user & record:
 			if ($callNumberNameUserOnly == "") // if the user didn't enter any personal reference ID for this record...
@@ -597,7 +606,7 @@
 		}
 	}
 	else // if the admin is logged in:
-		if ($locationSelectorName == "Add") // we only add the admin's call number information if he/she did set the '$locationSelectorName' to 'Add'
+		if ($locationSelectorName == "add") // we only add the admin's call number information if he/she did set the '$locationSelectorName' to 'add'
 		{
 			if ($callNumberName == "") // if there's no call number info provided by the admin...
 				$callNumberName = $callNumberPrefix . " @ "; // ...insert the admin's call number prefix
@@ -615,7 +624,7 @@
 		}
 		// otherwise we simply use the information as entered by the admin
 
-	if ($locationSelectorName == "Remove") // remove the current user's call number from the 'call_number' field:
+	if ($locationSelectorName == "remove") // remove the current user's call number from the 'call_number' field:
 	{
 		$callNumberName = ereg_replace("^ *$callNumberPrefix *@ *[^@;]*; *", "", $callNumberName); // the user's call number is listed at the very beginning of the 'call_number' field
 		$callNumberName = ereg_replace(" *; *$callNumberPrefix *@ *[^@;]*", "", $callNumberName); // the user's call number occurs after some other call number within the 'call_number' field
