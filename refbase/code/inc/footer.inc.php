@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/footer.inc.php
 	// Created:    28-Jul-02, 11:30
-	// Modified:   27-May-06, 00:11
+	// Modified:   21-Jun-06, 22:09
 
 	// This is the footer include file.
 	// It contains functions that build the footer
@@ -42,18 +42,20 @@
 		global $loginWelcomeMsg; // these variables are globally defined in function 'showLogin()' in 'include.inc.php'
 		global $loginStatus;
 		global $loginLinks;
+
+		global $loc; // '$loc' is made globally available in 'core.php'
 ?>
 
 <hr align="center" width="95%">
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds the footer">
 <tr>
-	<td class="small" width="105"><a href="index.php" title="goto main page">Home</a></td>
+	<td class="small" width="105"><a href="index.php" title="<?php echo $loc["LinkTitle_Home"]; ?>"><?php echo $loc["Home"]; ?></a></td>
 	<td class="small" align="center">
-		<a href="show.php?records=all" title="show all records in the database">Show All</a>
+		<a href="show.php?records=all" title="<?php echo $loc["LinkTitle_ShowAll"]; ?>"><?php echo $loc["ShowAll"]; ?></a>
 		&nbsp;|&nbsp;
-		<a href="simple_search.php" title="search the main fields of the database">Simple Search</a>
+		<a href="simple_search.php" title="<?php echo $loc["LinkTitle_SimpleSearch"]; ?>"><?php echo $loc["Simple"]; ?> <?php echo $loc["Search"]; ?></a>
 		&nbsp;|&nbsp;
-		<a href="advanced_search.php" title="search all fields of the database">Advanced Search</a>
+		<a href="advanced_search.php" title="<?php echo $loc["LinkTitle_AdvancedSearch"]; ?>"><?php echo $loc["Advanced"]; ?> <?php echo $loc["Search"]; ?></a>
 		&nbsp;|&nbsp;<?php
 
 		// -------------------------------------------------------
@@ -62,19 +64,25 @@
 		// ... include a link to 'sql_search.php':
 ?>
 
-		<a href="sql_search.php" title="search the database by use of a SQL query">SQL Search</a>
+		<a href="sql_search.php" title="<?php echo $loc["LinkTitle_SQLSearch"]; ?>">SQL <?php echo $loc["Search"]; ?></a>
 		&nbsp;|&nbsp;<?php
 		}
 
 		// -------------------------------------------------------
 ?>
 
-		<a href="library_search.php" title="search the library of the <?php echo encodeHTML($hostInstitutionName); ?>">Library Search</a>
+		<a href="library_search.php" title="<?php echo $loc["LinkTitle_LibrarySearch"]; ?> <?php echo encodeHTML($hostInstitutionName); ?>"><?php echo $loc["Library"]; ?> <?php echo $loc["Search"]; ?></a>
 	</td>
 	<td class="small" align="right" width="105"><?php echo date('D, j M Y'); ?></td>
 </tr>
 <tr>
-	<td class="small" width="105"><a href="<?php echo $helpResourcesURL; ?>" title="display help">Help</a></td>
+	<td class="small" width="105"><?php
+
+		if (!empty($helpResourcesURL))
+		{
+?><a href="<?php echo $helpResourcesURL; ?>" title="<?php echo $loc["LinkTitle_Help"]; ?>"><?php echo $loc["Help"]; ?></a><?php
+		}
+?></td>
 	<td class="small" align="center"><?php
 
 		// -------------------------------------------------------
@@ -83,7 +91,7 @@
 		// ... include a link to 'record.php?recordAction=add...':
 ?>
 
-		<a href="record.php?recordAction=add&amp;oldQuery=<?php echo rawurlencode($oldQuery); ?>" title="add a record to the database">Add Record</a>
+		<a href="record.php?recordAction=add&amp;oldQuery=<?php echo rawurlencode($oldQuery); ?>" title="<?php echo $loc["LinkTitle_AddRecord"]; ?>"><?php echo $loc["AddRecord"]; ?></a>
 		&nbsp;|&nbsp;<?php
 		}
 
@@ -93,7 +101,7 @@
 		// ... include a link to 'import.php':
 ?>
 
-		<a href="import.php" title="import records into the database">Import</a>
+		<a href="import.php" title="<?php echo $loc["LinkTitle_Import"]; ?>"><?php echo $loc["Import"]; ?></a>
 		&nbsp;|&nbsp;<?php
 		}
 
@@ -103,7 +111,7 @@
 		// ... include a link to 'show.php':
 ?>
 
-		<a href="show.php" title="display details for a particular record by entering its database serial number">Show Record</a>
+		<a href="show.php" title="<?php echo $loc["LinkTitle_ShowRecord"]; ?>"><?php echo $loc["Show"]; ?> <?php echo $loc["Record"]; ?></a>
 		&nbsp;|&nbsp;<?php
 		}
 
@@ -113,7 +121,7 @@
 		// ... include a link to 'extract.php':
 ?>
 
-		<a href="extract.php" title="extract citations from a text and build an appropriate reference list">Extract Citations</a><?php
+		<a href="extract.php" title="<?php echo $loc["LinkTitle_ExtractCitations"]; ?>"><?php echo $loc["ExtractCitations"]; ?></a><?php
 		}
 
 		// -------------------------------------------------------
