@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   22-Jun-06, 02:09
+	// Modified:   16-Jul-06, 12:31
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -272,7 +272,7 @@
 	// get information how exported data shall be returned:
 	// - 'text' => return data with mime type 'text/plain'
 	// - 'html' => return data with mime type 'text/html'
-	// - 'xml' => return data with mime type 'text/xml'
+	// - 'xml' => return data with mime type 'application/xml'
 	// - 'rss' => return data with mime type 'application/rss+xml'
 	// - 'file' => return data as downloadable file
 	// - 'email' => send data as email (to the user's login email address)
@@ -686,6 +686,7 @@
 	{
 		global $oldQuery; // This is required since the 'add record' link gets constructed outside this function, otherwise it would still contain the older query URL!)
 		global $searchReplaceActionsArray; // these variables are defined in 'ini.inc.php'
+		global $databaseBaseURL;
 		global $showLinkTypesInListView;
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
@@ -850,6 +851,9 @@
 						else
 							echo $row["serial"];
 						echo "\" title=\"select this record\">";
+
+						// add <abbr> block which works as a microformat that allows applications to identify objects on web pages; see <http://unapi.info/specs/> for more info
+						echo "<div class=\"unapi\"><abbr class=\"unapi-id\" title=\"" . $databaseBaseURL . "show.php?record=" . $row["serial"] . "\"></abbr></div>";
 
 						if (!empty($row["orig_record"]))
 						{
@@ -1311,7 +1315,8 @@
 
 					// Print out an URL that links directly to this record:
 					$recordData .= "\n<tr>" // start a new TR (Table Row)
-								. "\n\t<td colspan=\"$ColspanFields\" align=\"center\" class=\"smaller\"><a href=\"" . $databaseBaseURL . "show.php?record=" . $row["serial"] . "\" title=\"copy this URL to directly link to this record\">Permanent link to this record</a></td>"
+								. "\n\t<td colspan=\"$ColspanFields\" align=\"center\" class=\"smaller\"><a href=\"" . $databaseBaseURL . "show.php?record=" . $row["serial"] . "\" title=\"copy this URL to directly link to this record\">Permanent link to this record</a>"
+								. "<div class=\"unapi\"><abbr class=\"unapi-id\" title=\"" . $databaseBaseURL . "show.php?record=" . $row["serial"] . "\"></abbr></div></td>" // re <abbr> tag see <http://unapi.info/specs/>
 								. "\n</tr>";
 
 					// Append a divider line if it's not the last (or only) record on the page:
@@ -1398,19 +1403,19 @@
 		$exportText = exportRecords($result, $rowOffset, $showRows, $exportStylesheet, $displayType); // function 'exportRecords()' is defined in the export format file given in '$exportFormatFile' (which, in turn, must reside in the 'export' directory of the refbase root directory)
 
 		// adjust the mime type and return exported data based on the key given in '$exportType':
-		if ($exportType == "text")
+		if (eregi("text", $exportType))
 			$exportContentType = "text/plain";
 
 		elseif (eregi("^(html|email)$", $exportType))
 			$exportContentType = "text/html";
 
-		elseif ($exportType == "xml")
-			$exportContentType = "text/xml";
+		elseif (eregi("xml", $exportType))
+			$exportContentType = "application/xml";
 
-		elseif ($exportType == "rss")
+		elseif (eregi("rss", $exportType))
 			$exportContentType = "application/rss+xml";
 
-		elseif ($exportType == "file") // attempt to set mime type & download file name according to the chosen export format:
+		elseif (eregi("file", $exportType)) // attempt to set mime type & download file name according to the chosen export format:
 		{
 			$exportContentType = "text/plain"; // set the default mime type
 
@@ -1418,7 +1423,7 @@
 			// contains 'XML' within its name!). This is in NO way fool proof and should be handled in a better way!
 			if (eregi("XML", $exportFormat)) // if the export format name contains 'XML'
 			{
-				$exportContentType = "text/xml";
+				$exportContentType = "application/xml";
 
 				if (eregi("MODS", $exportFormat)) // if the export format name contains 'MODS'
 					$exportFileName = "mods_export.xml";
@@ -1465,13 +1470,13 @@
 		// set the appropriate mimetype & set the character encoding to the one given in '$contentTypeCharset':
 		setHeaderContentType($exportContentType, $contentTypeCharset); // function 'setHeaderContentType()' is defined in 'include.inc.php'
 
-		if ($exportType == "file") // instruct the browser to download the resulting XML file:
+		if (eregi("file", $exportType)) // instruct the browser to download the resulting XML file:
 			header('Content-Disposition: attachment; filename="' . $exportFileName . '"'); // Note that this doesn't seem to work with all browsers (notably not with Safari & OmniWeb on MacOSX Panther, but it does work with Mozilla & Camino as well as Safari on Tiger)
 
 
 		elseif (eregi("^(html|email)$", $exportType)) // output data as HTML, wrapped into <pre>...</pre> tags:
 		{
-			if ($exportType == "email") // send exported data to the user's login email address:
+			if (eregi("email", $exportType)) // send exported data to the user's login email address:
 			{
 				$emailRecipient = $_SESSION['loginEmail'];
 				$emailSubject = "Your records from the " . $officialDatabaseName . " (exported to " . $exportFormat . " format)";
@@ -1558,27 +1563,27 @@
 			$citationData = citeRecords($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType); // function 'citeRecordsHTML()' is defined in 'cite.inc.php'
 
 
-			if ($citeType == "RTF") // output references as RTF file
+			if (eregi("^RTF$", $citeType)) // output references as RTF file
 			{
 				$citeContentType = "application/rtf";
 				$citeFileName = "citations.rtf";
 			}
-			elseif ($citeType == "PDF") // output references as PDF file
+			elseif (eregi("^PDF$", $citeType)) // output references as PDF file
 			{
 				$citeContentType = "application/pdf";
 				$citeFileName = "citations.pdf";
 			}
-			elseif ($citeType == "LaTeX") // output references as LaTeX file
+			elseif (eregi("^LaTeX$", $citeType)) // output references as LaTeX file
 			{
 				$citeContentType = "application/x-latex";
 				$citeFileName = "citations.tex";
 			}
-			elseif ($citeType == "Markdown") // output references as Markdown TEXT (a plain text formatting syntax)
+			elseif (eregi("^Markdown$", $citeType)) // output references as Markdown TEXT (a plain text formatting syntax)
 			{
 				$citeContentType = "text/plain";
 				$citeFileName = "citations.txt";
 			}
-			elseif ($citeType == "ASCII") // output references as plain TEXT
+			elseif (eregi("^ASCII$", $citeType)) // output references as plain TEXT
 			{
 				$citeContentType = "text/plain";
 				$citeFileName = "citations.txt";
