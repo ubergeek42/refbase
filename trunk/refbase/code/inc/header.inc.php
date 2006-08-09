@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/header.inc.php
 	// Created:    28-Jul-02, 11:21
-	// Modified:   21-Jun-06, 01:10
+	// Modified:   15-Jul-06, 17:42
 
 	// This is the header include file.
 	// It contains functions that provide the HTML header
@@ -66,6 +66,9 @@
 	<link rel="alternate" type="application/rss+xml" href="<?php echo $rssURL['href']; ?>" title="<?php echo $rssURL['title']; ?>"><?php
 			}
 		}
+?>
+
+	<link rel="unapi-server" type="application/xml" title="unAPI" href="unapi.php"><?php
 
 		if (!empty($includeJavaScriptFile))
 		{
