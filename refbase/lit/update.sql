@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./update.sql
 # Created:    01-Mar-05, 16:54
-# Modified:   10-Jun-06, 22:19
+# Modified:   23-Jun-06, 21:35
 
 # This MySQL database structure file will update any refbase v0.8.0 database to v0.9.0
 
@@ -69,7 +69,7 @@ INSERT INTO `languages` VALUES (NULL, 'fr', 'true', '3');
 # update table `styles`
 #
 
-UPDATE styles SET style_spec = REPLACE(style_spec,"cite_","styles/cite_") WHERE style_spec RLIKE "^cite_";
+UPDATE `styles` SET `style_spec` = REPLACE(`style_spec`,"cite_","styles/cite_") WHERE `style_spec` RLIKE "^cite_";
 
 INSERT INTO `styles` VALUES (NULL, 'Ann Glaciol', 'true', 'styles/cite_AnnGlaciol_JGlaciol.php', '5', 1),
 (NULL, 'J Glaciol', 'true', 'styles/cite_AnnGlaciol_JGlaciol.php', '6', 1);
