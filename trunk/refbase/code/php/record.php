@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./record.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   21-Jun-06, 17:48
+	// Modified:   01-Aug-06, 21:11
 
 	// Form that offers to add
 	// records or edit/delete
@@ -66,7 +66,7 @@
 		$recordAction = ""; // if the 'recordAction' parameter wasn't set we set the '$recordAction' variable to the empty string ("") to prevent 'Undefined index: recordAction...' notification messages
 
 	if (isset($_REQUEST['mode']))
-		$mode = $_REQUEST['mode']; // check whether the user wants to add a record by use of an *import* form (e.g., the parameter "mode=import" will be set by 'import.php' and 'import_csa.php')
+		$mode = $_REQUEST['mode']; // check whether the user wants to add a record by use of an *import* form (e.g., the parameter "mode=import" will be set by 'import_modify.php' and 'import_csa_modify.php')
 	else
 		$mode = ""; // if the 'mode' parameter wasn't set we set the '$mode' variable to the empty string ("") to prevent 'Undefined index: mode...' notification messages
 
@@ -251,7 +251,7 @@
 					else
 						$callNumberNameUserOnly = "";
 				}
-				elseif ((isset($loginEmail)) AND ($loginEmail != $adminLoginEmail)) // admin logged in
+				elseif ((isset($loginEmail)) AND ($loginEmail == $adminLoginEmail)) // admin logged in
 				{
 					$callNumberNameUserOnly = ""; // the 'call_number' field will be empty if no user is logged in (note that '$callNumberNameUserOnly' won't be used at all, if the admin is logged in)
 					$callNumberName = encodeHTML($callNumberName); // if the admin is logged in we display the full contents of the 'call_number' field, so we'll need to HTML encode the data
@@ -505,11 +505,25 @@
 				$rawLocationName = "";
 
 				if (isset($_REQUEST['call_number']))
-					$callNumberName = encodeHTML($_REQUEST['call_number']);
+				{
+					// if the data did originate from an import form -AND- (if the user isn't logged in -OR- any normal user is logged in (not the admin))...
+					if ($recordAction == "add" AND $mode == "import" AND ((!isset($loginEmail)) OR ((isset($loginEmail)) AND ($loginEmail != $adminLoginEmail))))
+					{
+						$callNumberName = "";
+						$callNumberNameUserOnly = encodeHTML($_REQUEST['call_number']); // for import, we assume that the contents of the call number field fully belong to the current user
+					}
+					else // if the data didn't originate from an import form or if the admin is logged in...
+					{
+						$callNumberName = encodeHTML($_REQUEST['call_number']);
+						$callNumberNameUserOnly = "";
+					}
+				}
 				else
+				{
 					$callNumberName = "";
+					$callNumberNameUserOnly = "";
+				}
 
-				$callNumberNameUserOnly = "";
 				$serialNo = $serialNo; // supply some generic info: "(not assigned yet)" [as defined at the top of this script]
 
 				if (isset($_REQUEST['type']))
@@ -789,7 +803,7 @@
 		// to mess with other user's personal call numbers. Instead, normal users will always only see their own id number within the 'call_number' field.
 		// This should also avoid confusion how this field should/must be edited properly. Of course, the full contents of the 'call_number' field must be
 		// preserved, therefore we include them within a hidden form tag:
-		echo "\n<input type=\"hidden\" name=\"callNumberName\" value=\"" . rawurlencode($callNumberName) . "\">"; // ...include the *full* contents of the 'call_number' field (if nobody -OR- a normal user is logged in)
+		echo "\n<input type=\"hidden\" name=\"callNumberName\" value=\"" . rawurlencode($callNumberName) . "\">"; // ...include the *full* contents of the 'call_number' field
 
 	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" width=\"600\" summary=\"This table holds a form that offers to add records or edit existing ones\">"
 			. "\n<tr>"
