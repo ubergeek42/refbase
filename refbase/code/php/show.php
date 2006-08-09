@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   19-Jun-06, 13:34
+	// Modified:   16-Jul-06, 11:51
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -119,7 +119,7 @@
 	// for export, get information how exported data shall be returned; possible values:
 	// - 'text' => return data with mime type 'text/plain'
 	// - 'html' => return data with mime type 'text/html
-	// - 'xml' => return data with mime type 'text/xml
+	// - 'xml' => return data with mime type 'application/xml
 	// - 'rss' => return data with mime type 'application/rss+xml'
 	// - 'file' => return data as downloadable file
 	// - 'email' => send data as email (to the user's login email address)
