@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sru.php
 	// Created:    17-May-05, 16:22
-	// Modified:   05-Feb-06, 18:59
+	// Modified:   16-Jul-06, 11:50
 
 	// This script serves as a (faceless) routing page which takes a SRU query and
 	// converts the query into a native refbase query which is then passed to 'search.php'.
@@ -170,7 +170,7 @@
 	$exportFormat = "SRW XML";
 	$exportType = "xml";
 	$showLinks = "1";
-	$exportContentType = "text/xml";
+	$exportContentType = "application/xml";
 
 	// -------------------------------------------------------------------------------------------------------------------
 
