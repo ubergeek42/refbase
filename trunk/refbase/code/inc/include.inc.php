@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   21-Jun-06, 23:36
+	// Modified:   16-Aug-06, 10:52
 
 	// This file contains important
 	// functions that are shared
@@ -47,6 +47,8 @@
 		global $lastLogin;
 //		global $referer;
 
+		global $connection;
+
 		// Initialize the session:
 		if (!isset($_SESSION["sessionID"]))
 		{
@@ -59,7 +61,9 @@
 		}
 
 		// Get the MySQL version and save it to a session variable:
-		if (!isset($_SESSION['mysqlVersion']))
+		// Note: we only check for the MySQL version if a connection has been established already. Otherwise, a non-existing MySQL user
+		//       (or incorrect MySQL pwd) would prevent 'install.php' or 'error.php' from loading correctly when setting up a new refbase database.
+		if (!isset($_SESSION['mysqlVersion']) AND isset($connection))
 		{
 			$mysqlVersion = getMySQLversion();
 			saveSessionVariable("mysqlVersion", $mysqlVersion);
@@ -369,9 +373,9 @@
 		$recordSerialsString = "&marked[]=" . $recordSerialsString; // prefix also the very first record serial with "&marked[]="
 
 		// based on the refering script we adjust the parameters that get included in the link:
-		if (ereg(".*(index|simple_search|advanced_search|sql_search|library_search|extract|users|user_details|user_receipt)\.php", $_SERVER["SCRIPT_NAME"]))
-			$referer = $_SERVER["SCRIPT_NAME"]; // we don't need to provide any parameters if the user clicked login/logout on the main page or any of the search pages (we just need to re-locate
-												// back to these pages after successful login/logout). Logout on 'users.php', 'user_details.php' or 'user_receipt.php' will redirect to 'index.php'.
+		if (ereg(".*(index|install|update|simple_search|advanced_search|sql_search|library_search|extract|users|user_details|user_receipt)\.php", $_SERVER["SCRIPT_NAME"]))
+			$referer = $_SERVER["SCRIPT_NAME"]; // we don't need to provide any parameters if the user clicked login/logout on the main page, the install/update page or any of the search pages (we just need
+												// to re-locate back to these pages after successful login/logout). Logout on 'install.php', 'users.php', 'user_details.php' or 'user_receipt.php' will redirect to 'index.php'.
 
 		elseif (ereg(".*(record|receipt)\.php", $_SERVER["SCRIPT_NAME"]))
 			$referer = $_SERVER["SCRIPT_NAME"] . "?" . "recordAction=" . $recordAction . "&serialNo=" . $serialNo . "&headerMsg=" . rawurlencode($headerMsg) . "&oldQuery=" . rawurlencode($oldQuery);
@@ -3445,84 +3449,88 @@ EOF;
 							$SplitValues,
 							$SplitPattern)
 	{
-	$defaultWithinResultSet = FALSE;
+		$defaultWithinResultSet = FALSE;
 
-	// Query to find distinct values of $columnName
-	// in $refsTableName
-	if (isset($_SESSION['loginEmail'])) // if a user is logged in
-		if ($RestrictToField == "")
-			 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName LEFT JOIN $userDataTableName ON $refsTablePrimaryKey = $userDataTablePrimaryKey AND $userDataTableUserID = $userDataTableUserIDvalue ORDER BY $columnName";
-		else
-			 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName LEFT JOIN $userDataTableName ON $refsTablePrimaryKey = $userDataTablePrimaryKey AND $userDataTableUserID = $userDataTableUserIDvalue WHERE $RestrictToField RLIKE $RestrictToFieldContents ORDER BY $columnName";
-	else // if NO user is logged in
-		if ($RestrictToField == "")
-			 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName ORDER BY $columnName";
-		else
-			 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName WHERE $RestrictToField RLIKE $RestrictToFieldContents ORDER BY $columnName";
+		// Query to find distinct values of '$columnName' in '$refsTableName':
+		if (isset($_SESSION['loginEmail'])) // if a user is logged in
+		{
+			if ($RestrictToField == "")
+				 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName LEFT JOIN $userDataTableName ON $refsTablePrimaryKey = $userDataTablePrimaryKey AND $userDataTableUserID = $userDataTableUserIDvalue ORDER BY $columnName";
+			else
+				 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName LEFT JOIN $userDataTableName ON $refsTablePrimaryKey = $userDataTablePrimaryKey AND $userDataTableUserID = $userDataTableUserIDvalue WHERE $RestrictToField RLIKE $RestrictToFieldContents ORDER BY $columnName";
+		}
+		else // if NO user is logged in
+		{
+			if ($RestrictToField == "")
+				 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName ORDER BY $columnName";
+			else
+				 $distinctQuery = "SELECT DISTINCT $columnName FROM $refsTableName WHERE $RestrictToField RLIKE $RestrictToFieldContents ORDER BY $columnName";
+		}
 
-	// Run the distinctQuery on the database through the connection:
-	$resultId = queryMySQLDatabase($distinctQuery, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+		// Run the distinctQuery on the database through the connection:
+		$resultId = queryMySQLDatabase($distinctQuery, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
-	// Retrieve all distinct values
-	$i = 0;
-	while ($row = @ mysql_fetch_array($resultId))
-		if ($SplitValues) // If desired, split field contents into substrings
+		// Retrieve all distinct values:
+		$i = 0;
+		$resultBuffer = array();
+
+		while ($row = @ mysql_fetch_array($resultId))
+		{
+			if ($SplitValues) // if desired, split field contents into substrings
 			{
-				// split field data on the pattern specified in $SplitPattern:
-				$splittedFieldData = split($SplitPattern, $row[$columnName]); // yields an array as a result
-				// ... copy all array elements to end of $resultBuffer:
+				// split field data on the pattern specified in '$SplitPattern':
+				$splittedFieldData = split($SplitPattern, $row[$columnName]);
+				// ... copy all array elements to end of '$resultBuffer':
 				foreach($splittedFieldData as $element)
 					$resultBuffer[$i++] = $element;
 			}
-		else // copy field data (as is) to end of $resultBuffer:
-			$resultBuffer[$i++] = $row[$columnName];
-
-	if ($SplitValues) // (otherwise, data are already DISTINCT and ORDERed BY!)
-		{
-			// remove duplicate values from array:
-			$resultBuffer = array_unique($resultBuffer);
-			// sort in ascending order:
-			sort($resultBuffer);
+			else // copy field data (as is) to end of '$resultBuffer':
+				$resultBuffer[$i++] = $row[$columnName];
 		}
 
-	// Start the select widget
-	echo "\n\t\t<select name=\"$pulldownName\">";
+		if ($SplitValues) // (otherwise, data are already DISTINCT and ORDERed BY!)
+		{
+			if (!empty($resultBuffer))
+			{
+				// remove duplicate values from array:
+				$resultBuffer = array_unique($resultBuffer);
+				// sort in ascending order:
+				sort($resultBuffer);
+			}
+		}
 
-	// Is there an additional option?
-	if (isset($additionalOptionDisplay))
-		// Yes, but is it the default option?
-		if ($defaultValue == $additionalOptionDisplay)
-			// Show the additional option as selected
-			echo "\n\t\t\t<option value=\"$additionalOption\" selected>$additionalOptionDisplay</option>";
-		else
-			// Just show the additional option
-			echo "\n\t\t\t<option value=\"$additionalOption\">$additionalOptionDisplay</option>";
+		// Start the select widget:
+		echo "\n\t\t<select name=\"$pulldownName\">";
 
-	// check for a default value
-	if (isset($defaultValue))
-	{
-		// Yes, there's a default value specified
+		// Is there an additional option?
+		if (isset($additionalOptionDisplay))
+		{
+			// yes, but is it the default option?
+			if ($defaultValue == $additionalOptionDisplay) // show the additional option as selected
+				echo "\n\t\t\t<option value=\"$additionalOption\" selected>$additionalOptionDisplay</option>";
+			else // just show the additional option
+				echo "\n\t\t\t<option value=\"$additionalOption\">$additionalOptionDisplay</option>";
+		}
 
-		// Check if the defaultValue is in the
-		// database values
-		foreach ($resultBuffer as $result)
-			if ($result == $defaultValue)
-				// Yes, show as selected
-				echo "\n\t\t\t<option selected>$result</option>";
-			else
-				// No, just show as an option
+		// Check for a default value:
+		if (isset($defaultValue))
+		{
+			// check if the defaultValue is in the database values
+			foreach ($resultBuffer as $result)
+			{
+				if ($result == $defaultValue) // yes, show as selected
+					echo "\n\t\t\t<option selected>$result</option>";
+				else // no, just show as an option
+					echo "\n\t\t\t<option>$result</option>";
+			}
+		}
+		else // no default value
+		{
+			foreach ($resultBuffer as $result) // show database values as options
 				echo "\n\t\t\t<option>$result</option>";
-	}	// end if defaultValue
-	else
-	{
-		// No defaultValue
-
-		// Show database values as options
-		foreach ($resultBuffer as $result)
-			echo "\n\t\t\t<option>$result</option>";
+		}
+		echo "\n\t\t</select>";
 	}
-	echo "\n\t\t</select>";
-	} // end of function
 
 	// --------------------------------------------------------------------
 
