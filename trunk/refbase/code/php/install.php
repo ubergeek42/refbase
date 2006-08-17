@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./install.php
 	// Created:    07-Jan-04, 22:00
-	// Modified:   22-Jun-06, 01:16
+	// Modified:   17-Aug-06, 18:44
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -21,6 +21,7 @@
 	include 'includes/header.inc.php'; // include header
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
+	include 'includes/install.inc.php'; // include install/update functions
 	include 'initialize/ini.inc.php'; // include common variables
 
 	// --------------------------------------------------------------------
@@ -101,28 +102,24 @@
 		{
 			// Reset the '$formVars' variable (since we're providing the default values):
 			$formVars = array();
+			$pathSeparator = PATH_SEPARATOR;
+			$pathItems = explode($pathSeparator, getenv("PATH"));
 
-			// provide the default values:
+			// Provide default values for the form fields:
 			$formVars["adminUserName"] = "root";
 			$formVars["adminPassword"] = "";
-			$formVars["pathToMYSQL"] = "/usr/local/mysql/bin/mysql";
 			$formVars["databaseStructureFile"] = "./install.sql";
 			
-			// Try to find bibutils
-			// If this is useful, it should probably be broken out as a function which both the install & update scripts can access
-			$formVars["pathToBibutils"] = "";
-			$sep = PATH_SEPARATOR;
-			$bibutilsLocations = array("/usr/bin", "/usr/local/bin", ".", "./refbase") + explode($sep, getenv("PATH"));
+			// Try to find the 'mysql' command line interpreter:
+			$mysqlLocations = array_unique(array_merge($pathItems, array("/Program Files/MySQL/bin", "/wamp/mysql/bin", "/Program Files/xampp/mysql/bin", "/www/xampp/mysql/bin", "/xampp/mysql/bin", "/apachefriends/xampp/mysql/bin", "/usr/local/mysql/bin", "/usr/local/bin/mysql/bin", "/usr/bin/mysql/bin", "/usr/mysql/bin")));
+			$mysqlNames = array("mysql", "mysql.exe");
+			$formVars["pathToMYSQL"] = locateFile($mysqlLocations, $mysqlNames, false); // function 'locateFile()' is defined in 'install.inc.php'
+
+			// Try to find the 'bibutils' programs:
+			$bibutilsLocations = array_unique(array_merge($pathItems, array("/usr/bin", "/usr/local/bin", ".", "./refbase", "./bibutils")));
 			// We'll only check for one program to save time (and because, we currently don't allow the script to have a subset of the functionality provided by bibutils)
 			$bibutilsNames = array("xml2bib", "xml2bib.exe");
-			foreach ($bibutilsLocations as $location)
-			{
-				foreach  ($bibutilsNames as $exe)
-				{
-					if(file_exists("$location/$exe"))
-						$formVars["pathToBibutils"] = realpath($location)."/";
-				}
-			}
+			$formVars["pathToBibutils"] = locateFile($bibutilsLocations, $bibutilsNames, true);
 
 			$formVars["defaultCharacterSet"] = "latin1";
 		}
@@ -193,7 +190,7 @@
 
 			<input type="text" name="adminUserName" value="<?php echo $formVars["adminUserName"]; ?>" size="30">
 		</td>
-		<td valign="top">Give the name of an administrative user that has full access to the MySQL admin database. Often, this is the 'root' user.</td>
+		<td valign="top">Give the name of an administrative user that has full access to the MySQL admin database. Often, this is the <em>root</em> user.</td>
 	</tr>
 	<tr>
 		<td valign="top"><b>MySQL Admin Password:</b></td>
@@ -215,7 +212,7 @@
 
 			<input type="text" name="pathToMYSQL" value="<?php echo $formVars["pathToMYSQL"]; ?>" size="30">
 		</td>
-		<td valign="top">Specify the full path to the 'mysql' command line interpreter. The given path represents a common location on unix systems, but yours may vary.</td>
+		<td valign="top">Specify the full path to the <em>mysql</em> command line interpreter. The install script attempts to locate the <em>mysql</em> program for you. If the field is empty, please enter the full path manually.</td>
 	</tr>
 	<tr>
 		<td valign="top"><b>Path to the database structure file:</b></td>
@@ -231,7 +228,7 @@
 
 			<input type="text" name="pathToBibutils" value="<?php echo $formVars["pathToBibutils"]; ?>" size="30">
 		</td>
-		<td valign="top"><a href="http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html" title="bibutils home page">bibutils</a> provides additional import and export funtionality to refbase.  It is optional, but highly recommended.  The install script attempts to locate bibutils for you.  If you can't access bibutils from your path, please fill this value in manually (and, if you think other people might have bibutils installed to the same path, report it to the refbase developers).  The path must end with a slash!</td>
+		<td valign="top"><a href="http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html" target="top" title="bibutils home page"><em>bibutils</em></a> provides additional import and export funtionality to refbase. It is optional, but highly recommended. The install script attempts to locate <em>bibutils</em> for you. If you can't access <em>bibutils</em> from your path, please fill this value in manually (and, if you think other people might have <em>bibutils</em> installed to the same path, <a href="http://wiki.refbase.net/index.php/RefbaseWiki:Community_Portal" target="top" title="refbase forums &amp; mailinglists">report</a> it to the refbase developers). The path must end with a slash!</td>
 	</tr>
 	<tr>
 		<td valign="top"><b>Default character set:</b></td>
@@ -242,14 +239,14 @@
 				<option<?php echo $unicodeCharacterSetSelected; ?>>utf8</option>
 			</select>
 		</td>
-		<td valign="top">Specify the default character set for the MySQL database used by refbase. Note that 'utf8' (Unicode) requires MySQL 4.1.x or greater, otherwise 'latin1' (i.e., 'ISO-8859-1 West European') will be used by default.</td>
+		<td valign="top">Specify the default character set for the MySQL database used by refbase. Note that <em>utf8</em> (Unicode) requires MySQL 4.1.x or greater, otherwise <em>latin1</em> (i.e., ISO-8859-1 West European) will be used by default.</td>
 	</tr>
 	<tr>
 		<td valign="top">&nbsp;</td>
 		<td valign="top" align="right">
 			<input type="submit" name="submit" value="Install">
 		</td>
-		<td valign="top"><span class="warning">CAUTION:</span> Note that, if there's already an existing database with the name specified in <em>$databaseName</em>, clicking the <em>Install</em> button will overwrite ALL data in that database!</td>
+		<td valign="top"><span class="warning">CAUTION:</span> Note that, if there's already an existing refbase database with the name specified in <em>$databaseName</em>, clicking the <em>Install</em> button will overwrite ALL data in that database! If you'd like to install the refbase tables into another existing database, you must ensure that there are no table name conflicts (<a href="http://wiki.refbase.net/index.php/Installing_refbase#Installation_over_an_existing_database" target="top" title="howto install refbase over an existing database">more info</a>).</td>
 	</tr>
 </table>
 </form><?php
@@ -271,7 +268,7 @@
 		// --------------------------------------------------------------------
 
 		// Clear any errors that might have been found previously:
-			$errors = array();
+		$errors = array();
 
 		// Write the (POST) form variables into an array:
 		foreach($_POST as $varname => $value)
@@ -389,7 +386,17 @@
 
 		// First, check if we're a dealing with MySQL version 4.1.x or greater:
 		// (MySQL 4.1.x is required if the refbase MySQL database/tables shall be installed using Unicode/UTF-8 as default character set)
-		$mysqlVersion = $_SESSION['mysqlVersion']; // the MySQL version is saved to a session variable in function 'start_session()'
+		$queryCheckVersion = "SELECT VERSION()";
+
+		// Run the version check query on the mysql database through the connection:
+		if (!($result = @ mysql_query ($queryCheckVersion, $connection)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to query the MySQL version:", "");
+
+		// Extract result:
+		$row = mysql_fetch_row($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
+		$mysqlVersionString = $row[0]; // extract the contents of the first (and only) row (returned version string will be something like "4.0.20-standard" etc.)
+		$mysqlVersion = preg_replace("/^(\d+\.\d+).+/", "\\1", $mysqlVersionString); // extract main version number (e.g. "4.0") from version string
 
 		// --------------------------------------------------------------------
 
