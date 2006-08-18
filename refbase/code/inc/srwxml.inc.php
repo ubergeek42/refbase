@@ -9,10 +9,10 @@
 	//
 	// File:       ./includes/srwxml.inc.php
 	// Author:     Matthias Steffens <mailto:refbase@extracts.de> and
-	//             Richard Karnesky <mailto:karnesky@northwestern.edu>
+	//             Richard Karnesky <mailto:karnesky@gmail.com>
 	//
 	// Created:    17-May-05, 16:38
-	// Modified:   09-Jun-06, 02:20
+	// Modified:   16-Aug-06, 18:19
 
 	// This include file contains functions that'll export records to SRW XML.
 	// Requires ActiveLink PHP XML Package, which is available under the GPL from:

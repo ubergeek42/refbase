@@ -8,10 +8,10 @@
   //             License for more details.
   //
   // File:       ./includes/modsxml.inc.php
-  // Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
+  // Author:     Richard Karnesky <mailto:karnesky@gmail.com>
   //
   // Created:    02-Oct-04, 12:00
-  // Modified:   04-Jun-06, 01:52
+  // Modified:   16-Aug-06, 18:19
 
   // This include file contains functions that'll export records to MODS XML.
   // Requires ActiveLink PHP XML Package, which is available under the GPL from:

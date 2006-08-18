@@ -8,10 +8,10 @@
 	//             License for more details.
 	//
 	// File:       ./export/export_modsxml.php
-	// Author:     Richard Karnesky <mailto:karnesky@northwestern.edu>
+	// Author:     Richard Karnesky <mailto:karnesky@gmail.com>
 	//
 	// Created:    02-Oct-04, 12:00
-	// Modified:   29-Oct-05, 17:16
+	// Modified:   16-Aug-06, 18:18
 
 	// This exports MODS XML. This file must reside in the 'export' directory of the refbase root directory.
 	// It uses functions from include file 'modsxml.inc.php' that requires the ActiveLink PHP XML Package,
