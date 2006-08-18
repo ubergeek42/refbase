@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/cite.inc.php
 	// Created:    25-May-06, 15:19
-	// Modified:   22-Jun-06, 17:11
+	// Modified:   11-Aug-06, 17:11
 
 	// This file contains functions
 	// that are used when outputting
@@ -19,9 +19,9 @@
 	include 'includes/transtab_refbase_ascii.inc.php'; // include refbase markup -> plain text search & replace patterns
 
 	if ($contentTypeCharset == "UTF-8") // variable '$contentTypeCharset' is defined in 'ini.inc.php'
-		include 'includes/transtab_unicode_latex.inc.php'; // include Unicode -> LaTeX translation table
+		include_once 'includes/transtab_unicode_latex.inc.php'; // include Unicode -> LaTeX translation table
 	else // we assume "ISO-8859-1" by default
-		include 'includes/transtab_latin1_latex.inc.php'; // include Latin1 -> LaTeX translation table
+		include_once 'includes/transtab_latin1_latex.inc.php'; // include Latin1 -> LaTeX translation table
 
 	// --------------------------------------------------------------------
 
