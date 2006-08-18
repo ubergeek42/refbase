@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/transtab_unicode_latex.inc.php
 	// Created:    28-May-06, 12:39
-	// Modified:   17-Jun-06, 13:47
+	// Modified:   13-Aug-06, 13:57
 
 	// This is a translation table for best-effort conversion from Unicode to LaTeX entities. It contains a comprehensive list of substitution strings for Unicode characters,
 	// which can be used with the 'T1' font encoding. Uses commands from the 'textcomp' package. Characters that can't be matched are converted to ASCII equivalents.
@@ -987,7 +987,7 @@
 		// <U02DA> <U00B0>
 
 		// SMALL TILDE
-		"˜" => "\\~",
+		"˜" => "\\~{}",
 		// <U02DC> <U007E>
 
 		// DOUBLE ACUTE ACCENT
@@ -1731,7 +1731,7 @@
 		// <U2236> <U003A>
 
 		// TILDE OPERATOR
-		"∼" => "\\~",
+		"∼" => "\\~{}",
 		// <U223C> <U007E>
 
 		// NOT EQUAL TO
