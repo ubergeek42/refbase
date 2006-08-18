@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import.php
 	// Created:    17-Feb-06, 20:57
-	// Modified:   27-May-06, 00:14
+	// Modified:   10-Aug-06, 16:10
 
 	// Import form that offers to import records from Cambridge Scientific Abstracts (CSA),
 	// Reference Manager (RIS), Endnote, BibTeX, ISI Web of Science, PubMed or COPAC.
@@ -248,7 +248,7 @@
 			. "<a href=\"http://www.pubmed.gov/\" target=\"top\">PubMed</a> (MEDLINE or XML), "
 			. "<a href=\"" . $importCSArecordsURL . "\" target=\"top\">Cambridge Scientific Abstracts</a> (CSA) " // '$importCSArecordsURL' is defined in 'ini.inc.php'
 			. "and <a href=\"http://www.copac.ac.uk/\" target=\"top\">COPAC</a>."
-			. "Please see the <a href=\"http://wiki.refbase.net/index.php/Importing_Records\" target=\"top\">refbase online documentation</a> for more information about the supported formats and any requirements in format structure.</td>"
+			. " Please see the <a href=\"http://wiki.refbase.net/index.php/Importing_Records\" target=\"top\">refbase online documentation</a> for more information about the supported formats and any requirements in format structure.</td>"
 			. "\n</tr>"
 			. "\n</table>"
 			. "\n</form>";
