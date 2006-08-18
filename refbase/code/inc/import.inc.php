@@ -9,11 +9,18 @@
 	//
 	// File:       ./includes/import.inc.php
 	// Created:    13-Jan-06, 21:00
-	// Modified:   10-Jun-06, 19:35
+	// Modified:   16-Aug-06, 18:16
 
 	// This file contains functions
 	// that are used when importing
 	// records into the database.
+
+	include 'includes/transtab_bibtex_refbase.inc.php'; // include BibTeX markup -> refbase search & replace patterns
+
+	if ($contentTypeCharset == "UTF-8") // variable '$contentTypeCharset' is defined in 'ini.inc.php'
+		include_once 'includes/transtab_latex_unicode.inc.php'; // include LaTeX -> Unicode translation table
+	else // we assume "ISO-8859-1" by default
+		include_once 'includes/transtab_latex_latin1.inc.php'; // include LaTeX -> Latin1 translation table
 
 	// --------------------------------------------------------------------
 
@@ -1187,6 +1194,35 @@
 
 	// --------------------------------------------------------------------
 
+	// This function takes a BibTeX source and converts any contained
+	// LaTeX/BibTeX markup into proper refbase markup:
+	function standardizeBibtexInput($bibtexSourceText)
+	{
+		global $contentTypeCharset; // defined in 'ini.inc.php'
+
+		// The array '$transtab_bibtex_refbase' contains search & replace patterns for conversion from LaTeX/BibTeX markup & entities to refbase markup.
+		// Converts LaTeX fontshape markup (italic, bold) into appropriate refbase commands, super- and subscript as well as greek letters in math mode
+		// get converted into the respective refbase commands. You may need to adopt the LaTeX markup to suit your individual needs.
+		global $transtab_bibtex_refbase; // defined in 'transtab_bibtex_refbase.inc.php'
+
+		// The arrays '$transtab_latex_latin1' and '$transtab_latex_unicode' provide translation tables for best-effort conversion of higher ASCII
+		// characters from LaTeX markup to ISO-8859-1 entities (or Unicode, respectively).
+		global $transtab_latex_latin1; // defined in 'transtab_latex_latin1.inc.php'
+		global $transtab_latex_unicode; // defined in 'transtab_latex_unicode.inc.php'
+
+		// Perform search & replace actions on the given BibTeX text:
+		$bibtexSourceText = searchReplaceText($transtab_bibtex_refbase, $bibtexSourceText, true); // function 'searchReplaceText()' is defined in 'include.inc.php'
+
+		// Attempt to convert LaTeX markup for higher ASCII chars to their corresponding ISO-8859-1/Unicode entities:
+		if ($contentTypeCharset == "UTF-8")
+			$bibtexSourceText = searchReplaceText($transtab_latex_unicode, $bibtexSourceText, false);
+		else
+			$bibtexSourceText = searchReplaceText($transtab_latex_latin1, $bibtexSourceText, false);
+
+		return $bibtexSourceText;
+	}
+
+	// --------------------------------------------------------------------
 	// CSA TO REFBASE
 	// This function converts records from Cambridge Scientific Abstracts (CSA) into the standard "refbase"
 	// array format which can be then imported by the 'addRecords()' function in 'include.inc.php'.
