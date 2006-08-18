@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import/bibutils/import_bib2refbase.php
 	// Created:    24-Feb-06, 02:07
-	// Modified:   26-Feb-06, 17:49
+	// Modified:   10-Aug-06, 23:31
 
 	// This is an import format file (which must reside within the 'import/' sub-directory of your refbase root directory). It contains a version of the
 	// 'importRecords()' function that imports records from 'BibTeX'-formatted data, i.e. data that were formatted according to the export format used
@@ -24,6 +24,9 @@
 
 	function importRecords($sourceText, $importRecordsRadio, $importRecordNumbersArray)
 	{
+		// convert LaTeX/BibTeX markup into proper refbase markup:
+		$sourceText = standardizeBibtexInput($sourceText); // function 'standardizeBibtexInput()' is defined in 'import.inc.php'
+
 		// convert Bibtex format to MODS XML format:
 		$sourceText = importBibutils($sourceText,"bib2xml"); // function 'importBibutils()' is defined in 'execute.inc.php'
 
