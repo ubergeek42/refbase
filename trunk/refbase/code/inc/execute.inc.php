@@ -8,11 +8,11 @@
 	//             License for more details.
 	//
 	// File:       ./includes/execute.inc.php
-	// Author:     Richard Karnesky <mailto:karnesky@northwestern.edu> and
+	// Author:     Richard Karnesky <mailto:karnesky@gmail.com> and
 	//             Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    16-Dec-05, 18:00
-	// Modified:   03-Jun-06, 15:41
+	// Modified:   16-Aug-06, 18:18
 
 	// This file contains functions that deal with execution of shell commands and provides
 	// fixes for 'exec()' on certain win32 systems (based on rivera at spamjoy dot unr dot edu's
@@ -28,6 +28,8 @@
 	// Import records using the bibutils program given in '$program'
 	function importBibutils($sourceText, $program)
 	{
+		global $contentTypeCharset; // defined in 'ini.inc.php'
+
 		// Get the absolute path for the bibutils package:
 		// (function 'getExternalUtilityPath()' is defined in 'include.inc.php')
 		$bibutilsPath = getExternalUtilityPath("bibutils");
@@ -38,8 +40,20 @@
 		// Write the source data to a temporary file:
 		$tempFile = writeToTempFile($tempDirPath, $sourceText);
 
+		// Set input and output encoding:
+		if ($contentTypeCharset != "UTF-8")
+		{
+			$inputEncodingArg = " -i iso8859_1";
+			$outputEncodingArg = " -o iso8859_1";
+		}
+		else
+		{
+			$inputEncodingArg = " -i utf8";
+			$outputEncodingArg = " -o utf8";
+		}
+
 		// Pass this temp file to the bibutils utility for conversion:
-		$outputFile = convertBibutils($bibutilsPath, $tempDirPath, $tempFile, $program);
+		$outputFile = convertBibutils($bibutilsPath, $tempDirPath, $tempFile, $program, $inputEncodingArg, $outputEncodingArg);
 		unlink($tempFile);
 
 		// Read the resulting output file and return the converted data:
@@ -54,6 +68,9 @@
 	// Export records using the bibutils program given in '$program'
 	function exportBibutils($result, $program)
 	{
+		global $contentTypeCharset; // these variables are defined in 'ini.inc.php'
+		global $convertExportDataToUTF8;
+
 		// Get the absolute path for the bibutils package:
 		// (function 'getExternalUtilityPath()' is defined in 'include.inc.php')
 		$bibutilsPath = getExternalUtilityPath("bibutils");
@@ -68,8 +85,20 @@
 		// Write the MODS XML data to a temporary file:
 		$tempFile = writeToTempFile($tempDirPath, $recordCollection);
 
+		// Set input and output encoding:
+		if (($convertExportDataToUTF8 == "no") AND ($contentTypeCharset != "UTF-8"))
+		{
+			$inputEncodingArg = " -i iso8859_1";
+			$outputEncodingArg = " -o iso8859_1";
+		}
+		else
+		{
+			$inputEncodingArg = " -i utf8";
+			$outputEncodingArg = " -o utf8";
+		}
+
 		// Pass this temp file to the bibutils utility for conversion:
-		$outputFile = convertBibutils($bibutilsPath, $tempDirPath, $tempFile, $program);
+		$outputFile = convertBibutils($bibutilsPath, $tempDirPath, $tempFile, $program, $inputEncodingArg, $outputEncodingArg);
 		unlink($tempFile);
 
 		// Read the resulting output file and return the converted data:
@@ -82,22 +111,8 @@
 	// --------------------------------------------------------------------
 
 	// Convert file contents using the bibutils program given in '$program'
-	function convertBibutils($bibutilsPath, $tempDirPath, $tempFile, $program)
+	function convertBibutils($bibutilsPath, $tempDirPath, $tempFile, $program, $inputEncodingArg, $outputEncodingArg)
 	{
-		global $contentTypeCharset; // these variables are defined in 'ini.inc.php'
-		global $convertExportDataToUTF8;
-
-		if (($convertExportDataToUTF8 == "no") AND ($contentTypeCharset != "UTF-8"))
-		{
-			$inputEncodingArg = " -i iso8859_1";
-			$outputEncodingArg = " -o iso8859_1";
-		}
-		else
-		{
-			$inputEncodingArg = " -i utf8";
-			$outputEncodingArg = " -o utf8";
-		}
-
 		$outputFile = tempnam($tempDirPath, "refbase-");
 		$cmd = $bibutilsPath . $program . $inputEncodingArg . $outputEncodingArg . " " . $tempFile . " > " . $outputFile;
 		execute($cmd);
