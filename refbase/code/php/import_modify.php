@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import_modify.php
 	// Created:    17-Feb-06, 20:57
-	// Modified:   28-Feb-06, 00:17
+	// Modified:   11-Aug-06, 14:20
 
 	// This php script accepts input from 'import.php' and will process records exported from Endnote, Reference Manager (RIS), BibTeX, ISI Web of Science,
 	// Pubmed, CSA or Copac. In case of a single record, the script will call 'record.php' with all provided fields pre-filled. The user can then verify
@@ -33,7 +33,13 @@
 
 	// Write the (POST or GET) form variables into an array:
 	foreach($_REQUEST as $varname => $value)
+	{
+		// remove slashes from parameter values if 'magic_quotes_gpc = On':
+		$value = stripSlashesIfMagicQuotes($value); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
+
+//		$formVars[$varname] = preg_replace("/\\\\([\"'])/", "\\1", $value); // replace any \" with " and any \' with '
 		$formVars[$varname] = $value;
+	}
 
 	// --------------------------------------------------------------------
 
