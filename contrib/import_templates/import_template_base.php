@@ -5,11 +5,11 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import_template_base.php
 	// Created:    11-Jan-06, 18:36
-	// Modified:   12-Jan-06, 14:33
+	// Modified:   16-Aug-06, 16:28
 
 	// Template for a batch import script.
 	// Use this script to develop your own batch importer.
-	// See the scripts 'import_csa.php' and 'import_csa_modify.php' for a working example.
+	// See the scripts 'import.php' and 'import_modify.php' for a working example.
 
 	// Incorporate some include files:
 	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
@@ -28,7 +28,7 @@
 	if (!empty($_SERVER['HTTP_REFERER'])) // if the referrer variable isn't empty
 		$referer = $_SERVER['HTTP_REFERER']; // on error, redirect to calling page
 	else
-		$referer = "import_csa.php"; // on error, redirect to the web import form (if you've got your own import form, insert it's script name here)
+		$referer = "import.php"; // on error, redirect to the web import form (if you've got your own import form, insert it's script name here)
 
 	// First of all, check if the user is logged in:
 	if (!isset($_SESSION['loginEmail'])) // -> if the user isn't logged in
@@ -62,7 +62,7 @@
 
 	// ToDo:
 	// (1) Obtain your source data via a web form, file upload, direct read-in of a local source file, etc
-	//     If your script allows input from the web, make sure to validate your data, see 'import_csa.php' & 'import_csa_modify.php' for an example
+	//     If your script allows input from the web, make sure to validate your data, see 'import.php' & 'import_modify.php' for an example
 	// (2) Split your source data into individual bits representing individual records
 	// (3) Loop over each record and extract the record's field data into an array;
 	//     For each record you should end up with an array structure similar to the one below ('$recordFieldParametersArray'):
