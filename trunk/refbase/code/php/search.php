@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   16-Jul-06, 12:31
+	// Modified:   15-Aug-06, 13:16
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -852,9 +852,6 @@
 							echo $row["serial"];
 						echo "\" title=\"select this record\">";
 
-						// add <abbr> block which works as a microformat that allows applications to identify objects on web pages; see <http://unapi.info/specs/> for more info
-						echo "<div class=\"unapi\"><abbr class=\"unapi-id\" title=\"" . $databaseBaseURL . "show.php?record=" . $row["serial"] . "\"></abbr></div>";
-
 						if (!empty($row["orig_record"]))
 						{
 							echo "\n\t\t<br>";
@@ -863,6 +860,9 @@
 							else // $row["orig_record"] > 0
 								echo "<img src=\"img/caution.gif\" alt=\"(duplicate)\" title=\"duplicate record\" width=\"5\" height=\"16\" hspace=\"0\" border=\"0\">";
 						}
+
+						// add <abbr> block which works as a microformat that allows applications to identify objects on web pages; see <http://unapi.info/specs/> for more info
+						echo "<div class=\"unapi\"><abbr class=\"unapi-id\" title=\"" . $databaseBaseURL . "show.php?record=" . $row["serial"] . "\"></abbr></div>";
 
 						echo "\n\t</td>";
 					}
