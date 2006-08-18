@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   22-Jun-06, 17:46
+	// Modified:   09-Aug-06, 22:47
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -35,6 +35,8 @@
 
 
 	// The admin email address (by which a user is granted admin status after successful login!):
+	// Note that you must NOT change this email address unless you've already logged in and created your
+	// own admin user!
 	$adminLoginEmail = "user@refbase.net"; // e.g. "admin@ipoe.uni-kiel.de"
 
 
