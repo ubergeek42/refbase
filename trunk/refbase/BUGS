@@ -11,3 +11,5 @@ We are aware of the following problems, bugs and/or limitations:
   form open for a long period of time.
 
 - The 'allow_edit_call_number' permission setting isn't honoured yet.
+
+- The process of internationalization and localization has not been completed yet.
