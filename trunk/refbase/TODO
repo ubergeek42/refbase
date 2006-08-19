@@ -1,8 +1,5 @@
 Suggestions for improving refbase:
 
-- Data import from MODS XML and other common bibliographic formats, like BibTeX,
-  EndNote, ISI Web of Science, RIS, and Pubmed XML.
-
 - Provide additional citation formats, preferably via the use of a plugin
   structure which would make it easy to add your own citation styles.
 
@@ -29,3 +26,6 @@ Suggestions for improving refbase:
   and through adding more native export options which wouldn't require bibutils.
 
 - More user-specific and record-specific rights management.
+
+See also our list of planned feature additions at:
+  <http://wiki.refbase.net/index.php/Planned_feature_additions>
