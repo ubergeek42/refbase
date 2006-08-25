@@ -5,10 +5,10 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import.php
 	// Created:    17-Feb-06, 20:57
-	// Modified:   10-Aug-06, 16:10
+	// Modified:   25-Aug-06, 15:50
 
-	// Import form that offers to import records from Cambridge Scientific Abstracts (CSA),
-	// Reference Manager (RIS), Endnote, BibTeX, ISI Web of Science, PubMed or COPAC.
+	// Import form that offers to import records from Reference Manager (RIS), Cambridge Scientific Abstracts (CSA),
+	// RefWorks Tagged Format, ISI Web of Science, PubMed MEDLINE, PubMed XML, MODS XML, Endnote Tagged Text, BibTeX or COPAC.
 	// Import of the latter five formats is provided via use of bibutils.
 
 	/*
@@ -242,6 +242,7 @@
 			. "\n\t<td valign=\"top\" colspan=\"3\">This form enables you to import records from "
 			. "<a href=\"http://www.endnote.com/\" target=\"top\">Endnote</a>, "
 			. "<a href=\"http://www.refman.com/\" target=\"top\">Reference Manager</a> (RIS), "
+			. "<a href=\"http://www.refworks.com/\" target=\"top\">RefWorks</a>, "
 			. "<a href=\"http://en.wikipedia.org/wiki/Bibtex\" target=\"top\">BibTeX</a>, "
 			. "<a href=\"http://www.loc.gov/standards/mods/\" target=\"top\">MODS XML</a>, "
 			. "<a href=\"http://scientific.thomson.com/products/wos/\" target=\"top\">ISI Web of Science</a>, "
