@@ -9,7 +9,7 @@
 	//
 	// File:       ./includes/import.inc.php
 	// Created:    13-Jan-06, 21:00
-	// Modified:   16-Aug-06, 18:16
+	// Modified:   25-Aug-06, 18:02
 
 	// This file contains functions
 	// that are used when importing
@@ -360,14 +360,14 @@
 											"N1"  =>  "notes", // Notes
 											"ID"  =>  "call_number" // Reference ID
 
-		//									"M1   =>  "", // Miscellaneous 1
-		//									"M2   =>  "", // Miscellaneous 2
-		//									"M3   =>  "", // Miscellaneous 3
-		//									"U1   =>  "", // User definable 1
-		//									"U2   =>  "", // User definable 2
-		//									"U3   =>  "", // User definable 3
-		//									"U4   =>  "", // User definable 4
-		//									"U5   =>  "", // User definable 5
+		//									"M1"  =>  "", // Miscellaneous 1
+		//									"M2"  =>  "", // Miscellaneous 2
+		//									"M3"  =>  "", // Miscellaneous 3
+		//									"U1"  =>  "", // User definable 1
+		//									"U2"  =>  "", // User definable 2
+		//									"U3"  =>  "", // User definable 3
+		//									"U4"  =>  "", // User definable 4
+		//									"U5"  =>  "", // User definable 5
 
 		//									""    =>  "contribution_id",
 		//									""    =>  "online_publication",
@@ -376,7 +376,7 @@
 		//									""    =>  "orig_record",
 
 		//									"RP"  =>  "copy", // Reprint status (valid values: "IN FILE", "NOT IN FILE", "ON REQUEST (MM/DD/YY)") (NOTE: import into user-specific fields is NOT supported yet!)
-		//									"AV   =>  "", // Availability
+		//									"AV"  =>  "", // Availability
 										);
 
 		// This array lists all RIS tags that may occur multiple times:
@@ -778,6 +778,263 @@
 
 	// --------------------------------------------------------------------
 
+	// REFWORKS TO REFBASE
+	// This function converts records from RefWorks Tagged Format into the standard "refbase"
+	// array format which can be then imported by the 'addRecords()' function in 'include.inc.php'.
+	// More info on the RefWorks Tagged Format: <http://refworks.scholarsportal.info/Refworks/help/RefWorks_Tagged_Format.htm>
+	function refworksToRefbase($sourceText, $importRecordsRadio, $importRecordNumbersArray)
+	{
+		global $errors;
+		global $showSource;
+
+		// Define regular expression patterns that will facilitate parsing of RefWorks data:
+		// (patterns must be specified as perl-style regular expression, without the leading & trailing slashes, if not stated otherwise)
+
+		// Pattern by which the input text will be split into individual records:
+		$recordDelimiter = "\s*[\r\n][\r\n][\r\n]+\s*";
+
+		// Pattern by which records will be split into individual fields:
+		$fieldDelimiter = "[\r\n]+(?=\w\w )";
+
+		// Pattern by which fields will be split into their field label (tag) and field data:
+		$dataDelimiter = "(?<=^\w\w) ";
+
+		// Pattern by which multiple persons are separated within the author, editor or series editor fields of the source data:
+		// (Note: name standardization occurs after multiple author fields have been merged by '; ')
+		$personDelimiter = " *; *";
+
+		// Pattern by which a persons's family name is separated from the given name (or initials):
+		$familyNameGivenNameDelimiter = " *, *";
+
+		// Specifies whether the person's family name comes first within a person's name
+		// ('true' means that the family name is followed by the given name (or initials), 'false' means that the person's family name comes *after* the given name (or initials))
+		$familyNameFirst = true;
+
+		// Specifies whether a person's full given name(s) shall be shortened to initial(s):
+		// (Notes: - if set to 'true', given names will be abbreviated and initials will get normalized (meaning removal of extra whitespace, adding of dots between initials, etc)
+		//         - if set to 'false', given names (and any initials) are taken as is
+		//         - in your database, you should stick to either fully written given names OR initials; if you mix these, records won't get sorted correctly on citation output)
+		$shortenGivenNames = true;
+
+		// Specifies whether fields whose contents are entirely in upper case shall be transformed to title case ('true') or not ('false'):
+		$transformCase = true;
+
+		// Defines search & replace 'actions' that will be applied to all those refbase fields that are listed in the corresponding 'fields' element:
+		// (If you don't want to perform any search and replace actions, specify an empty array, like: '$searchReplaceActionsArray = array();'.
+		//  Note that, in this case, the search patterns MUST include the leading & trailing slashes -- which is done to allow for mode modifiers such as 'imsxU'.)
+		// 															"/Search Pattern/"  =>  "Replace Pattern"
+		$searchReplaceActionsArray = array(
+											array(
+													'fields'  => array("year"),
+													'actions' => array(
+																		"/^.*?(\d{4}).*/" =>  "\\1" // for the 'year' field, extract any four-digit number (and discard everything else)
+																	)
+												),
+											array(
+													'fields'  => array("title"),
+													'actions' => array(
+																		"/[,.;:!] *$/" =>  "" // remove any punctuation (except for question marks) from end of field contents
+																	)
+												),
+											array(
+													'fields'  => array("title", "notes", "abstract"), // convert RefWorks font attributes (which RefWorks supports in title fields, notes, abstracts and user 1 - 5 fields)
+													'actions' => array(
+																		"/0RW1S34RfeSDcfkexd09rT3(.+?)1RW1S34RfeSDcfkexd09rT3/"  =>  "[super:\\1]", // replace RefWorks indicators for superscript text with refbase markup ('[super:...]')
+																		"/0RW1S34RfeSDcfkexd09rT4(.+?)1RW1S34RfeSDcfkexd09rT4/"  =>  "[sub:\\1]", // replace RefWorks indicators for subscript text with refbase markup ('[sub:...]')
+																		"/0RW1S34RfeSDcfkexd09rT2(.+?)1RW1S34RfeSDcfkexd09rT2/"  =>  "_\\1_", // replace RefWorks indicators for italic text with refbase markup ('_..._')
+																		"/0RW1S34RfeSDcfkexd09rT0(.+?)1RW1S34RfeSDcfkexd09rT0/"  =>  "**\\1**", // replace RefWorks indicators for bold text with refbase markup ('**...**')
+																		"/0RW1S34RfeSDcfkexd09rT1(.+?)1RW1S34RfeSDcfkexd09rT1/"  =>  "\\1" // remove RefWorks indicators for underline text (which isn't currently supported by refbase)
+																	)
+												)
+										);
+
+
+		// This array lists patterns which match all RefWorks tags that must occur within a record to be recognized as valid RefWorks record:
+		// (Array keys must contain the tag name as it should be displayed to the user; as is the case with search & replace actions,
+		//  the search patterns MUST include the leading & trailing slashes.)
+		// 				"tag display name"  =>  "tag search pattern"
+		$requiredTagsArray = array(
+									"RT"    =>  "/^RT /m"
+								);
+
+		// This array matches RefWorks tags with their corresponding refbase fields:
+		// (fields that are unsupported in either RefWorks or refbase are commented out)
+		// 								"RefWorks tag" => "refbase field" // RefWorks tag name (comment)
+		$tagsToRefbaseFieldsArray = array(
+											"RT"  =>  "type", // Reference Type (IMPORTANT: the array element that maps to 'type' must be listed as the first element!)
+		//									""    =>  "thesis",
+
+											"A1"  =>  "author", // Primary Authors
+											"A2"  =>  "editor", // Secondary Authors (Editors)
+											"A3"  =>  "series_editor", // Tertiary Authors (Series Editors)
+		//									"A4"  =>  "", // Quaternary Authors (Translators)
+		//									"A5"  =>  "", // Quinary Authors (Compliers)
+		//									"A6"  =>  "", // Website Editors
+											"AD"  =>  "address", // Author Address
+		//									""    =>  "corporate_author",
+
+											"T1"  =>  "title", // Primary Title
+											"OT"  =>  "orig_title", // Original Foreign Title
+		//									"ST"  =>  "", // Shortened Title
+		//									"WT"  =>  "", // Website Title
+
+		//									"FD"  =>  "", // Publication Data, Free Form (this field is used for date information such as a season or month and day; year data is solely placed in the year field, i.e., "YR 2003")
+											"YR"  =>  "year", // Year
+		//									"RD"  =>  "", // Retrieved Date
+		//									"WV"  =>  "", // Website Version
+		//									"WP"  =>  "", // Date of Electronic Publication
+
+											"JF"  =>  "publication", // Periodical name: full format
+											"JO"  =>  "abbrev_journal", // Periodical name: standard abbreviation
+											"T2"  =>  array("Book, Section" => "publication", "Other" => "series_title"), // Secondary Title
+											"T3"  =>  "abbrev_series_title", // Tertiary Title
+
+											"VO"  =>  "volume", // Volume
+											"IS"  =>  "issue", // Issue
+											"SP"  =>  "startPage", // Start Page (contents of the special fields 'startPage' and 'endPage' will be merged into a range and copied to the refbase 'pages' field)
+											"OP"  =>  "endPage", // Other Pages ('SP' is the tag for the starting page and should only contain this information; the 'OP' tag is used for any additional pages or page information)
+
+		//									""    =>  "series_volume", // (for 'series_volume' and 'series_issue', some magic will be applied within the 'parseRecords()' function)
+		//									""    =>  "series_issue",
+
+											"PB"  =>  "publisher", // Publisher
+											"PP"  =>  "place", // Place of Publication
+
+											"ED"  =>  "edition", // Edition
+		//									""    =>  "medium",
+											"SN"  =>  array("Book, Section" => "isbn", "Book, Edited" => "isbn", "Book, Whole" => "isbn", "Dissertation" => "isbn", "Dissertation/Thesis" => "isbn", "Other" => "issn"), // Book Whole & Book Chapter: ISBN; Other reference types: ISSN
+
+											"LA"  =>  "language", // Language
+		//									""    =>  "summary_language",
+
+											"K1"  =>  "keywords", // Keywords
+											"AB"  =>  "abstract", // Abstract
+
+		//									""    =>  "area",
+		//									""    =>  "expedition",
+		//									""    =>  "conference",
+
+											"DO"  =>  "doi", // Digital Object Identifier
+											"LK"  =>  "url", // Links
+											"UL"  =>  "url", // URL
+		//									""    =>  "file", // Link to PDF
+		//									""    =>  "related", // Related Records (NOTE: import into user-specific fields is NOT supported yet!)
+
+											"NO"  =>  "notes", // Notes
+											"ID"  =>  "call_number", // Reference Identifier
+											"CN"  =>  "notes", // Call Number (if 'ID' would be mapped to 'cite_key', contents of this field could go into the 'call_number' field)
+											"IP"  =>  "notes", // Identifying Phrase (NOTE: contents of this field should probably better go into 'cite_key' but import into user-specific fields is NOT supported yet!)
+
+		//									"U1"  =>  "", // User definable 1
+		//									"U2"  =>  "", // User definable 2
+		//									"U3"  =>  "", // User definable 3
+		//									"U4"  =>  "", // User definable 4
+		//									"U5"  =>  "", // User definable 5
+
+		//									""    =>  "contribution_id",
+		//									""    =>  "online_publication",
+		//									""    =>  "online_citation",
+		//									""    =>  "approved",
+		//									""    =>  "orig_record",
+
+		//									""    =>  "copy", // Reprint status (valid values: "IN FILE", "NOT IN FILE", "ON REQUEST (MM/DD/YY)") (NOTE: import into user-specific fields is NOT supported yet!)
+											"AV"  =>  "notes" // Availability
+
+		//									"AN"  =>  "", // Accession Number
+		//									"CL"  =>  "", // Classification
+		//									"SF"  =>  "", // Subfile/Database
+		//									"DB"  =>  "", // Database
+		//									"DS"  =>  "", // Data Source
+		//									"SL"  =>  "", // Sponsoring Library
+		//									"LL"  =>  "", // Sponsoring Library Location
+		//									"CR"  =>  "", // Cited References
+										);
+
+		// This array lists all RefWorks tags that may occur multiple times:
+		$tagsMultipleArray = array(
+									"A1",
+									"A2",
+									"A3",
+		//							"A4",
+		//							"A5",
+		//							"A6",
+									"K1",
+		//							"LK", // currently, refbase does only support one link per record
+		//							"UL", // currently, refbase does only support one URL per record
+									"ID",
+									"CN",
+									"IP",
+									"NO",
+									"AV"
+								);
+
+
+		// This array matches RefWorks reference types with their corresponding refbase types:
+		// (RefWorks types that are currently not supported in refbase will be taken as is but will get
+		//  prefixed with an "Unsupported: " label; '#fallback#' in comments indicates a type mapping that
+		//  is not a perfect match but as close as currently possible)
+		// 															   "RefWorks type"  =>  "refbase type" // name of RefWorks reference type (comment)
+		$referenceTypesToRefbaseTypesArray = array(
+													"Abstract"                             =>  "Journal Article", // Abstract (#fallback#)
+													"Artwork"                              =>  "Unsupported: Artwork", // Artwork
+													"Bills\/Resolutions"                   =>  "Unsupported: Bills/Resolutions", // Bills/Resolutions
+													"Book,? (Section|Chapter)"             =>  "Book Chapter", // Book, Section
+													"Book, Edited"                         =>  "Book Whole", // Book, Edited (#fallback#)
+													"Book, Whole"                          =>  "Book Whole", // Book, Whole
+													"Case\/Court Decisions"                =>  "Unsupported: Case/Court Decisions", // Case/Court Decisions
+													"Computer Program"                     =>  "Unsupported: Computer Program", // Computer Program
+													"Conference Proceeding"                =>  "Unsupported: Conference Proceeding", // Conference Proceeding
+													"Dissertation(\/Thesis)?"              =>  "Thesis", // Dissertation/Thesis (function 'parseRecords()' will set the special type 'Thesis' back to 'Book Whole' and adopt the refbase 'thesis' field)
+													"Dissertation(\/Thesis)?, Unpublished" =>  "Thesis", // Dissertation/Thesis, Unpublished (#fallback#) (function 'parseRecords()' will set the special type 'Thesis' back to 'Book Whole' and adopt the refbase 'thesis' field)
+													"Generic"                              =>  "Book Whole", // Generic (#fallback#)
+													"Grant"                                =>  "Unsupported: Grant", // Grant
+													"Hearing"                              =>  "Unsupported: Hearing", // Hearing
+													"Journal"                              =>  "Journal Article", // Journal
+													"Journal, Electronic"                  =>  "Journal Article", // Journal, Electronic (#fallback#) (function 'parseRecords()' should set the 'online_publication' field accordingly)
+													"Laws\/Statutes"                       =>  "Unsupported: Laws/Statutes", // Laws/Statutes
+													"Magazine Article"                     =>  "Journal Article", // Magazine Article (#fallback#)
+													"Map"                                  =>  "Map", // Map
+													"Monograph"                            =>  "Book Whole", // Monograph (#fallback#)
+													"Motion Picture"                       =>  "Unsupported: Motion Picture", // Motion Picture
+													"Music Score"                          =>  "Unsupported: Music Score", // Music Score
+													"Newspaper Article"                    =>  "Journal Article", // Newspaper Article (#fallback#)
+													"Online Discussion Forum"              =>  "Unsupported: Online Discussion Forum", // Online Discussion Forum
+													"Patent"                               =>  "Unsupported: Patent", // Patent
+													"Personal Communication"               =>  "Unsupported: Personal Communication", // Personal Communication
+													"Report"                               =>  "Book Whole", // Report (#fallback#)
+													"Sound Recording"                      =>  "Unsupported: Sound Recording", // Sound Recording
+													"Thesis(\/Dissertation)?"              =>  "Thesis", // Dissertation/Thesis (function 'parseRecords()' will set the special type 'Thesis' back to 'Book Whole' and adopt the refbase 'thesis' field)
+													"Unpublished Material"                 =>  "Manuscript", // Unpublished Material (#fallback#)
+													"Video\/DVD"                           =>  "Unsupported: Video/DVD", // Video/DVD
+													"Web Page"                             =>  "Unsupported: Web Page" // Web Page
+												);
+
+		// -----------------------------------------
+
+		// Split input text into individual records:
+		$recordArray = splitSourceText($sourceText, $recordDelimiter, false); // split on the "ER" (= end of record) tag that terminates every RefWorks record
+
+		// Validate all records that shall be imported:
+		list($errors, $importRecordNumbersRecognizedFormatArray, $importRecordNumbersNotRecognizedFormatArray) = validateRecords($recordArray, $requiredTagsArray, $importRecordsRadio, $importRecordNumbersArray, $errors);
+
+		// Parse all records that shall be imported:
+		list($parsedRecordsArray, $recordsCount) = parseRecords($recordArray, "RefWorks", $importRecordNumbersRecognizedFormatArray, $tagsToRefbaseFieldsArray, $tagsMultipleArray, $referenceTypesToRefbaseTypesArray, $fieldDelimiter, $dataDelimiter, $personDelimiter, $familyNameGivenNameDelimiter, $familyNameFirst, $shortenGivenNames, $transformCase, $searchReplaceActionsArray);
+
+		// Build refbase import array:
+		$importDataArray = buildImportArray("refbase", // 'type' - the array format of the 'records' element
+											"1.0", // 'version' - the version of the given array structure
+											"http://refbase.net/import/refworks/", // 'creator' - the name of the script/importer (preferably given as unique URI)
+											"Matthias Steffens", // 'author' - author/contact name of the person who's responsible for this script/importer
+											"refbase@extracts.de", // 'contact' - author's email/contact address
+											array('prefix_call_number' => "true"), // 'options' - array with settings that control the behaviour of the 'addRecords()' function
+											$parsedRecordsArray); // 'records' - array of record(s) (with each record being a sub-array of fields)
+
+
+		return array($importDataArray, $recordsCount, $importRecordNumbersRecognizedFormatArray, $importRecordNumbersNotRecognizedFormatArray, $errors);
+	}
+
+	// --------------------------------------------------------------------
+
 	// IDENTIFY SOURCE FORMAT
 	// This function tries to identify the format of the input text:
 	function identifySourceFormat($sourceText)
@@ -804,6 +1061,10 @@
 		elseif (preg_match("/^TY  - /m", $sourceText) AND preg_match("/^ER  -/m", $sourceText)) // RIS records must at least start with the "TY" tag and end with an "ER" tag (we'll only check for their presence, though)
 			$sourceFormat = "RIS";
 
+		// RefWorks format:
+		elseif (preg_match("/^RT /m", $sourceText)) // RefWorks records must at least start with the "RT" tag (we'll only check for its presence, though)
+			$sourceFormat = "RefWorks";
+
 		// Copac format:
 		elseif (preg_match("/^TI- /m", $sourceText) AND preg_match("/^HL- /m", $sourceText)) // Copac records must at least contain the "TI" and "HL" tags
 			$sourceFormat = "Copac";
@@ -817,7 +1078,7 @@
 			$sourceFormat = "MODS XML";
 
 		// BibTeX format:
-		elseif (preg_match("/^@\w+\{[^ ,\r\n]* *, *[\r\n]/m", $sourceText)) // BibTeX records must at start with the "@" sign, followed by a type specifier and an optional cite key (such as in '@article{steffens1988,')
+		elseif (preg_match("/^@\w+\{[^ ,\r\n]* *, *[\r\n]/m", $sourceText)) // BibTeX records must start with the "@" sign, followed by a type specifier and an optional cite key (such as in '@article{steffens1988,')
 			$sourceFormat = "BibTeX";
 
 		return $sourceFormat;
@@ -1019,6 +1280,9 @@
 
 					if (!empty($pages))
 						$fieldParametersArray['pages'] = implode("-", $pages);
+
+					if (ereg("Book Whole", $fieldParametersArray['type']) AND preg_match("/^\d+$/", $fieldParametersArray['pages']))
+						$fieldParametersArray['pages'] = $fieldParametersArray['pages'] . " pp"; // append "pp" identifier for whole books where the pages field contains a single number
 				}
 
 				// if the 'pages' field contains a page range, verify that the end page is actually greater than the start page:
