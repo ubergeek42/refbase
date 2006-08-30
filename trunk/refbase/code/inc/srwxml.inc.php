@@ -12,7 +12,7 @@
 	//             Richard Karnesky <mailto:karnesky@gmail.com>
 	//
 	// Created:    17-May-05, 16:38
-	// Modified:   16-Aug-06, 18:19
+	// Modified:   30-Aug-06, 23:30
 
 	// This include file contains functions that'll export records to SRW XML.
 	// Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -439,7 +439,7 @@
 		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "relationModifier"), "false");
 		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "booleanModifier"), "false");
 		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "sort"), "false");
-		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "maskingCharacter"), "false");
+		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "maskingCharacter"), "true");
 		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "anchoring"), "true");
 		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "emptyTerm"), "false");
 		addNewBranch($srwConfigInfoBranch, "supports", array("type" => "recordXPath"), "false");
@@ -457,6 +457,11 @@
 
 		$srwCollectionDoc->setXML($srwCollection);
 		$srwCollectionString = $srwCollectionDoc->getXMLString();
+
+		// Add the XML Stylesheet definition:
+		// Note that this is just a hack (that should get fixed) since I don't know how to do it properly using the ActiveLink PHP XML Package ?:-/
+		if (!empty($exportStylesheet))
+			$srwCollectionString = preg_replace("/(?=\<srw:explainResponse)/i","<?xml-stylesheet type=\"text/xsl\" href=\"" . $exportStylesheet . "\"?>\n",$srwCollectionString);
 
 		return $srwCollectionString;
 	}
