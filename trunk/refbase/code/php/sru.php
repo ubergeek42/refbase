@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sru.php
 	// Created:    17-May-05, 16:22
-	// Modified:   16-Jul-06, 11:50
+	// Modified:   31-Aug-06, 01:06
 
 	// This script serves as a (faceless) routing page which takes a SRU query and
 	// converts the query into a native refbase query which is then passed to 'search.php'.
@@ -63,7 +63,7 @@
 	//   <http://www.loc.gov/standards/sru>
 
 	// TODO: - proper parsing of CQL query string (currently, 'sru.php' allows only for a limited set of CQL queries)
-	//       - offer support for the boolean CQL operators 'and/or/not', masking characters ('*' and '?') and parentheses
+	//       - offer support for the boolean CQL operators 'and/or/not' and parentheses
 	//       - honour the 'sortKeys' parameter and return records sorted accordingly
 
 
@@ -130,7 +130,7 @@
 	if (isset($_REQUEST['stylesheet'])) // contains the desired stylesheet to be returned for transformation of XML data
 		$exportStylesheet = $_REQUEST['stylesheet'];
 	else
-		$exportStylesheet = "srwmods2html.xsl"; // we provide a default stylesheet if no stylesheet was specified in the query
+		$exportStylesheet = "srwmods2html.xsl"; // we provide a default stylesheet if no stylesheet was specified in the query (for 'operation=explain', a different default stylesheet will be assigned below)
 
 	// Note that PHP will translate dots ('.') in parameter names into substrings ('_'). This is so that the
 	// import_request_variables function can generate legitimate variable names (and a . is not permissable
@@ -207,7 +207,7 @@
 	// -------------------------------------------------------------------------------------------------------------------
 
 	// Parse CQL query:
-	$searchArray = parseCQL($sruQuery); // function 'parseCQL()' is defined in 'webservice.inc.php'
+	$searchArray = parseCQL($sruVersion, $sruQuery); // function 'parseCQL()' is defined in 'webservice.inc.php'
 
 	// -------------------------------------------------------------------------------------------------------------------
 
@@ -215,6 +215,10 @@
 	if ($sruOperation == "explain" OR (!isset($_REQUEST['query']) AND !isset($_REQUEST['version']) AND !isset($_REQUEST['operation']) AND !isset($_REQUEST['recordSchema']) AND !isset($_REQUEST['recordPacking']) AND !isset($_REQUEST['maximumRecords']) AND !isset($_REQUEST['startRecord']) AND !isset($_REQUEST['sortKeys']) AND !isset($_REQUEST['recordXPath']) AND !isset($_REQUEST['stylesheet']) AND !isset($_REQUEST['x-info-2-auth1_0-authenticationToken'])))
 	{
 		// if 'sru.php' was called with 'operation=explain' -OR- without any recognized parameters, we'll return an appropriate 'explainResponse':
+
+		// use an appropriate default stylesheet:
+		if ($exportStylesheet == "srwmods2html.xsl")
+			$exportStylesheet = "srwExplainResponse2html.xsl";
 
 		// Set the appropriate mimetype & set the character encoding to the one given
 		// in '$contentTypeCharset' (which is defined in 'ini.inc.php'):
@@ -236,7 +240,7 @@
 	elseif ($sruVersion != "1.1")
 		returnDiagnostic(5, "1.1"); // only SRW version 1.1 is supported
 
-	elseif (!eregi("^mods$",$sruRecordSchema) AND !eregi("^info:srw/schema/1/mods-v3\.0$",$sruRecordSchema))
+	elseif (!eregi("^mods$",$sruRecordSchema) AND !eregi("^info:srw/schema/1/mods-v3\.0$",$sruRecordSchema) AND !eregi("^http://www\.loc\.gov/mods/v3$",$sruRecordSchema))
 		returnDiagnostic(66, $sruRecordSchema); // no other schema than MODS is supported
 
 	elseif (!eregi("^xml$",$sruRecordPacking))
