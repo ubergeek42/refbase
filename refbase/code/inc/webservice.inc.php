@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/webservice.inc.php
 	// Created:    04-Feb-06, 22:02
-	// Modified:   04-Feb-06, 22:36
+	// Modified:   30-Aug-06, 23:37
 
 	// This include file contains functions that are used in conjunction with the refbase webservices.
 	// Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -44,7 +44,7 @@
 	// NOTE: we don't provide a full CQL parser here but will (for now) concentrate on a rather limited feature
 	//       set that makes sense in conjunction with refbase. However, future versions should employ far better
 	//       CQL parsing logic.
-	function parseCQL($sruQuery)
+	function parseCQL($sruVersion, $sruQuery)
 	{
 		// map CQL indexes to refbase field names:
 		$indexNamesArray = mapCQLIndexes();
@@ -136,14 +136,17 @@
 			$searchTerm = preg_replace('/\\\\\^( |$)/', '$\\1', $searchTerm);
 
 			// recognize any masking ('*' and '?') characters:
-			// (NOT DONE YET)
+			// Note: by "character" we do refer to *word* characters here, i.e., any character that is not a space or punctuation character (see below);
+			//       however, I'm not sure if the masking characters '*' and '?' should also include non-word characters!
+			$searchTerm = preg_replace('/(?<!\\\\)\\\\\*/', '[^[:space:][:punct:]]*', $searchTerm); // a single asterisk ('*') is used to mask zero or more characters
+			$searchTerm = preg_replace('/(?<!\\\\)\\\\\?/', '[^[:space:][:punct:]]', $searchTerm); // a single question mark ('?') is used to mask a single character, thus N consecutive question-marks means mask N characters
 
 			// ----------------
 
 			// construct the WHERE clause:
 			$whereClausePart = $indexNamesArray[$contextSet . $contextSetIndexConnector . $indexName]; // start WHERE clause with field name
 
-			if ($mainRelation == "all") // matches full words (not sub-strings)
+			if ($mainRelation == "all") // matches full words (not sub-strings); 'all' means "all of these words"
 			{
 				if (ereg(" ", $searchTerm))
 				{
@@ -165,13 +168,13 @@
 					$whereClausePart .= " RLIKE \"(^|[[:space:][:punct:]])" . $searchTerm . "([[:space:][:punct:]]|$)\"";
 			}
 
-			elseif ($mainRelation == "any") // matches full words (not sub-strings)
+			elseif ($mainRelation == "any") // matches full words (not sub-strings); 'any' means "any of these words"
 			{
 				$searchTerm = splitAndMerge(" +", "|", $searchTerm); // function 'splitAndMerge()' is defined in 'include.inc.php'
 				$whereClausePart .= " RLIKE \"(^|[[:space:][:punct:]])(" . $searchTerm . ")([[:space:][:punct:]]|$)\"";
 			}
 
-			elseif ($mainRelation == "exact") // matches field contents exactly
+			elseif ($mainRelation == "exact") // 'exact' is used for exact string matching, i.e., it matches field contents exactly
 				$whereClausePart .= " = \"" . $searchTerm . "\"";
 
 			elseif ($mainRelation == "within") // matches a range (i.e. requires two space-separated dimensions)
@@ -189,7 +192,7 @@
 				}
 			}
 
-			elseif ($mainRelation == "=") // matches full words (not sub-strings)
+			elseif ($mainRelation == "=") // matches full words (not sub-strings); '=' is used for word adjacency, the words appear in that order with no others intervening
 				$whereClausePart .= " RLIKE \"(^|[[:space:][:punct:]])" . $searchTerm . "([[:space:][:punct:]]|$)\"";
 
 			elseif ($mainRelation == "<>") // does this also match full words (and not sub-strings) ?:-/
