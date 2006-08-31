@@ -12,7 +12,7 @@
 	//             Richard Karnesky <mailto:karnesky@gmail.com>
 	//
 	// Created:    17-May-05, 16:38
-	// Modified:   30-Aug-06, 23:30
+	// Modified:   31-Aug-06, 14:26
 
 	// This include file contains functions that'll export records to SRW XML.
 	// Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -59,7 +59,7 @@
 
 		$srwRecordsBranch = new XMLBranch("srw:records");
 
-		if ($showRowsOriginal != 0) // we ommit the records list in the response if the SRU query did contain 'maximumRecords=0'
+		if ($showRowsOriginal != 0) // we omit the records list in the response if the SRU query did contain 'maximumRecords=0'
 		{
 			$exportArray = array(); // Array for individually exported records
 

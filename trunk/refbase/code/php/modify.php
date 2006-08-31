@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./modify.php
 	// Created:    18-Dec-02, 23:08
-	// Modified:   20-Jun-06, 13:24
+	// Modified:   31-Aug-06, 14:26
 
 	// This php script will perform adding, editing & deleting of records.
 	// It then calls 'receipt.php' which displays links to the modified/added record
@@ -198,6 +198,13 @@
 
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE
 	connectToMySQLDatabase($oldQuery); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
+
+
+	// Apply search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$updateSearchReplaceActionsArray' (which is defined in 'ini.inc.php'):
+	foreach ($updateSearchReplaceActionsArray as $fieldActionsArray)
+		foreach ($formVars as $fieldName => $fieldValue)
+			if (in_array($fieldName, $fieldActionsArray['fields']))
+				$formVars[$fieldName] = searchReplaceText($fieldActionsArray['actions'], $fieldValue, true); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
 
 	// Extract all form values provided by 'record.php':
@@ -1164,7 +1171,7 @@
 
 			// copy the new subdir name & file name to the 'file' field variable:
 			// Note: if a user uploads a file and there was already a file specified within the 'file' field, the old file will NOT get removed
-			//       from the files directory! Automatic file removal is ommitted on purpose since it's way more difficult to recover an
+			//       from the files directory! Automatic file removal is omitted on purpose since it's way more difficult to recover an
 			//       inadvertently deleted file than to delete it manually. However, future versions should introduce a smarter way of handling
 			//       orphaned files...
 			$fileName = $subDirName . $newFileName;

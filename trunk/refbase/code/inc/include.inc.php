@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   31-Aug-06, 13:24
+	// Modified:   31-Aug-06, 14:21
 
 	// This file contains important
 	// functions that are shared
@@ -1074,7 +1074,7 @@
 							. "\n\t</td>";
 		}
 		// we don't show the select/deselect links in citation layout (since there aren't any checkboxes anyhow);
-		// similarly, we ommit these links on 'help.php' in 'Display' mode:
+		// similarly, we omit these links on 'help.php' in 'Display' mode:
 		else // citation layout
 			$BrowseLinks .= "\n\t<td align=\"left\" valign=\"bottom\" width=\"187\">&nbsp;</td>";
 
@@ -3169,7 +3169,7 @@ EOF;
 				}
 			}
 			else
-				$citeKey = ""; // by ommitting a cite key bibutils will take care of generation of cite keys for its export formats (BibTeX, Endnote, RIS)
+				$citeKey = ""; // by omitting a cite key bibutils will take care of generation of cite keys for its export formats (BibTeX, Endnote, RIS)
 		}
 
 
@@ -3764,7 +3764,7 @@ EOF;
 				if (preg_match("/SELECT(.(?!FROM))+?file/i",$sqlQuery))
 				{
 					// save an appropriate error message:
-					$HeaderString = "<b><span class=\"warning\">Display of file field was ommitted!</span></b>";
+					$HeaderString = "<b><span class=\"warning\">Display of file field was omitted!</span></b>";
 					// note: we don't write out any error message if the file field does only occur within the 'ORDER' clause (but not within the 'SELECT' clause)
 
 					// Write back session variable:
@@ -3789,7 +3789,7 @@ EOF;
 				$sqlQuery = preg_replace("/WHERE( *\( *?)*(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","WHERE serial RLIKE \".+\"",$sqlQuery); // ...supply generic 'WHERE' clause if it did ONLY contain the 'file' field
 
 				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">Querying of file field was ommitted!</span></b>"; // save an appropriate error message
+				$HeaderString = "<b><span class=\"warning\">Querying of file field was omitted!</span></b>"; // save an appropriate error message
 
 				// Write back session variable:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -3807,7 +3807,7 @@ EOF;
 				if (preg_match("/SELECT(.(?!FROM))+?(marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)/i",$sqlQuery))
 				{
 					// save an appropriate error message:
-					$HeaderString = "<b><span class=\"warning\">Display of user-specific fields was ommitted!</span></b>";
+					$HeaderString = "<b><span class=\"warning\">Display of user-specific fields was omitted!</span></b>";
 					// note: we don't write out any error message if the user-specific fields do only occur within the 'ORDER' clause (but not within the 'SELECT' clause)
 
 					// Write back session variable:
@@ -3840,7 +3840,7 @@ EOF;
 				$sqlQuery = preg_replace("/WHERE( *\( *?)*(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","WHERE serial RLIKE \".+\"",$sqlQuery); // ...supply generic 'WHERE' clause if it did ONLY contain user-specific fields
 
 				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">Querying of user-specific fields was ommitted!</span></b>"; // save an appropriate error message
+				$HeaderString = "<b><span class=\"warning\">Querying of user-specific fields was omitted!</span></b>"; // save an appropriate error message
 
 				// Write back session variable:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'

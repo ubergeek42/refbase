@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./cite/formats/cite_html.php
 	// Created:    10-Jun-06, 02:30
-	// Modified:   10-Jun-06, 19:47
+	// Modified:   31-Aug-06, 14:18
 
 	// This is a citation format file (which must reside within the 'cite/formats/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecords()' function that outputs a reference list from selected records in HTML format.
@@ -110,7 +110,7 @@
 
 
 		// OUTPUT RESULTS:
-		// Note: currently, we ommit the 'Search Within Results' form in citation layout! (compare with 'displayColumns()' function in 'search.php')
+		// Note: currently, we omit the 'Search Within Results' form in citation layout! (compare with 'displayColumns()' function in 'search.php')
 
 		// Build a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages
 		// call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
@@ -123,7 +123,7 @@
 					. "\n</table>";
 
 		// Append the footer:
-		// Note: we ommit the results footer in print view! ('viewType=Print')
+		// Note: we omit the results footer in print view! ('viewType=Print')
 		if ($viewType != "Print")
 		{
 			// Again, insert the (already constructed) BROWSE LINKS
