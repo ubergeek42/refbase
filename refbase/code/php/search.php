@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   31-Aug-06, 14:29
+	// Modified:   31-Aug-06, 15:02
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -1826,15 +1826,6 @@
 			$ResultsFooterRow = ""; // return an empty string if the 'user_permissions' session variable does NOT contain any of the following: 'allow_details_view', 'allow_cite', 'allow_user_groups', 'allow_export', 'allow_batch_export'
 
 		return $ResultsFooterRow;
-	}
-
-	// --------------------------------------------------------------------
-
-	// EXTRACT UNIQUE FIELD VALUES
-	// extract unique values from a given database field
-	function extractUniqueFieldValues($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset)
-	{
-		// function not yet implemented!
 	}
 
 	// --------------------------------------------------------------------

@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./modify.php
 	// Created:    18-Dec-02, 23:08
-	// Modified:   31-Aug-06, 14:26
+	// Modified:   31-Aug-06, 14:59
 
 	// This php script will perform adding, editing & deleting of records.
 	// It then calls 'receipt.php' which displays links to the modified/added record
@@ -198,13 +198,6 @@
 
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE
 	connectToMySQLDatabase($oldQuery); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
-
-
-	// Apply search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$updateSearchReplaceActionsArray' (which is defined in 'ini.inc.php'):
-	foreach ($updateSearchReplaceActionsArray as $fieldActionsArray)
-		foreach ($formVars as $fieldName => $fieldValue)
-			if (in_array($fieldName, $fieldActionsArray['fields']))
-				$formVars[$fieldName] = searchReplaceText($fieldActionsArray['actions'], $fieldValue, true); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
 
 	// Extract all form values provided by 'record.php':
