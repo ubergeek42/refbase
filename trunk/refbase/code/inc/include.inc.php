@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   16-Aug-06, 10:52
+	// Modified:   31-Aug-06, 13:24
 
 	// This file contains important
 	// functions that are shared
@@ -3109,17 +3109,26 @@ EOF;
 	{
 		connectToMySQLDatabase("");
 
+		$permissionQueryArray = array();
+
 		// CONSTRUCT SQL QUERY:
 		// prepare the 'SET' part of the SQL query string:
 		foreach($userPermissionsArray as $permissionKey => $permissionValue)
 			$permissionQueryArray[] = $permissionKey . " = \"" . $permissionValue . "\"";
 
-		$permissionQueryString = implode(", ", $permissionQueryArray);
+		if (!empty($permissionQueryArray))
+		{
+			$permissionQueryString = implode(", ", $permissionQueryArray);
 
-		// Update all specified permission settings in the 'user_permissions' table for the selected user(s):
-		$query = "UPDATE user_permissions SET " . $permissionQueryString . " WHERE user_id RLIKE \"^(" . $recordSerialsString . ")$\"";
+			// Update all specified permission settings in the 'user_permissions' table for the selected user(s):
+			$query = "UPDATE user_permissions SET " . $permissionQueryString . " WHERE user_id RLIKE \"^(" . $recordSerialsString . ")$\"";
 
-		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
+			$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
+
+			return true;
+		}
+		else
+			return false;
 	}
 
 	// --------------------------------------------------------------------
