@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_receipt.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   21-Jun-06, 00:27
+	// Modified:   31-Aug-06, 18:25
 
 	// This script shows the user a receipt for their user UPDATE or INSERT.
 	// It carries out no database actions and can be bookmarked.
@@ -208,6 +208,8 @@
 		global $officialDatabaseName;
 		global $defaultLanguage;
 		global $tableUsers; // defined in 'db.inc.php'
+
+		global $loc; // '$loc' is made globally available in 'core.php'
 
 		// CONSTRUCT SQL QUERY:
 		$query = "SELECT * FROM $tableUsers WHERE user_id = $userID";
@@ -464,48 +466,44 @@
 				// get all user permissions for the current user:
 				$userPermissionsArray = getPermissions($userID, "user", false); // function 'getPermissions()' is defined in 'include.inc.php'
 
+				// map raw field names from table 'user_permissions' with items of the global localization array ('$loc'):
+				$localizedUserPermissionsArray = array('allow_add'               => 'UserPermission_AllowAdd',
+														'allow_edit'             => 'UserPermission_AllowEdit',
+														'allow_delete'           => 'UserPermission_AllowDelete',
+														'allow_download'         => 'UserPermission_AllowDownload',
+														'allow_upload'           => 'UserPermission_AllowUpload',
+														'allow_details_view'     => 'UserPermission_AllowDetailsView',
+														'allow_print_view'       => 'UserPermission_AllowPrintView',
+														'allow_browse_view'      => 'UserPermission_AllowBrowseView',
+														'allow_sql_search'       => 'UserPermission_AllowSQLSearch',
+														'allow_user_groups'      => 'UserPermission_AllowUserGroups',
+														'allow_user_queries'     => 'UserPermission_AllowUserQueries',
+														'allow_rss_feeds'        => 'UserPermission_AllowRSSFeeds',
+														'allow_import'           => 'UserPermission_AllowImport',
+														'allow_export'           => 'UserPermission_AllowExport',
+														'allow_cite'             => 'UserPermission_AllowCite',
+														'allow_batch_import'     => 'UserPermission_AllowBatchImport',
+														'allow_batch_export'     => 'UserPermission_AllowBatchExport',
+														'allow_modify_options'   => 'UserPermission_AllowModifyOptions',
+														'allow_edit_call_number' => 'UserPermission_AllowEditCallNumber');
+
 				$enabledUserActionsArray = array(); // initialize array variables
 				$disabledUserActionsArray = array();
 
-				// separate enabled permission settings from disabled ones:
+				// separate enabled permission settings from disabled ones and assign localized permission names:
 				foreach($userPermissionsArray as $permissionKey => $permissionValue)
+				{
 					if ($permissionValue == 'yes')
-						$enabledUserActionsArray[] = $permissionKey; // append this field's permission name (as value) to the array of enabled user actions
+						$enabledUserActionsArray[] = $loc[$localizedUserPermissionsArray[$permissionKey]]; // append this field's localized permission name to the array of enabled user actions
 					else
-						$disabledUserActionsArray[] = $permissionKey; // append this field's permission name (as value) to the array of disabled user actions
-
-				// convert the raw field names from table 'user_permissions' into somewhat more readable names:
-				$searchReplaceActionsArray = array('allow_add'                => 'Add records',
-													'allow_edit'             => 'Edit records',
-													'allow_delete'           => 'Delete records',
-													'allow_download'         => 'File download',
-													'allow_upload'           => 'File upload',
-													'allow_details_view'     => 'Details view',
-													'allow_print_view'       => 'Print view',
-													'allow_browse_view'      => 'Browse view',
-													'allow_sql_search'       => 'SQL search',
-													'allow_user_groups'      => 'User groups',
-													'allow_user_queries'     => 'User queries',
-													'allow_rss_feeds'        => 'RSS feeds',
-													'allow_import'           => 'Import',
-													'allow_export'           => 'Export',
-													'allow_cite'             => 'Cite',
-													'allow_batch_import'     => 'Batch import',
-													'allow_batch_export'     => 'Batch export',
-													'allow_modify_options'   => 'Modify options');
-//													'allow_edit_call_number' => 'Edit call number');
+						$disabledUserActionsArray[] = $loc[$localizedUserPermissionsArray[$permissionKey]]; // append this field's localized permission name to the array of disabled user actions
+				}
 
 				if (empty($enabledUserActionsArray))
 					$enabledUserActionsArray[] = "(none)";
-				else
-					foreach($enabledUserActionsArray as $permissionKey => $permissionName)
-						$enabledUserActionsArray[$permissionKey] = searchReplaceText($searchReplaceActionsArray, $permissionName, false); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
 				if (empty($disabledUserActionsArray))
 					$disabledUserActionsArray[] = "(none)";
-				else
-					foreach($disabledUserActionsArray as $permissionKey => $permissionName)
-						$disabledUserActionsArray[$permissionKey] = searchReplaceText($searchReplaceActionsArray, $permissionName, false); // function 'searchReplaceText()' is defined in 'include.inc.php'
 
 				echo "\n\t\t<tr>\n\t\t\t<td colspan=\"2\"></td>\n\t\t</tr>";
 
