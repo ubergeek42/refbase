@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sru.php
 	// Created:    17-May-05, 16:22
-	// Modified:   31-Aug-06, 01:06
+	// Modified:   31-Aug-06, 14:27
 
 	// This script serves as a (faceless) routing page which takes a SRU query and
 	// converts the query into a native refbase query which is then passed to 'search.php'.
@@ -52,7 +52,7 @@
 	//     sru.php?version=1.1&query=1&stylesheet=xml2html.xsl
 
 	// Note that (if the 'version' & 'query' parameters are present in the
-	// query) 'operation=searchRetrieve' is assumed if ommitted. Additionally,
+	// query) 'operation=searchRetrieve' is assumed if omitted. Additionally,
 	// only 'recordPacking=xml' and 'recordSchema=mods' are supported and
 	// 'sru.php' will use these settings by default if not given in the query.
 	// Data will be returned together with a default stylesheet if the

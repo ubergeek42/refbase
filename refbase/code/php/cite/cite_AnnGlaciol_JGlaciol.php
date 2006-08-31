@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./cite/styles/cite_AnnGlaciol_JGlaciol.php
 	// Created:    07-Sep-05, 14:53
-	// Modified:   11-Jun-06, 17:08
+	// Modified:   31-Aug-06, 14:19
 
 	// This is a citation style file (which must reside within the 'cite/styles/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecord()' function that outputs a reference list from selected records according to the citation style used by
@@ -315,7 +315,7 @@
 						if (!empty($row['series_volume']))	// series volume
 							$record .= $row['series_volume'];
 
-						if (!empty($row['series_issue']))	// series issue (I'm not really sure if -- for this cite style -- the series issue should be rather ommitted here)
+						if (!empty($row['series_issue']))	// series issue (I'm not really sure if -- for this cite style -- the series issue should be rather omitted here)
 							$record .= "(" . $row['series_issue'] . ")";
 
 						$record .= ".)";
@@ -449,7 +449,7 @@
 						if (!empty($row['series_volume']))	// series volume
 							$record .= $row['series_volume'];
 
-						if (!empty($row['series_issue']))	// series issue (I'm not really sure if -- for this cite style -- the series issue should be rather ommitted here)
+						if (!empty($row['series_issue']))	// series issue (I'm not really sure if -- for this cite style -- the series issue should be rather omitted here)
 							$record .= "(" . $row['series_issue'] . ")";
 
 						$record .= ".)";

@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import.php
 	// Created:    17-Feb-06, 20:57
-	// Modified:   25-Aug-06, 15:50
+	// Modified:   31-Aug-06, 14:19
 
 	// Import form that offers to import records from Reference Manager (RIS), Cambridge Scientific Abstracts (CSA),
 	// RefWorks Tagged Format, ISI Web of Science, PubMed MEDLINE, PubMed XML, MODS XML, Endnote Tagged Text, BibTeX or COPAC.
@@ -173,7 +173,7 @@
 				$skipBadRecordsCheckBoxIsChecked = "";
 	
 			// display the 'Skip records with unrecognized data format' checkbox:
-			$skipBadRecordsInput = "<br><input type=\"checkbox\" name=\"skipBadRecords\" value=\"1\"$skipBadRecordsCheckBoxIsChecked title=\"mark this checkbox to ommit records with unrecognized data format during import\">&nbsp;&nbsp;" . fieldError("skipBadRecords", $errors);
+			$skipBadRecordsInput = "<br><input type=\"checkbox\" name=\"skipBadRecords\" value=\"1\"$skipBadRecordsCheckBoxIsChecked title=\"mark this checkbox to omit records with unrecognized data format during import\">&nbsp;&nbsp;" . fieldError("skipBadRecords", $errors);
 		}
 	}
 	else // all records did have a valid data format -> supress the 'Skip records with unrecognized data format' checkbox

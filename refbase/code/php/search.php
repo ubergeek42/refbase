@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   15-Aug-06, 13:16
+	// Modified:   31-Aug-06, 14:29
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -596,7 +596,7 @@
 					// ...generate a link to 'sql_search.php' with a custom SQL query that matches the current result set & display options:
 					$HeaderString = $HeaderStringPart . "<a href=\"sql_search.php?customQuery=1&amp;sqlQuery=$queryURL&amp;showQuery=$showQuery&amp;showLinks=$showLinks&amp;showRows=$showRows&amp;submit=$displayType&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=$citeOrder&amp;oldQuery=" . rawurlencode($oldQuery) . "\" title=\"modify your current query\">your query</a>";
 				else // use of 'sql_search.php' isn't allowed for this user
-					$HeaderString = $HeaderStringPart . "your query"; // so we ommit the link
+					$HeaderString = $HeaderStringPart . "your query"; // so we omit the link
 
 				if (isset($_SESSION['user_permissions']) AND ((isset($_SESSION['loginEmail']) AND ereg("(allow_user_queries|allow_rss_feeds)", $_SESSION['user_permissions'])) OR (!isset($_SESSION['loginEmail']) AND ereg("allow_rss_feeds", $_SESSION['user_permissions'])))) // if the 'user_permissions' session variable contains 'allow_rss_feeds' -OR- if logged in, aditionally: 'allow_user_queries':
 					$HeaderString .= " (";
@@ -659,7 +659,7 @@
 	{
 		// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Query Results", "index,follow", "Results from the " . encodeHTML($officialDatabaseName), "", true, "", $viewType, $rssURLArray);
-		if ($viewType != "Print") // Note: we ommit the visible header in print view! ('viewType=Print')
+		if ($viewType != "Print") // Note: we omit the visible header in print view! ('viewType=Print')
 			showPageHeader($HeaderString, $oldQuery);
 	}
 
@@ -731,7 +731,7 @@
 				$oldQuery = "sqlQuery=" . $query . "&amp;showQuery=" . $showQuery . "&amp;showLinks=" . $showLinks . "&amp;formType=sqlSearch&amp;showRows=" . $showRows . "&amp;rowOffset=" . $rowOffset . "&amp;submit=" . $displayType . "&amp;citeStyleSelector=" . rawurlencode($citeStyle) . "&amp;citeOrder=" . $citeOrder;
 
 
-				// Note: we ommit the 'Search Within Results' form in print view! ('viewType=Print')
+				// Note: we omit the 'Search Within Results' form in print view! ('viewType=Print')
 				if ($viewType != "Print")
 				{
 					if ($displayType == "Browse")
@@ -765,7 +765,7 @@
 
 
 				//    and insert a divider line (which separates the 'Search Within Results' form from the browse links & results data below):
-				if ($viewType != "Print") // Note: we ommit the divider line in print view! ('viewType=Print')
+				if ($viewType != "Print") // Note: we omit the divider line in print view! ('viewType=Print')
 					echo "\n<hr align=\"center\" width=\"93%\">";
 
 				// 3) Build a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages
@@ -795,7 +795,7 @@
 				echo "\n<tr>";
 
 				// ... print a marker ('x') column (which will hold the checkboxes within the results part)
-				if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
+				if ($viewType != "Print") // Note: we omit the marker column in print view! ('viewType=Print')
 					echo "\n\t<th align=\"left\" valign=\"top\">&nbsp;</th>";
 
 				// for each of the attributes in the result set...
@@ -843,7 +843,7 @@
 					echo "\n<tr>";
 
 					// ... print a column with a checkbox
-					if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
+					if ($viewType != "Print") // Note: we omit the marker column in print view! ('viewType=Print')
 					{
 						echo "\n\t<td align=\"center\" valign=\"top\" width=\"10\">\n\t\t<input type=\"checkbox\" name=\"marked[]\" value=\"";
 						if ($displayType == "Browse")
@@ -959,7 +959,7 @@
 				// END RESULTS DATA COLUMNS ----------------
 
 				// BEGIN RESULTS FOOTER --------------------
-				// Note: we ommit the results footer in print view! ('viewType=Print')
+				// Note: we omit the results footer in print view! ('viewType=Print')
 				if ($viewType != "Print")
 				{
 					// Again, insert the (already constructed) BROWSE LINKS
@@ -1038,7 +1038,7 @@
 					$NoColumns = 7; // 7 columns: checkbox, field name, field contents
 
 
-				// 2) Note: we ommit the 'Search Within Results' form when displaying details! (compare with 'displayColumns()' function)
+				// 2) Note: we omit the 'Search Within Results' form when displaying details! (compare with 'displayColumns()' function)
 
 
 				// 3) Build a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages
@@ -1069,7 +1069,7 @@
 				echo "\n<tr>";
 
 				// ... print a marker ('x') column (which will hold the checkboxes within the results part)
-				if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
+				if ($viewType != "Print") // Note: we omit the marker column in print view! ('viewType=Print')
 					echo "\n\t<th align=\"left\" valign=\"top\">&nbsp;</th>";
 
 				// ... print a record header
@@ -1115,7 +1115,7 @@
 								{
 									$recordData .= "\n<tr>"; // ...start a new TABLE row
 
-									if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
+									if ($viewType != "Print") // Note: we omit the marker column in print view! ('viewType=Print')
 									{
 										if ($i == 0) // ... print a column with a checkbox if it's the first row of attribute data:
 											$recordData .= "\n\t<td align=\"left\" valign=\"top\" width=\"10\"><input type=\"checkbox\" name=\"marked[]\" value=\"" . $row["serial"] . "\" title=\"select this record\"></td>";
@@ -1339,7 +1339,7 @@
 				// END RESULTS DATA COLUMNS ----------------
 
 				// BEGIN RESULTS FOOTER --------------------
-				// Note: we ommit the results footer in print view! ('viewType=Print')
+				// Note: we omit the results footer in print view! ('viewType=Print')
 				if ($viewType != "Print")
 				{
 					// Again, insert the (already constructed) BROWSE LINKS
@@ -1826,6 +1826,15 @@
 			$ResultsFooterRow = ""; // return an empty string if the 'user_permissions' session variable does NOT contain any of the following: 'allow_details_view', 'allow_cite', 'allow_user_groups', 'allow_export', 'allow_batch_export'
 
 		return $ResultsFooterRow;
+	}
+
+	// --------------------------------------------------------------------
+
+	// EXTRACT UNIQUE FIELD VALUES
+	// extract unique values from a given database field
+	function extractUniqueFieldValues($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset)
+	{
+		// function not yet implemented!
 	}
 
 	// --------------------------------------------------------------------
@@ -5550,7 +5559,7 @@
 	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
 	if (!eregi("^cli", $client) AND (!(($displayType == "Cite") AND (!eregi("^html$", $citeType))) OR ($rowsFound == 0))) // we exclude the HTML page footer for citation formats other than HTML if something was found
 	{
-		if ($viewType != "Print") // Note: we ommit the visible footer in print view!
+		if ($viewType != "Print") // Note: we omit the visible footer in print view!
 			showPageFooter($HeaderString, $oldQuery);
 
 		displayHTMLfoot();

@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 00:25
-	// Modified:   21-Jun-06, 00:27
+	// Modified:   31-Aug-06, 14:28
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -272,7 +272,7 @@
 
 	// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Manage Users", "noindex,nofollow", "Administration page that lists users of the " . encodeHTML($officialDatabaseName) . ", with links for adding, editing or deleting any users", "", true, "", $viewType, array());
-	if ($viewType != "Print") // Note: we ommit the visible header in print view! ('viewType=Print')
+	if ($viewType != "Print") // Note: we omit the visible header in print view! ('viewType=Print')
 		showPageHeader($HeaderString, "");
 
 	// (4b) DISPLAY results:
@@ -315,7 +315,7 @@
 			else
 				$NoColumns = (1+$fieldsToDisplay); // add checkbox column
 
-			// Note: we ommit the 'Search Within Results' form in print view! ('viewType=Print')
+			// Note: we omit the 'Search Within Results' form in print view! ('viewType=Print')
 			if ($viewType != "Print")
 			{
 				// Build a TABLE with forms containing options to show the user groups, refine the search results or change the displayed columns:
@@ -345,7 +345,7 @@
 
 
 			// and insert a divider line (which separates the 'Search Within Results' form from the browse links & results data below):
-			if ($viewType != "Print") // Note: we ommit the divider line in print view! ('viewType=Print')
+			if ($viewType != "Print") // Note: we omit the divider line in print view! ('viewType=Print')
 				echo "\n<hr align=\"center\" width=\"93%\">";
 
 			// Build a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages
@@ -370,7 +370,7 @@
 			echo "\n<tr>";
 	
 			// ... print a marker ('x') column (which will hold the checkboxes within the results part)
-			if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
+			if ($viewType != "Print") // Note: we omit the marker column in print view! ('viewType=Print')
 				echo "\n\t<th align=\"left\" valign=\"top\">&nbsp;</th>";
 	
 			// for each of the attributes in the result set...
@@ -409,7 +409,7 @@
 				echo "\n<tr>";
 	
 				// ... print a column with a checkbox
-				if ($viewType != "Print") // Note: we ommit the marker column in print view! ('viewType=Print')
+				if ($viewType != "Print") // Note: we omit the marker column in print view! ('viewType=Print')
 					echo "\n\t<td align=\"left\" valign=\"top\" width=\"10\"><input type=\"checkbox\" name=\"marked[]\" value=\"" . $row["user_id"] . "\"></td>";
 	
 				// ... and print out each of the attributes
@@ -457,7 +457,7 @@
 			// END RESULTS DATA COLUMNS ----------------
 
 			// BEGIN RESULTS FOOTER --------------------
-			// Note: we ommit the results footer in print view! ('viewType=Print')
+			// Note: we omit the results footer in print view! ('viewType=Print')
 			if ($viewType != "Print")
 			{
 				// Again, insert the (already constructed) BROWSE LINKS
@@ -695,7 +695,7 @@
 
 	// DISPLAY THE HTML FOOTER:
 	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
-	if ($viewType != "Print") // Note: we ommit the visible footer in print view! ('viewType=Print')
+	if ($viewType != "Print") // Note: we omit the visible footer in print view! ('viewType=Print')
 		showPageFooter($HeaderString, "");
 
 	displayHTMLfoot();

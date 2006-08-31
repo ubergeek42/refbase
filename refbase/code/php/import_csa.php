@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import_csa.php
 	// Created:    21-Nov-03, 22:05
-	// Modified:   27-May-06, 00:14
+	// Modified:   31-Aug-06, 14:20
 
 	// Import form that offers to import records from the "Cambridge Scientific Abstracts" (CSA)
 	// Internet Database Service (<http://www.csa1.co.uk/csa/index.html>). This import form requires
@@ -173,7 +173,7 @@
 				$skipBadRecordsCheckBoxIsChecked = "";
 	
 			// display the 'Skip records with unrecognized data format' checkbox:
-			$skipBadRecordsInput = "<br><input type=\"checkbox\" name=\"skipBadRecords\" value=\"1\"$skipBadRecordsCheckBoxIsChecked title=\"mark this checkbox to ommit records with unrecognized data format during import\">&nbsp;&nbsp;" . fieldError("skipBadRecords", $errors);
+			$skipBadRecordsInput = "<br><input type=\"checkbox\" name=\"skipBadRecords\" value=\"1\"$skipBadRecordsCheckBoxIsChecked title=\"mark this checkbox to omit records with unrecognized data format during import\">&nbsp;&nbsp;" . fieldError("skipBadRecords", $errors);
 		}
 	}
 	else // all records did have a valid data format -> supress the 'Skip records with unrecognized data format' checkbox

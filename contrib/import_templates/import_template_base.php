@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import_template_base.php
 	// Created:    11-Jan-06, 18:36
-	// Modified:   16-Aug-06, 16:28
+	// Modified:   31-Aug-06, 14:20
 
 	// Template for a batch import script.
 	// Use this script to develop your own batch importer.
@@ -67,11 +67,11 @@
 	// (3) Loop over each record and extract the record's field data into an array;
 	//     For each record you should end up with an array structure similar to the one below ('$recordFieldParametersArray'):
 
-	// NOTES: - you can safely ommit unneeded fields from your data array; for any fields that aren't present in the data array, the database will insert its default values
+	// NOTES: - you can safely omit unneeded fields from your data array; for any fields that aren't present in the data array, the database will insert its default values
 	//        - the 'addRecords()' function will take care of the calculation fields ('first_author', 'author_count', 'first_page', 'volume_numeric' and 'series_volume_numeric')
 	//        - similarly, the *date/*time/*by fields ('created_date', 'created_time', 'created_by', 'modified_date', 'modified_time', 'modified_by') will be filled automatically
 	//          if no custom values (in correct date ['YYYY-MM-DD'] and time ['HH:MM:SS'] format) are given in your array
-	//        - you can pass any custom info for the 'location' field in your array; however, if you ommit the 'location' field from the array
+	//        - you can pass any custom info for the 'location' field in your array; however, if you omit the 'location' field from the array
 	//          the 'addRecords()' function will insert name & email address of the currently logged-in user (e.g. 'Matthias Steffens (refbase@extracts.de)')
 	//        - the serial number(s) will be assigned automatically (and returned by the 'addRecords()' function in form of an array)
 	//        - this import example will only add to the main MySQL table ('refs'), but not to the 'user_data' table
