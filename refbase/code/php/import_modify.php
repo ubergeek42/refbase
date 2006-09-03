@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import_modify.php
 	// Created:    17-Feb-06, 20:57
-	// Modified:   03-Sep-06, 12:20
+	// Modified:   03-Sep-06, 22:42
 
 	// This php script accepts input from 'import.php' and will process records exported from Endnote, Reference Manager (RIS), BibTeX, ISI Web of Science,
 	// Pubmed, CSA or Copac. In case of a single record, the script will call 'record.php' with all provided fields pre-filled. The user can then verify
@@ -55,6 +55,7 @@
 		$formVars['formType'] = "import";
 		$formVars['importRecordsRadio'] = "all";
 		$formVars['importRecords'] = "1";
+		$formVars['showSource'] = "1";
 	}
 
 	// Get the referring page (or set a default one if no referrer is available or if the data were sent via a bookmarklet):
@@ -95,8 +96,17 @@
 	// Get the form used by the user:
 	$formType = $formVars['formType'];
 
-	// Get the source text containing the bibliographic record(s):
-	$sourceText = $formVars['sourceText'];
+	// In case of the main import form, get the source text containing the bibliographic record(s):
+	if (isset($formVars['sourceText']))
+		$sourceText = $formVars['sourceText'];
+	else
+		$sourceText = "";
+
+	// In case of the PubMed import form (import via PubMed ID), get the entered PubMed IDs:
+	if (isset($formVars['pubmedIDs']))
+		$pubmedIDs = $formVars['pubmedIDs'];
+	else
+		$pubmedIDs = "";
 
 	// If data were sent via a bookmarklet, get the URL containing the posted data:
 	if (isset($formVars['sourceURL']))
@@ -113,13 +123,19 @@
 	if (isset($_SESSION['user_permissions']) AND ereg("allow_batch_import", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does contain 'allow_batch_import'...
 	{
 		// Check whether we're supposed to import all records ('all') or just particular ones ('only'):
-		$importRecordsRadio = $formVars['importRecordsRadio'];
+		if (isset($formVars['importRecordsRadio']))
+			$importRecordsRadio = $formVars['importRecordsRadio'];
+		else
+			$importRecordsRadio = "";
 
 		// Get the record numbers of those records that shall be imported:
 		// examples of recognized formats: '1-5' imports the first five records; '1 3 7' will import records 1, 3 and 7; '1-3 5-7 9' will import records 1, 2, 3, 5, 6, 7 and 9
 		// (note that the first three records could be labelled e.g. as 'Record 12 of 52', 'Record 30 of 112' and 'Record 202 of 533' but they must be referred to as records '1-3'
 		//  in the 'importRecords' form)
-		$importRecords = $formVars['importRecords'];
+		if (isset($formVars['importRecords']))
+			$importRecords = $formVars['importRecords'];
+		else
+			$importRecords = "";
 	}
 	else // if the user is only allowed to import one record at a time, we'll always import the very first record
 	{
@@ -179,9 +195,46 @@
 		// attempt to identify the format of the input text:
 		$sourceFormat = identifySourceFormat($sourceText); // function 'identifySourceFormat()' is defined in 'import.inc.php'
 
-	// else if source text originated from the "import by PubMed ID" form:
+	// else if source text originated from the PubMed import form (import via PubMed ID):
 	elseif ($formType == "importPubMed")
-		$sourceFormat = "Pubmed";
+		$sourceFormat = "Pubmed Medline";
+
+	// --------------------------------------------------------------------
+
+	// FETCH DATA FROM URL:
+
+	// in case of import via PubMed ID: fetch source data from PubMed.gov for all given PubMed IDs:
+	if (($formType == "importPubMed") AND ereg("[0-9]", $pubmedIDs) AND !empty($sourceFormat))
+	{
+		// remove any meaningless delimiter(s) from the beginning or end of the ID string:
+		$pubmedIDs = trimTextPattern($pubmedIDs, "\D+", true, true); // function 'trimTextPattern()' is defined in 'include.inc.php'
+		// split on any text between PubMed IDs and remove any duplicate IDs:
+		$pubmedIDArray = array_unique(split("[^0-9]+", $pubmedIDs));
+		// merge PubMed IDs again with commas:
+		$pubmedIDs = implode(",", $pubmedIDArray);
+
+		$eUtilsServer = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/";
+		$eFetchScript = "efetch.fcgi";
+		$eFetchTool = "refbase";
+		$eFetchEmail = rawurlencode("info@refbase.net");
+		$eFetchDatabase = "pubmed";
+		$eFetchFormat = "medline";
+
+		if ($sourceFormat == "Pubmed XML")
+			$eFetchType = "xml";
+		else // by default, we'll use the "Pubmed Medline" format
+			$eFetchType = "text";
+
+		$sourceURL = $eUtilsServer . $eFetchScript . "?db=" . $eFetchDatabase . "&retmode=" . $eFetchType . "&rettype=" . $eFetchFormat . "&tool=" . $eFetchTool . "&email=" . $eFetchEmail . "&id=" . $pubmedIDs;
+
+		$sourceText = fetchDataFromURL($sourceURL); // function 'fetchDataFromURL()' is defined in 'import.inc.php'
+
+		if (!preg_match("/^PMID- /m", $sourceText) AND ereg("Error occurred:", $sourceText)) // a PubMed error occurred, probably because only unrecognized PubMed IDs were given
+		{
+			$errors["pubmedIDs"] = preg_replace("/.*Error occurred: *([^<>]+).*/s", "PubMed error: \\1", $sourceText); // attempt to extract PubMed error message
+			$sourceText = "";
+		}
+	}
 
 	// --------------------------------------------------------------------
 
@@ -216,9 +269,20 @@
 
 	// VALIDATE DATA FIELDS:
 
+	// For each parsed record, function 'validateRecords()' (in 'import.inc.php') will assign errors to '$errors["sourceText"]'.
+	// In case of the PubMed import form, we'll redirect these error messages to '$errors["pubmedIDs"]':
+	if (($formType == "importPubMed") AND isset($errors["sourceText"])) // some errors occurred
+	{
+		$errors["pubmedIDs"] = $errors["sourceText"];
+		unset($errors["sourceText"]);
+	}
+
 	// Verify that some source text was given:
-	if (empty($sourceText)) // no source data given
+	if (($formType == "import") AND empty($sourceText)) // no source data given
 		$errors["sourceText"] = "Source data missing!";
+
+	elseif (($formType == "importPubMed") AND !ereg("[0-9]", $pubmedIDs)) // no PubMed IDs given
+		$errors["pubmedIDs"] = "You must specify at least one PubMed ID!";
 
 	// If some source data were given but the source text format wasn't among the recognized formats:
 	elseif (empty($sourceFormat))
