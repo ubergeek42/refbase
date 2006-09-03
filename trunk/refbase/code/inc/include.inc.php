@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   31-Aug-06, 14:21
+	// Modified:   03-Sep-06, 17:38
 
 	// This file contains important
 	// functions that are shared
@@ -3545,7 +3545,7 @@ EOF;
 
 	// Remove a text pattern from the beginning and/or end of a string:
 	// This function is used to remove leading and/or trailing delimiters from a string.
-	// Notes:  - '$removePattern' must be specified as regular expression!
+	// Notes:  - '$removePattern' must be specified as perl-style regular expression!
 	//         - set both variables '$trimLeft' & '$trimRight' to 'true' if you want your text pattern to get removed from BOTH sides of the source string;
 	//           if you only want to trim the LEFT side of your source string: set '$trimLeft = true' & '$trimRight = false';
 	//           if you only want to trim the RIGHT side of your source string: set '$trimLeft = false' & '$trimRight = true';
@@ -3554,10 +3554,10 @@ EOF;
 	function trimTextPattern($sourceString, $removePattern, $trimLeft, $trimRight)
 	{
 		if ($trimLeft)
-			$sourceString = ereg_replace("^" . $removePattern, "", $sourceString); // remove text pattern from beginning of source string
+			$sourceString = preg_replace("/^" . $removePattern . "/", "", $sourceString); // remove text pattern from beginning of source string
 
 		if ($trimRight)
-			$sourceString = ereg_replace($removePattern . "$", "", $sourceString); // remove text pattern from end of source string
+			$sourceString = preg_replace("/" . $removePattern . "$/", "", $sourceString); // remove text pattern from end of source string
 
 		return $sourceString; // return the trimmed source string
 	}
