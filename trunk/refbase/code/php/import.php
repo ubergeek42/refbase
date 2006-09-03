@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import.php
 	// Created:    17-Feb-06, 20:57
-	// Modified:   31-Aug-06, 14:19
+	// Modified:   03-Sep-06, 22:48
 
 	// Import form that offers to import records from Reference Manager (RIS), Cambridge Scientific Abstracts (CSA),
 	// RefWorks Tagged Format, ISI Web of Science, PubMed MEDLINE, PubMed XML, MODS XML, Endnote Tagged Text, BibTeX or COPAC.
@@ -106,6 +106,9 @@
 	// If there were some errors on submit -> Re-load the data that were submitted by the user:
 	if (!empty($errors))
 	{
+		$formType = $formVars['formType']; // get the form type that was submitted by the user (and which subsequently caused an error)
+
+		// (A) main import form:
 		if (isset($formVars['sourceText'])) // '$formVars['sourceText']' may be non-existent in the (unlikely but possible) event that a user calls 'import_modify.php' directly
 			$sourceText = $formVars['sourceText'];
 		else
@@ -125,21 +128,33 @@
 		if (isset($formVars['importRecords'])) // 'importRecords' is only set if user has 'batch_import' permission
 			$importRecords = $formVars['importRecords'];
 		else
-			$importRecords = "";
+			$importRecords = "1";
 
 		// check whether the user marked the checkbox to skip records with unrecognized data format:
 		if (isset($formVars['skipBadRecords']))
 			$skipBadRecords = $formVars['skipBadRecords'];
 		else
 			$skipBadRecords = "";
+
+		// (B) PubMed import form (import via PubMed ID):
+		if (isset($formVars['pubmedIDs']))
+			$pubmedIDs = $formVars['pubmedIDs'];
+		else
+			$pubmedIDs = "";
 	}
 	else // display an empty form (i.e., set all variables to an empty string [""] or their default values, respectively):
 	{
+		$formType = "";
+
+		// (A) main import form:
 		$sourceText = "";
 		$showSource = "1";
 		$importRecordsRadio = "only";
 		$importRecords = "1";
 		$skipBadRecords = "";
+
+		// (B) PubMed import form:
+		$pubmedIDs = "";
 	}
 
 	// Show the login status:
@@ -150,9 +165,9 @@
 	displayHTMLhead(encodeHTML($officialDatabaseName) . $pageTitle, "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
 	showPageHeader($HeaderString, "");
 
-	// (2b) Start <form> and <table> holding the form elements:
-	echo "\n<form action=\"import_modify.php\" method=\"POST\">";
-	echo "\n<input type=\"hidden\" name=\"formType\" value=\"import\">"
+	// (2b) Start <form> and <table> holding the form elements of the main import form:
+	echo "\n<form action=\"import_modify.php\" method=\"POST\">"
+		. "\n<input type=\"hidden\" name=\"formType\" value=\"import\">"
 		. "\n<input type=\"hidden\" name=\"submit\" value=\"Import\">" // provide a default value for the 'submit' form tag. Otherwise, some browsers may not recognize the correct output format when a user hits <enter> within a form field (instead of clicking the "Import" button)
 		. "\n<input type=\"hidden\" name=\"showLinks\" value=\"1\">"; // embed '$showLinks=1' so that links get displayed on any 'display details' page
 
@@ -181,9 +196,28 @@
 		$skipBadRecordsInput = "";
 	}
 
-	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the import form\">"
-			. "\n<tr>\n\t<td width=\"58\" valign=\"top\"><b>" . $textEntryFormLabel . ":</b></td>\n\t<td width=\"10\">&nbsp;</td>"
-			. "\n\t<td colspan=\"3\">" . fieldError("sourceText", $errors) . $skipBadRecordsInput . "<textarea name=\"sourceText\" rows=\"6\" cols=\"60\" title=\"paste your records here\">$sourceText</textarea></td>"
+	if (!empty($skipBadRecordsInput))
+	{
+		if ($formType == "importPubMed")
+		{
+			$skipBadRecordsInputMain = "";
+			$skipBadRecordsInputPubmed = $skipBadRecordsInput;
+		}
+		else // $formType == "import"
+		{
+			$skipBadRecordsInputMain = $skipBadRecordsInput;
+			$skipBadRecordsInputPubmed = "";
+		}
+	}
+	else
+	{
+		$skipBadRecordsInputMain = "";
+		$skipBadRecordsInputPubmed = "";
+	}
+
+	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the main import form\">"
+			. "\n<tr>\n\t<td width=\"94\" valign=\"top\"><b>" . $textEntryFormLabel . ":</b></td>\n\t<td width=\"10\">&nbsp;</td>"
+			. "\n\t<td colspan=\"3\">" . fieldError("sourceText", $errors) . $skipBadRecordsInputMain . "<textarea name=\"sourceText\" rows=\"6\" cols=\"60\" title=\"paste your records here\">$sourceText</textarea></td>"
 			. "\n</tr>";
 
 	if (!empty($showSource))
@@ -226,20 +260,40 @@
 	// adjust the title string for the import button
 	{
 		$importButtonLock = "";
-		$importTitle = "press this button to import the given source data";
+		$importTitleMain = "press this button to import the given source data";
+		$importTitlePubmed = "press this button to fetch &amp; import source data for the given PubMed IDs";
 	}
 	else // Note, that disabling the submit button is just a cosmetic thing -- the user can still submit the form by pressing enter or by building the correct URL from scratch!
 	{
 		$importButtonLock = " disabled";
-		$importTitle = "not available since you have no permission to import any records";
+		$importTitleMain = "not available since you have no permission to import any records";
+		$importTitlePubmed = "not available since you have no permission to import any records";
 	}
 
-	echo "\n\t<td colspan=\"3\">\n\t\t<input type=\"submit\" name=\"submit\" value=\"Import\"$importButtonLock title=\"$importTitle\">\n\t</td>"
+	echo "\n\t<td colspan=\"3\">\n\t\t<input type=\"submit\" name=\"submit\" value=\"Import\"$importButtonLock title=\"$importTitleMain\">\n\t</td>"
+			. "\n</tr>"
+			. "\n</table>"
+			. "\n</form>";
+
+	// (2c) Start <form> and <table> holding the form elements of the PubMed import form (import via PubMed ID):
+	echo "\n<form action=\"import_modify.php\" method=\"POST\">"
+			. "\n<input type=\"hidden\" name=\"formType\" value=\"importPubMed\">"
+			. "\n<input type=\"hidden\" name=\"submit\" value=\"Import\">" // provide a default value for the 'submit' form tag. Otherwise, some browsers may not recognize the correct output format when a user hits <enter> within a form field (instead of clicking the "Import" button)
+			. "\n<input type=\"hidden\" name=\"showSource\" value=\"1\"$showSourceCheckBoxIsChecked>"; // we set this value from the main import form so that the state of the main import form is identical upon a submit error
+
+	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the PubMed import form\">"
+			. "\n<tr>\n\t<td width=\"94\" valign=\"top\"><b>PubMed IDs:</b></td>\n\t<td width=\"10\">&nbsp;</td>"
+			. "\n\t<td colspan=\"3\">" . fieldError("pubmedIDs", $errors) . $skipBadRecordsInputPubmed . "<input type=\"text\" name=\"pubmedIDs\" value=\"$pubmedIDs\" size=\"63\" title=\"enter any PubMed IDs, multiple IDs must be delimited by any non-digit chars\"></td>"
+			. "\n</tr>"
+			. "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
+			. "\n\t<td colspan=\"3\">\n\t\t<input type=\"submit\" name=\"submit\" value=\"Import\"$importButtonLock title=\"$importTitlePubmed\">\n\t</td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td align=\"center\" colspan=\"5\">&nbsp;</td>"
-			. "\n</tr>"
-			. "\n<tr>\n\t<td valign=\"top\"><b>Help:</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td valign=\"top\" colspan=\"3\">This form enables you to import records from "
+			. "\n</tr>";
+
+	// (2d) Display a table row with some help text:
+	echo "\n<tr>\n\t<td valign=\"top\"><b>Help:</b></td>\n\t<td>&nbsp;</td>"
+			. "\n\t<td valign=\"top\" colspan=\"3\">The upper form enables you to import records from "
 			. "<a href=\"http://www.endnote.com/\" target=\"top\">Endnote</a>, "
 			. "<a href=\"http://www.refman.com/\" target=\"top\">Reference Manager</a> (RIS), "
 			. "<a href=\"http://www.refworks.com/\" target=\"top\">RefWorks</a>, "
@@ -250,6 +304,9 @@
 			. "<a href=\"" . $importCSArecordsURL . "\" target=\"top\">Cambridge Scientific Abstracts</a> (CSA) " // '$importCSArecordsURL' is defined in 'ini.inc.php'
 			. "and <a href=\"http://www.copac.ac.uk/\" target=\"top\">COPAC</a>."
 			. " Please see the <a href=\"http://wiki.refbase.net/index.php/Importing_Records\" target=\"top\">refbase online documentation</a> for more information about the supported formats and any requirements in format structure.</td>"
+			. "\n</tr>"
+			. "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
+			. "\n\t<td colspan=\"3\">The lower form allows you to import records by their <a href=\"http://www.pubmed.gov/\" target=\"top\">PubMed</a> ID (PMID). Just enter one or more PubMed IDs (delimited by any non-digit characters) and press the <em>Import</em> button.</td>"
 			. "\n</tr>"
 			. "\n</table>"
 			. "\n</form>";
