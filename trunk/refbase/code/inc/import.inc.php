@@ -9,7 +9,7 @@
 	//
 	// File:       ./includes/import.inc.php
 	// Created:    13-Jan-06, 21:00
-	// Modified:   25-Aug-06, 18:02
+	// Modified:   03-Sep-06, 23:06
 
 	// This file contains functions
 	// that are used when importing
@@ -271,12 +271,22 @@
 																	)
 												),
 											array(
-													'fields'  => array("title", "address", "keywords", "abstract"),
+													'fields'  => array("title", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes"), // convert font attributes (which some publishers include in RIS records that are available on their web pages)
 													'actions' => array(
 																		"/<sup>(.+?)<\/sup>/i" =>  "[super:\\1]", // replace '<sup>...</sup>' with refbase markup ('[super:...]')
 																		"/<sub>(.+?)<\/sub>/i" =>  "[sub:\\1]", // replace '<sub>...</sub>' with refbase markup ('[sub:...]')
 																		"/<i>(.+?)<\/i>/i"     =>  "_\\1_", // replace '<i>...</i>' with refbase markup ('_..._')
 																		"/\\x10(.+?)\\x11/"    =>  "_\\1_" // replace '<ASCII#10>...<ASCII#11>' (which is used by Reference Manager to indicate italic strings) with refbase markup ('_..._')
+																	)
+												),
+											array(
+													'fields'  => array("title", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes"), // convert RefWorks font attributes (which RefWorks supports in title fields, notes, abstracts and user 1 - 5 fields)
+													'actions' => array(
+																		"/0RW1S34RfeSDcfkexd09rT3(.+?)1RW1S34RfeSDcfkexd09rT3/"  =>  "[super:\\1]", // replace RefWorks indicators for superscript text with refbase markup ('[super:...]')
+																		"/0RW1S34RfeSDcfkexd09rT4(.+?)1RW1S34RfeSDcfkexd09rT4/"  =>  "[sub:\\1]", // replace RefWorks indicators for subscript text with refbase markup ('[sub:...]')
+																		"/0RW1S34RfeSDcfkexd09rT2(.+?)1RW1S34RfeSDcfkexd09rT2/"  =>  "_\\1_", // replace RefWorks indicators for italic text with refbase markup ('_..._')
+																		"/0RW1S34RfeSDcfkexd09rT0(.+?)1RW1S34RfeSDcfkexd09rT0/"  =>  "**\\1**", // replace RefWorks indicators for bold text with refbase markup ('**...**')
+																		"/0RW1S34RfeSDcfkexd09rT1(.+?)1RW1S34RfeSDcfkexd09rT1/"  =>  "\\1" // remove RefWorks indicators for underline text (which isn't currently supported by refbase)
 																	)
 												)
 										);
@@ -837,7 +847,7 @@
 																	)
 												),
 											array(
-													'fields'  => array("title", "notes", "abstract"), // convert RefWorks font attributes (which RefWorks supports in title fields, notes, abstracts and user 1 - 5 fields)
+													'fields'  => array("title", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes"), // convert RefWorks font attributes (which RefWorks supports in title fields, notes, abstracts and user 1 - 5 fields)
 													'actions' => array(
 																		"/0RW1S34RfeSDcfkexd09rT3(.+?)1RW1S34RfeSDcfkexd09rT3/"  =>  "[super:\\1]", // replace RefWorks indicators for superscript text with refbase markup ('[super:...]')
 																		"/0RW1S34RfeSDcfkexd09rT4(.+?)1RW1S34RfeSDcfkexd09rT4/"  =>  "[sub:\\1]", // replace RefWorks indicators for subscript text with refbase markup ('[sub:...]')
@@ -1092,7 +1102,7 @@
 	{
 		if ($returnEmptyElements) // include empty elements:
 			$recordArray = preg_split("/" . $splitPattern . "/", $sourceText);
-		else // ommit empty elements:
+		else // omit empty elements:
 			$recordArray = preg_split("/" . $splitPattern . "/", $sourceText, -1, PREG_SPLIT_NO_EMPTY); // the 'PREG_SPLIT_NO_EMPTY' flag causes only non-empty pieces to be returned
 
 		return $recordArray;
@@ -1442,7 +1452,7 @@
 		//     'modified_by') will be filled automatically if no custom values (in correct date ['YYYY-MM-DD'] and time ['HH:MM:SS'] format)
 		//     are given in the '$importDataArray'
 		//
-		//   - we could pass any custom info for the 'location' field with the '$importDataArray', ommitting it here
+		//   - we could pass any custom info for the 'location' field with the '$importDataArray', omitting it here
 		//     causes the 'addRecords()' function to insert name & email address of the currently logged-in user
 		//     (e.g. 'Matthias Steffens (refbase@extracts.de)')
 		//
@@ -1487,6 +1497,28 @@
 	}
 
 	// --------------------------------------------------------------------
+
+	// This function takes the URL given in '$sourceURL' and retrieves the returned data:
+	function fetchDataFromURL($sourceURL)
+	{
+		$handle = fopen($sourceURL, "r"); // fetch data from URL in read mode
+
+		$sourceData = "";
+
+		if ($handle)
+		{
+			while (!feof($handle))
+			{
+				$sourceData .= fread($handle, 4096); // read data in chunks
+			}
+			fclose($handle);
+		}
+
+		return $sourceData;
+	}
+
+	// --------------------------------------------------------------------
+
 	// CSA TO REFBASE
 	// This function converts records from Cambridge Scientific Abstracts (CSA) into the standard "refbase"
 	// array format which can be then imported by the 'addRecords()' function in 'include.inc.php'.
