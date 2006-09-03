@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import_modify.php
 	// Created:    17-Feb-06, 20:57
-	// Modified:   11-Aug-06, 14:20
+	// Modified:   03-Sep-06, 12:20
 
 	// This php script accepts input from 'import.php' and will process records exported from Endnote, Reference Manager (RIS), BibTeX, ISI Web of Science,
 	// Pubmed, CSA or Copac. In case of a single record, the script will call 'record.php' with all provided fields pre-filled. The user can then verify
@@ -43,8 +43,22 @@
 
 	// --------------------------------------------------------------------
 
-	// Get the referring page (or set a default one if no referrer is available):
-	if (!empty($_SERVER['HTTP_REFERER'])) // if the referrer variable isn't empty
+	// Extract the ID of the client from which the query originated:
+	// this identifier is used to identify queries that originated from the refbase command line client ("cli-refbase-1.0.1") or from a bookmarklet (e.g., "jsb-refbase-1.0.0")
+	if (isset($formVars['client']))
+		$client = $formVars['client'];
+	else
+		$client = "";
+
+	if (eregi("^jsb", $client)) // if data were sent via a bookmarklet, we set some variables directly
+	{
+		$formVars['formType'] = "import";
+		$formVars['importRecordsRadio'] = "all";
+		$formVars['importRecords'] = "1";
+	}
+
+	// Get the referring page (or set a default one if no referrer is available or if the data were sent via a bookmarklet):
+	if (!empty($_SERVER['HTTP_REFERER']) AND !eregi("^jsb", $client)) // if the referrer variable isn't empty and doesn't originate from a bookmarklet
 		$referer = $_SERVER['HTTP_REFERER']; // on error, redirect to calling page
 	else
 		$referer = "import.php"; // on error, redirect to import form
@@ -83,6 +97,12 @@
 
 	// Get the source text containing the bibliographic record(s):
 	$sourceText = $formVars['sourceText'];
+
+	// If data were sent via a bookmarklet, get the URL containing the posted data:
+	if (isset($formVars['sourceURL']))
+		$sourceURL = $formVars['sourceURL'];
+	else
+		$sourceURL = "";
 
 	// Check whether we're supposed to display the original source data:
 	if (isset($formVars['showSource']))
