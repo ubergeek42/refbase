@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./update.sql
 # Created:    01-Mar-05, 16:54
-# Modified:   23-Jun-06, 21:35
+# Modified:   04-Sep-06, 15:49
 
 # This MySQL database structure file will update any refbase v0.8.0 database to v0.9.0
 
@@ -25,7 +25,7 @@ CREATE TABLE `formats` (
   `depends_id` mediumint(8) unsigned NOT NULL default '0',
   PRIMARY KEY  (`format_id`),
   KEY `format_name` (`format_name`)
-) TYPE=MyISAM AUTO_INCREMENT=24 ;
+) TYPE=MyISAM AUTO_INCREMENT=25 ;
 
 #
 # data for table `formats`
@@ -53,7 +53,8 @@ INSERT INTO `formats` VALUES (1, 'MODS XML', 'import', 'true', 'bibutils/import_
 (20, 'PDF', 'cite', 'true', 'formats/cite_pdf.php', '16', 1),
 (21, 'LaTeX', 'cite', 'true', 'formats/cite_latex.php', '17', 1),
 (22, 'Markdown', 'cite', 'true', 'formats/cite_markdown.php', '18', 1),
-(23, 'ASCII', 'cite', 'true', 'formats/cite_ascii.php', '19', 1);
+(23, 'ASCII', 'cite', 'true', 'formats/cite_ascii.php', '19', 1),
+(24, 'RefWorks', 'import', 'true', 'import_refworks2refbase.php', '20', 1);
 
 # --------------------------------------------------------
 
