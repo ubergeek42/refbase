@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./install_utf8.sql
 # Created:    02-Oct-04, 20:11
-# Modified:   18-Jun-06, 16:37
+# Modified:   04-Sep-06, 15:38
 
 # MySQL database structure & initial data (for use with 'utf8' character set)
 
@@ -181,7 +181,8 @@ INSERT INTO `formats` VALUES (1, 'MODS XML', 'import', 'true', 'bibutils/import_
 (20, 'PDF', 'cite', 'true', 'formats/cite_pdf.php', '16', 1),
 (21, 'LaTeX', 'cite', 'true', 'formats/cite_latex.php', '17', 1),
 (22, 'Markdown', 'cite', 'true', 'formats/cite_markdown.php', '18', 1),
-(23, 'ASCII', 'cite', 'true', 'formats/cite_ascii.php', '19', 1);
+(23, 'ASCII', 'cite', 'true', 'formats/cite_ascii.php', '19', 1),
+(24, 'RefWorks', 'import', 'true', 'import_refworks2refbase.php', '20', 1);
 
 # --------------------------------------------------------
 
