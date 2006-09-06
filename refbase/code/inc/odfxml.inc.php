@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/odfxml.inc.php
 	// Created:    01-Jun-06, 12:49
-	// Modified:   12-Jun-06, 20:09
+	// Modified:   06-Sep-06, 14:00
 
 	// This include file contains functions that'll export records to ODF XML
 	// in spreadsheet format ('.ods').
@@ -16,6 +16,7 @@
 	// Incorporate some include files:
 	include_once 'includes/webservice.inc.php'; // include functions that are commonly used with the refbase webservices
 	include_once 'includes/transtab_refbase_unicode.inc.php'; // include refbase markup -> Unicode search & replace patterns
+	include_once 'includes/zip.inc.php';
 
 	// Import the ActiveLink Packages
 	require_once("classes/include.php");
@@ -487,6 +488,17 @@
 
 
 		return array($universalSearchReplaceActionsArray, $fieldSpecificSearchReplaceActionsArray, $odfIndexesToRefbaseFieldsArray, $referenceTypesToRefbaseTypesArray);
+	}
+
+	function zipODF($content) {
+		$zipfile = new zipfile();  
+		//$zipfile -> add_dir("META-INF/"); 
+		$zipfile -> addFile($content, "content.xml");
+		$zipfile -> addFile("", "styles.xml");
+		$zipfile -> addFile("application/vnd.oasis.opendocument.spreadsheet","mimetype");
+		$zipfile -> addFile("<?xml version=\"1.0\" encoding=\"UTF-8\"?><office:document-meta xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:meta=\"urn:oasis:names:tc:opendocument:xmlns:meta:1.0\" xmlns:ooo=\"http://openoffice.org/2004/office\" office:version=\"1.0\"><office:meta><meta:generator>refbase</meta:generator></office:meta></office:document-meta>","meta.xml");
+		$zipfile -> addFile("<?xml version=\"1.0\" encoding=\"UTF-8\"?><manifest:manifest xmlns:manifest=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\"><manifest:file-entry manifest:media-type=\"application/vnd.oasis.opendocument.spreadsheet\" manifest:full-path=\"/\"/><manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"content.xml\"/><manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"styles.xml\"/><manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"meta.xml\"/></manifest:manifest>","META-INF/manifest.xml");	
+		return $zipfile;
 	}
 
 	// --------------------------------------------------------------------
