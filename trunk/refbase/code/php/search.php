@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   31-Aug-06, 15:02
+	// Modified:   06-Sep-06, 14:15
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -1432,8 +1432,13 @@
 					$exportFileName = "srw_export.xml";
 
 				elseif (eregi("ODF|OpenDocument", $exportFormat)) // if the export format name contains 'ODF' or 'OpenDocument'
-					$exportFileName = "content.xml";
-
+					if (eregi("file", $exportType)) {
+						$exportContentType="application/vnd.oasis.opendocument.spreadsheet";
+						$exportFileName="odf_export.ods";
+					}
+					else {
+						$exportFileName = "content.xml";
+					}
 				else
 					$exportFileName = "export.xml";
 			}
@@ -1506,9 +1511,18 @@
 			$officialDatabaseName = $oldOfficialDatabaseName; // restore the database name as originally encoded
 		}
 
-		// we'll present the output within the _same_ browser window:
-		// (note that we don't use a popup window here, since this may be blocked by particular browsers, and I think it's safe to assume that the user knows how to use the back button of his browser...)
-		echo $exportText;
+		if ( (eregi("ODF|OpenDocument", $exportFormat)) && (eregi("file", $exportType)) ) {
+			// This is a dirty hack to zip and return an ODF file.
+			// It may be desired to retun other non-textual formats in the future & to return these as attachments by email in the future.
+			// If this becomes needed, we should refactor the output.
+			$zipfile = zipODF($exportText);
+			echo $zipfile -> file();   
+		}
+		else {
+			// we'll present the output within the _same_ browser window:
+			// (note that we don't use a popup window here, since this may be blocked by particular browsers)
+			echo $exportText;
+		}
 	}
 
 	// --------------------------------------------------------------------
