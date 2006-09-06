@@ -42,6 +42,7 @@
 "code/inc/transtab_unicode_latex.inc.php"=>"includes/transtab_unicode_latex.inc.php",
 "code/inc/unapi.inc.php"=>"includes/unapi.inc.php",
 "code/inc/webservice.inc.php"=>"includes/webservice.inc.php",
+"code/inc/zip.inc.php"=>"includes/zip.inc.php",
 "code/php"=>"",
 "code/xsl"=>"",
 "img"=>"img",
