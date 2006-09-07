@@ -11,30 +11,36 @@
   // Author:     Richard Karnesky <mailto:karnesky@gmail.com>
   //
   // Created:    06-Sep-06, 16:30
-  // Modified:   07-Sep-06, 12:05
+  // Modified:   08-Sep-06, 00:42
 
   // Generate OpenURL and COinS data
 
   function openURL($row) {
-    global $openURLResolver;
+    global $openURLResolver; // these variables are defined in 'ini.inc.php'
     global $hostInstitutionAbbrevName;
 
     $co = contextObject($row); 
     $co = ereg_replace("rft.", "", $co);
     
-    $openURL = "<A HREF=\"" . $openURLResolver . "?ctx_ver=Z39.88-2004" . $co . "&sid=refbase:" . $hostInstitutionAbbrevName . "\"><img src=\"img/xref.gif\" alt=\"openurl\" title=\"find record details (via OpenURL)\" width=\"18\" height=\"20\" hspace=\"0\" border=\"0\"></A>";
-    return $openURL;
+    $openURL = $openURLResolver . "?ctx_ver=Z39.88-2004" . $co . "&sid=refbase:" . $hostInstitutionAbbrevName;
+
+ 	$encodedOpenURL = encodeHTML($openURL); // 'htmlentities()' is used to convert higher ASCII chars into its entities and any '&' into '&amp;' (function 'encodeHTML()' is defined in 'include.inc.php')
+	$encodedOpenURL = str_replace(" ", "%20", $encodedOpenURL); // ensure that any spaces are also properly urlencoded
+
+    $openURLLink = "<a href=\"" . $encodedOpenURL. "\"><img src=\"img/xref.gif\" alt=\"openurl\" title=\"find record details (via OpenURL)\" width=\"18\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
+
+    return $openURLLink;
   }
 
   function coins($row) {
     // fmt_info (type)
-    //
+    $fmt = "";
     // 'dissertation' is compatible with the 1.0 spec, but not the 0.1 spec
     if (!empty($row['thesis']))
       $fmt .= "&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Adissertation";
-    else if (ereg("Journal", $row['type']))
+    elseif (ereg("Journal", $row['type']))
       $fmt .= "&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal";
-    else if (ereg("Book", $row['type']))
+    elseif (ereg("Book", $row['type']))
       $fmt .= "&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook";
     // 'dc' (dublin core) is compatible with the 1.0 spec, but not the 0.1 spec.
     // We default to this, as it is the most generic type.
@@ -46,27 +52,32 @@
 
     $coins = "<span class=\"Z3988\" title=\"ctx_ver=Z39.88-2004" . $fmt . $co
            . "\"></span>";
+
     return $coins;
   }
 
   function contextObject($row) {
-    global $databaseBaseURL;
+    global $databaseBaseURL; // defined in 'ini.inc.php'
+
     foreach ($row as $rowFieldName => $rowFieldValue) {
       $row[$rowFieldName] = encodeHTMLspecialchars($row[$rowFieldName]);
     }
 
     // rfr_id
-    $co .= "&rfr_id=info%3Asid%2F" . ereg_replace("http://", "", $databaseBaseURL);
+    $co = "&rfr_id=info%3Asid%2F" . ereg_replace("http://", "", $databaseBaseURL);
 
     // genre (type)
-    if ($row['type'] == "Journal Article")
-      $co .= "&rft.genre=article";
-    else if ($row['type'] == "Book Chapter")
-      $co .= "&rft.genre=bookitem";
-    else if ($row['type'] == "Book")
-      $co .= "&rft.genre=book";
-    else if ($row['type'] == "Journal")
-      $co .= "&rft.genre=journal";
+    if (isset($row['type']))
+    {
+		if ($row['type'] == "Journal Article")
+		  $co .= "&rft.genre=article";
+		elseif ($row['type'] == "Book Chapter")
+		  $co .= "&rft.genre=bookitem";
+		elseif ($row['type'] == "Book")
+		  $co .= "&rft.genre=book";
+		elseif ($row['type'] == "Journal")
+		  $co .= "&rft.genre=journal";
+	}
 
     // atitle, btitle, title (title, publication)
     if (($row['type'] == "Journal Article") || ($row['type'] == "Book Chapter")){
@@ -78,7 +89,7 @@
           $co .= "&rft.btitle=" . $row['publication'];
       }
     }
-    else if (!empty($row['title']))
+    elseif (!empty($row['title']))
       $co .= "&rft.title=" . $row['title'];
     if (($row['type'] == "Book Whole") && (!empty($row['title'])))
       $co .= "&rft.btitle=" . $row['title'];
@@ -114,24 +125,26 @@
     // spage, epage, tpages (pages)
     // NOTE: lifted from modsxml.inc.php--should throw some into a new include file
     if (!empty($row['pages'])){
-      if (ereg("[0-9] *- *[0-9]", $row['pages'])){
+      if (ereg("[0-9] *- *[0-9]", $row['pages'])) {
         list($pagestart, $pageend) = preg_split('/\s*[-]\s*/', $row['pages']);
         if ($pagestart < $pageend) {
           $co .= "&rft.spage=" . $pagestart;
           $co .= "&rft.epage=" . $pageend;
         }
       }
-      else if ($row['type'] == "Book Whole")
-        $co .= "&rft.tpages=" . $pages;
+      elseif ($row['type'] == "Book Whole") {
+        $pagetotal = preg_replace('/^(\d+)\s*pp?\.?$/', "\\1", $row['pages']);
+        $co .= "&rft.tpages=" . $pagetotal;
+      }
       else
-        $co .= "&rft.spage=" . $pages;
+        $co .= "&rft.spage=" . $row['pages'];
     }
 
-    // aulast,aufirst (author)
+    // aulast, aufirst (author)
     if (!empty($row['author'])) {
       $author = $row['author'];
-      $aulast .= extractAuthorsLastName(" *; *", " *, *", 1, $author);
-      $aufirst .= extractAuthorsGivenName(" *; *", " *, *", 1, $author);
+      $aulast = extractAuthorsLastName(" *; *", " *, *", 1, $author);
+      $aufirst = extractAuthorsGivenName(" *; *", " *, *", 1, $author);
       if (!empty($aulast))
         $co .= "&rft.aulast=" . $aulast;
       if (!empty($aufirst))
@@ -149,7 +162,7 @@
     // id (doi, url)
     if (!empty($row['doi']))
       $co .= "&rft_id=info:doi/" . $row['doi'];
-    else if (!empty($row['url']))
+    elseif (!empty($row['url']))
       $co .= "&rft_id=" . $row['url'];
 
     return $co;
