@@ -41,8 +41,11 @@
     else
       $fmt .= "&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Adc";
       
-    $coins = "<span class=\"Z3988\" title=\"ctx_ver=Z39.88-2004" . $fmt
-           . contextObject($row) . "\">&nbsp;</span>";
+    $co = contextObject($row); 
+    $co = ereg_replace(" ", "+", $co);
+
+    $coins = "<span class=\"Z3988\" title=\"ctx_ver=Z39.88-2004" . $fmt . $co
+           . "\">&nbsp;</span>";
     return $coins;
   }
 
@@ -50,7 +53,6 @@
     global $databaseBaseURL;
     foreach ($row as $rowFieldName => $rowFieldValue) {
       $row[$rowFieldName] = encodeHTMLspecialchars($row[$rowFieldName]);
-      $row[$rowFieldName] = ereg_replace(" ","+",$row[$rowFieldName]);
     }
 
     // rfr_id
