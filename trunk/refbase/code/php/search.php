@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   07-Sep-06, 00:30
+	// Modified:   07-Sep-06, 12:05
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -1278,6 +1278,7 @@
 
 												// provide a link to an OpenURL resolver:
 												$linkArray[] = "\n\t\t" . openURL($row);
+												$linkArray[] = "\n\t\t" . coins($row);
 
 												// merge links with delimiters appropriate for display in the Links column:
 												$recordData .=  mergeLinks($linkArray);
@@ -5493,6 +5494,7 @@
 		elseif (in_array("xref", $showLinkTypes))
 			$links .= "\n\t\t" . openURL($row);
 
+		$links .= "\n\t\t" . coins($row);
 		return $links;
 	}
 
