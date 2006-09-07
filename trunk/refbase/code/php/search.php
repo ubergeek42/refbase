@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   06-Sep-06, 14:15
+	// Modified:   07-Sep-06, 00:30
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -26,8 +26,9 @@
 	include 'includes/export.inc.php'; // include export functions
 	include 'includes/execute.inc.php'; // include functions that deal with execution of shell commands
 	include 'includes/modsxml.inc.php'; // include functions that deal with MODS XML
-	include 'includes/srwxml.inc.php'; // include functions that deal with SRW XML
 	include 'includes/odfxml.inc.php'; // include functions that deal with ODF XML
+	include 'includes/openurl.inc.php';
+	include 'includes/srwxml.inc.php'; // include functions that deal with SRW XML
 	include 'initialize/ini.inc.php'; // include common variables
 
 	// --------------------------------------------------------------------
@@ -1005,7 +1006,6 @@
 		global $databaseBaseURL;
 		global $fileVisibility;
 		global $fileVisibilityException;
-		global $openURLFormat;
 		global $isbnURLFormat;
 
 		global $loc; // '$loc' is made globally available in 'core.php'
@@ -1277,21 +1277,7 @@
 												}
 
 												// provide a link to an OpenURL resolver:
-												// auto-generated OpenURL links are only included if the main bibliographic data (author/year/publication/volume/pages) are present
-												if (!empty($openURLFormat) AND !empty($row["author"]) AND !empty($row["year"]) AND !empty($row["publication"]) AND !empty($row["volume"]) AND !empty($row["pages"]))
-												{
-													// again, the stupid hack (see note above)
-													$formVars = buildFormVarsArray($row); // function 'buildFormVarsArray()' is defined in 'include.inc.php'
-
-													// auto-generate an OpenURL according to the naming scheme given in '$openURLFormat' (in 'ini.inc.php'):
-													$openURL = parsePlaceholderString($formVars, $openURLFormat, ""); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
-
-													$encodedURL = encodeHTML($openURL); // 'htmlentities()' is used to convert higher ASCII chars into its entities and any '&' into '&amp;'
-													$encodedURL = str_replace(" ", "%20", $encodedURL); // ensure that any spaces are also properly urlencoded
-
-													if (!empty($openURL))
-														$linkArray[] = "\n\t\t<a href=\"" . $encodedURL . "\"><img src=\"img/xref.gif\" alt=\"openurl\" title=\"find record details (via OpenURL)\" width=\"18\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
-												}
+												$linkArray[] = "\n\t\t" . openURL($row);
 
 												// merge links with delimiters appropriate for display in the Links column:
 												$recordData .=  mergeLinks($linkArray);
@@ -5377,7 +5363,6 @@
 		global $filesBaseURL; // these variables are defined in 'ini.inc.php'
 		global $fileVisibility;
 		global $fileVisibilityException;
-		global $openURLFormat;
 		global $isbnURLFormat;
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
@@ -5406,7 +5391,7 @@
 			$linkElementCounterLoggedOut = ($linkElementCounterLoggedOut + 1);
 
 		// auto-generated OpenURL links are only included if the main bibliographic data (author/year/publication/volume/pages) are present
-		elseif (in_array("xref", $showLinkTypes) AND !empty($openURLFormat) AND !empty($row["author"]) AND !empty($row["year"]) AND !empty($row["publication"]) AND !empty($row["volume"]) AND !empty($row["pages"])) // provide a link to an OpenURL resolver
+		elseif (in_array("xref", $showLinkTypes))
 			$linkElementCounterLoggedOut = ($linkElementCounterLoggedOut + 1);
 
 		$linkElementCounterLoggedIn = $linkElementCounterLoggedOut;
@@ -5505,20 +5490,8 @@
 		// if still no link was generated and the main bibliographic data do exist for the current record, we'll provide a link to an OpenURL resolver:
 		// currently, auto-generated OpenURL links are only included in List view if the main bibliographic fields (author/year/publication/volume/pages) are displayed;
 		// the reason is that, currently, these fields are only provided within the '$row' array when they are actually displayed by the user as a visible column.
-		elseif (in_array("xref", $showLinkTypes) AND !empty($openURLFormat) AND !empty($row["author"]) AND !empty($row["year"]) AND !empty($row["publication"]) AND !empty($row["volume"]) AND !empty($row["pages"]))
-		{
-			// again, the stupid hack (see note above)
-			$formVars = buildFormVarsArray($row); // function 'buildFormVarsArray()' is defined in 'include.inc.php'
-
-			// auto-generate an OpenURL according to the naming scheme given in '$openURLFormat' (in 'ini.inc.php'):
-			$openURL = parsePlaceholderString($formVars, $openURLFormat, ""); // function 'parsePlaceholderString()' is defined in 'include.inc.php'
-
-			$encodedURL = encodeHTML($openURL); // 'htmlentities()' is used to convert higher ASCII chars into its entities and any '&' into '&amp;'
-			$encodedURL = str_replace(" ", "%20", $encodedURL); // ensure that any spaces are also properly urlencoded
-
-			if (!empty($openURL))
-				$links .= "\n\t\t<a href=\"" . $encodedURL . "\"><img src=\"img/resolve.gif\" alt=\"openurl\" title=\"find record details (via OpenURL)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
-		}
+		elseif (in_array("xref", $showLinkTypes))
+			$links .= "\n\t\t" . openURL($row);
 
 		return $links;
 	}

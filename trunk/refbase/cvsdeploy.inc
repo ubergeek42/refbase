@@ -21,6 +21,7 @@
 "code/inc/locales.inc.php"=>"includes/locales.inc.php",
 "code/inc/modsxml.inc.php"=>"includes/modsxml.inc.php",
 "code/inc/odfxml.inc.php"=>"includes/odfxml.inc.php",
+"code/inc/openurl.inc.php"=>"includes/openurl.inc.php",
 "code/inc/results_header.inc.php"=>"includes/results_header.inc.php",
 "code/inc/srwxml.inc.php"=>"includes/srwxml.inc.php",
 "code/inc/transtab_bibtex_refbase.inc.php"=>"includes/transtab_bibtex_refbase.inc.php",
