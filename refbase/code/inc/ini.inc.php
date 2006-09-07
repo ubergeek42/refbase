@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   09-Aug-06, 22:47
+	// Modified:   07-Sep-06, 00:30
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -435,17 +435,7 @@
 	// Citation view:
 	$showLinkTypesInCitationView = array("details", "file");
 
-
-	// Define an OpenURL with placeholders that will be auto-completed for each record according to its
-	// field values:
-	// Notes: - see comments for '$fileNamingScheme' (above) for more info on supported placeholders
-	//        - currently, OpenURL links will only get auto-generated if the main bibliographic data
-	//          (author, year, publication, volume & pages) are present (and displayed on screen)
-	//        - more info about the OpenURL standard is available at <http://www.exlibrisgroup.com/sfx_openurl.htm>
-	//        - specify an empty string if you don't want any auto-generation of OpenURL links: '$openURLFormat = "";'
-	$openURLFormat = "http://www.crossref.org/openurl?aulast=<:firstAuthor:>&title=<:publication[|]:>&volume=<:volume:>&issue=<:issue:>&spage=<:startPage:>&date=<:year:>";
-	// e.g. CrossRef OpenURL resolver: "http://www.crossref.org/openurl?aulast=<:firstAuthor:>&title=<:publication[|]:>&volume=<:volume:>&issue=<:issue:>&spage=<:startPage:>&date=<:year:>"
-
+	$openURLResolver = "http://www.crossref.org/openurl";
 
 	// Define the format for an ISBN lookup URL:
 	// Notes: - obviously, the ISBN link will only get auto-generated if an ISBN number is present
