@@ -11,7 +11,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@gmail.com>
   //
   // Created:    06-Sep-06, 16:30
-  // Modified:   07-Sep-06, 12:00
+  // Modified:   07-Sep-06, 12:05
 
   // Generate OpenURL and COinS data
 
@@ -45,7 +45,7 @@
     $co = ereg_replace(" ", "+", $co);
 
     $coins = "<span class=\"Z3988\" title=\"ctx_ver=Z39.88-2004" . $fmt . $co
-           . "\">&nbsp;</span>";
+           . "\"></span>";
     return $coins;
   }
 
