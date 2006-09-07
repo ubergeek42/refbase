@@ -11,7 +11,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@gmail.com>
   //
   // Created:    06-Sep-06, 16:30
-  // Modified:   07-Sep-06, 00:15
+  // Modified:   07-Sep-06, 12:00
 
   // Generate OpenURL and COinS data
 
@@ -127,7 +127,16 @@
         $co .= "&rft.spage=" . $pages;
     }
 
-    // NOTE: put aulast,aufirst here
+    // aulast,aufirst (author)
+    if (!empty($row['author'])) {
+      $author = $row['author'];
+      $aulast .= extractAuthorsLastName(" *; *", " *, *", 1, $author);
+      $aufirst .= extractAuthorsGivenName(" *; *", " *, *", 1, $author);
+      if (!empty($aulast))
+        $co .= "&rft.aulast=" . $aulast;
+      if (!empty($aufirst))
+        $co .= "&rft.aufirst=" . $aufirst;
+    }
 
     // pub (publisher)
     if (!empty($row['publisher']))

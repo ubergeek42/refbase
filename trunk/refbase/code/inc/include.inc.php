@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   03-Sep-06, 17:38
+	// Modified:   07-Sep-06, 12:00
 
 	// This file contains important
 	// functions that are shared
@@ -1809,6 +1809,28 @@ EOF;
 		$singleAuthorsLastName = $singleAuthorArray[0]; // extract this author's last name into a new variable
 
 		return $singleAuthorsLastName;
+	}
+
+	// --------------------------------------------------------------------
+
+	// EXTRACT AUTHOR'S GIVEN NAME
+	// this function takes the contents of the author field and will extract the given name of a particular author (specified by position)
+	// (e.g., setting '$authorPosition' to "1" will return the 1st author's given name)
+	//  Required Parameters:
+	//        1. pattern describing delimiter that separates different authors
+	//        2. pattern describing delimiter that separates author name & initials (within one author)
+	//        3. position of the author whose last name shall be extracted (e.g., "1" will return the 1st author's last name)
+	//        4. contents of the author field
+	function extractAuthorsGivenName($oldBetweenAuthorsDelim, $oldAuthorsInitialsDelim, $authorPosition, $authorContents)
+	{
+		$authorsArray = split($oldBetweenAuthorsDelim, $authorContents); // get a list of all authors for this record
+
+		$authorPosition = ($authorPosition-1); // php array elements start with "0", so we decrease the authors position by 1
+		$singleAuthor = $authorsArray[$authorPosition]; // for the author in question, extract the full author name (last name & initials)
+		$singleAuthorArray = split($oldAuthorsInitialsDelim, $singleAuthor); // then, extract author name & initials to separate list items
+		$singleAuthorsGivneName = $singleAuthorArray[1]; // extract this author's last name into a new variable
+
+		return $singleAuthorsGivenName;
 	}
 
 	// --------------------------------------------------------------------
