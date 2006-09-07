@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/header.inc.php
 	// Created:    28-Jul-02, 11:21
-	// Modified:   15-Jul-06, 17:42
+	// Modified:   07-Sep-06, 17:30
 
 	// This is the header include file.
 	// It contains functions that provide the HTML header
@@ -68,8 +68,7 @@
 		}
 ?>
 
-	<link rel="unapi-server" type="application/xml" title="unAPI" href="unapi.php"><?php
-
+	<link rel="unapi-server" type="application/xml" title="unAPI" href="<?php global $databaseBaseURL; echo $databaseBaseURL; ?>unapi.php"><?php
 		if (!empty($includeJavaScriptFile))
 		{
 ?>
