@@ -1828,7 +1828,7 @@ EOF;
 		$authorPosition = ($authorPosition-1); // php array elements start with "0", so we decrease the authors position by 1
 		$singleAuthor = $authorsArray[$authorPosition]; // for the author in question, extract the full author name (last name & initials)
 		$singleAuthorArray = split($oldAuthorsInitialsDelim, $singleAuthor); // then, extract author name & initials to separate list items
-		$singleAuthorsGivneName = $singleAuthorArray[1]; // extract this author's last name into a new variable
+		$singleAuthorsGivenName = $singleAuthorArray[1]; // extract this author's last name into a new variable
 
 		return $singleAuthorsGivenName;
 	}
