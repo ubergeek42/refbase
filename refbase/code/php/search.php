@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   07-Sep-06, 12:05
+	// Modified:   09-Sep-06, 19:32
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -51,7 +51,7 @@
 	// [ !! NOTE !!: for details see <http://www.php.net/release_4_2_1.php> & <http://www.php.net/manual/en/language.variables.predefined.php> ]
 
 	// Extract the ID of the client from which the query originated:
-	// Note: currently, this identifier is only used to identify queries that originated from the refbase command line client ("cli-refbase-1.0")
+	// this identifier is used to identify queries that originated from the refbase command line client ("cli-refbase-1.0.1") or from a bookmarklet (e.g., "jsb-refbase-1.0")
 	if (isset($_REQUEST['client']))
 		$client = $_REQUEST['client'];
 	else
@@ -471,7 +471,7 @@
 	// this is to support the '$fileVisibilityException' feature from 'ini.inc.php':
 	if (eregi("^SELECT", $query) AND ($displayType != "Browse") AND !empty($fileVisibilityException) AND !preg_match("/SELECT.+$fileVisibilityException[0].+FROM/i", $query)) // restrict adding of columns to SELECT queries (so that 'DELETE FROM refs ...' statements won't get modified as well);
 	{
-		$query = eregi_replace("(, orig_record)?(, serial)?(, file, url, doi, isbn)? FROM $tableRefs", ", $fileVisibilityException[0]\\1\\2\\3 FROM $tableRefs",$query); // add column that's given in '$fileVisibilityException'
+		$query = eregi_replace("(, orig_record)?(, serial)?(, file, url, doi, isbn, type)? FROM $tableRefs", ", $fileVisibilityException[0]\\1\\2\\3 FROM $tableRefs",$query); // add column that's given in '$fileVisibilityException'
 		$addCounterMax = 1; // this will ensure that the added column won't get displayed within the 'displayColumns()' function
 	}
 	else
@@ -504,7 +504,7 @@
 	// (4a) DISPLAY header:
 	// First, build the appropriate SQL query in order to embed it into the 'your query' URL:
 	if ($showLinks == "1")
-		$query = eregi_replace(", file, url, doi, isbn FROM $tableRefs"," FROM $tableRefs",$query); // strip 'file', 'url', 'doi' & 'isbn' columns from SQL query
+		$query = eregi_replace(", file, url, doi, isbn, type FROM $tableRefs"," FROM $tableRefs",$query); // strip 'file', 'url', 'doi', 'isbn' & 'type columns from SQL query
 
 	$query = eregi_replace(", serial FROM $tableRefs"," FROM $tableRefs",$query); // strip 'serial' column from SQL query
 
@@ -705,8 +705,8 @@
 			{
 				// BEGIN RESULTS HEADER --------------------
 				// 1) First, initialize some variables that we'll need later on
-				if ($showLinks == "1" AND $displayType != "Browse") // we exclude the Browse view since it has a special type of 'Links' column and the 'file', 'url', 'doi' & 'isbn' columns weren't included in the query
-					$CounterMax = 4; // When displaying a 'Links' column truncate the last four columns (i.e., hide the 'file', 'url', 'doi' & 'isbn' columns)
+				if ($showLinks == "1" AND $displayType != "Browse") // we exclude the Browse view since it has a special type of 'Links' column and the 'file', 'url', 'doi', 'isbn' & 'type columns weren't included in the query
+					$CounterMax = 5; // When displaying a 'Links' column truncate the last five columns (i.e., hide the 'file', 'url', 'doi', 'isbn' & 'type columns)
 				else
 					$CounterMax = 0; // Otherwise don't hide any columns
 
@@ -776,7 +776,7 @@
 
 
 				// 4) Start a FORM
-				echo "\n<form action=\"search.php\" method=\"POST\" name=\"queryResults\">"
+				echo "\n<form action=\"search.php\" method=\"GET\" name=\"queryResults\">"
 						. "\n<input type=\"hidden\" name=\"formType\" value=\"queryResults\">"
 						. "\n<input type=\"hidden\" name=\"submit\" value=\"Display\">" // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
 						. "\n<input type=\"hidden\" name=\"orderBy\" value=\"" . rawurlencode($orderBy) . "\">" // embed the current ORDER BY parameter so that it can be re-applied when displaying details
@@ -1006,6 +1006,7 @@
 		global $databaseBaseURL;
 		global $fileVisibility;
 		global $fileVisibilityException;
+		global $openURLResolver;
 		global $isbnURLFormat;
 
 		global $loc; // '$loc' is made globally available in 'core.php'
@@ -1018,7 +1019,7 @@
 				// BEGIN RESULTS HEADER --------------------
 				// 1) First, initialize some variables that we'll need later on
 				if ($showLinks == "1")
-					$CounterMax = 4; // When displaying a 'Links' column truncate the last four columns (i.e., hide the 'file', 'url', 'doi' & 'isbn' columns)
+					$CounterMax = 5; // When displaying a 'Links' column truncate the last five columns (i.e., hide the 'file', 'url', 'doi', 'isbn' & 'type columns)
 				else
 					$CounterMax = 0; // Otherwise don't hide any columns
 
@@ -1029,7 +1030,7 @@
 				$fieldsFound = mysql_num_fields($result);
 				// hide those last columns that were added by the script and not by the user
 				$fieldsToDisplay = $fieldsFound-(2+$CounterMax); // (2+$CounterMax) -> $CounterMax is increased by 2 in order to hide the 'orig_record' & 'serial' columns (which were added to make checkboxes & dup warning work)
-				// In summary, when displaying a 'Links' column and with a user being logged in, we hide the following fields: 'related, orig_record, serial, file, url, doi, isbn' (i.e., truncate the last seven columns)
+				// In summary, when displaying a 'Links' column and with a user being logged in, we hide the following fields: 'related, orig_record, serial, file, url, doi, isbn, type' (i.e., truncate the last eight columns)
 
 				// Calculate the number of all visible columns (which is needed as colspan value inside some TD tags)
 				if ($showLinks == "1") // in 'display details' layout, we simply set it to a fixed no of columns:
@@ -1048,7 +1049,7 @@
 
 
 				// 4) Start a FORM
-				echo "\n<form action=\"search.php\" method=\"POST\" name=\"queryResults\">"
+				echo "\n<form action=\"search.php\" method=\"GET\" name=\"queryResults\">"
 						. "\n<input type=\"hidden\" name=\"formType\" value=\"queryResults\">"
 						. "\n<input type=\"hidden\" name=\"submit\" value=\"Display\">" // provide a default value for the 'submit' form tag (then, hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
 						. "\n<input type=\"hidden\" name=\"originalDisplayType\" value=\"$displayType\">" // embed the original value of the '$displayType' variable
@@ -1277,8 +1278,14 @@
 												}
 
 												// provide a link to an OpenURL resolver:
-												$linkArray[] = "\n\t\t" . openURL($row);
-												$linkArray[] = "\n\t\t" . coins($row);
+												if (!empty($openURLResolver))
+												{
+													$openURL = openURL($row); // function 'openURL()' is defined in 'openurl.inc.php'
+													$linkArray[] = "\n\t\t<a href=\"" . $openURL . "\"><img src=\"img/xref.gif\" alt=\"openurl\" title=\"find record details (via OpenURL)\" width=\"18\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
+												}
+
+												// insert COinS (ContextObjects in Spans):
+												$linkArray[] = "\n\t\t" . coins($row); // function 'coins()' is defined in 'openurl.inc.php'
 
 												// merge links with delimiters appropriate for display in the Links column:
 												$recordData .=  mergeLinks($linkArray);
@@ -1767,7 +1774,7 @@
 
 					$ResultsFooterRow .= "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
 										. "\n\t\t<input type=\"radio\" name=\"userGroupActionRadio\" value=\"0\" title=\"click here if you want to setup a new group; then, enter the group name in the text box to the right\"$groupSearchTextInputChecked>"
-										. "\n\t\t<input type=\"text\" name=\"userGroupName\" value=\"\" size=\"8\" title=\"$groupSearchTextInputTitle\">"
+										. "\n\t\t<input type=\"text\" name=\"userGroupName\" value=\"\" size=\"12\" title=\"$groupSearchTextInputTitle\">"
 										. "\n\t</td>"
 
 										. "\n</tr>";
@@ -1802,10 +1809,9 @@
 					$ResultsFooterRow .= "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
 										. "\n\t\treturn as:&nbsp;&nbsp;"
 										. "\n\t\t<select name=\"exportType\" title=\"choose how exported references shall be returned\"$exportFormatDisabled>"
+										. "\n\t\t\t<option value=\"file\">file</option>"
 										. "\n\t\t\t<option value=\"html\">html</option>"
 										. "\n\t\t\t<option value=\"text\">text</option>"
-//										. "\n\t\t\t<option value=\"xml\">xml</option>"
-										. "\n\t\t\t<option value=\"file\">file</option>"
 										. "\n\t\t\t<option value=\"email\">email</option>"
 										. "\n\t\t</select>"
 										. "\n\t</td>"
@@ -1900,7 +1906,7 @@
 							//  (which is required in order to obtain unique checkbox names)
 
 		if ($showLinks == "1")
-			$query .= ", file, url, doi, isbn"; // add 'file', 'url', 'doi' & 'isbn' columns
+			$query .= ", file, url, doi, isbn, type"; // add 'file', 'url', 'doi', 'isbn' & 'type columns
 
 		// Finally, fix the wrong syntax where its says "SELECT, author, title, ..." instead of "SELECT author, title, ..."
 		$query = eregi_replace("SELECT, ","SELECT ",$query);
@@ -2264,7 +2270,7 @@
 							//  (which is required in order to obtain unique checkbox names)
 
 		if ($showLinks == "1")
-			$query .= ", file, url, doi, isbn"; // add 'file', 'url', 'doi' & 'isbn' columns
+			$query .= ", file, url, doi, isbn, type"; // add 'file', 'url', 'doi', 'isbn' & 'type columns
 
 		// Finally, fix the wrong syntax where its says "SELECT, author, title, ..." instead of "SELECT author, title, ..."
 		$query = eregi_replace("SELECT, ","SELECT ",$query);
@@ -3079,7 +3085,7 @@
 							//  (which is required in order to obtain unique checkbox names)
 
 		if ($showLinks == "1")
-			$query .= ", file, url, doi, isbn"; // add 'file', 'url', 'doi' & 'isbn' columns
+			$query .= ", file, url, doi, isbn, type"; // add 'file', 'url', 'doi', 'isbn' & 'type columns
 
 		// Finally, fix the wrong syntax where its says "SELECT, author, title, ..." instead of "SELECT author, title, ..."
 		$query = eregi_replace("SELECT, ","SELECT ",$query);
@@ -4825,22 +4831,22 @@
 
 		if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_groups", $_SESSION['user_permissions']))) // if a user is logged in AND the 'user_permissions' session variable contains 'allow_user_groups', extract form elements which add/remove the selected records to/from a user's group:
 		{
-			$userGroupActionRadio = $_POST['userGroupActionRadio']; // extract user option whether we're supposed to process an existing group name or any custom/new group name that was specified by the user
+			$userGroupActionRadio = $_REQUEST['userGroupActionRadio']; // extract user option whether we're supposed to process an existing group name or any custom/new group name that was specified by the user
 
 			// Extract the chosen user group from the request:
 			// first, we need to check whether the user did choose an existing group name from the popup menu
 			// -OR- if he/she did enter a custom group name in the text entry field:
 			if ($userGroupActionRadio == "1") // if the user checked the radio button next to the group popup menu ('userGroupSelector') [this is the default]
 			{
-				if (isset($_POST['userGroupSelector']))
-					$userGroup = $_POST['userGroupSelector']; // extract the value of the 'userGroupSelector' popup menu
+				if (isset($_REQUEST['userGroupSelector']))
+					$userGroup = $_REQUEST['userGroupSelector']; // extract the value of the 'userGroupSelector' popup menu
 				else
 					$userGroup = "";
 			}
 			else // $userGroupActionRadio == "0" // if the user checked the radio button next to the group text entry field ('userGroupName')
 			{
-				if (isset($_POST['userGroupName']))
-					$userGroup = $_POST['userGroupName']; // extract the value of the 'userGroupName' text entry field
+				if (isset($_REQUEST['userGroupName']))
+					$userGroup = $_REQUEST['userGroupName']; // extract the value of the 'userGroupName' text entry field
 				else
 					$userGroup = "";
 			}
@@ -4866,7 +4872,7 @@
 				$query .= ", serial"; // add 'serial' column
 
 				if ($showLinks == "1")
-					$query .= ", file, url, doi, isbn"; // add 'file', 'url', 'doi' & 'isbn' columns
+					$query .= ", file, url, doi, isbn, type"; // add 'file', 'url', 'doi', 'isbn' & 'type columns
 
 				if (isset($_SESSION['loginEmail'])) // if a user is logged in...
 					$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID . " WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\"";
@@ -4901,7 +4907,7 @@
 				$query .= ", orig_record, serial"; // add 'orig_record' and 'serial' columns
 
 				if ($showLinks == "1" OR $displayType == "Export")
-					$query .= ", file, url, doi, isbn"; // add 'file', 'url', 'doi' & 'isbn' columns
+					$query .= ", file, url, doi, isbn, type"; // add 'file', 'url', 'doi', 'isbn' & 'type columns
 
 				if (isset($_SESSION['loginEmail'])) // if a user is logged in...
 					$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID . " WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY $orderBy";
@@ -4925,7 +4931,7 @@
 				$query = eregi_replace(" FROM $tableRefs",", serial FROM $tableRefs",$query); // add 'serial' column (which is required in order to obtain unique checkbox names)
 
 				if ($showLinks == "1")
-					$query = eregi_replace(" FROM $tableRefs",", file, url, doi, isbn FROM $tableRefs",$query); // add 'file', 'url', 'doi' & 'isbn' columns
+					$query = eregi_replace(" FROM $tableRefs",", file, url, doi, isbn, type FROM $tableRefs",$query); // add 'file', 'url', 'doi', 'isbn' & 'type columns
 
 				// re-assign the correct display type if the user clicked the 'Remember', 'Add' or 'Remove' button of the 'queryResults' form:
 				$displayType = $originalDisplayType;
@@ -5037,8 +5043,8 @@
 
 		$query = "SELECT author, title, year, publication";
 
-		$quickSearchSelector = $_POST['quickSearchSelector']; // extract field name chosen by the user
-		$quickSearchName = $_POST['quickSearchName']; // extract search text entered by the user
+		$quickSearchSelector = $_REQUEST['quickSearchSelector']; // extract field name chosen by the user
+		$quickSearchName = $_REQUEST['quickSearchName']; // extract search text entered by the user
 
 		// if the SELECT string doesn't already contain the chosen field name...
 		// (which is only the case for 'keywords' & 'abstract')
@@ -5054,7 +5060,7 @@
 							//  (which is required in order to obtain unique checkbox names)
 
 		if ($showLinks == "1")
-			$query .= ", file, url, doi, isbn"; // add 'file', 'url', 'doi' & 'isbn' columns
+			$query .= ", file, url, doi, isbn, type"; // add 'file', 'url', 'doi', 'isbn' & 'type columns
 
 		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
 		$query .= " FROM $tableRefs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
@@ -5075,7 +5081,7 @@
 	{
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
-		$groupSearchSelector = $_POST['groupSearchSelector']; // extract the user group chosen by the user
+		$groupSearchSelector = $_REQUEST['groupSearchSelector']; // extract the user group chosen by the user
 
 		if (($originalDisplayType != "Browse") AND (!empty($sqlQuery))) // if we're not in Browse view and there's a previous SQL query available (as is the case if the group search originated from a search results page - and not from the main page 'index.php')
 		{
@@ -5095,7 +5101,7 @@
 							//  (which is required in order to obtain unique checkbox names)
 
 		if ($showLinks == "1")
-			$query .= ", file, url, doi, isbn"; // add 'file', 'url', 'doi' & 'isbn' columns
+			$query .= ", file, url, doi, isbn, type"; // add 'file', 'url', 'doi', 'isbn' & 'type columns
 
 		$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID; // add FROM clause
 
@@ -5216,7 +5222,7 @@
 							//  (which is required in order to obtain unique checkbox names)
 
 		if ($showLinks == "1")
-			$query .= ", file, url, doi, isbn"; // add 'file', 'url', 'doi' & 'isbn' columns
+			$query .= ", file, url, doi, isbn, type"; // add 'file', 'url', 'doi', 'isbn' & 'type columns
 
 		$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID . " WHERE location RLIKE \"$loginEmail\""; // add FROM & (initial) WHERE clause
 
@@ -5281,7 +5287,7 @@
 
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
-		$browseFieldSelector = $_POST['browseFieldSelector']; // extract field name chosen by the user
+		$browseFieldSelector = $_REQUEST['browseFieldSelector']; // extract field name chosen by the user
 
 		// construct the SQL query:
 
@@ -5364,6 +5370,7 @@
 		global $filesBaseURL; // these variables are defined in 'ini.inc.php'
 		global $fileVisibility;
 		global $fileVisibilityException;
+		global $openURLResolver;
 		global $isbnURLFormat;
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
@@ -5391,8 +5398,8 @@
 		elseif (in_array("isbn", $showLinkTypes) AND !empty($isbnURLFormat) AND !empty($row["isbn"])) // provide a link to an ISBN resolver
 			$linkElementCounterLoggedOut = ($linkElementCounterLoggedOut + 1);
 
-		// auto-generated OpenURL links are only included if the main bibliographic data (author/year/publication/volume/pages) are present
-		elseif (in_array("xref", $showLinkTypes))
+		// if we're supposed to auto-generate an OpenURL link
+		elseif (in_array("xref", $showLinkTypes) AND !empty($openURLResolver))
 			$linkElementCounterLoggedOut = ($linkElementCounterLoggedOut + 1);
 
 		$linkElementCounterLoggedIn = $linkElementCounterLoggedOut;
@@ -5488,13 +5495,16 @@
 				$links .= "\n\t\t<a href=\"" . $encodedURL . "\"><img src=\"img/resolve.gif\" alt=\"isbn\" title=\"find book details (via ISBN)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
 		}
 
-		// if still no link was generated and the main bibliographic data do exist for the current record, we'll provide a link to an OpenURL resolver:
-		// currently, auto-generated OpenURL links are only included in List view if the main bibliographic fields (author/year/publication/volume/pages) are displayed;
-		// the reason is that, currently, these fields are only provided within the '$row' array when they are actually displayed by the user as a visible column.
-		elseif (in_array("xref", $showLinkTypes))
-			$links .= "\n\t\t" . openURL($row);
+		// if still no link was generated, we'll provide a link to an OpenURL resolver:
+		elseif (in_array("xref", $showLinkTypes) AND !empty($openURLResolver))
+		{
+			$openURL = openURL($row); // function 'openURL()' is defined in 'openurl.inc.php'
+			$links .= "\n\t\t<a href=\"" . $openURL . "\"><img src=\"img/resolve.gif\" alt=\"openurl\" title=\"find record details (via OpenURL)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+		}
 
-		$links .= "\n\t\t" . coins($row);
+		// insert COinS (ContextObjects in Spans):
+		$links .= "\n\t\t" . coins($row); // function 'coins()' is defined in 'openurl.inc.php'
+
 		return $links;
 	}
 
