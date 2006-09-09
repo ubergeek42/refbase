@@ -11,11 +11,14 @@
   // Author:     Richard Karnesky <mailto:karnesky@gmail.com>
   //
   // Created:    06-Sep-06, 16:30
-  // Modified:   09-Sep-06, 02:14
+  // Modified:   09-Sep-06, 17:10
 
   // This include file contains functions that generate OpenURL and COinS data.
   // More info about the OpenURL standard (including pointers to further documentation) is available
   // at <http://en.wikipedia.org/wiki/OpenURL>. For more info about COinS, see <http://ocoins.info/>.
+
+  // Include refbase markup -> plain text search & replace patterns
+  include 'includes/transtab_refbase_ascii.inc.php';
 
   function openURL($row) {
     global $openURLResolver; // these variables are defined in 'ini.inc.php'
@@ -75,6 +78,27 @@
 
   function contextObject($row) {
     global $databaseBaseURL; // defined in 'ini.inc.php'
+
+    // The array '$transtab_refbase_ascii' contains search & replace patterns for
+    // conversion from refbase markup to plain text
+    global $transtab_refbase_ascii; // defined in 'transtab_refbase_ascii.inc.php'
+
+    // Defines search & replace 'actions' that will be applied to all those
+    // refbase fields that are listed in the corresponding 'fields' element:
+    $plainTextSearchReplaceActionsArray = array(
+      array(
+        'fields'  => array("title", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes", "publication"),
+        'actions' => $transtab_refbase_ascii
+      )
+    );
+
+    foreach ($row as $rowFieldName => $rowFieldValue)
+      // Apply search & replace 'actions' to all fields that are listed in the 'fields'
+      // element of the arrays contained in '$plainTextSearchReplaceActionsArray':
+      foreach ($plainTextSearchReplaceActionsArray as $fieldActionsArray)
+        if (in_array($rowFieldName, $fieldActionsArray['fields']))
+          // function 'searchReplaceText()' is defined in 'include.inc.php'
+          $row[$rowFieldName] = searchReplaceText($fieldActionsArray['actions'], $row[$rowFieldName], true);
 
     $co = array();
 
