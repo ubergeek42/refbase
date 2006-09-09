@@ -4,7 +4,7 @@
 	/*             Please see the GNU General Public License for more details. */
 	/* File:       ./style_print.css */
 	/* Created:    20-Oct-02, 15:08 */
-	/* Modified:   16-Jul-06, 12:32 */
+	/* Modified:   09-Sep-06, 19:03 */
 
 	/* refbase CSS definitions - print view style */
 
@@ -34,6 +34,8 @@ pre,code       { font-family:monaco,courier,monospace; font-size:7pt; }
 .footer        { font-family:helvetica,arial,sans-serif; font-size:x-small; color:#999999; }
 
 .unapi         { font-size:smaller; }
+
+.Z3988         { font-size:smaller; }
 
 .warning       { color:red; }
 
