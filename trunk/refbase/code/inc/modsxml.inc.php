@@ -11,7 +11,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@gmail.com>
   //
   // Created:    02-Oct-04, 12:00
-  // Modified:   16-Aug-06, 18:19
+	// Modified:   09-Sep-06, 16:49
 
   // This include file contains functions that'll export records to MODS XML.
   // Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -236,7 +236,7 @@
 
     if ($convertExportDataToUTF8 == "yes")
       $fieldSpecificSearchReplaceActionsArray[] = array(
-                                                          'fields'  => array("title", "address", "keywords", "abstract", "publication"),
+                                                          'fields'  => array("title", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes", "publication"),
                                                           'actions' => $transtab_refbase_unicode
                                                       );
 
