@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   16-Jul-06, 11:51
+	// Modified:   09-Sep-06, 15:19
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -41,7 +41,7 @@
 	// (they control how found records are presented on screen)
 
 	// Extract the ID of the client from which the query originated:
-	// Note: currently, this identifier is only used to identify queries that originated from the refbase command line client ("cli-refbase-1.0")
+	// this identifier is used to identify queries that originated from the refbase command line client ("cli-refbase-1.0.1") or from a bookmarklet (e.g., "jsb-refbase-1.0")
 	if (isset($_REQUEST['client']))
 		$client = $_REQUEST['client'];
 	else
@@ -471,7 +471,7 @@
 		// CONSTRUCT SQL QUERY:
 
 		// Note: the 'verifySQLQuery()' function that gets called by 'search.php' to process query data with "$formType = sqlSearch" will add the user specific fields to the 'SELECT' clause
-		// and the 'LEFT JOIN...' part to the 'FROM' clause of the SQL query if a user is logged in. It will also add 'orig_record', 'serial', 'file', 'url', 'doi' & 'isbn' columns
+		// and the 'LEFT JOIN...' part to the 'FROM' clause of the SQL query if a user is logged in. It will also add 'orig_record', 'serial', 'file', 'url', 'doi', 'isbn' & 'type' columns
 		// as required. Therefore it's sufficient to provide just the plain SQL query here:
 
 		// Build SELECT clause:
