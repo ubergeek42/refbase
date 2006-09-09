@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./cite/formats/cite_rtf.php
 	// Created:    10-Jun-06, 02:04
-	// Modified:   10-Jun-06, 03:26
+	// Modified:   09-Sep-06, 16:45
 
 	// This is a citation format file (which must reside within the 'cite/formats/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecords()' function that outputs a reference list from selected records in RTF format.
@@ -50,7 +50,7 @@
 		// in the corresponding 'fields' element:
 		$rtfSearchReplaceActionsArray = array(
 												array(
-														'fields'  => array("title", "address", "keywords", "abstract", "publication"),
+														'fields'  => array("title", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes", "publication"),
 														'actions' => $transtab_refbase_rtf
 													)
 											);

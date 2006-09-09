@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./cite/formats/cite_latex.php
 	// Created:    10-Jun-06, 02:32
-	// Modified:   10-Jun-06, 03:49
+	// Modified:   09-Sep-06, 16:43
 
 	// This is a citation format file (which must reside within the 'cite/formats/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecords()' function that outputs a reference list from selected records in LaTeX format.
@@ -50,7 +50,7 @@
 		// in the corresponding 'fields' element:
 		$latexSearchReplaceActionsArray = array(
 												array(
-														'fields'  => array("title", "address", "keywords", "abstract", "publication"),
+														'fields'  => array("title", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes", "publication"),
 														'actions' => $transtab_refbase_latex
 													)
 											);
