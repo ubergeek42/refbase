@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./index.php
 	// Created:    29-Jul-02, 16:45
-	// Modified:   21-Jun-06, 22:24
+	// Modified:   01-Sep-06, 23:14
 
 	// This script builds the main page.
 	// It provides login and quick search forms
@@ -171,7 +171,7 @@ if (!isset($_SESSION['loginEmail']))
 else
 	{
 ?>
-			<form action="search.php" method="POST">
+			<form action="search.php" method="GET">
 				<input type="hidden" name="formType" value="myRefsSearch">
 				<input type="hidden" name="showQuery" value="0">
 				<input type="hidden" name="showLinks" value="1">
@@ -243,7 +243,7 @@ else
 			</ul>
 		</td>
 		<td width="182" valign="top">
-			<form action="search.php" method="POST">
+			<form action="search.php" method="GET">
 				<input type="hidden" name="formType" value="quickSearch">
 				<input type="hidden" name="showQuery" value="0">
 				<input type="hidden" name="showLinks" value="1">
@@ -299,7 +299,7 @@ else
 if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_browse_view", $_SESSION['user_permissions']))) // if a user is logged in AND the 'user_permissions' session variable contains 'allow_browse_view', show the 'Browse My Refs' form:
 	{
 ?>
-			<form action="search.php" method="POST">
+			<form action="search.php" method="GET">
 				<input type="hidden" name="formType" value="myRefsBrowse">
 				<input type="hidden" name="submit" value="Browse">
 				<input type="hidden" name="showQuery" value="0">
@@ -393,7 +393,7 @@ if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND
 		else
 			$groupSearchDisabled = "";
 ?>
-			<form action="search.php" method="POST">
+			<form action="search.php" method="GET">
 				<input type="hidden" name="formType" value="groupSearch">
 				<input type="hidden" name="showQuery" value="0">
 				<input type="hidden" name="showLinks" value="1">
@@ -489,7 +489,7 @@ if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND
 		else
 			$querySearchDisabled = "";
 ?>
-			<form action="queries.php" method="POST">
+			<form action="queries.php" method="GET">
 				<input type="hidden" name="formType" value="querySearch">
 				<input type="hidden" name="showQuery" value="0">
 				<input type="hidden" name="showLinks" value="1">
