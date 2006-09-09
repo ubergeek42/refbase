@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   07-Sep-06, 00:30
+	// Modified:   09-Sep-06, 02:59
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -87,8 +87,7 @@
 	// the relevant refbase markup will not get converted for a latin1 database(*) and output will be in
 	// ISO-8859-1 encoding.
 	// (*: as a notable exception, conversion of refbase markup such as super- and subscript or greek letters
-	//     will be done upon Bibtex export even if this variable is set to "no", in fact it may work better
-	//     since bibutils <= v3.24 does not convert all Unicode entities correctly)
+	//     will be done upon Bibtex export even if this variable is set to "no")
 	$convertExportDataToUTF8 = "yes"; // possible values: "yes", "no"
 
 
@@ -435,7 +434,15 @@
 	// Citation view:
 	$showLinkTypesInCitationView = array("details", "file");
 
-	$openURLResolver = "http://www.crossref.org/openurl";
+
+	// Specify the base URL to an OpenURL resolver:
+	// Notes: - more info about the OpenURL standard (including pointers to further documentation) is available at <http://en.wikipedia.org/wiki/OpenURL>
+	//        - specify an empty string if you don't want any auto-generation of OpenURL links: '$openURLResolver = "";'
+	$openURLResolver = "http://www.crossref.org/openurl?pid=rfbs:rfbs228";
+	// Examples for OpenURL resolvers:
+	// - Generic OpenURL resolver provided by CrossRef: "http://www.crossref.org/openurl?pid=rfbs:rfbs228" ('pid=rfbs:rfbs228' identifies refbase as a registered CrossRef member)
+	// - WorldCat OpenURL resolver which redirects to "the best" resolver for the client IP address: "http://worldcatlibraries.org/registry/gateway"
+
 
 	// Define the format for an ISBN lookup URL:
 	// Notes: - obviously, the ISBN link will only get auto-generated if an ISBN number is present
@@ -478,7 +485,7 @@
 	// 								"/Search Pattern/"    =>  "Replace Pattern"
 	$searchReplaceActionsArray = array(
 										array(
-												'fields'  => array("title", "address", "keywords", "abstract"),
+												'fields'  => array("title", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes"),
 												'actions' => $transtab_refbase_html // perform search & replace actions that provide for human readable markup (as defined in 'includes/transtab_refbase_html.inc.php')
 											)
 //										,
