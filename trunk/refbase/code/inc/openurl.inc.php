@@ -11,7 +11,7 @@
   // Author:     Richard Karnesky <mailto:karnesky@gmail.com>
   //
   // Created:    06-Sep-06, 16:30
-  // Modified:   09-Sep-06, 17:10
+  // Modified:   09-Sep-06, 19:28
 
   // This include file contains functions that generate OpenURL and COinS data.
   // More info about the OpenURL standard (including pointers to further documentation) is available
@@ -41,9 +41,7 @@
       $openURL .= "&amp;" . $coKey . "=" . rawurlencode($coValue);
     }
 
-    $openURLLink = "<a href=\"" . $openURL. "\"><img src=\"img/xref.gif\" alt=\"openurl\" title=\"find record details (via OpenURL)\" width=\"18\" height=\"20\" hspace=\"0\" border=\"0\"></a>";
-
-    return $openURLLink;
+    return $openURL;
   }
 
   function coins($row) {
