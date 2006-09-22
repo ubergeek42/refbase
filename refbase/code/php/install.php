@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./install.php
 	// Created:    07-Jan-04, 22:00
-	// Modified:   17-Aug-06, 18:44
+	// Modified:   22-Sep-06, 18:00
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -403,7 +403,7 @@
 		// Prepare the install queries and proceed with the actual installation procedure:
 
 		// Build the database queries required for installation:
-		$queryGrantStatement = "GRANT SELECT,INSERT,UPDATE,DELETE ON " . $databaseName . ".* TO " . $username . "@" . $hostName . " IDENTIFIED BY '" . $password . "'";
+		$queryGrantStatement = "GRANT SELECT,INSERT,UPDATE,DELETE ON " . $databaseName . ".* TO " . quote_smart($username) . "@" . quote_smart($hostName) . " IDENTIFIED BY " . quote_smart($password);
 
 		$queryCreateDB = "CREATE DATABASE IF NOT EXISTS " . $databaseName; // by default, 'latin1' will be used as default character set
 
@@ -417,7 +417,7 @@
 		}
 
 		if (!empty($pathToBibutils)) // we'll only update the bibutils path if '$pathToBibutils' isn't empty (installation of bibutils is optional)
-			$queryUpdateDependsTable = "UPDATE " . $databaseName . ".depends SET depends_path = \"" . $pathToBibutils . "\" WHERE depends_external = \"bibutils\""; // update the bibutils path spec
+			$queryUpdateDependsTable = "UPDATE " . $databaseName . ".depends SET depends_path = " . quote_smart($pathToBibutils) . " WHERE depends_external = \"bibutils\""; // update the bibutils path spec
 		else // we set the 'depends_enabled' field in table 'depends' to 'false' to indicate that bibutils isn't installed
 			$queryUpdateDependsTable = "UPDATE " . $databaseName . ".depends SET depends_enabled = \"false\" WHERE depends_external = \"bibutils\""; // disable bibutils functionality
 

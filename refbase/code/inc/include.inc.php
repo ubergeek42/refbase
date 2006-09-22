@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   22-Sep-06, 15:00
+	// Modified:   22-Sep-06, 18:00
 
 	// This file contains important
 	// functions that are shared
@@ -445,7 +445,7 @@
 		connectToMySQLDatabase("");
 
 		// CONSTRUCT SQL QUERY:
-		$query = "SELECT user_id FROM $tableAuth WHERE email = '$emailAddress'";
+		$query = "SELECT user_id FROM $tableAuth WHERE email = " . quote_smart($emailAddress);
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 		$row = mysql_fetch_array($result);
@@ -544,149 +544,149 @@
 					$queryRefs = ""; // note: we'll prefix "INSERT INTO $tableRefs SET " *after* we've parsed all array elements to trap the case that none of the array elements did contain any data
 
 					if (!empty($recordData['author']))
-						$queryRefs .= "author = \"" . $recordData['author'] . "\", ";
+						$queryRefs .= "author = " . quote_smart($recordData['author']) . ", ";
 
 					if (!empty($firstAuthor))
-						$queryRefs .= "first_author = \"" . $firstAuthor . "\", ";
+						$queryRefs .= "first_author = " . quote_smart($firstAuthor) . ", ";
 
 					if (!empty($authorCount))
-						$queryRefs .= "author_count = \"" . $authorCount . "\", ";
+						$queryRefs .= "author_count = " . quote_smart($authorCount) . ", ";
 
 					if (!empty($recordData['title']))
-						$queryRefs .= "title = \"" . $recordData['title'] . "\", ";
+						$queryRefs .= "title = " . quote_smart($recordData['title']) . ", ";
 
 					if (!empty($recordData['year']))
-						$queryRefs .= "year = \"" . $recordData['year'] . "\", ";
+						$queryRefs .= "year = " . quote_smart($recordData['year']) . ", ";
 
 					if (!empty($recordData['publication']))
-						$queryRefs .= "publication = \"" . $recordData['publication'] . "\", ";
+						$queryRefs .= "publication = " . quote_smart($recordData['publication']) . ", ";
 
 					if (!empty($recordData['abbrev_journal']))
-						$queryRefs .= "abbrev_journal = \"" . $recordData['abbrev_journal'] . "\", ";
+						$queryRefs .= "abbrev_journal = " . quote_smart($recordData['abbrev_journal']) . ", ";
 
 					if (!empty($recordData['volume']))
-						$queryRefs .= "volume = \"" . $recordData['volume'] . "\", ";
+						$queryRefs .= "volume = " . quote_smart($recordData['volume']) . ", ";
 
 					if (!empty($volumeNumeric))
-						$queryRefs .= "volume_numeric = \"" . $volumeNumeric . "\", ";
+						$queryRefs .= "volume_numeric = " . quote_smart($volumeNumeric) . ", ";
 
 					if (!empty($recordData['issue']))
-						$queryRefs .= "issue = \"" . $recordData['issue'] . "\", ";
+						$queryRefs .= "issue = " . quote_smart($recordData['issue']) . ", ";
 
 					if (!empty($recordData['pages']))
-						$queryRefs .= "pages = \"" . $recordData['pages'] . "\", ";
+						$queryRefs .= "pages = " . quote_smart($recordData['pages']) . ", ";
 
 					if (!empty($firstPage))
-						$queryRefs .= "first_page = \"" . $firstPage . "\", ";
+						$queryRefs .= "first_page = " . quote_smart($firstPage) . ", ";
 
 					if (!empty($recordData['address']))
-						$queryRefs .= "address = \"" . $recordData['address'] . "\", ";
+						$queryRefs .= "address = " . quote_smart($recordData['address']) . ", ";
 
 					if (!empty($recordData['corporate_author']))
-						$queryRefs .= "corporate_author = \"" . $recordData['corporate_author'] . "\", ";
+						$queryRefs .= "corporate_author = " . quote_smart($recordData['corporate_author']) . ", ";
 
 					if (!empty($recordData['keywords']))
-						$queryRefs .= "keywords = \"" . $recordData['keywords'] . "\", ";
+						$queryRefs .= "keywords = " . quote_smart($recordData['keywords']) . ", ";
 
 					if (!empty($recordData['abstract']))
-						$queryRefs .= "abstract = \"" . $recordData['abstract'] . "\", ";
+						$queryRefs .= "abstract = " . quote_smart($recordData['abstract']) . ", ";
 
 					if (!empty($recordData['publisher']))
-						$queryRefs .= "publisher = \"" . $recordData['publisher'] . "\", ";
+						$queryRefs .= "publisher = " . quote_smart($recordData['publisher']) . ", ";
 
 					if (!empty($recordData['place']))
-						$queryRefs .= "place = \"" . $recordData['place'] . "\", ";
+						$queryRefs .= "place = " . quote_smart($recordData['place']) . ", ";
 
 					if (!empty($recordData['editor']))
-						$queryRefs .= "editor = \"" . $recordData['editor'] . "\", ";
+						$queryRefs .= "editor = " . quote_smart($recordData['editor']) . ", ";
 
 					if (!empty($recordData['language']))
-						$queryRefs .= "language = \"" . $recordData['language'] . "\", ";
+						$queryRefs .= "language = " . quote_smart($recordData['language']) . ", ";
 
 					if (!empty($recordData['summary_language']))
-						$queryRefs .= "summary_language = \"" . $recordData['summary_language'] . "\", ";
+						$queryRefs .= "summary_language = " . quote_smart($recordData['summary_language']) . ", ";
 
 					if (!empty($recordData['orig_title']))
-						$queryRefs .= "orig_title = \"" . $recordData['orig_title'] . "\", ";
+						$queryRefs .= "orig_title = " . quote_smart($recordData['orig_title']) . ", ";
 
 					if (!empty($recordData['series_editor']))
-						$queryRefs .= "series_editor = \"" . $recordData['series_editor'] . "\", ";
+						$queryRefs .= "series_editor = " . quote_smart($recordData['series_editor']) . ", ";
 
 					if (!empty($recordData['series_title']))
-						$queryRefs .= "series_title = \"" . $recordData['series_title'] . "\", ";
+						$queryRefs .= "series_title = " . quote_smart($recordData['series_title']) . ", ";
 
 					if (!empty($recordData['abbrev_series_title']))
-						$queryRefs .= "abbrev_series_title = \"" . $recordData['abbrev_series_title'] . "\", ";
+						$queryRefs .= "abbrev_series_title = " . quote_smart($recordData['abbrev_series_title']) . ", ";
 
 					if (!empty($recordData['series_volume']))
-						$queryRefs .= "series_volume = \"" . $recordData['series_volume'] . "\", ";
+						$queryRefs .= "series_volume = " . quote_smart($recordData['series_volume']) . ", ";
 
 					if (!empty($seriesVolumeNumeric))
-						$queryRefs .= "series_volume_numeric = \"" . $seriesVolumeNumeric . "\", ";
+						$queryRefs .= "series_volume_numeric = " . quote_smart($seriesVolumeNumeric) . ", ";
 
 					if (!empty($recordData['series_issue']))
-						$queryRefs .= "series_issue = \"" . $recordData['series_issue'] . "\", ";
+						$queryRefs .= "series_issue = " . quote_smart($recordData['series_issue']) . ", ";
 
 					if (!empty($recordData['edition']))
-						$queryRefs .= "edition = \"" . $recordData['edition'] . "\", ";
+						$queryRefs .= "edition = " . quote_smart($recordData['edition']) . ", ";
 
 					if (!empty($recordData['issn']))
-						$queryRefs .= "issn = \"" . $recordData['issn'] . "\", ";
+						$queryRefs .= "issn = " . quote_smart($recordData['issn']) . ", ";
 
 					if (!empty($recordData['isbn']))
-						$queryRefs .= "isbn = \"" . $recordData['isbn'] . "\", ";
+						$queryRefs .= "isbn = " . quote_smart($recordData['isbn']) . ", ";
 
 					if (!empty($recordData['medium']))
-						$queryRefs .= "medium = \"" . $recordData['medium'] . "\", ";
+						$queryRefs .= "medium = " . quote_smart($recordData['medium']) . ", ";
 
 					if (!empty($recordData['area']))
-						$queryRefs .= "area = \"" . $recordData['area'] . "\", ";
+						$queryRefs .= "area = " . quote_smart($recordData['area']) . ", ";
 
 					if (!empty($recordData['expedition']))
-						$queryRefs .= "expedition = \"" . $recordData['expedition'] . "\", ";
+						$queryRefs .= "expedition = " . quote_smart($recordData['expedition']) . ", ";
 
 					if (!empty($recordData['conference']))
-						$queryRefs .= "conference = \"" . $recordData['conference'] . "\", ";
+						$queryRefs .= "conference = " . quote_smart($recordData['conference']) . ", ";
 
 					// the 'location' field is handled below
 
 					if (!empty($recordData['call_number']))
-						$queryRefs .= "call_number = \"" . $recordData['call_number'] . "\", ";
+						$queryRefs .= "call_number = " . quote_smart($recordData['call_number']) . ", ";
 
 					if (!empty($recordData['approved']))
-						$queryRefs .= "approved = \"" . $recordData['approved'] . "\", ";
+						$queryRefs .= "approved = " . quote_smart($recordData['approved']) . ", ";
 
 					if (!empty($recordData['file']))
-						$queryRefs .= "file = \"" . $recordData['file'] . "\", ";
+						$queryRefs .= "file = " . quote_smart($recordData['file']) . ", ";
 
 					// the 'serial' field is handled below
 
 					if (!empty($recordData['orig_record']))
-						$queryRefs .= "orig_record = \"" . $recordData['orig_record'] . "\", ";
+						$queryRefs .= "orig_record = " . quote_smart($recordData['orig_record']) . ", ";
 
 					if (!empty($recordData['type']))
-						$queryRefs .= "type = \"" . $recordData['type'] . "\", ";
+						$queryRefs .= "type = " . quote_smart($recordData['type']) . ", ";
 
 					if (!empty($recordData['thesis']))
-						$queryRefs .= "thesis = \"" . $recordData['thesis'] . "\", ";
+						$queryRefs .= "thesis = " . quote_smart($recordData['thesis']) . ", ";
 
 					if (!empty($recordData['notes']))
-						$queryRefs .= "notes = \"" . $recordData['notes'] . "\", ";
+						$queryRefs .= "notes = " . quote_smart($recordData['notes']) . ", ";
 
 					if (!empty($recordData['url']))
-						$queryRefs .= "url = \"" . $recordData['url'] . "\", ";
+						$queryRefs .= "url = " . quote_smart($recordData['url']) . ", ";
 
 					if (!empty($recordData['doi']))
-						$queryRefs .= "doi = \"" . $recordData['doi'] . "\", ";
+						$queryRefs .= "doi = " . quote_smart($recordData['doi']) . ", ";
 
 					if (!empty($recordData['contribution_id']))
-						$queryRefs .= "contribution_id = \"" . $recordData['contribution_id'] . "\", ";
+						$queryRefs .= "contribution_id = " . quote_smart($recordData['contribution_id']) . ", ";
 
 					if (!empty($recordData['online_publication']))
-						$queryRefs .= "online_publication = \"" . $recordData['online_publication'] . "\", ";
+						$queryRefs .= "online_publication = " . quote_smart($recordData['online_publication']) . ", ";
 
 					if (!empty($recordData['online_citation']))
-						$queryRefs .= "online_citation = \"" . $recordData['online_citation'] . "\", ";
+						$queryRefs .= "online_citation = " . quote_smart($recordData['online_citation']) . ", ";
 
 
 					if (!empty($queryRefs)) // go ahead, if some array elements did contain data
@@ -694,12 +694,14 @@
 						// for the 'location' field, we accept input from the '$recordData',
 						// but if no data were given, we'll add the currently logged-in user to the 'location' field:
 						if (!empty($recordData['location']))
-							$queryRefs .= "location = \"" . $recordData['location'] . "\", ";
+							$queryRefs .= "location = " . quote_smart($recordData['location']) . ", ";
 						elseif (isset($_SESSION['loginEmail']))
-							$queryRefs .= "location = \"" . $currentUser . "\", ";
+							$queryRefs .= "location = " . quote_smart($currentUser) . ", ";
 
 						// if the 'prefix_call_number' option is set to "true", any 'call_number' string will be prefixed with
 						// the correct call number prefix of the currently logged-in user (e.g. 'IPÖ @ msteffens @ '):
+            //
+            // TODO: Sanitize this using quote_smart
 						if ((isset($_SESSION['loginEmail'])) AND (isset($importDataArray['options']['prefix_call_number'])) AND ($importDataArray['options']['prefix_call_number'] == "true"))
 						{
 							if (empty($recordData['call_number'])) // similar to the GUI behaviour, we'll also add a call number prefix if the 'call_number' field is empty
@@ -715,34 +717,34 @@
 						// we accept custom values for the *date/*time/*by fields if they are in correct format (*date: 'YYYY-MM-DD'; *time: 'HH:MM:SS'; *by: 'string'),
 						// otherwise we'll use the current date & time as well as the currently logged-in user name & email address:
 						if (!empty($recordData['created_by']))
-							$queryRefs .= "created_by = \"" . $recordData['created_by'] . "\", ";
+							$queryRefs .= "created_by = " . quote_smart($recordData['created_by']) . ", ";
 						elseif (isset($_SESSION['loginEmail']))
-							$queryRefs .= "created_by = \"" . $currentUser . "\", ";
+							$queryRefs .= "created_by = " . quote_smart($currentUser) . ", ";
 
 						if (!empty($recordData['created_date']) AND preg_match("/^\d{4}-\d{2}-\d{2}$/", $recordData['created_date']))
-							$queryRefs .= "created_date = \"" . $recordData['created_date'] . "\", ";
+							$queryRefs .= "created_date = " . quote_smart($recordData['created_date']) . ", ";
 						else
-							$queryRefs .= "created_date = \"" . $currentDate . "\", ";
+							$queryRefs .= "created_date = " . quote_smart($currentDate) . ", ";
 
 						if (!empty($recordData['created_time']) AND preg_match("/^\d{2}:\d{2}:\d{2}$/", $recordData['created_time']))
-							$queryRefs .= "created_time = \"" . $recordData['created_time'] . "\", ";
+							$queryRefs .= "created_time = " . quote_smart($recordData['created_time']) . ", ";
 						else
-							$queryRefs .= "created_time = \"" . $currentTime . "\", ";
+							$queryRefs .= "created_time = " . quote_smart($currentTime) . ", ";
 
 						if (!empty($recordData['modified_by']))
-							$queryRefs .= "modified_by = \"" . $recordData['modified_by'] . "\", ";
+							$queryRefs .= "modified_by = " . quote_smart($recordData['modified_by']) . ", ";
 						elseif (isset($_SESSION['loginEmail']))
-							$queryRefs .= "modified_by = \"" . $currentUser . "\", ";
+							$queryRefs .= "modified_by = " . quote_smart($currentUser) . ", ";
 
 						if (!empty($recordData['modified_date']) AND preg_match("/^\d{4}-\d{2}-\d{2}$/", $recordData['modified_date']))
-							$queryRefs .= "modified_date = \"" . $recordData['modified_date'] . "\", ";
+							$queryRefs .= "modified_date = " . quote_smart($recordData['modified_date']) . ", ";
 						else
-							$queryRefs .= "modified_date = \"" . $currentDate . "\", ";
+							$queryRefs .= "modified_date = " . quote_smart($currentDate) . ", ";
 
 						if (!empty($recordData['modified_time']) AND preg_match("/^\d{2}:\d{2}:\d{2}$/", $recordData['modified_time']))
-							$queryRefs .= "modified_time = \"" . $recordData['modified_time'] . "\"";
+							$queryRefs .= "modified_time = " . quote_smart($recordData['modified_time']) . "";
 						else
-							$queryRefs .= "modified_time = \"" . $currentTime . "\"";
+							$queryRefs .= "modified_time = " . quote_smart($currentTime);
 
 
 						$queryRefs = "INSERT INTO $tableRefs SET " . $queryRefs; // finalize the query by prefixing it with the actual MySQL command
@@ -1558,13 +1560,13 @@ EOF;
 					{
 						// for the fields 'marked=no', 'copy=false' and 'selected=no', force NULL values to be matched:
 						if (($fieldSelector == "marked" AND $refineSearchName == "no") OR ($fieldSelector == "copy" AND $refineSearchName == "false") OR ($fieldSelector == "selected" AND $refineSearchName == "no"))
-							$query = eregi_replace("WHERE","WHERE ($fieldSelector RLIKE \"$refineSearchName\" OR $fieldSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
+							$query = eregi_replace("WHERE","WHERE ($fieldSelector RLIKE " . quote_smart($refineSearchName) . " OR $fieldSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
 						else // add default 'WHERE' clause:
-							$query = eregi_replace("WHERE","WHERE $fieldSelector RLIKE \"$refineSearchName\" AND",$query); // ...add search field name & value to the sql query
+							$query = eregi_replace("WHERE","WHERE $fieldSelector RLIKE " . quote_smart($refineSearchName) . " AND",$query); // ...add search field name & value to the sql query
 					}
 				else // $refineSearchActionCheckbox == "1" // if the user marked the checkbox next to "Exclude matches"
 					{
-						$query = eregi_replace("WHERE","WHERE ($fieldSelector NOT RLIKE \"$refineSearchName\" OR $fieldSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
+						$query = eregi_replace("WHERE","WHERE ($fieldSelector NOT RLIKE " . qoute_smart($refineSearchName) . " OR $fieldSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
 					}
 				$query = eregi_replace(' AND serial RLIKE "\.\+"','',$query); // remove any 'AND serial RLIKE ".+"' which isn't required anymore
 			}
@@ -2459,7 +2461,7 @@ EOF;
 		if (!empty($serialsArray)) // if the 'related' field did contain any record serials
 		{
 			$serialsString = implode("|", $serialsArray);
-			$serialsString = "serial RLIKE \"^(" . $serialsString . ")$\"";
+			$serialsString = "serial RLIKE " . qoute_smart("^(" . $serialsString . ")$");
 			$queriesArray[] = $serialsString; // append the serial query to the end of the queries array
 		}
 
@@ -2522,9 +2524,9 @@ EOF;
 
 
 		if ($queryTable == $tableUserData) // for the current user, get all entries within the 'user_data' table that refer to the selected records (listed in '$recordSerialsString'):
-			$query = "SELECT record_id, user_groups FROM $tableUserData WHERE record_id RLIKE \"^(" . $recordSerialsString . ")$\" AND user_id = " . $userID;
+			$query = "SELECT record_id, user_groups FROM $tableUserData WHERE record_id RLIKE " . quote_smart("^(" . $recordSerialsString . ")$") . " AND user_id = " . quote_smart($userID);
 		elseif ($queryTable == $tableUsers) // for the admin, get all entries within the 'users' table that refer to the selected records (listed in '$recordSerialsString'):
-			$query = "SELECT user_id as record_id, user_groups FROM $tableUsers WHERE user_id RLIKE \"^(" . $recordSerialsString . ")$\"";
+      $query = "SELECT user_id as record_id, user_groups FROM $tableUsers WHERE user_id RLIKE " . quote_smart("^(" . $recordSerialsString . ")$");
 			// (note that by using 'user_id as record_id' we can use the term 'record_id' as identifier of the primary key for both tables)
 
 
@@ -2560,9 +2562,9 @@ EOF;
 				}
 
 				if ($queryTable == $tableUserData) // for the current record & user ID, update the matching entry within the 'user_data' table:
-					$queryUserData = "UPDATE $tableUserData SET user_groups = \"" . $recordUserGroups . "\" WHERE record_id = " . $recordID . " AND user_id = " . $userID;
+					$queryUserData = "UPDATE $tableUserData SET user_groups = " . quote_smart($recordUserGroups) . " WHERE record_id = " . quote_smart($recordID) . " AND user_id = " . quote_smart($userID);
 				elseif ($queryTable == $tableUsers) // for the current user ID, update the matching entry within the 'users' table:
-					$queryUserData = "UPDATE $tableUsers SET user_groups = \"" . $recordUserGroups . "\" WHERE user_id = " . $recordID;
+					$queryUserData = "UPDATE $tableUsers SET user_groups = " . quote_smart($recordUserGroups) . " WHERE user_id = " . quote_smart($recordID);
 
 
 				$resultUserData = queryMySQLDatabase($queryUserData, $oldQuery); // RUN the query on the database through the connection
@@ -2578,9 +2580,9 @@ EOF;
 			{
 				// for the current record & user ID, add a new entry (containing the specified group) to the 'user_data' table:
 				$queryUserData = "INSERT INTO $tableUserData SET "
-								. "user_groups = \"$userGroup\", "
-								. "record_id = \"$leftoverRecordID\", "
-								. "user_id = \"$userID\", "
+								. "user_groups = " . quote_smart($userGroup) . ", "
+								. "record_id = " . quote_smart($leftoverRecordID) . ", "
+								. "user_id = " . quote_smart($userID) . ", "
 								. "data_id = NULL"; // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
 
 				$resultUserData = queryMySQLDatabase($queryUserData, $oldQuery); // RUN the query on the database through the connection
@@ -2608,7 +2610,7 @@ EOF;
 		//       is neither NULL (=> 'user_groups IS NOT NULL') nor the empty string (=> 'user_groups NOT RLIKE "^$"')
 		if ($queryTable == $tableUserData)
 			// Find all unique 'user_groups' entries in the 'user_data' table belonging to the current user:
-			$query = "SELECT DISTINCT user_groups FROM $tableUserData WHERE user_id = '$userID' AND user_groups RLIKE \".+\"";
+			$query = "SELECT DISTINCT user_groups FROM $tableUserData WHERE user_id = " . quote_smart($userID) . " AND user_groups RLIKE \".+\"";
 		elseif ($queryTable == $tableUsers)
 			// Find all unique 'user_groups' entries in the 'users' table:
 			$query = "SELECT DISTINCT user_groups FROM $tableUsers WHERE user_groups RLIKE \".+\"";
@@ -2667,7 +2669,7 @@ EOF;
 		// CONSTRUCT SQL QUERY:
 		// Find all unique query entries in the 'queries' table belonging to the current user:
 		// (query names should be unique anyhow, so the DISTINCT parameter wouldn't be really necessary)
-		$query = "SELECT DISTINCT query_name FROM $tableQueries WHERE user_id = '$userID' ORDER BY last_execution DESC";
+		$query = "SELECT DISTINCT query_name FROM $tableQueries WHERE user_id = " . quote_smart($userID) . " ORDER BY last_execution DESC";
 		// Note: we sort (in descending order) by the 'last_execution' field to get the last used query entries first;
 		//       by that, the last used query will be always at the top of the popup menu within the 'Recall My Query' form
 
@@ -2702,7 +2704,7 @@ EOF;
 
 		// CONSTRUCT SQL QUERY:
 		if ($dataType == "format")
-			$query = "SELECT format_name, format_id FROM $tableFormats LEFT JOIN $tableDepends ON $tableFormats.depends_id = $tableDepends.depends_id WHERE format_type = '" . $formatType . "' AND format_enabled = 'true' AND depends_enabled = 'true' ORDER BY order_by, format_name";
+			$query = "SELECT format_name, format_id FROM $tableFormats LEFT JOIN $tableDepends ON $tableFormats.depends_id = $tableDepends.depends_id WHERE format_type = " . quote_smart($formatType) . " AND format_enabled = 'true' AND depends_enabled = 'true' ORDER BY order_by, format_name";
 
 		elseif ($dataType == "style")
 			$query = "SELECT style_name, style_id FROM $tableStyles LEFT JOIN $tableDepends ON $tableStyles.depends_id = $tableDepends.depends_id WHERE style_enabled = 'true' AND depends_enabled = 'true' ORDER BY order_by, style_name";
@@ -2733,13 +2735,13 @@ EOF;
 
 		// CONSTRUCT SQL QUERY:
 		if ($dataType == "format")
-			$query = "SELECT $tableFormats.format_name, $tableFormats.format_id FROM $tableFormats LEFT JOIN $tableUserFormats on $tableFormats.format_id = $tableUserFormats.format_id LEFT JOIN $tableDepends ON $tableFormats.depends_id = $tableDepends.depends_id WHERE format_type = '" . $formatType . "' AND format_enabled = 'true' AND depends_enabled = 'true' AND user_id = '" . $userID . "' ORDER BY $tableFormats.order_by, $tableFormats.format_name";
+			$query = "SELECT $tableFormats.format_name, $tableFormats.format_id FROM $tableFormats LEFT JOIN $tableUserFormats on $tableFormats.format_id = $tableUserFormats.format_id LEFT JOIN $tableDepends ON $tableFormats.depends_id = $tableDepends.depends_id WHERE format_type = " . quote_smart($formatType) . " AND format_enabled = 'true' AND depends_enabled = 'true' AND user_id = " . quote_smart($userID) . " ORDER BY $tableFormats.order_by, $tableFormats.format_name";
 
 		elseif ($dataType == "style")
-			$query = "SELECT $tableStyles.style_name, $tableStyles.style_id FROM $tableStyles LEFT JOIN $tableUserStyles on $tableStyles.style_id = $tableUserStyles.style_id LEFT JOIN $tableDepends ON $tableStyles.depends_id = $tableDepends.depends_id WHERE style_enabled = 'true' AND depends_enabled = 'true' AND user_id = '" . $userID . "' ORDER BY $tableStyles.order_by, $tableStyles.style_name";
+			$query = "SELECT $tableStyles.style_name, $tableStyles.style_id FROM $tableStyles LEFT JOIN $tableUserStyles on $tableStyles.style_id = $tableUserStyles.style_id LEFT JOIN $tableDepends ON $tableStyles.depends_id = $tableDepends.depends_id WHERE style_enabled = 'true' AND depends_enabled = 'true' AND user_id = " . quote_smart($userID) . " ORDER BY $tableStyles.order_by, $tableStyles.style_name";
 
 		elseif ($dataType == "type")
-			$query = "SELECT $tableTypes.type_name, $tableTypes.type_id FROM $tableTypes LEFT JOIN $tableUserTypes USING (type_id) WHERE type_enabled = 'true' AND user_id = '" . $userID . "' ORDER BY $tableTypes.order_by, $tableTypes.type_name";
+			$query = "SELECT $tableTypes.type_name, $tableTypes.type_id FROM $tableTypes LEFT JOIN $tableUserTypes USING (type_id) WHERE type_enabled = 'true' AND user_id = " . quote_smart($userID) . " ORDER BY $tableTypes.order_by, $tableTypes.type_name";
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 
@@ -2785,19 +2787,19 @@ EOF;
 			//       - 'user_formats' table: there must be an entry for the given user where the 'format_id' matches the 'format_id' of the given format in table 'formats' -AND-
 			//                               the 'show_format' field must contain 'true' for the 'format_id' that matches the 'format_id' of the given format in table 'formats'
 			//                               (the 'user_formats' table specifies all of the available formats for a particular user that have been selected by this user to be included in the format popups)
-			$query = "SELECT format_name FROM $tableFormats LEFT JOIN $tableUserFormats on $tableFormats.format_id = $tableUserFormats.format_id LEFT JOIN $tableDepends ON $tableFormats.depends_id = $tableDepends.depends_id WHERE format_type = '" . $formatType . "' AND format_enabled = 'true' AND depends_enabled = 'true' AND user_id = '" . $userID . "' AND show_format = 'true' ORDER BY $tableFormats.order_by, $tableFormats.format_name";
+			$query = "SELECT format_name FROM $tableFormats LEFT JOIN $tableUserFormats on $tableFormats.format_id = $tableUserFormats.format_id LEFT JOIN $tableDepends ON $tableFormats.depends_id = $tableDepends.depends_id WHERE format_type = " . quote_smart($formatType) . " AND format_enabled = 'true' AND depends_enabled = 'true' AND user_id = " . quote_smart($userID) . " AND show_format = 'true' ORDER BY $tableFormats.order_by, $tableFormats.format_name";
 		}
 		elseif ($dataType == "style")
 		{
 			// Find all enabled+visible styles in table 'user_styles' belonging to the current user:
 			// (same conditions apply as for formats)
-			$query = "SELECT style_name FROM $tableStyles LEFT JOIN $tableUserStyles on $tableStyles.style_id = $tableUserStyles.style_id LEFT JOIN $tableDepends ON $tableStyles.depends_id = $tableDepends.depends_id WHERE style_enabled = 'true' AND depends_enabled = 'true' AND user_id = '" . $userID . "' AND show_style = 'true' ORDER BY $tableStyles.order_by, $tableStyles.style_name";
+			$query = "SELECT style_name FROM $tableStyles LEFT JOIN $tableUserStyles on $tableStyles.style_id = $tableUserStyles.style_id LEFT JOIN $tableDepends ON $tableStyles.depends_id = $tableDepends.depends_id WHERE style_enabled = 'true' AND depends_enabled = 'true' AND user_id = " . quote_smart($userID) . " AND show_style = 'true' ORDER BY $tableStyles.order_by, $tableStyles.style_name";
 		}
 		elseif ($dataType == "type")
 		{
 			// Find all enabled+visible types in table 'user_types' belonging to the current user:
 			// (opposed to formats & styles, we're not checking for any dependencies here)
-			$query = "SELECT type_name FROM $tableTypes LEFT JOIN $tableUserTypes USING (type_id) WHERE user_id = '" . $userID . "' AND show_type = 'true' ORDER BY $tableTypes.order_by, $tableTypes.type_name";
+			$query = "SELECT type_name FROM $tableTypes LEFT JOIN $tableUserTypes USING (type_id) WHERE user_id = " . quote_smart($userID) . " AND show_type = 'true' ORDER BY $tableTypes.order_by, $tableTypes.type_name";
 		}
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
@@ -2888,7 +2890,7 @@ EOF;
 
 		// CONSTRUCT SQL QUERY:
 		// get the 'style_spec' for the record entry in table 'styles' whose 'style_name' matches that in '$citeStyle':
-		$query = "SELECT style_spec FROM $tableStyles WHERE style_name = '$citeStyle'";
+		$query = "SELECT style_spec FROM $tableStyles WHERE style_name = " . quote_smart($citeStyle);
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 		$row = mysql_fetch_array($result);
@@ -2907,7 +2909,7 @@ EOF;
 
 		// CONSTRUCT SQL QUERY:
 		// get the 'format_spec' for the record entry in table 'formats' whose 'format_name' matches that in '$formatName':
-		$query = "SELECT format_spec FROM $tableFormats WHERE format_name = '" . $formatName . "' AND format_type = '" . $formatType . "'";
+		$query = "SELECT format_spec FROM $tableFormats WHERE format_name = " . quote_smart($formatName) . " AND format_type = " . quote_smart($formatType);
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 		$row = mysql_fetch_array($result);
@@ -2926,7 +2928,7 @@ EOF;
 
 		// CONSTRUCT SQL QUERY:
 		// get the path for the record entry in table 'depends' whose field 'depends_external' matches that in '$externalUtilityName':
-		$query = "SELECT depends_path FROM $tableDepends WHERE depends_external = '" . $externalUtilityName . "'";
+		$query = "SELECT depends_path FROM $tableDepends WHERE depends_external = " . qoute_smart($externalUtilityName);
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 		$row = mysql_fetch_array($result);
@@ -2944,7 +2946,7 @@ EOF;
 
 		// CONSTRUCT SQL QUERY:
 		// Fetch all permission settings from the 'user_permissions' (or 'group_permissions') table for the current user:
-		$query = "SELECT allow_add, allow_edit, allow_delete, allow_download, allow_upload, allow_details_view, allow_print_view, allow_browse_view, allow_sql_search, allow_user_groups, allow_user_queries, allow_rss_feeds, allow_import, allow_export, allow_cite, allow_batch_import, allow_batch_export, allow_modify_options FROM " . $permissionType . "_permissions WHERE " . $permissionType . "_id = '$user_OR_groupID'";
+		$query = "SELECT allow_add, allow_edit, allow_delete, allow_download, allow_upload, allow_details_view, allow_print_view, allow_browse_view, allow_sql_search, allow_user_groups, allow_user_queries, allow_rss_feeds, allow_import, allow_export, allow_cite, allow_batch_import, allow_batch_export, allow_modify_options FROM " . $permissionType . "_permissions WHERE " . $permissionType . "_id = " . quote_smart($user_OR_groupID);
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 
@@ -3006,7 +3008,7 @@ EOF;
 			$query = "SELECT DISTINCT language_name FROM $tableLanguages WHERE language_enabled = 'true' ORDER BY order_by";
 		else
 			// Get the preferred language for the user with the user ID given in '$userID':
-			$query = "SELECT language AS language_name FROM $tableUsers WHERE user_id = '" . $userID . "'";
+			$query = "SELECT language AS language_name FROM $tableUsers WHERE user_id = " . quote_smart($userID);
 
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
@@ -3037,7 +3039,7 @@ EOF;
 
 		// CONSTRUCT SQL QUERY:
 		// Fetch all options from table 'user_options' for the user with the user ID given in '$userID':
-		$query = "SELECT * FROM $tableUserOptions WHERE user_id = '" . $userID . "'";
+		$query = "SELECT * FROM $tableUserOptions WHERE user_id = " . quote_smart($userID);
 
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
@@ -3136,14 +3138,14 @@ EOF;
 		// CONSTRUCT SQL QUERY:
 		// prepare the 'SET' part of the SQL query string:
 		foreach($userPermissionsArray as $permissionKey => $permissionValue)
-			$permissionQueryArray[] = $permissionKey . " = \"" . $permissionValue . "\"";
+			$permissionQueryArray[] = $permissionKey . " = " . quote_smart($permissionValue);
 
 		if (!empty($permissionQueryArray))
 		{
 			$permissionQueryString = implode(", ", $permissionQueryArray);
 
 			// Update all specified permission settings in the 'user_permissions' table for the selected user(s):
-			$query = "UPDATE user_permissions SET " . $permissionQueryString . " WHERE user_id RLIKE \"^(" . $recordSerialsString . ")$\"";
+			$query = "UPDATE user_permissions SET " . $permissionQueryString . " WHERE user_id RLIKE " . quote_smart("^(" . $recordSerialsString . ")$");
 
 			$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 
@@ -3934,7 +3936,7 @@ EOF;
 				if (eregi(", (marked|copy|user_keys|user_notes|user_file|user_groups|related)",$sqlQuery) OR eregi("WHERE.+(marked|copy|user_keys|user_notes|user_file|user_groups|related)",$sqlQuery))
 				{
 					$sqlQuery = eregi_replace("user_id *= *[0-9]+","user_id = $loginUserID",$sqlQuery); // ...replace any other user ID with the ID of the currently logged in user
-					$sqlQuery = eregi_replace("location RLIKE [^ ]+","location RLIKE \"$loginEmail\"",$sqlQuery); // ...replace any other user email address with the login email address of the currently logged in user
+					$sqlQuery = eregi_replace("location RLIKE [^ ]+","location RLIKE " . quote_smart($loginEmail),$sqlQuery); // ...replace any other user email address with the login email address of the currently logged in user
 				}
 			}
 
@@ -4215,6 +4217,7 @@ EOF;
 						. $userIDTableSpec
 						. "INDEX (" . $fieldName . "_id, " . $fieldName . ", ref_id))";
 
+    // TODO: Sanitize with quote_smart
 		foreach ($fieldValuesArray as $fieldValue)
 			$queryArray[] = "INSERT INTO " . $tableName . " VALUES " . $fieldValue;
 

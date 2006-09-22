@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./query_modify.php
 	// Created:    23-May-04, 20:42
-	// Modified:   15-Feb-05, 23:21
+	// Modified:   22-Sep-06, 18:00
 
 	// This php script will perform adding, editing & deleting of user queries.
 	// It then relocates back to the main page ('index.php') so that the user
@@ -218,38 +218,38 @@
 	{
 			// UPDATE - update the relevant query
 			$query = "UPDATE $tableQueries SET "
-					. "query_name = \"$queryName\", "
-					. "display_type = \"$displayType\", "
-					. "view_type = \"$queryViewType\", "
-					. "query = \"$sqlQuery\", "
-					. "show_query = \"$showQuery\", "
-					. "show_links = \"$showLinks\", "
-					. "show_rows = \"$showRows\", "
-					. "cite_style_selector = \"$citeStyle\", "
-					. "cite_order = \"$citeOrder\" "
-					. "WHERE query_id = $queryID";
+					. "query_name = " . quote_smart($queryName)
+					. "display_type = " . quote_smart($displayType)
+					. "view_type = " . quote_smart($queryViewType)
+					. "query = " . quote_smart($sqlQuery)
+					. "show_query = " . quote_smart($showQuery)
+					. "show_links = " . quote_smart($showLinks)
+					. "show_rows = " . quote_smart($showRows)
+					. "cite_style_selector = " . quote_smart($citeStyle)
+					. "cite_order = " . quote_smart($citeOrder\" "
+					. "WHERE query_id = " . quote_smart($queryID);
 	}
 
 	elseif ($queryAction == "delet")
 	{
 			// DELETE - delete existing query
-			$query = "DELETE FROM $tableQueries WHERE query_id = $queryID";
+			$query = "DELETE FROM $tableQueries WHERE query_id = " . quote_smart($queryID);
 	}
 
 	else // add the data:
 	{
 			// INSERT - add new query
 			$query = "INSERT INTO $tableQueries SET "
-					. "user_id = \"$loginUserID\", " // the global variable '$loginUserID' gets set in function 'start_session()' within 'include.inc.php'
-					. "query_name = \"$queryName\", "
-					. "display_type = \"$displayType\", "
-					. "view_type = \"$queryViewType\", "
-					. "query = \"$sqlQuery\", "
-					. "show_query = \"$showQuery\", "
-					. "show_links = \"$showLinks\", "
-					. "show_rows = \"$showRows\", "
-					. "cite_style_selector = \"$citeStyle\", "
-					. "cite_order = \"$citeOrder\", "
+					. "user_id = " . quote_smart($loginUserID) // the global variable '$loginUserID' gets set in function 'start_session()' within 'include.inc.php'
+					. "query_name = " . quote_smart($queryName)
+					. "display_type = " . quote_smart($displayType)
+					. "view_type = " . quote_smart($queryViewType)
+					. "query = " . quote_smart($sqlQuery)
+					. "show_query = " . quote_smart($showQuery)
+					. "show_links = " . quote_smart($showLinks)
+					. "show_rows = " . quote_smart($showRows)
+					. "cite_style_selector = " . quote_smart($citeStyle)
+					. "cite_order = " . quote_smart($citeOrder)
 					. "last_execution = NOW(), " // set 'last_execution' field to the current date & time in 'DATETIME' format (which is 'YYYY-MM-DD HH:MM:SS', e.g.: '2003-12-31 23:45:59')
 					. "query_id = NULL"; // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
 	}

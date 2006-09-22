@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./query_manager.php
 	// Created:    04-Feb-04, 22:29
-	// Modified:   25-Jun-06, 20:04
+	// Modified:   22-Sep-06, 18:00
 
 	// This script enables you to manage your custom queries.
 	// It offers a form to save the current query or update/delete any of your saved queries.
@@ -182,7 +182,7 @@
 		// CONSTRUCT SQL QUERY:
 		// for the selected query, select *all* fields that are available in the form:
 		$query = "SELECT query_id, user_id, query_name, display_type, view_type, query, show_query, show_links, show_rows, cite_style_selector, cite_order"
-				. " FROM $tableQueries WHERE query_id = $queryID"; // since we'll only fetch one record, the ORDER BY clause is obsolete here
+				. " FROM $tableQueries WHERE query_id = " quote_smart($queryID); // since we'll only fetch one record, the ORDER BY clause is obsolete here
 
 
 		// (1) OPEN CONNECTION, (2) SELECT DATABASE
