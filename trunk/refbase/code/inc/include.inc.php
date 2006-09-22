@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   22-Sep-06, 13:30
+	// Modified:   22-Sep-06, 15:00
 
 	// This file contains important
 	// functions that are shared
@@ -3589,9 +3589,8 @@ EOF;
 	// Quote variable to make safe
 	function quote_smart($value) {
 		// Stripslashes
-		if (get_magic_quotes_gpc()) {
-			$value = stripslashes($value);
-		}
+		$value = stripSlashesIfMagicQuotes($value);
+		
 		// Quote if not a number or a numeric string
 		if (!is_numeric($value)) {
 			$value = "'" . mysql_real_escape_string($value) . "'";
