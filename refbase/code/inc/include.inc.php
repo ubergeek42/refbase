@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   09-Sep-06, 15:14
+	// Modified:   22-Sep-06, 13:30
 
 	// This file contains important
 	// functions that are shared
@@ -3586,6 +3586,19 @@ EOF;
 
 	// --------------------------------------------------------------------
 
+	// Quote variable to make safe
+	function quote_smart($value) {
+		// Stripslashes
+		if (get_magic_quotes_gpc()) {
+			$value = stripslashes($value);
+		}
+		// Quote if not a number or a numeric string
+		if (!is_numeric($value)) {
+			$value = "'" . mysql_real_escape_string($value) . "'";
+	 	}
+		return $value;
+	}
+
 	// Removes slashes from the input string if 'magic_quotes_gpc = On'
 	function stripSlashesIfMagicQuotes($sourceString)
 	{
@@ -3593,19 +3606,6 @@ EOF;
 
 		if ($magicQuotes) // magic_quotes_gpc = On
 			$sourceString = stripslashes($sourceString);
-
-		return $sourceString;
-	}
-
-	// --------------------------------------------------------------------
-
-	// Add slashes to the input string if 'magic_quotes_gpc = Off'
-	function addSlashesIfNotMagicQuotes($sourceString)
-	{
-		$magicQuotes = ini_get("magic_quotes_gpc"); // check the value of the 'magic_quotes_gpc' directive in 'php.ini'
-
-		if (!($magicQuotes)) // magic_quotes_gpc = Off
-			$sourceString = addslashes($sourceString);
 
 		return $sourceString;
 	}
