@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   25-Sep-06, 23:45
+	// Modified:   26-Sep-06, 16:00
 	// TODO: Refactor so that query builder will use a few common functions
 
 	// This is the main script that handles the search query and displays the query results.
@@ -1948,7 +1948,7 @@
 				elseif ($titleSelector == "is equal to")
 					$query .= " AND title = " . quote_smart($titleName);
 				elseif ($titleSelector == "is not equal to")
-					$query .= " AND title != " quote_smart($titleName);
+					$query .= " AND title != " . quote_smart($titleName);
 				elseif ($titleSelector == "starts with")
 					$query .= " AND title RLIKE " . quote_smart("^" . $titleName);
 				elseif ($titleSelector == "ends with")
@@ -2000,7 +2000,7 @@
 						$yearNo = preg_replace("/\D+/", "|", $yearNo);
 						// strip "|" from beginning/end of string (if any):
 						$yearNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $yearNo);
-						$query .= " AND year RLIKE " quote_smart("^(" . $yearNo . ")$");
+						$query .= " AND year RLIKE " . quote_smart("^(" . $yearNo . ")$");
 					}
 			}
 
@@ -2278,7 +2278,7 @@
 		$query = eregi_replace("SELECT, ","SELECT ",$query);
 
 		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
-		$query .= " FROM $tableRefs WHERE serial RLIKE \".+\" AND " . $librarySearchPattern[0] . " RLIKE " quote_smart($librarySearchPattern[1]); // add FROM & (initial) WHERE clause
+		$query .= " FROM $tableRefs WHERE serial RLIKE \".+\" AND " . $librarySearchPattern[0] . " RLIKE " . quote_smart($librarySearchPattern[1]); // add FROM & (initial) WHERE clause
 		// Note: we'll restrict the query to records where the pattern given in array element '$librarySearchPattern[1]' (defined in 'ini.inc.php')
 		//       matches the contents of the field given in array element '$librarySearchPattern[0]'
 
@@ -5008,7 +5008,7 @@
 			$query .= " OR";
 
 		if (!empty($escapedRecordKeysArray) AND isset($_SESSION['loginEmail']))
-			$query .= " cite_key RLIKE " . quote_smart\"^(" . $escapedRecordKeysString . ")$\""; // add any cite keys to WHERE clause
+			$query .= " cite_key RLIKE " . quote_smart("^(" . $escapedRecordKeysString . ")$"); // add any cite keys to WHERE clause
 
 		// add ORDER BY clause:
 		if ($citeOrder == "year") // sort records first by year (descending), then in the usual way:
