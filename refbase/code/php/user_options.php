@@ -5,11 +5,11 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_options.php
 	// Created:    24-Oct-04, 19:31
-	// Modified:   26-Sep-06, 00:45
+	// Modified:   26-Sep-06, 17:00
 
 	// This script provides options which are individual for each user.
 	// 
-	// 
+	// TODO: more encodeHTML fixes?
 
 	/*
 	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
@@ -304,14 +304,14 @@
 ?>
 
 <form method="POST" action="user_options_modify.php" name="userOptions">
-<input type="hidden" name="userID" value="<?php echo $userID ?>">
+<input type="hidden" name="userID" value="<?php echo encodeHTML($userID) ?>">
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds a form with user options">
 <tr>
 	<td align="left" width="169"><b>Display Options:</b></td>
 	<td align="left" width="169">Use language:</td>
 	<td><?php echo fieldError("languageName", $errors); ?>
 
-		<select name="languageName"<?php echo $languagePopupDisabled; ?>><?php echo $languageOptionTags; ?>
+		<select name="languageName"<?php echo encodeHTML($languagePopupDisabled); ?>><?php echo $languageOptionTags; ?>
 
 		</select>
 	</td>
@@ -375,7 +375,7 @@
 <tr>
 	<td align="left"></td>
 	<td colspan="2">
-		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="text_citation_format" value="<?php echo $textCitationFormat; ?>" size="46">
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="text_citation_format" value="<?php echo encodeHTML($textCitationFormat); ?>" size="46">
 	</td>
 </tr>
 <tr>
@@ -425,7 +425,7 @@
 <tr>
 	<td align="left"></td>
 	<td colspan="2">
-		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="cite_key_format" value="<?php echo $citeKeyFormat; ?>" size="46">
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="cite_key_format" value="<?php echo encodeHTML($citeKeyFormat); ?>" size="46">
 	</td>
 </tr>
 <tr>

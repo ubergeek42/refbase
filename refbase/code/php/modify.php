@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./modify.php
 	// Created:    18-Dec-02, 23:08
-	// Modified:   22-Sep-06, 14:00
+	// Modified:   26-Sep-06, 17:10
 
 	// This php script will perform adding, editing & deleting of records.
 	// It then calls 'receipt.php' which displays links to the modified/added record
@@ -707,8 +707,8 @@
 					. "address = " . quote_smart($addressName) . ", "
 					. "corporate_author = " . quote_smart($corporateAuthorName) . ", "
 					. "keywords = " . quote_smart($keywordsName) . ", "
-					. "abstract = " .  quote_smart($abstractName)
-					. " publisher = " . quote_smart($publisherName) . ", "
+					. "abstract = " .  quote_smart($abstractName) . ", "
+					. "publisher = " . quote_smart($publisherName) . ", "
 					. "place = " . quote_smart($placeName) . ", "
 					. "editor = " . quote_smart($editorName) . ", "
 					. "language = " . quote_smart($languageName) . ", "
@@ -803,8 +803,8 @@
 					. "address = " . quote_smart($addressName) . ", "
 					. "corporate_author = " . quote_smart($corporateAuthorName) . ", "
 					. "keywords = " . quote_smart($keywordsName) . ", "
-					. "abstract = " .  quote_smart($abstractName)
-					. " publisher = " . quote_smart($publisherName) . ", "
+					. "abstract = " .  quote_smart($abstractName) . ", "
+					. "publisher = " . quote_smart($publisherName) . ", "
 					. "place = " . quote_smart($placeName) . ", "
 					. "editor = " . quote_smart($editorName) . ", "
 					. "language = " . quote_smart($languageName) . ", "
