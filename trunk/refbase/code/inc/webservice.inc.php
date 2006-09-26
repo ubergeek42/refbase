@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/webservice.inc.php
 	// Created:    04-Feb-06, 22:02
-	// Modified:   26-Sep-06, 00:35
+	// Modified:   26-Sep-06, 16:00
 
 	// This include file contains functions that are used in conjunction with the refbase webservices.
 	// Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -183,7 +183,7 @@
 				{
 					$searchTermArray = split(" +", $searchTerm);
 
-					$whereClausePart .= " >= " . quote_smart($searchTermArray[0]) . " AND " . $indexNamesArray[$contextSet . $contextSetIndexConnector . $indexName] . " <= " . quote_smart($searchTermArray[1])
+					$whereClausePart .= " >= " . quote_smart($searchTermArray[0]) . " AND " . $indexNamesArray[$contextSet . $contextSetIndexConnector . $indexName] . " <= " . quote_smart($searchTermArray[1]);
 				}
 				else
 				{
