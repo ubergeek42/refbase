@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_options_modify.php
 	// Created:    26-Oct-04, 20:57
-	// Modified:   10-Jun-06, 17:55
+	// Modified:   26-Sep-06, 08:30
 
 	// This script validates user options selected within the form provided by 'user_options.php'.
 	// If validation succeeds, it UPDATEs the corresponding table fields for that user and redirects to a receipt page;
@@ -144,8 +144,8 @@
 
 		// a) update the language field of the 'users' table:
 		$queryArray[] = "UPDATE $tableUsers SET "
-						. "language = \"" . $formVars["languageName"] . "\" "
-						. "WHERE user_id = $userID";
+						. "language = " . quote_smart($formVars["languageName"])
+						. "WHERE user_id = " . quote_smart($userID);
 
 
 		if ($loginEmail == $adminLoginEmail) // if the admin is logged in
@@ -167,7 +167,7 @@
 				$enabledUserTypesNOTInSelectedTypesString = implode("|", $enabledUserTypesNOTInSelectedTypesArray); // join array of type IDs using a pipe as separator
 
 				$queryArray[] = "DELETE FROM $tableUserTypes "
-								. "WHERE user_id = $userID AND type_id RLIKE \"^(" . $enabledUserTypesNOTInSelectedTypesString . ")$\"";
+								. "WHERE user_id = " . quote_smart($userID) AND type_id RLIKE " . quote_smart("^(" . $enabledUserTypesNOTInSelectedTypesString . ")$");
 			}
 	
 			if (!empty($selectedTypesNOTInEnabledUserTypesArray))
@@ -178,7 +178,7 @@
 				$insertTypesQuery = "INSERT INTO $tableUserTypes VALUES ";
 
 				foreach ($selectedTypesNOTInEnabledUserTypesArray as $newUserTypeID)
-					$insertTypesQueryValues[] = "(NULL, $newUserTypeID, $userID, 'true')";
+					$insertTypesQueryValues[] = "(NULL, quote_smart($newUserTypeID), quote_smart($userID), 'true')";
 
 				$queryArray[] = $insertTypesQuery . implode(", ", $insertTypesQueryValues) . ";";
 			}
@@ -201,7 +201,7 @@
 				$enabledUserStylesNOTInSelectedStylesString = implode("|", $enabledUserStylesNOTInSelectedStylesArray); // join array of style IDs using a pipe as separator
 
 				$queryArray[] = "DELETE FROM $tableUserStyles "
-								. "WHERE user_id = $userID AND style_id RLIKE \"^(" . $enabledUserStylesNOTInSelectedStylesString . ")$\"";
+								. "WHERE user_id = " . quote_smart($userID) . " AND style_id RLIKE " . quote_smart("^(" . $enabledUserStylesNOTInSelectedStylesString . ")$");
 			}
 	
 			if (!empty($selectedStylesNOTInEnabledUserStylesArray))
@@ -212,7 +212,7 @@
 				$insertStylesQuery = "INSERT INTO $tableUserStyles VALUES ";
 
 				foreach ($selectedStylesNOTInEnabledUserStylesArray as $newUserStyleID)
-					$insertStylesQueryValues[] = "(NULL, $newUserStyleID, $userID, 'true')";
+					$insertStylesQueryValues[] = "(NULL, quote_smart($newUserStyleID), quote_smart($userID), 'true')";
 
 				$queryArray[] = $insertStylesQuery . implode(", ", $insertStylesQueryValues) . ";";
 			}
@@ -235,7 +235,7 @@
 				$enabledUserFormatsNOTInSelectedFormatsString = implode("|", $enabledUserFormatsNOTInSelectedFormatsArray); // join array of format IDs using a pipe as separator
 
 				$queryArray[] = "DELETE FROM $tableUserFormats "
-								. "WHERE user_id = $userID AND format_id RLIKE \"^(" . $enabledUserFormatsNOTInSelectedFormatsString . ")$\"";
+								. "WHERE user_id = " . quote_smart($userID) . " AND format_id RLIKE " . quote_smart("^(" . $enabledUserFormatsNOTInSelectedFormatsString . ")$");
 			}
 	
 			if (!empty($selectedFormatsNOTInEnabledUserFormatsArray))
@@ -246,7 +246,7 @@
 				$insertFormatsQuery = "INSERT INTO $tableUserFormats VALUES ";
 
 				foreach ($selectedFormatsNOTInEnabledUserFormatsArray as $newUserFormatID)
-					$insertFormatsQueryValues[] = "(NULL, $newUserFormatID, $userID, 'true')";
+					$insertFormatsQueryValues[] = "(NULL, quote_smart($newUserFormatID), quote_smart($userID), 'true')";
 
 				$queryArray[] = $insertFormatsQuery . implode(", ", $insertFormatsQueryValues) . ";";
 			}
@@ -269,7 +269,7 @@
 				$enabledUserFormatsNOTInSelectedFormatsString = implode("|", $enabledUserFormatsNOTInSelectedFormatsArray); // join array of format IDs using a pipe as separator
 
 				$queryArray[] = "DELETE FROM $tableUserFormats "
-								. "WHERE user_id = $userID AND format_id RLIKE \"^(" . $enabledUserFormatsNOTInSelectedFormatsString . ")$\"";
+								. "WHERE user_id = " . quote_smart($userID) . " AND format_id RLIKE " . quote_smart("^(" . $enabledUserFormatsNOTInSelectedFormatsString . ")$");
 			}
 	
 			if (!empty($selectedFormatsNOTInEnabledUserFormatsArray))
@@ -280,7 +280,7 @@
 				$insertFormatsQuery = "INSERT INTO $tableUserFormats VALUES ";
 
 				foreach ($selectedFormatsNOTInEnabledUserFormatsArray as $newUserFormatID)
-					$insertFormatsQueryValues[] = "(NULL, $newUserFormatID, $userID, 'true')";
+					$insertFormatsQueryValues[] = "(NULL, quote_smart($newUserFormatID), quote_smart($userID), 'true')";
 
 				$queryArray[] = $insertFormatsQuery . implode(", ", $insertFormatsQueryValues) . ";";
 			}
@@ -317,44 +317,44 @@
 	
 			$queryArray[] = "UPDATE $tableUserTypes SET "
 							. "show_type = \"true\" "
-							. "WHERE user_id = $userID AND type_id RLIKE \"^(" . $typeIDString . ")$\"";
+							. "WHERE user_id = " . quote_smart($userID) . " AND type_id RLIKE " . quote_smart("^(" . $typeIDString . ")$");
 	
 			$queryArray[] = "UPDATE $tableUserTypes SET "
 							. "show_type = \"false\" "
-							. "WHERE user_id = $userID AND type_id NOT RLIKE \"^(" . $typeIDString . ")$\"";
+							. "WHERE user_id = " . quote_smart($userID) . " AND type_id NOT RLIKE " . quote_smart("^(" . $typeIDString . ")$");
 	
 			// c) update all entries for this user within the 'user_styles' table:
 			$styleIDString = implode("|", $formVars["citationStyleSelector"]); // join array of style IDs using a pipe as separator
 	
 			$queryArray[] = "UPDATE $tableUserStyles SET "
 							. "show_style = \"true\" "
-							. "WHERE user_id = $userID AND style_id RLIKE \"^(" . $styleIDString . ")$\"";
+							. "WHERE user_id = " . quote_smart($userID) . " AND style_id RLIKE " . quote_smart("^(" . $styleIDString . ")$");
 	
 			$queryArray[] = "UPDATE $tableUserStyles SET "
 							. "show_style = \"false\" "
-							. "WHERE user_id = $userID AND style_id NOT RLIKE \"^(" . $styleIDString . ")$\"";
+							. "WHERE user_id = " . quote_smart($userID) . " AND style_id NOT RLIKE " . quote_smart("^(" . $styleIDString . ")$");
 	
 			// d) update all cite entries for this user within the 'user_formats' table:
 			$citeFormatIDString = implode("|", $formVars["citationFormatSelector"]); // join array of format IDs using a pipe as separator
 	
 			$queryArray[] = "UPDATE $tableUserFormats SET "
 							. "show_format = \"true\" "
-							. "WHERE user_id = $userID AND format_id RLIKE \"^(" . $citeFormatIDString . ")$\"";
+							. "WHERE user_id = " . quote_smart($userID) . " AND format_id RLIKE " . quote_smart("^(" . $citeFormatIDString . ")$");
 	
 			$queryArray[] = "UPDATE $tableUserFormats SET "
 							. "show_format = \"false\" "
-							. "WHERE user_id = $userID AND format_id NOT RLIKE \"^(" . $citeFormatIDString . ")$\"";
+							. "WHERE user_id = " . quote_smart($userID) . " AND format_id NOT RLIKE " . quote_smart("^(" . $citeFormatIDString . ")$");
 	
 			// e) update all export entries for this user within the 'user_formats' table:
 			$exportFormatIDString = implode("|", $formVars["exportFormatSelector"]); // join array of format IDs using a pipe as separator
 	
 			$queryArray[] = "UPDATE $tableUserFormats SET "
 							. "show_format = \"true\" "
-							. "WHERE user_id = $userID AND format_id RLIKE \"^(" . $exportFormatIDString . ")$\"";
+							. "WHERE user_id = " . quote_smart($userID) . " AND format_id RLIKE " . quote_smart("^(" . $exportFormatIDString . ")$");
 	
 			$queryArray[] = "UPDATE $tableUserFormats SET "
 							. "show_format = \"false\" "
-							. "WHERE user_id = $userID AND format_id NOT RLIKE \"^(" . $exportFormatIDString . ")$\" AND format_id NOT RLIKE \"^(" . $citeFormatIDString . ")$\""; // we need to include '$citeFormatIDString' here, otherwise the user's selected cite formats would get deleted again
+							. "WHERE user_id = " . quote_smart($userID) . " AND format_id NOT RLIKE " . quote_smart("^(" . $exportFormatIDString . ")$") . " AND format_id NOT RLIKE " . quote_smart("^(" . $citeFormatIDString . ")$"); // we need to include '$citeFormatIDString' here, otherwise the user's selected cite formats would get deleted again
 		}
 
 		// ---------------------------------------------------------------
@@ -363,7 +363,7 @@
 		if (!isset($formVars["use_custom_handling_of_nonascii_chars_in_cite_keys"]))
 			$nonASCIICharsInCiteKeys = "NULL"; // use the site default given in '$handleNonASCIICharsInCiteKeysDefault' in 'ini.inc.php'
 		else
-			$nonASCIICharsInCiteKeys = "\"" . $formVars["nonascii_chars_in_cite_keys"] . "\""; // use the setting chosen by the user
+			$nonASCIICharsInCiteKeys = quote_smart($formVars["nonascii_chars_in_cite_keys"]; // use the setting chosen by the user
 
 
 		// we account for the possibility that no entry in table 'user_options' exists for the current user
@@ -371,37 +371,37 @@
 
 		// check if there's already an entry for the current user within the 'user_options' table:
 		// CONSTRUCT SQL QUERY:
-		$query = "SELECT option_id FROM $tableUserOptions WHERE user_id = $userID";
+		$query = "SELECT option_id FROM $tableUserOptions WHERE user_id = " . quote_smart($userID);
 
 		// RUN the query on the database through the connection:
 		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		if (mysql_num_rows($result) == 1) // if there's already an existing user_data entry, we perform an UPDATE action:
 			$queryArray[] = "UPDATE $tableUserOptions SET "
-							. "export_cite_keys = \"" . $formVars["export_cite_keys"] . "\", "
-							. "autogenerate_cite_keys = \"" . $formVars["autogenerate_cite_keys"] . "\", "
-							. "prefer_autogenerated_cite_keys = \"" . $formVars["prefer_autogenerated_cite_keys"] . "\", "
-							. "use_custom_cite_key_format = \"" . $formVars["use_custom_cite_key_format"] . "\", "
-							. "cite_key_format = \"" . $formVars["cite_key_format"] . "\", "
-							. "uniquify_duplicate_cite_keys = \"" . $formVars["uniquify_duplicate_cite_keys"] . "\", "
-							. "nonascii_chars_in_cite_keys = " . $nonASCIICharsInCiteKeys . ", "
-							. "use_custom_text_citation_format = \"" . $formVars["use_custom_text_citation_format"] . "\", "
-							. "text_citation_format = \"" . $formVars["text_citation_format"] . "\" "
-							. "WHERE user_id = $userID";
+							. "export_cite_keys = " . quote_smart($formVars["export_cite_keys"])
+							. ", autogenerate_cite_keys = " . quote_smart($formVars["autogenerate_cite_keys"]
+							. ", prefer_autogenerated_cite_keys = " . quote_smart($formVars["prefer_autogenerated_cite_keys"])
+							. ", use_custom_cite_key_format = " . quote_smart($formVars["use_custom_cite_key_format"])
+							. ", cite_key_format = " . quote_smart($formVars["cite_key_format"])
+							. ", uniquify_duplicate_cite_keys = " . quote_smart($formVars["uniquify_duplicate_cite_keys"])
+							. ", nonascii_chars_in_cite_keys = " . $nonASCIICharsInCiteKeys //Already quote_smart
+							. ", use_custom_text_citation_format = " . quote_smart($formVars["use_custom_text_citation_format"])
+							. ", text_citation_format = " . quote_smart($formVars["text_citation_format"])
+							. " WHERE user_id = " . quote_smart($userID);
 
 		else // otherwise we perform an INSERT action:
 			$queryArray[] = "INSERT INTO $tableUserOptions SET "
-							. "export_cite_keys = \"" . $formVars["export_cite_keys"] . "\", "
-							. "autogenerate_cite_keys = \"" . $formVars["autogenerate_cite_keys"] . "\", "
-							. "prefer_autogenerated_cite_keys = \"" . $formVars["prefer_autogenerated_cite_keys"] . "\", "
-							. "use_custom_cite_key_format = \"" . $formVars["use_custom_cite_key_format"] . "\", "
-							. "cite_key_format = \"" . $formVars["cite_key_format"] . "\", "
-							. "uniquify_duplicate_cite_keys = \"" . $formVars["uniquify_duplicate_cite_keys"] . "\", "
-							. "nonascii_chars_in_cite_keys = " . $nonASCIICharsInCiteKeys . ", "
-							. "use_custom_text_citation_format = \"" . $formVars["use_custom_text_citation_format"] . "\", "
-							. "text_citation_format = \"" . $formVars["text_citation_format"] . "\", "
-							. "user_id = " . $userID . ", "
-							. "option_id = NULL"; // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
+							. "export_cite_keys = " . quote_smart($formVars["export_cite_keys"])
+							. ", autogenerate_cite_keys = " . quote_smart($formVars["autogenerate_cite_keys"]
+							. ", prefer_autogenerated_cite_keys = " . quote_smart($formVars["prefer_autogenerated_cite_keys"])
+							. ", use_custom_cite_key_format = " . quote_smart($formVars["use_custom_cite_key_format"])
+							. ", cite_key_format = " . quote_smart($formVars["cite_key_format"])
+							. ", uniquify_duplicate_cite_keys = " . quote_smart($formVars["uniquify_duplicate_cite_keys"])
+							. ", nonascii_chars_in_cite_keys = " . $nonASCIICharsInCiteKeys //Already quote_smart
+							. ", use_custom_text_citation_format = " . quote_smart($formVars["use_custom_text_citation_format"])
+							. ", text_citation_format = " . quote_smart($formVars["text_citation_format"])
+							. ", user_id = " . quote_smart($userID);
+							. ", option_id = NULL"; // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
 
  	}
 

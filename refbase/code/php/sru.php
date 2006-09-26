@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sru.php
 	// Created:    17-May-05, 16:22
-	// Modified:   31-Aug-06, 14:27
+	// Modified:   26-Sep-06, 00:30
 
 	// This script serves as a (faceless) routing page which takes a SRU query and
 	// converts the query into a native refbase query which is then passed to 'search.php'.
@@ -292,7 +292,7 @@
 		// 'verifySQLQuery()') we allow any user's 'cite_key' field to be queried by every user (e.g., by URLs like: 'sru.php?version=1.1&query=bib.citekey=...&x-info-2-auth1.0-authenticationToken=email=...').
 		// Note that if you enable other user-specific fields in function 'mapCQLIndexes()' (in 'webservice.inc.php') then these fields will be allowed to be queried by everyone as well!
 		if (!empty($userID)) // the 'x-...authenticationToken' parameter was specified containing an email address that could be resolved to a user ID -> include user specific fields
-			$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = $userID"; // add FROM clause (including the 'LEFT JOIN...' part); '$tableRefs' and '$tableUserData' are defined in 'db.inc.php'
+			$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . quote_smart($userID); // add FROM clause (including the 'LEFT JOIN...' part); '$tableRefs' and '$tableUserData' are defined in 'db.inc.php'
 		else
 			$query .= " FROM $tableRefs"; // add FROM clause
 

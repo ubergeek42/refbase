@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./update.php
 	// Created:    01-Mar-05, 20:47
-	// Modified:   21-Jun-06, 23:08
+	// Modified:   26-Sep-06, 00:40
 
 	// This file will update any refbase MySQL database installation from v0.7 to v0.8.
 	// (Note that this script currently doesn't offer any conversion from 'latin1' to 'utf8')
@@ -519,7 +519,7 @@
 
 		if (!empty($pathToBibutils)) // we'll only update the bibutils path if '$pathToBibutils' isn't empty (installation of bibutils is optional)
 			// Prepare query which updates the path to the bibutils utilities in table 'depends':
-			$queryArray[] = "UPDATE " . $databaseName . ".depends SET depends_path = \"" . $pathToBibutils . "\" WHERE depends_external = \"bibutils\""; // update the bibutils path spec
+			$queryArray[] = "UPDATE " . $databaseName . ".depends SET depends_path = " . quote_smart($pathToBibutils) . " WHERE depends_external = \"bibutils\""; // update the bibutils path spec
 		else // we set the 'depends_enabled' field in table 'depends' to 'false' to indicate that bibutils isn't installed
 			$queryArray[] = "UPDATE " . $databaseName . ".depends SET depends_enabled = \"false\" WHERE depends_external = \"bibutils\""; // disable bibutils functionality
 

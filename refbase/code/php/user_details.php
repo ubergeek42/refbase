@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_details.php
 	// Created:    16-Apr-02, 10:55
-	// Modified:   21-Jun-06, 00:30
+	// Modified:   26-Sep-06, 00:40
 
 	// This script shows the user a user <form>. It can be used both for INSERTing a new user and for UPDATE-ing an existing user.
 	// If the user is logged in, then it is an UPDATE; otherwise, an INSERT. The script also shows error messages above widgets that
@@ -139,7 +139,7 @@
 	if (isset($_SESSION['loginEmail']) && empty($errors) && isset($userID) && !empty($userID))
 	{
 		// CONSTRUCT SQL QUERY:
-		$query = "SELECT * FROM $tableUsers WHERE user_id = " . $userID;
+		$query = "SELECT * FROM $tableUsers WHERE user_id = " . quote_smart($userID);
 
 		// --------------------------------------------------------------------
 

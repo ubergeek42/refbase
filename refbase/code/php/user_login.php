@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   22-Jun-06, 22:10
+	// Modified:   26-Sep-06, 00:40
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -119,7 +119,7 @@
 		$crypted_password = crypt($loginPassword, $salt);
 
 		// CONSTRUCT SQL QUERY:
-		$query = "SELECT user_id FROM $tableAuth WHERE email = '$loginEmail' AND password = '$crypted_password'";
+		$query = "SELECT user_id FROM $tableAuth WHERE email = " . quote_smart($loginEmail) . " AND password = " . quote_smart($crypted_password);
 
 		// -------------------
 
@@ -153,7 +153,7 @@
 			$userID = $row["user_id"]; // extract the user's userID from the last query
 
 			// Now we need to get the user's first name and last name (e.g., in order to display them within the login welcome message)
-			$query = "SELECT user_id, first_name, last_name, abbrev_institution, language, last_login FROM $tableUsers WHERE user_id = " . $userID; // CONSTRUCT SQL QUERY
+			$query = "SELECT user_id, first_name, last_name, abbrev_institution, language, last_login FROM $tableUsers WHERE user_id = " . quote_smart($userID); // CONSTRUCT SQL QUERY
 	
 			// RUN the query on the database through the connection:
 			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'

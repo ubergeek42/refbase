@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_receipt.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   31-Aug-06, 18:25
+	// Modified:   26-Sep-06, 08:30
 
 	// This script shows the user a receipt for their user UPDATE or INSERT.
 	// It carries out no database actions and can be bookmarked.
@@ -212,7 +212,7 @@
 		global $loc; // '$loc' is made globally available in 'core.php'
 
 		// CONSTRUCT SQL QUERY:
-		$query = "SELECT * FROM $tableUsers WHERE user_id = $userID";
+		$query = "SELECT * FROM $tableUsers WHERE user_id = " . quote_smart($userID);
 
 		// (3) RUN the query on the database through the connection:
 		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'

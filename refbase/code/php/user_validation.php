@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   10-Jun-06, 23:20
+	// Modified:   26-Sep-06, 09:15
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -190,7 +190,7 @@
 
 		else // Check if the email address is already in use in the database:
 		{
-			$query = "SELECT * FROM $tableAuth WHERE email = '" . $formVars["email"] . "'"; // CONSTRUCT SQL QUERY
+			$query = "SELECT * FROM $tableAuth WHERE email = " . quote_smart($formVars["email"]); // CONSTRUCT SQL QUERY
 	
 			// (3) RUN the query on the database through the connection:
 			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
@@ -252,34 +252,34 @@
 
 		// UPDATE - construct a query to update the relevant record
 		$query = "UPDATE $tableUsers SET "
-				. "first_name = \"" . $formVars["firstName"] . "\", "
-				. "last_name = \"" . $formVars["lastName"] . "\", "
-				. "title = \"" . $formVars["title"] . "\", "
-				. "institution = \"" . $formVars["institution"] . "\", "
-				. "abbrev_institution = \"" . $formVars["abbrevInstitution"] . "\", "
-				. "corporate_institution = \"" . $formVars["corporateInstitution"] . "\", "
-				. "address_line_1 = \"" . $formVars["address1"] . "\", "
-				. "address_line_2 = \"" . $formVars["address2"] . "\", "
-				. "address_line_3 = \"" . $formVars["address3"] . "\", "
-				. "zip_code = \"" . $formVars["zipCode"] . "\", "
-				. "city = \"" . $formVars["city"] . "\", "
-				. "state = \"" . $formVars["state"] . "\", "
-				. "country = \"" . $formVars["country"] . "\", "
-				. "phone = \"" . $formVars["phone"] . "\", "
-				. "url = \"" . $formVars["url"] . "\", ";
+				. "first_name = " . quote_smart($formVars["firstName"])
+				. ", last_name = " . quote_smart($formVars["lastName"])
+				. ", title = " . quote_smart($formVars["title"])
+				. ", institution = " . quote_smart($formVars["institution"])
+				. ", abbrev_institution = " . quote_smart($formVars["abbrevInstitution"])
+				. ", corporate_institution = " . quote_smart($formVars["corporateInstitution"])
+				. ", address_line_1 = " . quote_smart($formVars["address1"])
+				. ", address_line_2 = " . quote_smart($formVars["address2"])
+				. ", address_line_3 = " . quote_smart($formVars["address3"])
+				. ", zip_code = " . quote_smart($formVars["zipCode"])
+				. ", city = " . quote_smart($formVars["city"])
+				. ", state = " . quote_smart($formVars["state"])
+				. ", country = " . quote_smart($formVars["country"])
+				. ", phone = " . quote_smart($formVars["phone"])
+				. ", url = " . quote_smart($formVars["url"]);
 
 		if (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail))
 		{
-			$query .= "keywords = \"" . $formVars["keywords"] . "\", "
-					. "notes = \"" . $formVars["notes"] . "\", "
-					. "marked = \"" . $formVars["marked"] . "\", ";
+			$query .= ", keywords = " . quote_smart($formVars["keywords"])
+					. ", notes = " . quote_smart($formVars["notes"])
+					. ", marked = " . quote_smart($formVars["marked"]);
 		}
 
 		if (isset($_SESSION['loginEmail']))
-			$query .= "modified_by = \"$currentUser\", ";
+			$query .= ", modified_by = " . quote_smart($currentUser);
 
-		$query .= "modified_date = \"$currentDate\", "
-				. "modified_time = \"$currentTime\" ";
+		$query .= ", modified_date = " . quote_smart($currentDate)
+				. ", modified_time = " . quote_smart($currentTime);
 
 		$query .= "WHERE user_id = $userID";
 	}
@@ -293,42 +293,42 @@
 	{
 		// INSERT - construct a query to add data as new record
 		$query = "INSERT INTO $tableUsers SET "
-				. "first_name = \"" . $formVars["firstName"] . "\", "
-				. "last_name = \"" . $formVars["lastName"] . "\", "
-				. "title = \"" . $formVars["title"] . "\", "
-				. "institution = \"" . $formVars["institution"] . "\", "
-				. "abbrev_institution = \"" . $formVars["abbrevInstitution"] . "\", "
-				. "corporate_institution = \"" . $formVars["corporateInstitution"] . "\", "
-				. "address_line_1 = \"" . $formVars["address1"] . "\", "
-				. "address_line_2 = \"" . $formVars["address2"] . "\", "
-				. "address_line_3 = \"" . $formVars["address3"] . "\", "
-				. "zip_code = \"" . $formVars["zipCode"] . "\", "
-				. "city = \"" . $formVars["city"] . "\", "
-				. "state = \"" . $formVars["state"] . "\", "
-				. "country = \"" . $formVars["country"] . "\", "
-				. "phone = \"" . $formVars["phone"] . "\", "
-				. "url = \"" . $formVars["url"] . "\", ";
+				. "first_name = " . quote_smart($formVars["firstName"])
+				. ", last_name = " . quote_smart($formVars["lastName"])
+				. ", title = " . quote_smart($formVars["title"])
+				. ", institution = " . quote_smart($formVars["institution"])
+				. ", abbrev_institution = " . quote_smart($formVars["abbrevInstitution"])
+				. ", corporate_institution = " . quote_smart($formVars["corporateInstitution"])
+				. ", address_line_1 = " . quote_smart($formVars["address1"])
+				. ", address_line_2 = " . quote_smart($formVars["address2"])
+				. ", address_line_3 = " . quote_smart($formVars["address3"])
+				. ", zip_code = " . quote_smart($formVars["zipCode"])
+				. ", city = " . quote_smart($formVars["city"])
+				. ", state = " . quote_smart($formVars["state"])
+				. ", country = " . quote_smart($formVars["country"])
+				. ", phone = " . quote_smart($formVars["phone"])
+				. ", url = " . quote_smart($formVars["url"]);
 
 		if (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail))
 		{
-			$query .= "keywords = \"" . $formVars["keywords"] . "\", "
-					. "notes = \"" . $formVars["notes"] . "\", "
-					. "marked = \"" . $formVars["marked"] . "\", ";
+			$query .= ", keywords = " . quote_smart($formVars["keywords"])
+					. ", notes = " . quote_smart($formVars["notes"])
+					. ", marked = " . quote_smart($formVars["marked"]);
 		}
 
-		$query .= "email = \"" . $formVars["email"] . "\", ";
+		$query .= ", email = " . quote_smart($formVars["email"]);
 
 		if (isset($_SESSION['loginEmail']))
-			$query .= "created_by = \"$currentUser\", ";
+			$query .= ", created_by = " . quote_smart($currentUser);
 
-		$query .= "created_date = \"$currentDate\", "
-				. "created_time = \"$currentTime\", ";
+		$query .= ", created_date = " . quote_smart($currentDate)
+				. ", created_time = " . quote_smart($currentTime);
 
 		if (isset($_SESSION['loginEmail']))
-			$query .= "modified_by = \"$currentUser\", ";
+			$query .= ", modified_by = " . quote_smart($currentUser);
 
-		$query .= "modified_date = \"$currentDate\", "
-				. "modified_time = \"$currentTime\", ";
+		$query .= ", modified_date = " . quote_smart($currentDate)
+				. ", modified_time = " . quote_smart($currentTime);
 
 		$query .= "language = \"en\", " // initially, english will be used as default language (the language setting can be changed by the user in 'user_options.php')
 				. "last_login = NOW(), " // set 'last_login' field to the current date & time in 'DATETIME' format (which is 'YYYY-MM-DD HH:MM:SS', e.g.: '2003-12-31 23:45:59')
@@ -340,7 +340,7 @@
 	elseif ($addNewUsers == "admin" && ($_REQUEST['userID'] == ""))
 	{
 		// First, we have to query for the proper admin name, so that we can include this name within the emails:
-		$query = "SELECT first_name, last_name FROM $tableUsers WHERE email = '" . $adminLoginEmail . "'"; // CONSTRUCT SQL QUERY ('$adminLoginEmail' is specified in 'ini.inc.php')
+		$query = "SELECT first_name, last_name FROM $tableUsers WHERE email = " . quote_smart($adminLoginEmail); // CONSTRUCT SQL QUERY ('$adminLoginEmail' is specified in 'ini.inc.php')
 
 		// (3a) RUN the query on the database through the connection:
 		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
@@ -424,8 +424,8 @@
 	
 			// Update the user's password within the auth table
 			$query = "UPDATE $tableAuth SET "
-					. "password = '" . $stored_password . "' "
-					. "WHERE user_id = $userID";
+					. "password = " . quote_smart($stored_password)
+					. " WHERE user_id = " . quote_smart($userID);
 	
 			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 		}
@@ -450,14 +450,14 @@
 
 		// Insert a new user into the auth table
 		$queryArray[] = "INSERT INTO $tableAuth SET "
-						. "user_id = " . $userID . ", "
-						. "email = '" . $formVars["email"] . "', "
-						. "password = '" . $stored_password . "'";
+						. "user_id = " . quote_smart($userID) . ", "
+						. "email = " . quote_smart($formVars["email"]) . ", "
+						. "password = " . quote_smart($stored_password);
 
 
 		// Insert a row for this new user into the 'user_permissions' table:
 		$defaultUserPermissionsString = implode("\", \"", $defaultUserPermissions); // '$defaultUserPermissions' is defined in 'ini.inc.php'
-		$queryArray[] = "INSERT INTO $tableUserPermissions VALUES (NULL, " . $userID . ", \"" . $defaultUserPermissionsString . "\")";
+		$queryArray[] = "INSERT INTO $tableUserPermissions VALUES (NULL, " . quote_smart($userID) . ", " . quote_smart($defaultUserPermissionsString) . ")";
 
 
 		// Note: Refbase lets you define default formats/styles/types in 'ini.inc.php' by their name (and not by ID numbers) which means that
@@ -466,52 +466,52 @@
 		foreach($defaultUserExportFormats as $defaultUserExportFormat)
 		{
 			// get the 'format_id' for the record entry in table 'formats' whose 'format_name' matches that in '$defaultUserExportFormats' (defined in 'ini.inc.php'):
-			$query = "SELECT format_id FROM $tableFormats WHERE format_name = '$defaultUserExportFormat' AND format_type = 'export'";
+			$query = "SELECT format_id FROM $tableFormats WHERE format_name = " . quote_smart($defaultUserExportFormat) . " AND format_type = 'export'";
 			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 			$row = mysql_fetch_array($result);
 
 			// Insert a row with the found format ID for this new user into the 'user_formats' table:
-			$queryArray[] = "INSERT INTO $tableUserFormats VALUES (NULL, " . $row["format_id"] . ", " . $userID . ", \"true\")";
+			$queryArray[] = "INSERT INTO $tableUserFormats VALUES (NULL, " . quote_smart($row["format_id"]) . ", " . quote_smart($userID) . ", \"true\")";
 		}
 
 		foreach($defaultUserCiteFormats as $defaultUserCiteFormat)
 		{
 			// get the 'format_id' for the record entry in table 'formats' whose 'format_name' matches that in '$defaultUserCiteFormats' (defined in 'ini.inc.php'):
-			$query = "SELECT format_id FROM $tableFormats WHERE format_name = '$defaultUserCiteFormat' AND format_type = 'cite'";
+			$query = "SELECT format_id FROM $tableFormats WHERE format_name = " . quote_smart($defaultUserCiteFormat) . " AND format_type = 'cite'";
 			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 			$row = mysql_fetch_array($result);
 
 			// Insert a row with the found format ID for this new user into the 'user_formats' table:
-			$queryArray[] = "INSERT INTO $tableUserFormats VALUES (NULL, " . $row["format_id"] . ", " . $userID . ", \"true\")";
+			$queryArray[] = "INSERT INTO $tableUserFormats VALUES (NULL, " . quote_smart($row["format_id"]) . ", " . quote_smart($userID) . ", \"true\")";
 		}
 
 		foreach($defaultUserStyles as $defaultUserStyle)
 		{
 			// get the 'style_id' for the record entry in table 'styles' whose 'style_name' matches that in '$defaultUserStyles' (defined in 'ini.inc.php'):
-			$query = "SELECT style_id FROM $tableStyles WHERE style_name = '$defaultUserStyle'";
+			$query = "SELECT style_id FROM $tableStyles WHERE style_name = " . quote_smart($defaultUserStyle);
 			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 			$row = mysql_fetch_array($result);
 
 			// Insert a row with the found style ID for this new user into the 'user_styles' table:
-			$queryArray[] = "INSERT INTO $tableUserStyles VALUES (NULL, " . $row["style_id"] . ", " . $userID . ", \"true\")";
+			$queryArray[] = "INSERT INTO $tableUserStyles VALUES (NULL, " . quote_smart($row["style_id"]) . ", " . quote_smart($userID) . ", \"true\")";
 		}
 
 		foreach($defaultUserTypes as $defaultUserType)
 		{
 			// get the 'type_id' for the record entry in table 'types' whose 'type_name' matches that in '$defaultUserTypes' (defined in 'ini.inc.php'):
-			$query = "SELECT type_id FROM $tableTypes WHERE type_name = '$defaultUserType'";
+			$query = "SELECT type_id FROM $tableTypes WHERE type_name = " . quote_smart($defaultUserType);
 			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 			$row = mysql_fetch_array($result);
 
 			// Insert a row with the found type ID for this new user into the 'user_types' table:
-			$queryArray[] = "INSERT INTO $tableUserTypes VALUES (NULL, " . $row["type_id"] . ", " . $userID . ", \"true\")";
+			$queryArray[] = "INSERT INTO $tableUserTypes VALUES (NULL, " . quote_smart($row["type_id"]) . ", " . quote_smart($userID) . ", \"true\")";
 		}
 
 
 		// Insert a row for this new user into the 'user_options' table:
 		$defaultUserOptionsString = implode("\", \"", $defaultUserOptions); // '$defaultUserOptions' is defined in 'ini.inc.php'
 		$defaultUserOptionsString = ereg_replace("\"\"", "NULL", $defaultUserOptionsString); // replace empty string with NULL
-		$queryArray[] = "INSERT INTO $tableUserOptions VALUES (NULL, " . $userID . ", \"" . $defaultUserOptionsString . "\")";
+		$queryArray[] = "INSERT INTO $tableUserOptions VALUES (NULL, " . quote_smart($userID) . ", " . quote_smart($defaultUserOptionsString) . ")";
 
 
 		// RUN the queries on the database through the connection:

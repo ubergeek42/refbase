@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/webservice.inc.php
 	// Created:    04-Feb-06, 22:02
-	// Modified:   30-Aug-06, 23:37
+	// Modified:   26-Sep-06, 00:35
 
 	// This include file contains functions that are used in conjunction with the refbase webservices.
 	// Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -153,7 +153,7 @@
 					$searchTermArray = split(" +", $searchTerm);
 
 					foreach ($searchTermArray as $searchTermItem)
-						$whereClauseSubPartsArray[] = " RLIKE \"(^|[[:space:][:punct:]])" . $searchTermItem . "([[:space:][:punct:]]|$)\"";
+						$whereClauseSubPartsArray[] = " RLIKE " . quote_smart("(^|[[:space:][:punct:]])" . $searchTermItem . "([[:space:][:punct:]]|$)");
 
 					// NOTE: For word-matching relations (like 'all', 'any' or '=') we could also use word boundaries which would be more (too?) restrictive:
 					// 
@@ -165,17 +165,17 @@
 					$whereClausePart .= implode(" AND " . $indexNamesArray[$contextSet . $contextSetIndexConnector . $indexName], $whereClauseSubPartsArray);
 				}
 				else
-					$whereClausePart .= " RLIKE \"(^|[[:space:][:punct:]])" . $searchTerm . "([[:space:][:punct:]]|$)\"";
+					$whereClausePart .= " RLIKE " . quote_smart("(^|[[:space:][:punct:]])" . $searchTerm . "([[:space:][:punct:]]|$)");
 			}
 
 			elseif ($mainRelation == "any") // matches full words (not sub-strings); 'any' means "any of these words"
 			{
 				$searchTerm = splitAndMerge(" +", "|", $searchTerm); // function 'splitAndMerge()' is defined in 'include.inc.php'
-				$whereClausePart .= " RLIKE \"(^|[[:space:][:punct:]])(" . $searchTerm . ")([[:space:][:punct:]]|$)\"";
+				$whereClausePart .= " RLIKE " . quote_smart("(^|[[:space:][:punct:]])(" . $searchTerm . ")([[:space:][:punct:]]|$)");
 			}
 
 			elseif ($mainRelation == "exact") // 'exact' is used for exact string matching, i.e., it matches field contents exactly
-				$whereClausePart .= " = \"" . $searchTerm . "\"";
+				$whereClausePart .= " = " . quote_smart($searchTerm);
 
 			elseif ($mainRelation == "within") // matches a range (i.e. requires two space-separated dimensions)
 			{
@@ -183,7 +183,7 @@
 				{
 					$searchTermArray = split(" +", $searchTerm);
 
-					$whereClausePart .= " >= \"" . $searchTermArray[0] . "\" AND " . $indexNamesArray[$contextSet . $contextSetIndexConnector . $indexName] . " <= \"" . $searchTermArray[1] . "\"";
+					$whereClausePart .= " >= " . quote_smart($searchTermArray[0]) . " AND " . $indexNamesArray[$contextSet . $contextSetIndexConnector . $indexName] . " <= " . quote_smart($searchTermArray[1])
 				}
 				else
 				{
@@ -193,22 +193,22 @@
 			}
 
 			elseif ($mainRelation == "=") // matches full words (not sub-strings); '=' is used for word adjacency, the words appear in that order with no others intervening
-				$whereClausePart .= " RLIKE \"(^|[[:space:][:punct:]])" . $searchTerm . "([[:space:][:punct:]]|$)\"";
+				$whereClausePart .= " RLIKE " . quote_smart("(^|[[:space:][:punct:]])" . $searchTerm . "([[:space:][:punct:]]|$)");
 
 			elseif ($mainRelation == "<>") // does this also match full words (and not sub-strings) ?:-/
-				$whereClausePart .= " NOT RLIKE \"(^|[[:space:][:punct:]])" . $searchTerm . "([[:space:][:punct:]]|$)\"";
+				$whereClausePart .= " NOT RLIKE " . quote_smart("(^|[[:space:][:punct:]])" . $searchTerm . "([[:space:][:punct:]]|$)");
 
 			elseif ($mainRelation == "<")
-				$whereClausePart .= " < \"" . $searchTerm . "\"";
+				$whereClausePart .= " < " . quote_smart($searchTerm);
 
 			elseif ($mainRelation == "<=")
-				$whereClausePart .= " <= \"" . $searchTerm . "\"";
+				$whereClausePart .= " <= " . quote_smart($searchTerm);
 
 			elseif ($mainRelation == ">")
-				$whereClausePart .= " > \"" . $searchTerm . "\"";
+				$whereClausePart .= " > " . quote_smart($searchTerm);
 
 			elseif ($mainRelation == ">=")
-				$whereClausePart .= " >= \"" . $searchTerm . "\"";
+				$whereClausePart .= " >= " . quote_smart($searchTerm);
 
 			$searchSubArray1[] = array("_boolean" => "",
 										"_query" => $whereClausePart);
@@ -227,7 +227,7 @@
 
 			if (!empty($serialsString))
 				$searchSubArray1[] = array("_boolean" => "",
-											"_query" => "serial RLIKE \"^(" . $serialsString . ")$\"");
+											"_query" => "serial RLIKE " . quote_smart("^(" . $serialsString . ")$"));
 		}
 
 

@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sql_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   19-Jun-06, 13:31
+	// Modified:   26-Sep-06, 12:30
 
 	// Search form that offers to specify a custom sql query.
 	// It offers some output options (like how many records to display per page)
@@ -97,7 +97,7 @@
 	else // if there was no previous SQL query provide the default one:
 		{
 			if (isset($_SESSION['loginEmail']))
-				$sqlQuery = "SELECT author, title, year, publication, volume, pages FROM $tableRefs WHERE location RLIKE \"" . $loginEmail . "\" ORDER BY year DESC, author"; // '$loginEmail' is defined in function 'start_session()' (in 'include.inc.php')
+				$sqlQuery = "SELECT author, title, year, publication, volume, pages FROM $tableRefs WHERE location RLIKE " . quote_smart($loginEmail) . " ORDER BY year DESC, author"; // '$loginEmail' is defined in function 'start_session()' (in 'include.inc.php')
 			else
 				$sqlQuery = "SELECT author, title, year, publication, volume, pages FROM $tableRefs WHERE year &gt; 2001 ORDER BY year DESC, author";
 
