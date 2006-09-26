@@ -565,11 +565,13 @@
 				// strip "|" from beginning/end of string (if any):
 				$serial = preg_replace("/^\|?(.+?)\|?$/", "\\1", $serial);
 
-				$query .= " serial RLIKE " . quote_smart("^(" . $serial . ")$");
+				// TODO: quote_smart()
+				$query .= " serial RLIKE \"^(" . $serial . ")$\"";
 			}
 
 			else // $recordConditionalSelector == "contains"
-				$query .= " serial RLIKE " . quote_smart($serial);
+				// TODO: quote_smart()
+				$query .= " serial RLIKE \"" . $serial . "\"";
 		}
 
 		if (!empty($date) AND !empty($time)) // if both, 'date' AND 'time' parameters are present:
@@ -803,7 +805,8 @@
 				// strip "|" from beginning/end of string (if any):
 				$citeKey = preg_replace("/^\|?(.+?)\|?$/", "\\1", $citeKey);
 
-				$query .= " cite_key RLIKE " . quote_smart("^(" . $citeKey . ")$");
+				// TODO: quote_smart()
+				$query .= " cite_key RLIKE \"^(" . $citeKey . ")$\"";
 			}
 
 			else // $recordConditionalSelector == "contains"
