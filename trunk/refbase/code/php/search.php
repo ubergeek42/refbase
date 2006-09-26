@@ -5,7 +5,8 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   09-Sep-06, 19:32
+	// Modified:   25-Sep-06, 23:45
+	// TODO: Refactor so that query builder will use a few common functions
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -1922,17 +1923,17 @@
 			{
 				$authorSelector = $_POST['authorSelector'];
 				if ($authorSelector == "contains")
-					$query .= " AND author RLIKE \"$authorName\"";
+					$query .= " AND author RLIKE " . quote_smart($authorName);
 				elseif ($authorSelector == "does not contain")
-					$query .= " AND author NOT RLIKE \"$authorName\"";
+					$query .= " AND author NOT RLIKE " . quote_smart($authorName);
 				elseif ($authorSelector == "is equal to")
-					$query .= " AND author = \"$authorName\"";
+					$query .= " AND author = " . quote_smart($authorName);
 				elseif ($authorSelector == "is not equal to")
-					$query .= " AND author != \"$authorName\"";
+					$query .= " AND author != " . quote_smart($authorName);
 				elseif ($authorSelector == "starts with")
-					$query .= " AND author RLIKE \"^$authorName\"";
+					$query .= " AND author RLIKE " . quote_smart("^" . $authorName);
 				elseif ($authorSelector == "ends with")
-					$query .= " AND author RLIKE \"$authorName$\"";
+					$query .= " AND author RLIKE " . quote_smart($authorName ."$");
 			}
 
 		// ... if the user has specified a title, add the value of '$titleName' as an AND clause:
@@ -1941,17 +1942,17 @@
 			{
 				$titleSelector = $_POST['titleSelector'];
 				if ($titleSelector == "contains")
-					$query .= " AND title RLIKE \"$titleName\"";
+					$query .= " AND title RLIKE " . quote_smart($titleName);
 				elseif ($titleSelector == "does not contain")
-					$query .= " AND title NOT RLIKE \"$titleName\"";
+					$query .= " AND title NOT RLIKE " . quote_smart($titleName);
 				elseif ($titleSelector == "is equal to")
-					$query .= " AND title = \"$titleName\"";
+					$query .= " AND title = " . quote_smart($titleName);
 				elseif ($titleSelector == "is not equal to")
-					$query .= " AND title != \"$titleName\"";
+					$query .= " AND title != " quote_smart($titleName);
 				elseif ($titleSelector == "starts with")
-					$query .= " AND title RLIKE \"^$titleName\"";
+					$query .= " AND title RLIKE " . quote_smart("^" . $titleName);
 				elseif ($titleSelector == "ends with")
-					$query .= " AND title RLIKE \"$titleName$\"";
+					$query .= " AND title RLIKE " . quote_smart($titleName . "$");
 			}
 
 		// ... if the user has specified a year, add the value of '$yearNo' as an AND clause:
@@ -1960,38 +1961,38 @@
 			{
 				$yearSelector = $_POST['yearSelector'];
 				if ($yearSelector == "contains")
-					$query .= " AND year RLIKE \"$yearNo\"";
+					$query .= " AND year RLIKE " . quote_smart($yearNo);
 				elseif ($yearSelector == "does not contain")
-					$query .= " AND year NOT RLIKE \"$yearNo\"";
+					$query .= " AND year NOT RLIKE " . quote_smart($yearNo);
 				elseif ($yearSelector == "is equal to")
-					$query .= " AND year = \"$yearNo\"";
+					$query .= " AND year = " . quote_smart($yearNo);
 				elseif ($yearSelector == "is not equal to")
-					$query .= " AND year != \"$yearNo\"";
+					$query .= " AND year != " . quote_smart($yearNo);
 				elseif ($yearSelector == "starts with")
-					$query .= " AND year RLIKE \"^$yearNo\"";
+					$query .= " AND year RLIKE " . quote_smart("^" . $yearNo);
 				elseif ($yearSelector == "ends with")
-					$query .= " AND year RLIKE \"$yearNo$\"";
+					$query .= " AND year RLIKE " . quote_smart($yearNo . "$");
 				elseif ($yearSelector == "is greater than")
-					$query .= " AND year > \"$yearNo\"";
+					$query .= " AND year > " . quote_smart($yearNo);
 				elseif ($yearSelector == "is less than")
-					$query .= " AND year < \"$yearNo\"";
+					$query .= " AND year < " . quote_smart($yearNo);
 				elseif ($yearSelector == "is within range")
 					{
 						if (preg_match("/\d+/", $yearNo)) // if '$yearNo' does contain at least one number
 						{
 							// extract first number:
 							$yearNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $yearNo);
-							$query .= " AND year >= \"$yearNoStart\"";
+							$query .= " AND year >= " . quote_smart($yearNoStart);
 
 							if (preg_match("/^\D*\d+\D+\d+/", $yearNo)) // if '$yearNo' does contain at least two numbers (which are separated by one or more non-digit characters)
 							{
 								// extract the second number:
 								$yearNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $yearNo);
-								$query .= " AND year <= \"$yearNoEnd\"";
+								$query .= " AND year <= " . quote_smart($yearNoEnd);
 							}
 						}
 						else // fallback if no number is given:
-							$query .= " AND year RLIKE \"$yearNo\"";
+							$query .= " AND year RLIKE " . quote_smart($yearNo);
 					}
 				elseif ($yearSelector == "is within list")
 					{
@@ -1999,7 +2000,7 @@
 						$yearNo = preg_replace("/\D+/", "|", $yearNo);
 						// strip "|" from beginning/end of string (if any):
 						$yearNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $yearNo);
-						$query .= " AND year RLIKE \"^($yearNo)$\"";
+						$query .= " AND year RLIKE " quote_smart("^(" . $yearNo . ")$");
 					}
 			}
 
@@ -2012,17 +2013,17 @@
 				{
 					$publicationSelector = $_POST['publicationSelector'];
 					if ($publicationSelector == "contains")
-						$query .= " AND publication RLIKE \"$publicationName\"";
+						$query .= " AND publication RLIKE " . quote_smart($publicationName);
 					elseif ($publicationSelector == "does not contain")
-						$query .= " AND publication NOT RLIKE \"$publicationName\"";
+						$query .= " AND publication NOT RLIKE " . quote_smart($publicationName);
 					elseif ($publicationSelector == "is equal to")
-						$query .= " AND publication = \"$publicationName\"";
+						$query .= " AND publication = " . quote_smart($publicationName);
 					elseif ($publicationSelector == "is not equal to")
-						$query .= " AND publication != \"$publicationName\"";
+						$query .= " AND publication != " . quote_smart($publicationName);
 					elseif ($publicationSelector == "starts with")
-						$query .= " AND publication RLIKE \"^$publicationName\"";
+						$query .= " AND publication RLIKE " . quote_smart("^" . $publicationName);
 					elseif ($publicationSelector == "ends with")
-						$query .= " AND publication RLIKE \"$publicationName$\"";
+						$query .= " AND publication RLIKE " . quote_smart($publicationName . "$");
 				}
 		}
 		elseif ($publicationRadio == "0")
@@ -2032,17 +2033,17 @@
 				{
 					$publicationSelector2 = $_POST['publicationSelector2'];
 					if ($publicationSelector2 == "contains")
-						$query .= " AND publication RLIKE \"$publicationName2\"";
+						$query .= " AND publication RLIKE " . quote_smart($publicationName2);
 					elseif ($publicationSelector2 == "does not contain")
-						$query .= " AND publication NOT RLIKE \"$publicationName2\"";
+						$query .= " AND publication NOT RLIKE " . quote_smart($publicationName2);
 					elseif ($publicationSelector2 == "is equal to")
-						$query .= " AND publication = \"$publicationName2\"";
+						$query .= " AND publication = " . quote_smart($publicationName2);
 					elseif ($publicationSelector2 == "is not equal to")
-						$query .= " AND publication != \"$publicationName2\"";
+						$query .= " AND publication != " . quote_smart($publicationName2);
 					elseif ($publicationSelector2 == "starts with")
-						$query .= " AND publication RLIKE \"^$publicationName2\"";
+						$query .= " AND publication RLIKE " . quote_smart("^" . $publicationName2);
 					elseif ($publicationSelector2 == "ends with")
-						$query .= " AND publication RLIKE \"$publicationName2$\"";
+						$query .= " AND publication RLIKE " . quote_smart($publicationName2 . "$");
 				}
 		}
 
@@ -2052,38 +2053,38 @@
 			{
 				$volumeSelector = $_POST['volumeSelector'];
 				if ($volumeSelector == "contains")
-					$query .= " AND volume RLIKE \"$volumeNo\"";
+					$query .= " AND volume RLIKE " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "does not contain")
-					$query .= " AND volume NOT RLIKE \"$volumeNo\"";
+					$query .= " AND volume NOT RLIKE " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "is equal to")
-					$query .= " AND volume = \"$volumeNo\"";
+					$query .= " AND volume = " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "is not equal to")
-					$query .= " AND volume != \"$volumeNo\"";
+					$query .= " AND volume != " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "starts with")
-					$query .= " AND volume RLIKE \"^$volumeNo\"";
+					$query .= " AND volume RLIKE " . quote_smart("^" . $volumeNo);
 				elseif ($volumeSelector == "ends with")
-					$query .= " AND volume RLIKE \"$volumeNo$\"";
+					$query .= " AND volume RLIKE " . quote_smart($volumeNo . "$");
 				elseif ($volumeSelector == "is greater than")
-					$query .= " AND volume_numeric > \"$volumeNo\"";
+					$query .= " AND volume_numeric > " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "is less than")
-					$query .= " AND volume_numeric < \"$volumeNo\"";
+					$query .= " AND volume_numeric < " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "is within range")
 					{
 						if (preg_match("/\d+/", $volumeNo)) // if '$volumeNo' does contain at least one number
 						{
 							// extract first number:
 							$volumeNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $volumeNo);
-							$query .= " AND volume_numeric >= \"$volumeNoStart\"";
+							$query .= " AND volume_numeric >= " . quote_smart($volumeNoStart);
 
 							if (preg_match("/^\D*\d+\D+\d+/", $volumeNo)) // if '$volumeNo' does contain at least two numbers (which are separated by one or more non-digit characters)
 							{
 								// extract the second number:
 								$volumeNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $volumeNo);
-								$query .= " AND volume_numeric <= \"$volumeNoEnd\"";
+								$query .= " AND volume_numeric <= " . quote_smart($volumeNoEnd);
 							}
 						}
 						else // fallback if no number is given:
-							$query .= " AND volume RLIKE \"$volumeNo\"";
+							$query .= " AND volume RLIKE " . quote_smart($volumeNo);
 					}
 				elseif ($volumeSelector == "is within list")
 					{
@@ -2091,7 +2092,7 @@
 						$volumeNo = preg_replace("/\D+/", "|", $volumeNo);
 						// strip "|" from beginning/end of string (if any):
 						$volumeNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $volumeNo);
-						$query .= " AND volume RLIKE \"^($volumeNo)$\"";
+						$query .= " AND volume RLIKE " . quote_smart("^(" . $volumeNo . ")$");
 					}
 			}
 
@@ -2101,21 +2102,22 @@
 			{
 				$pagesSelector = $_POST['pagesSelector'];
 				if ($pagesSelector == "contains")
-					$query .= " AND pages RLIKE \"$pagesNo\"";
+					$query .= " AND pages RLIKE " . quote_smart($pagesNo);
 				elseif ($pagesSelector == "does not contain")
-					$query .= " AND pages NOT RLIKE \"$pagesNo\"";
+					$query .= " AND pages NOT RLIKE " . quote_smart($pagesNo);
 				elseif ($pagesSelector == "is equal to")
-					$query .= " AND pages = \"$pagesNo\"";
+					$query .= " AND pages = " . quote_smart($pagesNo);
 				elseif ($pagesSelector == "is not equal to")
-					$query .= " AND pages != \"$pagesNo\"";
+					$query .= " AND pages != " . quote_smart($pagesNo);
 				elseif ($pagesSelector == "starts with")
-					$query .= " AND pages RLIKE \"^$pagesNo\"";
+					$query .= " AND pages RLIKE " . quote_smart("^" . $pagesNo);
 				elseif ($pagesSelector == "ends with")
-					$query .= " AND pages RLIKE \"$pagesNo$\"";
+					$query .= " AND pages RLIKE " . quote_smart($pagesNo . "$");
 			}
 
 
 		// Construct the ORDER BY clause:
+		// TODO?: quote_smart (haven't yey tested)
 		// A) extract first level sort option:
 		$sortSelector1 = $_POST['sortSelector1'];
 		// when field name = 'pages' then sort by 'first_page' instead:
@@ -2276,7 +2278,7 @@
 		$query = eregi_replace("SELECT, ","SELECT ",$query);
 
 		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
-		$query .= " FROM $tableRefs WHERE serial RLIKE \".+\" AND " . $librarySearchPattern[0] . " RLIKE \"" . $librarySearchPattern[1] . "\""; // add FROM & (initial) WHERE clause
+		$query .= " FROM $tableRefs WHERE serial RLIKE \".+\" AND " . $librarySearchPattern[0] . " RLIKE " quote_smart($librarySearchPattern[1]); // add FROM & (initial) WHERE clause
 		// Note: we'll restrict the query to records where the pattern given in array element '$librarySearchPattern[1]' (defined in 'ini.inc.php')
 		//       matches the contents of the field given in array element '$librarySearchPattern[0]'
 
@@ -2288,17 +2290,17 @@
 			{
 				$authorSelector = $_POST['authorSelector'];
 				if ($authorSelector == "contains")
-					$query .= " AND author RLIKE \"$authorName\"";
+					$query .= " AND author RLIKE " . quote_smart($authorName);
 				elseif ($authorSelector == "does not contain")
-					$query .= " AND author NOT RLIKE \"$authorName\"";
+					$query .= " AND author NOT RLIKE " . quote_smart($authorName);
 				elseif ($authorSelector == "is equal to")
-					$query .= " AND author = \"$authorName\"";
+					$query .= " AND author = " . quote_smart($authorName);
 				elseif ($authorSelector == "is not equal to")
-					$query .= " AND author != \"$authorName\"";
+					$query .= " AND author != " . quote_smart($authorName);
 				elseif ($authorSelector == "starts with")
-					$query .= " AND author RLIKE \"^$authorName\"";
+					$query .= " AND author RLIKE " . quote_smart("^" . $authorName);
 				elseif ($authorSelector == "ends with")
-					$query .= " AND author RLIKE \"$authorName$\"";
+					$query .= " AND author RLIKE " . quote_smart($authorName . "$");
 			}
 
 		// ... if the user has specified a title, add the value of '$titleName' as an AND clause:
@@ -2307,17 +2309,17 @@
 			{
 				$titleSelector = $_POST['titleSelector'];
 				if ($titleSelector == "contains")
-					$query .= " AND title RLIKE \"$titleName\"";
+					$query .= " AND title RLIKE " . quote_smart($titleName);
 				elseif ($titleSelector == "does not contain")
-					$query .= " AND title NOT RLIKE \"$titleName\"";
+					$query .= " AND title NOT RLIKE " . quote_smart($titleName);
 				elseif ($titleSelector == "is equal to")
-					$query .= " AND title = \"$titleName\"";
+					$query .= " AND title = " . quote_smart($titleName);
 				elseif ($titleSelector == "is not equal to")
-					$query .= " AND title != \"$titleName\"";
+					$query .= " AND title != " . quote_smart($titleName);
 				elseif ($titleSelector == "starts with")
-					$query .= " AND title RLIKE \"^$titleName\"";
+					$query .= " AND title RLIKE " . quote_smart("^" . $titleName);
 				elseif ($titleSelector == "ends with")
-					$query .= " AND title RLIKE \"$titleName$\"";
+					$query .= " AND title RLIKE " . quote_smart($titleName . "$");
 			}
 
 		// ... if the user has specified a year, add the value of '$yearNo' as an AND clause:
@@ -2326,38 +2328,38 @@
 			{
 				$yearSelector = $_POST['yearSelector'];
 				if ($yearSelector == "contains")
-					$query .= " AND year RLIKE \"$yearNo\"";
+					$query .= " AND year RLIKE " . quote_smart($yearNo);
 				elseif ($yearSelector == "does not contain")
-					$query .= " AND year NOT RLIKE \"$yearNo\"";
+					$query .= " AND year NOT RLIKE " . quote_smart($yearNo);
 				elseif ($yearSelector == "is equal to")
-					$query .= " AND year = \"$yearNo\"";
+					$query .= " AND year = " . quote_smart($yearNo);
 				elseif ($yearSelector == "is not equal to")
-					$query .= " AND year != \"$yearNo\"";
+					$query .= " AND year != " . quote_smart($yearNo);
 				elseif ($yearSelector == "starts with")
-					$query .= " AND year RLIKE \"^$yearNo\"";
+					$query .= " AND year RLIKE " .quote_smart("^" . $yearNo);
 				elseif ($yearSelector == "ends with")
-					$query .= " AND year RLIKE \"$yearNo$\"";
+					$query .= " AND year RLIKE " . quote_smart($yearNo . "$");
 				elseif ($yearSelector == "is greater than")
-					$query .= " AND year > \"$yearNo\"";
+					$query .= " AND year > " . quote_smart($yearNo);
 				elseif ($yearSelector == "is less than")
-					$query .= " AND year < \"$yearNo\"";
+					$query .= " AND year < " . quote_smart($yearNo);
 				elseif ($yearSelector == "is within range")
 					{
 						if (preg_match("/\d+/", $yearNo)) // if '$yearNo' does contain at least one number
 						{
 							// extract first number:
 							$yearNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $yearNo);
-							$query .= " AND year >= \"$yearNoStart\"";
+							$query .= " AND year >= " . quote_smart($yearNoStart);
 
 							if (preg_match("/^\D*\d+\D+\d+/", $yearNo)) // if '$yearNo' does contain at least two numbers (which are separated by one or more non-digit characters)
 							{
 								// extract the second number:
 								$yearNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $yearNo);
-								$query .= " AND year <= \"$yearNoEnd\"";
+								$query .= " AND year <= " . quote_smart($yearNoEnd);
 							}
 						}
 						else // fallback if no number is given:
-							$query .= " AND year RLIKE \"$yearNo\"";
+							$query .= " AND year RLIKE " . quote_smart($yearNo);
 					}
 				elseif ($yearSelector == "is within list")
 					{
@@ -2365,7 +2367,7 @@
 						$yearNo = preg_replace("/\D+/", "|", $yearNo);
 						// strip "|" from beginning/end of string (if any):
 						$yearNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $yearNo);
-						$query .= " AND year RLIKE \"^($yearNo)$\"";
+						$query .= " AND year RLIKE " . quote_smart("^(" . $yearNo . ")$");
 					}
 			}
 
@@ -2375,17 +2377,17 @@
 			{
 				$editorSelector = $_POST['editorSelector'];
 				if ($editorSelector == "contains")
-					$query .= " AND editor RLIKE \"$editorName\"";
+					$query .= " AND editor RLIKE " . quote_smart($editorName);
 				elseif ($editorSelector == "does not contain")
-					$query .= " AND editor NOT RLIKE \"$editorName\"";
+					$query .= " AND editor NOT RLIKE " . quote_smart($editorName);
 				elseif ($editorSelector == "is equal to")
-					$query .= " AND editor = \"$editorName\"";
+					$query .= " AND editor = " . quote_smart($editorName);
 				elseif ($editorSelector == "is not equal to")
-					$query .= " AND editor != \"$editorName\"";
+					$query .= " AND editor != " . quote_smart($editorName);
 				elseif ($editorSelector == "starts with")
-					$query .= " AND editor RLIKE \"^$editorName\"";
+					$query .= " AND editor RLIKE " . quote_smart("^" . $editorName);
 				elseif ($editorSelector == "ends with")
-					$query .= " AND editor RLIKE \"$editorName$\"";
+					$query .= " AND editor RLIKE " . quote_smart($editorName . "$");
 			}
 
 		// ... if the user has specified a series title, add the value of '$seriesTitleName' as an AND clause:
@@ -2397,17 +2399,17 @@
 				{
 					$seriesTitleSelector = $_POST['seriesTitleSelector'];
 					if ($seriesTitleSelector == "contains")
-						$query .= " AND series_title RLIKE \"$seriesTitleName\"";
+						$query .= " AND series_title RLIKE " . quote_smart($seriesTitleName);
 					elseif ($seriesTitleSelector == "does not contain")
-						$query .= " AND series_title NOT RLIKE \"$seriesTitleName\"";
+						$query .= " AND series_title NOT RLIKE " . quote_smart($seriesTitleName);
 					elseif ($seriesTitleSelector == "is equal to")
-						$query .= " AND series_title = \"$seriesTitleName\"";
+						$query .= " AND series_title = " . quote_smart($seriesTitleName);
 					elseif ($seriesTitleSelector == "is not equal to")
-						$query .= " AND series_title != \"$seriesTitleName\"";
+						$query .= " AND series_title != " . quote_smart($seriesTitleName);
 					elseif ($seriesTitleSelector == "starts with")
-						$query .= " AND series_title RLIKE \"^$seriesTitleName\"";
+						$query .= " AND series_title RLIKE " . quote_smart("^" . $seriesTitleName);
 					elseif ($seriesTitleSelector == "ends with")
-						$query .= " AND series_title RLIKE \"$seriesTitleName$\"";
+						$query .= " AND series_title RLIKE " . quote_smart($seriesTitleName . "$");
 				}
 		}
 		elseif ($seriesTitleRadio == "0")
@@ -2417,17 +2419,17 @@
 				{
 					$seriesTitleSelector2 = $_POST['seriesTitleSelector2'];
 					if ($seriesTitleSelector2 == "contains")
-						$query .= " AND series_title RLIKE \"$seriesTitleName2\"";
+						$query .= " AND series_title RLIKE " . quote_smart($seriesTitleName2);
 					elseif ($seriesTitleSelector2 == "does not contain")
-						$query .= " AND series_title NOT RLIKE \"$seriesTitleName2\"";
+						$query .= " AND series_title NOT RLIKE " . quote_smart($seriesTitleName2);
 					elseif ($seriesTitleSelector2 == "is equal to")
-						$query .= " AND series_title = \"$seriesTitleName2\"";
+						$query .= " AND series_title = " . quote_smart($seriesTitleName2);
 					elseif ($seriesTitleSelector2 == "is not equal to")
-						$query .= " AND series_title != \"$seriesTitleName2\"";
+						$query .= " AND series_title != " . quote_smart($seriesTitleName2);
 					elseif ($seriesTitleSelector2 == "starts with")
-						$query .= " AND series_title RLIKE \"^$seriesTitleName2\"";
+						$query .= " AND series_title RLIKE " . quote_smart("^" .$seriesTitleName2);
 					elseif ($seriesTitleSelector2 == "ends with")
-						$query .= " AND series_title RLIKE \"$seriesTitleName2$\"";
+						$query .= " AND series_title RLIKE " . quote_smart($seriesTitleName2 . "$");
 				}
 		}
 
@@ -2437,38 +2439,38 @@
 			{
 				$volumeSelector = $_POST['volumeSelector'];
 				if ($volumeSelector == "contains")
-					$query .= " AND series_volume RLIKE \"$volumeNo\"";
+					$query .= " AND series_volume RLIKE " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "does not contain")
-					$query .= " AND series_volume NOT RLIKE \"$volumeNo\"";
+					$query .= " AND series_volume NOT RLIKE " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "is equal to")
-					$query .= " AND series_volume = \"$volumeNo\"";
+					$query .= " AND series_volume = " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "is not equal to")
-					$query .= " AND series_volume != \"$volumeNo\"";
+					$query .= " AND series_volume != " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "starts with")
-					$query .= " AND series_volume RLIKE \"^$volumeNo\"";
+					$query .= " AND series_volume RLIKE " . quote_smart("^" . $volumeNo);
 				elseif ($volumeSelector == "ends with")
-					$query .= " AND series_volume RLIKE \"$volumeNo$\"";
+					$query .= " AND series_volume RLIKE " . quote_smart($volumeNo . "$");
 				elseif ($volumeSelector == "is greater than")
-					$query .= " AND series_volume_numeric > \"$volumeNo\"";
+					$query .= " AND series_volume_numeric > " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "is less than")
-					$query .= " AND series_volume_numeric < \"$volumeNo\"";
+					$query .= " AND series_volume_numeric < " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "is within range")
 					{
 						if (preg_match("/\d+/", $volumeNo)) // if '$volumeNo' does contain at least one number
 						{
 							// extract first number:
 							$volumeNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $volumeNo);
-							$query .= " AND series_volume_numeric >= \"$volumeNoStart\"";
+							$query .= " AND series_volume_numeric >= " . quote_smart($volumeNoStart);
 
 							if (preg_match("/^\D*\d+\D+\d+/", $volumeNo)) // if '$volumeNo' does contain at least two numbers (which are separated by one or more non-digit characters)
 							{
 								// extract the second number:
 								$volumeNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $volumeNo);
-								$query .= " AND series_volume_numeric <= \"$volumeNoEnd\"";
+								$query .= " AND series_volume_numeric <= " . quote_smart($volumeNoEnd);
 							}
 						}
 						else // fallback if no number is given:
-							$query .= " AND series_volume RLIKE \"$volumeNo\"";
+							$query .= " AND series_volume RLIKE " . quote_smart($volumeNo);
 					}
 				elseif ($volumeSelector == "is within list")
 					{
@@ -2476,7 +2478,7 @@
 						$volumeNo = preg_replace("/\D+/", "|", $volumeNo);
 						// strip "|" from beginning/end of string (if any):
 						$volumeNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $volumeNo);
-						$query .= " AND series_volume RLIKE \"^($volumeNo)$\"";
+						$query .= " AND series_volume RLIKE " . quote_smart("^(" . $volumeNo . ")$");
 					}
 			}
 
@@ -2486,17 +2488,17 @@
 			{
 				$pagesSelector = $_POST['pagesSelector'];
 				if ($pagesSelector == "contains")
-					$query .= " AND pages RLIKE \"$pagesNo\"";
+					$query .= " AND pages RLIKE " . quote_smart($pagesNo);
 				elseif ($pagesSelector == "does not contain")
-					$query .= " AND pages NOT RLIKE \"$pagesNo\"";
+					$query .= " AND pages NOT RLIKE " . quote_smart($pagesNo);
 				elseif ($pagesSelector == "is equal to")
-					$query .= " AND pages = \"$pagesNo\"";
+					$query .= " AND pages = " . quote_smart($pagesNo);
 				elseif ($pagesSelector == "is not equal to")
-					$query .= " AND pages != \"$pagesNo\"";
+					$query .= " AND pages != " . quote_smart($pagesNo);
 				elseif ($pagesSelector == "starts with")
-					$query .= " AND pages RLIKE \"^$pagesNo\"";
+					$query .= " AND pages RLIKE " . quote_smart("^" . $pagesNo);
 				elseif ($pagesSelector == "ends with")
-					$query .= " AND pages RLIKE \"$pagesNo$\"";
+					$query .= " AND pages RLIKE " . quote_smart($pagesNo . "$");
 			}
 
 		// ... if the user has specified a publisher, add the value of '$publisherName' as an AND clause:
@@ -2505,17 +2507,17 @@
 			{
 				$publisherSelector = $_POST['publisherSelector'];
 				if ($publisherSelector == "contains")
-					$query .= " AND publisher RLIKE \"$publisherName\"";
+					$query .= " AND publisher RLIKE " . quote_smart($publisherName);
 				elseif ($publisherSelector == "does not contain")
-					$query .= " AND publisher NOT RLIKE \"$publisherName\"";
+					$query .= " AND publisher NOT RLIKE " . quote_smart($publisherName);
 				elseif ($publisherSelector == "is equal to")
-					$query .= " AND publisher = \"$publisherName\"";
+					$query .= " AND publisher = " . quote_smart($publisherName);
 				elseif ($publisherSelector == "is not equal to")
-					$query .= " AND publisher != \"$publisherName\"";
+					$query .= " AND publisher != " . quote_smart($publisherName);
 				elseif ($publisherSelector == "starts with")
-					$query .= " AND publisher RLIKE \"^$publisherName\"";
+					$query .= " AND publisher RLIKE " . quote_smart("^" . $publisherName);
 				elseif ($publisherSelector == "ends with")
-					$query .= " AND publisher RLIKE \"$publisherName$\"";
+					$query .= " AND publisher RLIKE " . quote_smart($publisherName . "$");
 			}
 
 		// ... if the user has specified a place, add the value of '$placeName' as an AND clause:
@@ -2524,17 +2526,17 @@
 			{
 				$placeSelector = $_POST['placeSelector'];
 				if ($placeSelector == "contains")
-					$query .= " AND place RLIKE \"$placeName\"";
+					$query .= " AND place RLIKE " . quote_smart($placeName);
 				elseif ($placeSelector == "does not contain")
-					$query .= " AND place NOT RLIKE \"$placeName\"";
+					$query .= " AND place NOT RLIKE " . quote_smart($placeName);
 				elseif ($placeSelector == "is equal to")
-					$query .= " AND place = \"$placeName\"";
+					$query .= " AND place = " . quote_smart($placeName);
 				elseif ($placeSelector == "is not equal to")
-					$query .= " AND place != \"$placeName\"";
+					$query .= " AND place != " . quote_smart($placeName);
 				elseif ($placeSelector == "starts with")
-					$query .= " AND place RLIKE \"^$placeName\"";
+					$query .= " AND place RLIKE " . quote_smart("^" . $placeName);
 				elseif ($placeSelector == "ends with")
-					$query .= " AND place RLIKE \"$placeName$\"";
+					$query .= " AND place RLIKE " . quote_smart($placeName . "$");
 			}
 
 		// ... if the user has specified a call number, add the value of '$callNumberName' as an AND clause:
@@ -2543,17 +2545,17 @@
 			{
 				$callNumberSelector = $_POST['callNumberSelector'];
 				if ($callNumberSelector == "contains")
-					$query .= " AND call_number RLIKE \"$callNumberName\"";
+					$query .= " AND call_number RLIKE " . quote_smart($callNumberName);
 				elseif ($callNumberSelector == "does not contain")
-					$query .= " AND call_number NOT RLIKE \"$callNumberName\"";
+					$query .= " AND call_number NOT RLIKE " . quote_smart($callNumberName);
 				elseif ($callNumberSelector == "is equal to")
-					$query .= " AND call_number = \"$callNumberName\"";
+					$query .= " AND call_number = " . quote_smart($callNumberName);
 				elseif ($callNumberSelector == "is not equal to")
-					$query .= " AND call_number != \"$callNumberName\"";
+					$query .= " AND call_number != " . quote_smart($callNumberName);
 				elseif ($callNumberSelector == "starts with")
-					$query .= " AND call_number RLIKE \"^$callNumberName\"";
+					$query .= " AND call_number RLIKE " . quote_smart("^" . $callNumberName);
 				elseif ($callNumberSelector == "ends with")
-					$query .= " AND call_number RLIKE \"$callNumberName$\"";
+					$query .= " AND call_number RLIKE " . quote_smart($callNumberName . "$");
 			}
 
 		// ... if the user has specified some keywords, add the value of '$keywordsName' as an AND clause:
@@ -2562,17 +2564,17 @@
 			{
 				$keywordsSelector = $_POST['keywordsSelector'];
 				if ($keywordsSelector == "contains")
-					$query .= " AND keywords RLIKE \"$keywordsName\"";
+					$query .= " AND keywords RLIKE " . quote_smart($keywordsName);
 				elseif ($keywordsSelector == "does not contain")
-					$query .= " AND keywords NOT RLIKE \"$keywordsName\"";
+					$query .= " AND keywords NOT RLIKE " . quote_smart($keywordsName);
 				elseif ($keywordsSelector == "is equal to")
-					$query .= " AND keywords = \"$keywordsName\"";
+					$query .= " AND keywords = " . quote_smart($keywordsName);
 				elseif ($keywordsSelector == "is not equal to")
-					$query .= " AND keywords != \"$keywordsName\"";
+					$query .= " AND keywords != " . quote_smart($keywordsName);
 				elseif ($keywordsSelector == "starts with")
-					$query .= " AND keywords RLIKE \"^$keywordsName\"";
+					$query .= " AND keywords RLIKE " . quote_smart("^" . $keywordsName);
 				elseif ($keywordsSelector == "ends with")
-					$query .= " AND keywords RLIKE \"$keywordsName$\"";
+					$query .= " AND keywords RLIKE " . quote_smart($keywordsName . "$");
 			}
 
 		// ... if the user has specified some notes, add the value of '$notesName' as an AND clause:
@@ -2581,17 +2583,17 @@
 			{
 				$notesSelector = $_POST['notesSelector'];
 				if ($notesSelector == "contains")
-					$query .= " AND notes RLIKE \"$notesName\"";
+					$query .= " AND notes RLIKE " . quote_smart($notesName);
 				elseif ($notesSelector == "does not contain")
-					$query .= " AND notes NOT RLIKE \"$notesName\"";
+					$query .= " AND notes NOT RLIKE " . quote_smart($notesName);
 				elseif ($notesSelector == "is equal to")
-					$query .= " AND notes = \"$notesName\"";
+					$query .= " AND notes = " . quote_smart($notesName);
 				elseif ($notesSelector == "is not equal to")
-					$query .= " AND notes != \"$notesName\"";
+					$query .= " AND notes != " . quote_smart($notesName);
 				elseif ($notesSelector == "starts with")
-					$query .= " AND notes RLIKE \"^$notesName\"";
+					$query .= " AND notes RLIKE " . quote_smart("^" . $notesName);
 				elseif ($notesSelector == "ends with")
-					$query .= " AND notes RLIKE \"$notesName$\"";
+					$query .= " AND notes RLIKE " . quote_smart($notesName . "$");
 			}
 
 
@@ -3103,17 +3105,17 @@
 			{
 				$authorSelector = $_POST['authorSelector'];
 				if ($authorSelector == "contains")
-					$query .= " AND author RLIKE \"$authorName\"";
+					$query .= " AND author RLIKE " . quote_smart($authorName);
 				elseif ($authorSelector == "does not contain")
-					$query .= " AND author NOT RLIKE \"$authorName\"";
+					$query .= " AND author NOT RLIKE " . quote_smart($authorName);
 				elseif ($authorSelector == "is equal to")
-					$query .= " AND author = \"$authorName\"";
+					$query .= " AND author = " . quote_smart($authorName);
 				elseif ($authorSelector == "is not equal to")
-					$query .= " AND author != \"$authorName\"";
+					$query .= " AND author != " . quote_smart($authorName);
 				elseif ($authorSelector == "starts with")
-					$query .= " AND author RLIKE \"^$authorName\"";
+					$query .= " AND author RLIKE " . quote_smart("^" . $authorName);
 				elseif ($authorSelector == "ends with")
-					$query .= " AND author RLIKE \"$authorName$\"";
+					$query .= " AND author RLIKE " . quote_smart($authorName . "$");
 			}
 
 		// ... if the user has specified an address, add the value of '$addressName' as an AND clause:
@@ -3122,17 +3124,17 @@
 			{
 				$addressSelector = $_POST['addressSelector'];
 				if ($addressSelector == "contains")
-					$query .= " AND address RLIKE \"$addressName\"";
+					$query .= " AND address RLIKE " . quote_smart($addressName);
 				elseif ($addressSelector == "does not contain")
-					$query .= " AND address NOT RLIKE \"$addressName\"";
+					$query .= " AND address NOT RLIKE " . quote_smart($addressName);
 				elseif ($addressSelector == "is equal to")
-					$query .= " AND address = \"$addressName\"";
+					$query .= " AND address = " . quote_smart($addressName);
 				elseif ($addressSelector == "is not equal to")
-					$query .= " AND address != \"$addressName\"";
+					$query .= " AND address != " . quote_smart($addressName);
 				elseif ($addressSelector == "starts with")
-					$query .= " AND address RLIKE \"^$addressName\"";
+					$query .= " AND address RLIKE " . quote_smart("^" . $addressName);
 				elseif ($addressSelector == "ends with")
-					$query .= " AND address RLIKE \"$addressName$\"";
+					$query .= " AND address RLIKE " . quote_smart($addressName . "$");
 			}
 
 		// ... if the user has specified a corporate author, add the value of '$corporateAuthorName' as an AND clause:
@@ -3141,17 +3143,17 @@
 			{
 				$corporateAuthorSelector = $_POST['corporateAuthorSelector'];
 				if ($corporateAuthorSelector == "contains")
-					$query .= " AND corporate_author RLIKE \"$corporateAuthorName\"";
+					$query .= " AND corporate_author RLIKE " . quote_smart($corporateAuthorName);
 				elseif ($corporateAuthorSelector == "does not contain")
-					$query .= " AND corporate_author NOT RLIKE \"$corporateAuthorName\"";
+					$query .= " AND corporate_author NOT RLIKE " . quote_smart($corporateAuthorName);
 				elseif ($corporateAuthorSelector == "is equal to")
-					$query .= " AND corporate_author = \"$corporateAuthorName\"";
+					$query .= " AND corporate_author = " . quote_smart($corporateAuthorName);
 				elseif ($corporateAuthorSelector == "is not equal to")
-					$query .= " AND corporate_author != \"$corporateAuthorName\"";
+					$query .= " AND corporate_author != " . quote_smart($corporateAuthorName);
 				elseif ($corporateAuthorSelector == "starts with")
-					$query .= " AND corporate_author RLIKE \"^$corporateAuthorName\"";
+					$query .= " AND corporate_author RLIKE " . quote_smart("^" . $corporateAuthorName);
 				elseif ($corporateAuthorSelector == "ends with")
-					$query .= " AND corporate_author RLIKE \"$corporateAuthorName$\"";
+					$query .= " AND corporate_author RLIKE " . quote_smart($corporateAuthorName . "$");
 			}
 
 		// ... if the user has specified a thesis, add the value of '$thesisName' as an AND clause:
@@ -3163,17 +3165,17 @@
 				{
 					$thesisSelector = $_POST['thesisSelector'];
 					if ($thesisSelector == "contains")
-						$query .= " AND thesis RLIKE \"$thesisName\"";
+						$query .= " AND thesis RLIKE " . quote_smart($thesisName);
 					elseif ($thesisSelector == "does not contain")
-						$query .= " AND thesis NOT RLIKE \"$thesisName\"";
+						$query .= " AND thesis NOT RLIKE " . quote_smart($thesisName);
 					elseif ($thesisSelector == "is equal to")
-						$query .= " AND thesis = \"$thesisName\"";
+						$query .= " AND thesis = " . quote_smart($thesisName);
 					elseif ($thesisSelector == "is not equal to")
-						$query .= " AND thesis != \"$thesisName\"";
+						$query .= " AND thesis != " . quote_smart($thesisName);
 					elseif ($thesisSelector == "starts with")
-						$query .= " AND thesis RLIKE \"^$thesisName\"";
+						$query .= " AND thesis RLIKE " . quote_smart("^" . $thesisName);
 					elseif ($thesisSelector == "ends with")
-						$query .= " AND thesis RLIKE \"$thesisName$\"";
+						$query .= " AND thesis RLIKE " . quote_smart($thesisName . "$");
 				}
 		}
 		elseif ($thesisRadio == "0")
@@ -3183,17 +3185,17 @@
 				{
 					$thesisSelector2 = $_POST['thesisSelector2'];
 					if ($thesisSelector2 == "contains")
-						$query .= " AND thesis RLIKE \"$thesisName2\"";
+						$query .= " AND thesis RLIKE " . quote_smart($thesisName2);
 					elseif ($thesisSelector2 == "does not contain")
-						$query .= " AND thesis NOT RLIKE \"$thesisName2\"";
+						$query .= " AND thesis NOT RLIKE " . quote_smart($thesisName2);
 					elseif ($thesisSelector2 == "is equal to")
-						$query .= " AND thesis = \"$thesisName2\"";
+						$query .= " AND thesis = " . quote_smart($thesisName2);
 					elseif ($thesisSelector2 == "is not equal to")
-						$query .= " AND thesis != \"$thesisName2\"";
+						$query .= " AND thesis != " . quote_smart($thesisName2);
 					elseif ($thesisSelector2 == "starts with")
-						$query .= " AND thesis RLIKE \"^$thesisName2\"";
+						$query .= " AND thesis RLIKE " . quote_smart("^" . $thesisName2);
 					elseif ($thesisSelector2 == "ends with")
-						$query .= " AND thesis RLIKE \"$thesisName2$\"";
+						$query .= " AND thesis RLIKE " . quote_smart($thesisName2 . "$");
 				}
 		}
 
@@ -3203,17 +3205,17 @@
 			{
 				$titleSelector = $_POST['titleSelector'];
 				if ($titleSelector == "contains")
-					$query .= " AND title RLIKE \"$titleName\"";
+					$query .= " AND title RLIKE " . quote_smart($titleName);
 				elseif ($titleSelector == "does not contain")
-					$query .= " AND title NOT RLIKE \"$titleName\"";
+					$query .= " AND title NOT RLIKE " . quote_smart($titleName);
 				elseif ($titleSelector == "is equal to")
-					$query .= " AND title = \"$titleName\"";
+					$query .= " AND title = " . quote_smart($titleName);
 				elseif ($titleSelector == "is not equal to")
-					$query .= " AND title != \"$titleName\"";
+					$query .= " AND title != " . quote_smart($titleName);
 				elseif ($titleSelector == "starts with")
-					$query .= " AND title RLIKE \"^$titleName\"";
+					$query .= " AND title RLIKE " . quote_smart("^" . $titleName);
 				elseif ($titleSelector == "ends with")
-					$query .= " AND title RLIKE \"$titleName$\"";
+						$query .= " AND title RLIKE " . quote_smart($titleName . "$");
 			}
 
 		// ... if the user has specified an original title, add the value of '$origTitleName' as an AND clause:
@@ -3222,17 +3224,17 @@
 			{
 				$origTitleSelector = $_POST['origTitleSelector'];
 				if ($origTitleSelector == "contains")
-					$query .= " AND orig_title RLIKE \"$origTitleName\"";
+					$query .= " AND orig_title RLIKE " . quote_smart($origTitleName);
 				elseif ($origTitleSelector == "does not contain")
-					$query .= " AND orig_title NOT RLIKE \"$origTitleName\"";
+					$query .= " AND orig_title NOT RLIKE " . quote_smart($origTitleName);
 				elseif ($origTitleSelector == "is equal to")
-					$query .= " AND orig_title = \"$origTitleName\"";
+					$query .= " AND orig_title = " . quote_smart($origTitleName);
 				elseif ($origTitleSelector == "is not equal to")
-					$query .= " AND orig_title != \"$origTitleName\"";
+					$query .= " AND orig_title != " . quote_smart($origTitleName);
 				elseif ($origTitleSelector == "starts with")
-					$query .= " AND orig_title RLIKE \"^$origTitleName\"";
+					$query .= " AND orig_title RLIKE " . quote_smart("^" . $origTitleName);
 				elseif ($origTitleSelector == "ends with")
-					$query .= " AND orig_title RLIKE \"$origTitleName$\"";
+					$query .= " AND orig_title RLIKE " . quote_smart($origTitleName . "$");
 			}
 
 		// ... if the user has specified a year, add the value of '$yearNo' as an AND clause:
@@ -3241,38 +3243,38 @@
 			{
 				$yearSelector = $_POST['yearSelector'];
 				if ($yearSelector == "contains")
-					$query .= " AND year RLIKE \"$yearNo\"";
+					$query .= " AND year RLIKE " . quote_smart($yearNo);
 				elseif ($yearSelector == "does not contain")
-					$query .= " AND year NOT RLIKE \"$yearNo\"";
+					$query .= " AND year NOT RLIKE " . quote_smart($yearNo);
 				elseif ($yearSelector == "is equal to")
-					$query .= " AND year = \"$yearNo\"";
+					$query .= " AND year = " . quote_smart($yearNo);
 				elseif ($yearSelector == "is not equal to")
-					$query .= " AND year != \"$yearNo\"";
+					$query .= " AND year != " . quote_smart($yearNo);
 				elseif ($yearSelector == "starts with")
-					$query .= " AND year RLIKE \"^$yearNo\"";
+					$query .= " AND year RLIKE " . quote_smart("^" . $yearNo);
 				elseif ($yearSelector == "ends with")
-					$query .= " AND year RLIKE \"$yearNo$\"";
+					$query .= " AND year RLIKE " . quote_smart($yearNo . "$");
 				elseif ($yearSelector == "is greater than")
-					$query .= " AND year > \"$yearNo\"";
+					$query .= " AND year > " . quote_smart($yearNo);
 				elseif ($yearSelector == "is less than")
-					$query .= " AND year < \"$yearNo\"";
+					$query .= " AND year < " . quote_smart($yearNo);
 				elseif ($yearSelector == "is within range")
 					{
 						if (preg_match("/\d+/", $yearNo)) // if '$yearNo' does contain at least one number
 						{
 							// extract first number:
 							$yearNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $yearNo);
-							$query .= " AND year >= \"$yearNoStart\"";
+							$query .= " AND year >= " . quote_smart($yearNoStart);
 
 							if (preg_match("/^\D*\d+\D+\d+/", $yearNo)) // if '$yearNo' does contain at least two numbers (which are separated by one or more non-digit characters)
 							{
 								// extract the second number:
 								$yearNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $yearNo);
-								$query .= " AND year <= \"$yearNoEnd\"";
+								$query .= " AND year <= " . quote_smart($yearNoEnd);
 							}
 						}
 						else // fallback if no number is given:
-							$query .= " AND year RLIKE \"$yearNo\"";
+							$query .= " AND year RLIKE " . quote_smart($yearNo);
 					}
 				elseif ($yearSelector == "is within list")
 					{
@@ -3280,7 +3282,7 @@
 						$yearNo = preg_replace("/\D+/", "|", $yearNo);
 						// strip "|" from beginning/end of string (if any):
 						$yearNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $yearNo);
-						$query .= " AND year RLIKE \"^($yearNo)$\"";
+						$query .= " AND year RLIKE " . quote_smart("^(" . $yearNo . ")$");
 					}
 			}
 
@@ -3293,17 +3295,17 @@
 				{
 					$publicationSelector = $_POST['publicationSelector'];
 					if ($publicationSelector == "contains")
-						$query .= " AND publication RLIKE \"$publicationName\"";
+						$query .= " AND publication RLIKE " . quote_smart($publicationName);
 					elseif ($publicationSelector == "does not contain")
-						$query .= " AND publication NOT RLIKE \"$publicationName\"";
+						$query .= " AND publication NOT RLIKE " . quote_smart($publicationName);
 					elseif ($publicationSelector == "is equal to")
-						$query .= " AND publication = \"$publicationName\"";
+						$query .= " AND publication = " . quote_smart($publicationName);
 					elseif ($publicationSelector == "is not equal to")
-						$query .= " AND publication != \"$publicationName\"";
+						$query .= " AND publication != " . quote_smart($publicationName);
 					elseif ($publicationSelector == "starts with")
-						$query .= " AND publication RLIKE \"^$publicationName\"";
+						$query .= " AND publication RLIKE " . quote_smart("^" . $publicationName);
 					elseif ($publicationSelector == "ends with")
-						$query .= " AND publication RLIKE \"$publicationName$\"";
+						$query .= " AND publication RLIKE " . quote_smart($publicationName . "$");
 				}
 		}
 		elseif ($publicationRadio == "0")
@@ -3313,17 +3315,17 @@
 				{
 					$publicationSelector2 = $_POST['publicationSelector2'];
 					if ($publicationSelector2 == "contains")
-						$query .= " AND publication RLIKE \"$publicationName2\"";
+						$query .= " AND publication RLIKE " . quote_smart($publicationName2);
 					elseif ($publicationSelector2 == "does not contain")
-						$query .= " AND publication NOT RLIKE \"$publicationName2\"";
+						$query .= " AND publication NOT RLIKE " . quote_smart($publicationName2);
 					elseif ($publicationSelector2 == "is equal to")
-						$query .= " AND publication = \"$publicationName2\"";
+						$query .= " AND publication = " . quote_smart($publicationName2);
 					elseif ($publicationSelector2 == "is not equal to")
-						$query .= " AND publication != \"$publicationName2\"";
+						$query .= " AND publication != " . quote_smart($publicationName2);
 					elseif ($publicationSelector2 == "starts with")
-						$query .= " AND publication RLIKE \"^$publicationName2\"";
+						$query .= " AND publication RLIKE " . quote_smart("^" . $publicationName2);
 					elseif ($publicationSelector2 == "ends with")
-						$query .= " AND publication RLIKE \"$publicationName2$\"";
+						$query .= " AND publication RLIKE " . quote_smart($publicationName2 . "$");
 				}
 		}
 
@@ -3336,17 +3338,17 @@
 				{
 					$abbrevJournalSelector = $_POST['abbrevJournalSelector'];
 					if ($abbrevJournalSelector == "contains")
-						$query .= " AND abbrev_journal RLIKE \"$abbrevJournalName\"";
+						$query .= " AND abbrev_journal RLIKE " . quote_smart($abbrevJournalName);
 					elseif ($abbrevJournalSelector == "does not contain")
-						$query .= " AND abbrev_journal NOT RLIKE \"$abbrevJournalName\"";
+						$query .= " AND abbrev_journal NOT RLIKE " . quote_smart($abbrevJournalName);
 					elseif ($abbrevJournalSelector == "is equal to")
-						$query .= " AND abbrev_journal = \"$abbrevJournalName\"";
+						$query .= " AND abbrev_journal = " . quote_smart($abbrevJournalName);
 					elseif ($abbrevJournalSelector == "is not equal to")
-						$query .= " AND abbrev_journal != \"$abbrevJournalName\"";
+						$query .= " AND abbrev_journal != " . quote_smart($abbrevJournalName);
 					elseif ($abbrevJournalSelector == "starts with")
-						$query .= " AND abbrev_journal RLIKE \"^$abbrevJournalName\"";
+						$query .= " AND abbrev_journal RLIKE " . quote_smart("^" . $abbrevJournalName);
 					elseif ($abbrevJournalSelector == "ends with")
-						$query .= " AND abbrev_journal RLIKE \"$abbrevJournalName$\"";
+						$query .= " AND abbrev_journal RLIKE " . quote_smart($abbrevJournalName . "$");
 				}
 		}
 		elseif ($abbrevJournalRadio == "0")
@@ -3356,17 +3358,17 @@
 				{
 					$abbrevJournalSelector2 = $_POST['abbrevJournalSelector2'];
 					if ($abbrevJournalSelector2 == "contains")
-						$query .= " AND abbrev_journal RLIKE \"$abbrevJournalName2\"";
+						$query .= " AND abbrev_journal RLIKE " . quote_smart($abbrevJournalName2);
 					elseif ($abbrevJournalSelector2 == "does not contain")
-						$query .= " AND abbrev_journal NOT RLIKE \"$abbrevJournalName2\"";
+						$query .= " AND abbrev_journal NOT RLIKE " . quote_smart($abbrevJournalName2);
 					elseif ($abbrevJournalSelector2 == "is equal to")
-						$query .= " AND abbrev_journal = \"$abbrevJournalName2\"";
+						$query .= " AND abbrev_journal = " . quote_smart($abbrevJournalName2);
 					elseif ($abbrevJournalSelector2 == "is not equal to")
-						$query .= " AND abbrev_journal != \"$abbrevJournalName2\"";
+						$query .= " AND abbrev_journal != " . quote_smart($abbrevJournalName2);
 					elseif ($abbrevJournalSelector2 == "starts with")
-						$query .= " AND abbrev_journal RLIKE \"^$abbrevJournalName2\"";
+						$query .= " AND abbrev_journal RLIKE " . quote_smart("^" . $abbrevJournalName2);
 					elseif ($abbrevJournalSelector2 == "ends with")
-						$query .= " AND abbrev_journal RLIKE \"$abbrevJournalName2$\"";
+						$query .= " AND abbrev_journal RLIKE " . quote_smart($abbrevJournalName2 . "$");
 				}
 		}
 
@@ -3376,17 +3378,17 @@
 			{
 				$editorSelector = $_POST['editorSelector'];
 				if ($editorSelector == "contains")
-					$query .= " AND editor RLIKE \"$editorName\"";
+					$query .= " AND editor RLIKE " . quote_smart($editorName);
 				elseif ($editorSelector == "does not contain")
-					$query .= " AND editor NOT RLIKE \"$editorName\"";
+					$query .= " AND editor NOT RLIKE " . quote_smart($editorName);
 				elseif ($editorSelector == "is equal to")
-					$query .= " AND editor = \"$editorName\"";
+					$query .= " AND editor = " . quote_smart($editorName);
 				elseif ($editorSelector == "is not equal to")
-					$query .= " AND editor != \"$editorName\"";
+					$query .= " AND editor != " . quote_smart($editorName);
 				elseif ($editorSelector == "starts with")
-					$query .= " AND editor RLIKE \"^$editorName\"";
+					$query .= " AND editor RLIKE " . quote_smart("^" . $editorName);
 				elseif ($editorSelector == "ends with")
-					$query .= " AND editor RLIKE \"$editorName$\"";
+					$query .= " AND editor RLIKE " . quote_smart($editorName . "$");
 			}
 
 		// ... if the user has specified a volume, add the value of '$volumeNo' as an AND clause:
@@ -3395,38 +3397,38 @@
 			{
 				$volumeSelector = $_POST['volumeSelector'];
 				if ($volumeSelector == "contains")
-					$query .= " AND volume RLIKE \"$volumeNo\"";
+					$query .= " AND volume RLIKE " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "does not contain")
-					$query .= " AND volume NOT RLIKE \"$volumeNo\"";
+					$query .= " AND volume NOT RLIKE " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "is equal to")
-					$query .= " AND volume = \"$volumeNo\"";
+					$query .= " AND volume = " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "is not equal to")
-					$query .= " AND volume != \"$volumeNo\"";
+					$query .= " AND volume != " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "starts with")
-					$query .= " AND volume RLIKE \"^$volumeNo\"";
+					$query .= " AND volume RLIKE " . quote_smart("^" . $volumeNo);
 				elseif ($volumeSelector == "ends with")
-					$query .= " AND volume RLIKE \"$volumeNo$\"";
+					$query .= " AND volume RLIKE " . quote_smart($volumeNo . "$");
 				elseif ($volumeSelector == "is greater than")
-					$query .= " AND volume_numeric > \"$volumeNo\"";
+					$query .= " AND volume_numeric > " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "is less than")
-					$query .= " AND volume_numeric < \"$volumeNo\"";
+					$query .= " AND volume_numeric < " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "is within range")
 					{
 						if (preg_match("/\d+/", $volumeNo)) // if '$volumeNo' does contain at least one number
 						{
 							// extract first number:
 							$volumeNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $volumeNo);
-							$query .= " AND volume_numeric >= \"$volumeNoStart\"";
+							$query .= " AND volume_numeric >= " . quote_smart($volumeNoStart);
 
 							if (preg_match("/^\D*\d+\D+\d+/", $volumeNo)) // if '$volumeNo' does contain at least two numbers (which are separated by one or more non-digit characters)
 							{
 								// extract the second number:
 								$volumeNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $volumeNo);
-								$query .= " AND volume_numeric <= \"$volumeNoEnd\"";
+								$query .= " AND volume_numeric <= " . quote_smart($volumeNoEnd);
 							}
 						}
 						else // fallback if no number is given:
-							$query .= " AND volume RLIKE \"$volumeNo\"";
+							$query .= " AND volume RLIKE " . quote_smart($volumeNo);
 					}
 				elseif ($volumeSelector == "is within list")
 					{
@@ -3434,7 +3436,7 @@
 						$volumeNo = preg_replace("/\D+/", "|", $volumeNo);
 						// strip "|" from beginning/end of string (if any):
 						$volumeNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $volumeNo);
-						$query .= " AND volume RLIKE \"^($volumeNo)$\"";
+						$query .= " AND volume RLIKE " . quote_smart("^(" . $volumeNo . ")$");
 					}
 			}
 
@@ -3444,17 +3446,17 @@
 			{
 				$issueSelector = $_POST['issueSelector'];
 				if ($issueSelector == "contains")
-					$query .= " AND issue RLIKE \"$issueNo\"";
+					$query .= " AND issue RLIKE " . quote_smart($issueNo);
 				elseif ($issueSelector == "does not contain")
-					$query .= " AND issue NOT RLIKE \"$issueNo\"";
+					$query .= " AND issue NOT RLIKE " . quote_smart($issueNo);
 				elseif ($issueSelector == "is equal to")
-					$query .= " AND issue = \"$issueNo\"";
+					$query .= " AND issue = " . quote_smart($issueNo);
 				elseif ($issueSelector == "is not equal to")
-					$query .= " AND issue != \"$issueNo\"";
+					$query .= " AND issue != " . quote_smart($issueNo);
 				elseif ($issueSelector == "starts with")
-					$query .= " AND issue RLIKE \"^$issueNo\"";
+					$query .= " AND issue RLIKE " . quote_smart("^" . $issueNo);
 				elseif ($issueSelector == "ends with")
-					$query .= " AND issue RLIKE \"$issueNo$\"";
+					$query .= " AND issue RLIKE " . quote_smart($issueNo . "$");
 			}
 
 		// ... if the user has specified some pages, add the value of '$pagesNo' as an AND clause:
@@ -3463,17 +3465,17 @@
 			{
 				$pagesSelector = $_POST['pagesSelector'];
 				if ($pagesSelector == "contains")
-					$query .= " AND pages RLIKE \"$pagesNo\"";
+					$query .= " AND pages RLIKE " . quote_smart($pagesNo);
 				elseif ($pagesSelector == "does not contain")
-					$query .= " AND pages NOT RLIKE \"$pagesNo\"";
+					$query .= " AND pages NOT RLIKE " . quote_smart($pagesNo);
 				elseif ($pagesSelector == "is equal to")
-					$query .= " AND pages = \"$pagesNo\"";
+					$query .= " AND pages = " . quote_smart($pagesNo);
 				elseif ($pagesSelector == "is not equal to")
-					$query .= " AND pages != \"$pagesNo\"";
+					$query .= " AND pages != " . quote_smart($pagesNo);
 				elseif ($pagesSelector == "starts with")
-					$query .= " AND pages RLIKE \"^$pagesNo\"";
+					$query .= " AND pages RLIKE " . quote_smart("^" . $pagesNo);
 				elseif ($pagesSelector == "ends with")
-					$query .= " AND pages RLIKE \"$pagesNo$\"";
+					$query .= " AND pages RLIKE " . quote_smart($pagesNo . "$");
 			}
 
 
@@ -3486,17 +3488,17 @@
 				{
 					$seriesTitleSelector = $_POST['seriesTitleSelector'];
 					if ($seriesTitleSelector == "contains")
-						$query .= " AND series_title RLIKE \"$seriesTitleName\"";
+						$query .= " AND series_title RLIKE " . quote_smart($seriesTitleName);
 					elseif ($seriesTitleSelector == "does not contain")
-						$query .= " AND series_title NOT RLIKE \"$seriesTitleName\"";
+						$query .= " AND series_title NOT RLIKE " . quote_smart($seriesTitleName);
 					elseif ($seriesTitleSelector == "is equal to")
-						$query .= " AND series_title = \"$seriesTitleName\"";
+						$query .= " AND series_title = " . quote_smart($seriesTitleName);
 					elseif ($seriesTitleSelector == "is not equal to")
-						$query .= " AND series_title != \"$seriesTitleName\"";
+						$query .= " AND series_title != " . quote_smart($seriesTitleName);
 					elseif ($seriesTitleSelector == "starts with")
-						$query .= " AND series_title RLIKE \"^$seriesTitleName\"";
+						$query .= " AND series_title RLIKE " . quote_smart("^" . $seriesTitleName);
 					elseif ($seriesTitleSelector == "ends with")
-						$query .= " AND series_title RLIKE \"$seriesTitleName$\"";
+						$query .= " AND series_title RLIKE " . quote_smart($seriesTitleName . "$");
 				}
 		}
 		elseif ($seriesTitleRadio == "0")
@@ -3506,17 +3508,17 @@
 				{
 					$seriesTitleSelector2 = $_POST['seriesTitleSelector2'];
 					if ($seriesTitleSelector2 == "contains")
-						$query .= " AND series_title RLIKE \"$seriesTitleName2\"";
+						$query .= " AND series_title RLIKE " . quote_smart($seriesTitleName2);
 					elseif ($seriesTitleSelector2 == "does not contain")
-						$query .= " AND series_title NOT RLIKE \"$seriesTitleName2\"";
+						$query .= " AND series_title NOT RLIKE " . quote_smart($seriesTitleName2);
 					elseif ($seriesTitleSelector2 == "is equal to")
-						$query .= " AND series_title = \"$seriesTitleName2\"";
+						$query .= " AND series_title = " . quote_smart($seriesTitleName2);
 					elseif ($seriesTitleSelector2 == "is not equal to")
-						$query .= " AND series_title != \"$seriesTitleName2\"";
+						$query .= " AND series_title != " . quote_smart($seriesTitleName2);
 					elseif ($seriesTitleSelector2 == "starts with")
-						$query .= " AND series_title RLIKE \"^$seriesTitleName2\"";
+						$query .= " AND series_title RLIKE " . quote_smart("^" . $seriesTitleName2);
 					elseif ($seriesTitleSelector2 == "ends with")
-						$query .= " AND series_title RLIKE \"$seriesTitleName2$\"";
+						$query .= " AND series_title RLIKE " . quote_smart($seriesTitleName2 . "$");
 				}
 		}
 
@@ -3529,17 +3531,17 @@
 				{
 					$abbrevSeriesTitleSelector = $_POST['abbrevSeriesTitleSelector'];
 					if ($abbrevSeriesTitleSelector == "contains")
-						$query .= " AND abbrev_series_title RLIKE \"$abbrevSeriesTitleName\"";
+						$query .= " AND abbrev_series_title RLIKE " . quote_smart($abbrevSeriesTitleName);
 					elseif ($abbrevSeriesTitleSelector == "does not contain")
-						$query .= " AND abbrev_series_title NOT RLIKE \"$abbrevSeriesTitleName\"";
+						$query .= " AND abbrev_series_title NOT RLIKE " . quote_smart($abbrevSeriesTitleName);
 					elseif ($abbrevSeriesTitleSelector == "is equal to")
-						$query .= " AND abbrev_series_title = \"$abbrevSeriesTitleName\"";
+						$query .= " AND abbrev_series_title = " . quote_smart($abbrevSeriesTitleName);
 					elseif ($abbrevSeriesTitleSelector == "is not equal to")
-						$query .= " AND abbrev_series_title != \"$abbrevSeriesTitleName\"";
+						$query .= " AND abbrev_series_title != " . quote_smart($abbrevSeriesTitleName);
 					elseif ($abbrevSeriesTitleSelector == "starts with")
-						$query .= " AND abbrev_series_title RLIKE \"^$abbrevSeriesTitleName\"";
+						$query .= " AND abbrev_series_title RLIKE " . quote_smart("^" . $abbrevSeriesTitleName);
 					elseif ($abbrevSeriesTitleSelector == "ends with")
-						$query .= " AND abbrev_series_title RLIKE \"$abbrevSeriesTitleName$\"";
+						$query .= " AND abbrev_series_title RLIKE " . quote_smart($abbrevSeriesTitleName . "$");
 				}
 		}
 		elseif ($abbrevSeriesTitleRadio == "0")
@@ -3549,17 +3551,17 @@
 				{
 					$abbrevSeriesTitleSelector2 = $_POST['abbrevSeriesTitleSelector2'];
 					if ($abbrevSeriesTitleSelector2 == "contains")
-						$query .= " AND abbrev_series_title RLIKE \"$abbrevSeriesTitleName2\"";
+						$query .= " AND abbrev_series_title RLIKE " . quote_smart($abbrevSeriesTitleName2);
 					elseif ($abbrevSeriesTitleSelector2 == "does not contain")
-						$query .= " AND abbrev_series_title NOT RLIKE \"$abbrevSeriesTitleName2\"";
+						$query .= " AND abbrev_series_title NOT RLIKE " . quote_smart($abbrevSeriesTitleName2);
 					elseif ($abbrevSeriesTitleSelector2 == "is equal to")
-						$query .= " AND abbrev_series_title = \"$abbrevSeriesTitleName2\"";
+						$query .= " AND abbrev_series_title = " . quote_smart($abbrevSeriesTitleName2);
 					elseif ($abbrevSeriesTitleSelector2 == "is not equal to")
-						$query .= " AND abbrev_series_title != \"$abbrevSeriesTitleName2\"";
+						$query .= " AND abbrev_series_title != " . quote_smart($abbrevSeriesTitleName2);
 					elseif ($abbrevSeriesTitleSelector2 == "starts with")
-						$query .= " AND abbrev_series_title RLIKE \"^$abbrevSeriesTitleName2\"";
+						$query .= " AND abbrev_series_title RLIKE " . quote_smart("^" . $abbrevSeriesTitleName2);
 					elseif ($abbrevSeriesTitleSelector2 == "ends with")
-						$query .= " AND abbrev_series_title RLIKE \"$abbrevSeriesTitleName2$\"";
+						$query .= " AND abbrev_series_title RLIKE " . quote_smart($abbrevSeriesTitleName2 . "$");
 				}
 		}
 
@@ -3569,17 +3571,17 @@
 			{
 				$seriesEditorSelector = $_POST['seriesEditorSelector'];
 				if ($seriesEditorSelector == "contains")
-					$query .= " AND series_editor RLIKE \"$seriesEditorName\"";
+					$query .= " AND series_editor RLIKE " . quote_smart($seriesEditorName);
 				elseif ($seriesEditorSelector == "does not contain")
-					$query .= " AND series_editor NOT RLIKE \"$seriesEditorName\"";
+					$query .= " AND series_editor NOT RLIKE " . quote_smart($seriesEditorName);
 				elseif ($seriesEditorSelector == "is equal to")
-					$query .= " AND series_editor = \"$seriesEditorName\"";
+					$query .= " AND series_editor = " . quote_smart($seriesEditorName);
 				elseif ($seriesEditorSelector == "is not equal to")
-					$query .= " AND series_editor != \"$seriesEditorName\"";
+					$query .= " AND series_editor != " . quote_smart($seriesEditorName);
 				elseif ($seriesEditorSelector == "starts with")
-					$query .= " AND series_editor RLIKE \"^$seriesEditorName\"";
+					$query .= " AND series_editor RLIKE " . quote_smart("^" . $seriesEditorName);
 				elseif ($seriesEditorSelector == "ends with")
-					$query .= " AND series_editor RLIKE \"$seriesEditorName$\"";
+					$query .= " AND series_editor RLIKE " . quote_smart($seriesEditorName . "$");
 			}
 
 
@@ -3589,38 +3591,38 @@
 			{
 				$seriesVolumeSelector = $_POST['seriesVolumeSelector'];
 				if ($seriesVolumeSelector == "contains")
-					$query .= " AND series_volume RLIKE \"$seriesVolumeNo\"";
+					$query .= " AND series_volume RLIKE " . quote_smart($seriesVolumeNo);
 				elseif ($seriesVolumeSelector == "does not contain")
-					$query .= " AND series_volume NOT RLIKE \"$seriesVolumeNo\"";
+					$query .= " AND series_volume NOT RLIKE " . quote_smart($seriesVolumeNo);
 				elseif ($seriesVolumeSelector == "is equal to")
-					$query .= " AND series_volume = \"$seriesVolumeNo\"";
+					$query .= " AND series_volume = " . quote_smart($seriesVolumeNo);
 				elseif ($seriesVolumeSelector == "is not equal to")
-					$query .= " AND series_volume != \"$seriesVolumeNo\"";
+					$query .= " AND series_volume != " . quote_smart($seriesVolumeNo);
 				elseif ($seriesVolumeSelector == "starts with")
-					$query .= " AND series_volume RLIKE \"^$seriesVolumeNo\"";
+					$query .= " AND series_volume RLIKE " . quote_smart("^" . $seriesVolumeNo);
 				elseif ($seriesVolumeSelector == "ends with")
-					$query .= " AND series_volume RLIKE \"$seriesVolumeNo$\"";
+					$query .= " AND series_volume RLIKE " . quote_smart($seriesVolumeNo . "$");
 				elseif ($seriesVolumeSelector == "is greater than")
-					$query .= " AND series_volume_numeric > \"$seriesVolumeNo\"";
+					$query .= " AND series_volume_numeric > " . quote_smart($seriesVolumeNo);
 				elseif ($seriesVolumeSelector == "is less than")
-					$query .= " AND series_volume_numeric < \"$seriesVolumeNo\"";
+					$query .= " AND series_volume_numeric < " . quote_smart($seriesVolumeNo);
 				elseif ($seriesVolumeSelector == "is within range")
 					{
 						if (preg_match("/\d+/", $seriesVolumeNo)) // if '$seriesVolumeNo' does contain at least one number
 						{
 							// extract first number:
 							$seriesVolumeNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $seriesVolumeNo);
-							$query .= " AND series_volume_numeric >= \"$seriesVolumeNoStart\"";
+							$query .= " AND series_volume_numeric >= " . quote_smart($seriesVolumeNoStart);
 
 							if (preg_match("/^\D*\d+\D+\d+/", $seriesVolumeNo)) // if '$seriesVolumeNo' does contain at least two numbers (which are separated by one or more non-digit characters)
 							{
 								// extract the second number:
 								$seriesVolumeNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $seriesVolumeNo);
-								$query .= " AND series_volume_numeric <= \"$seriesVolumeNoEnd\"";
+								$query .= " AND series_volume_numeric <= " . quote_smart($seriesVolumeNoEnd);
 							}
 						}
 						else // fallback if no number is given:
-							$query .= " AND series_volume RLIKE \"$seriesVolumeNo\"";
+							$query .= " AND series_volume RLIKE " . quote_smart($seriesVolumeNo);
 					}
 				elseif ($seriesVolumeSelector == "is within list")
 					{
@@ -3628,7 +3630,7 @@
 						$seriesVolumeNo = preg_replace("/\D+/", "|", $seriesVolumeNo);
 						// strip "|" from beginning/end of string (if any):
 						$seriesVolumeNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $seriesVolumeNo);
-						$query .= " AND series_volume RLIKE \"^($seriesVolumeNo)$\"";
+						$query .= " AND series_volume RLIKE " . quote_smart("^(" . $seriesVolumeNo . ")$");
 					}
 			}
 
@@ -3638,17 +3640,17 @@
 			{
 				$seriesIssueSelector = $_POST['seriesIssueSelector'];
 				if ($seriesIssueSelector == "contains")
-					$query .= " AND series_issue RLIKE \"$seriesIssueNo\"";
+					$query .= " AND series_issue RLIKE " . quote_smart($seriesIssueNo);
 				elseif ($seriesIssueSelector == "does not contain")
-					$query .= " AND series_issue NOT RLIKE \"$seriesIssueNo\"";
+					$query .= " AND series_issue NOT RLIKE " . quote_smart($seriesIssueNo);
 				elseif ($seriesIssueSelector == "is equal to")
-					$query .= " AND series_issue = \"$seriesIssueNo\"";
+					$query .= " AND series_issue = " . quote_smart($seriesIssueNo);
 				elseif ($seriesIssueSelector == "is not equal to")
-					$query .= " AND series_issue != \"$seriesIssueNo\"";
+					$query .= " AND series_issue != " . quote_smart($seriesIssueNo);
 				elseif ($seriesIssueSelector == "starts with")
-					$query .= " AND series_issue RLIKE \"^$seriesIssueNo\"";
+					$query .= " AND series_issue RLIKE " . quote_smart("^" . $seriesIssueNo);
 				elseif ($seriesIssueSelector == "ends with")
-					$query .= " AND series_issue RLIKE \"$seriesIssueNo$\"";
+					$query .= " AND series_issue RLIKE " . quote_smart($seriesIssueNo . "$");
 			}
 
 		// ... if the user has specified a publisher, add the value of '$publisherName' as an AND clause:
@@ -3660,17 +3662,17 @@
 				{
 					$publisherSelector = $_POST['publisherSelector'];
 					if ($publisherSelector == "contains")
-						$query .= " AND publisher RLIKE \"$publisherName\"";
+						$query .= " AND publisher RLIKE " . quote_smart($publisherName);
 					elseif ($publisherSelector == "does not contain")
-						$query .= " AND publisher NOT RLIKE \"$publisherName\"";
+						$query .= " AND publisher NOT RLIKE " . quote_smart($publisherName);
 					elseif ($publisherSelector == "is equal to")
-						$query .= " AND publisher = \"$publisherName\"";
+						$query .= " AND publisher = " . quote_smart($publisherName);
 					elseif ($publisherSelector == "is not equal to")
-						$query .= " AND publisher != \"$publisherName\"";
+						$query .= " AND publisher != " . quote_smart($publisherName);
 					elseif ($publisherSelector == "starts with")
-						$query .= " AND publisher RLIKE \"^$publisherName\"";
+						$query .= " AND publisher RLIKE " . quote_smart("^" . $publisherName);
 					elseif ($publisherSelector == "ends with")
-						$query .= " AND publisher RLIKE \"$publisherName$\"";
+						$query .= " AND publisher RLIKE " . quote_smart($publisherName . "$");
 				}
 		}
 		elseif ($publisherRadio == "0")
@@ -3680,17 +3682,17 @@
 				{
 					$publisherSelector2 = $_POST['publisherSelector2'];
 					if ($publisherSelector2 == "contains")
-						$query .= " AND publisher RLIKE \"$publisherName2\"";
+						$query .= " AND publisher RLIKE " . quote_smart($publisherName2);
 					elseif ($publisherSelector2 == "does not contain")
-						$query .= " AND publisher NOT RLIKE \"$publisherName2\"";
+						$query .= " AND publisher NOT RLIKE " . quote_smart($publisherName2);
 					elseif ($publisherSelector2 == "is equal to")
-						$query .= " AND publisher = \"$publisherName2\"";
+						$query .= " AND publisher = " . quote_smart($publisherName2);
 					elseif ($publisherSelector2 == "is not equal to")
-						$query .= " AND publisher != \"$publisherName2\"";
+						$query .= " AND publisher != " . quote_smart($publisherName2);
 					elseif ($publisherSelector2 == "starts with")
-						$query .= " AND publisher RLIKE \"^$publisherName2\"";
+						$query .= " AND publisher RLIKE " . quote_smart("^" . $publisherName2);
 					elseif ($publisherSelector2 == "ends with")
-						$query .= " AND publisher RLIKE \"$publisherName2$\"";
+						$query .= " AND publisher RLIKE " . quote_smart($publisherName2 . "$");
 				}
 		}
 
@@ -3703,17 +3705,17 @@
 				{
 					$placeSelector = $_POST['placeSelector'];
 					if ($placeSelector == "contains")
-						$query .= " AND place RLIKE \"$placeName\"";
+						$query .= " AND place RLIKE " . quote_smart($placeName);
 					elseif ($placeSelector == "does not contain")
-						$query .= " AND place NOT RLIKE \"$placeName\"";
+						$query .= " AND place NOT RLIKE " . quote_smart($placeName);
 					elseif ($placeSelector == "is equal to")
-						$query .= " AND place = \"$placeName\"";
+						$query .= " AND place = " . quote_smart($placeName);
 					elseif ($placeSelector == "is not equal to")
-						$query .= " AND place != \"$placeName\"";
+						$query .= " AND place != " . quote_smart($placeName);
 					elseif ($placeSelector == "starts with")
-						$query .= " AND place RLIKE \"^$placeName\"";
+						$query .= " AND place RLIKE " . quote_smart("^" . $placeName);
 					elseif ($placeSelector == "ends with")
-						$query .= " AND place RLIKE \"$placeName$\"";
+						$query .= " AND place RLIKE " . quote_smart($placeName . "$");
 				}
 		}
 		elseif ($placeRadio == "0")
@@ -3723,17 +3725,17 @@
 				{
 					$placeSelector2 = $_POST['placeSelector2'];
 					if ($placeSelector2 == "contains")
-						$query .= " AND place RLIKE \"$placeName2\"";
+						$query .= " AND place RLIKE " . quote_smart($placeName2);
 					elseif ($placeSelector2 == "does not contain")
-						$query .= " AND place NOT RLIKE \"$placeName2\"";
+						$query .= " AND place NOT RLIKE " . quote_smart($placeName2);
 					elseif ($placeSelector2 == "is equal to")
-						$query .= " AND place = \"$placeName2\"";
+						$query .= " AND place = " . quote_smart($placeName2);
 					elseif ($placeSelector2 == "is not equal to")
-						$query .= " AND place != \"$placeName2\"";
+						$query .= " AND place != " . quote_smart($placeName2);
 					elseif ($placeSelector2 == "starts with")
-						$query .= " AND place RLIKE \"^$placeName2\"";
+						$query .= " AND place RLIKE " . quote_smart("^" . $placeName2);
 					elseif ($placeSelector2 == "ends with")
-						$query .= " AND place RLIKE \"$placeName2$\"";
+						$query .= " AND place RLIKE " . quote_smart($placeName2 . "$");
 				}
 		}
 
@@ -3743,38 +3745,38 @@
 			{
 				$editionSelector = $_POST['editionSelector'];
 				if ($editionSelector == "contains")
-					$query .= " AND edition RLIKE \"$editionNo\"";
+					$query .= " AND edition RLIKE " . quote_smart($editionNo);
 				elseif ($editionSelector == "does not contain")
-					$query .= " AND edition NOT RLIKE \"$editionNo\"";
+					$query .= " AND edition NOT RLIKE " . quote_smart($editionNo);
 				elseif ($editionSelector == "is equal to")
-					$query .= " AND edition = \"$editionNo\"";
+					$query .= " AND edition = " . quote_smart($editionNo);
 				elseif ($editionSelector == "is not equal to")
-					$query .= " AND edition != \"$editionNo\"";
+					$query .= " AND edition != " . quote_smart($editionNo);
 				elseif ($editionSelector == "starts with")
-					$query .= " AND edition RLIKE \"^$editionNo\"";
+					$query .= " AND edition RLIKE " . quote_smart("^" . $editionNo);
 				elseif ($editionSelector == "ends with")
-					$query .= " AND edition RLIKE \"$editionNo$\"";
+					$query .= " AND edition RLIKE " . quote_smart($editionNo . "$");
 				elseif ($editionSelector == "is greater than")
-					$query .= " AND edition > \"$editionNo\"";
+					$query .= " AND edition > " . quote_smart($editionNo);
 				elseif ($editionSelector == "is less than")
-					$query .= " AND edition < \"$editionNo\"";
+					$query .= " AND edition < " . quote_smart($editionNo);
 				elseif ($editionSelector == "is within range")
 					{
 						if (preg_match("/\d+/", $editionNo)) // if '$editionNo' does contain at least one number
 						{
 							// extract first number:
 							$editionNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $editionNo);
-							$query .= " AND edition >= \"$editionNoStart\"";
+							$query .= " AND edition >= " . quote_smart($editionNoStart);
 
 							if (preg_match("/^\D*\d+\D+\d+/", $editionNo)) // if '$editionNo' does contain at least two numbers (which are separated by one or more non-digit characters)
 							{
 								// extract the second number:
 								$editionNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $editionNo);
-								$query .= " AND edition <= \"$editionNoEnd\"";
+								$query .= " AND edition <= " . quote_smart($editionNoEnd);
 							}
 						}
 						else // fallback if no number is given:
-							$query .= " AND edition RLIKE \"$editionNo\"";
+							$query .= " AND edition RLIKE " . quote_smart($editionNo);
 					}
 				elseif ($editionSelector == "is within list")
 					{
@@ -3782,7 +3784,7 @@
 						$editionNo = preg_replace("/\D+/", "|", $editionNo);
 						// strip "|" from beginning/end of string (if any):
 						$editionNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $editionNo);
-						$query .= " AND edition RLIKE \"^($editionNo)$\"";
+						$query .= " AND edition RLIKE " . quote_smart("^(" . $editionNo . ")$");
 					}
 			}
 
@@ -3792,17 +3794,17 @@
 			{
 				$mediumSelector = $_POST['mediumSelector'];
 				if ($mediumSelector == "contains")
-					$query .= " AND medium RLIKE \"$mediumName\"";
+					$query .= " AND medium RLIKE " . quote_smart($mediumName);
 				elseif ($mediumSelector == "does not contain")
-					$query .= " AND medium NOT RLIKE \"$mediumName\"";
+					$query .= " AND medium NOT RLIKE " . quote_smart($mediumName);
 				elseif ($mediumSelector == "is equal to")
-					$query .= " AND medium = \"$mediumName\"";
+					$query .= " AND medium = " . quote_smart($mediumName);
 				elseif ($mediumSelector == "is not equal to")
-					$query .= " AND medium != \"$mediumName\"";
+					$query .= " AND medium != " . quote_smart($mediumName);
 				elseif ($mediumSelector == "starts with")
-					$query .= " AND medium RLIKE \"^$mediumName\"";
+					$query .= " AND medium RLIKE " . quote_smart("^" . $mediumName);
 				elseif ($mediumSelector == "ends with")
-					$query .= " AND medium RLIKE \"$mediumName$\"";
+					$query .= " AND medium RLIKE " . quote_smart($mediumName . "$");
 			}
 
 		// ... if the user has specified an ISSN, add the value of '$issnName' as an AND clause:
@@ -3811,17 +3813,17 @@
 			{
 				$issnSelector = $_POST['issnSelector'];
 				if ($issnSelector == "contains")
-					$query .= " AND issn RLIKE \"$issnName\"";
+					$query .= " AND issn RLIKE " . quote_smart($issnName);
 				elseif ($issnSelector == "does not contain")
-					$query .= " AND issn NOT RLIKE \"$issnName\"";
+					$query .= " AND issn NOT RLIKE " . quote_smart($issnName);
 				elseif ($issnSelector == "is equal to")
-					$query .= " AND issn = \"$issnName\"";
+					$query .= " AND issn = " . quote_smart($issnName);
 				elseif ($issnSelector == "is not equal to")
-					$query .= " AND issn != \"$issnName\"";
+					$query .= " AND issn != " . quote_smart($issnName);
 				elseif ($issnSelector == "starts with")
-					$query .= " AND issn RLIKE \"^$issnName\"";
+					$query .= " AND issn RLIKE " . quote_smart("^" . $issnName);
 				elseif ($issnSelector == "ends with")
-					$query .= " AND issn RLIKE \"$issnName$\"";
+					$query .= " AND issn RLIKE " . quote_smart($issnName . "$");
 			}
 
 		// ... if the user has specified an ISBN, add the value of '$isbnName' as an AND clause:
@@ -3830,17 +3832,17 @@
 			{
 				$isbnSelector = $_POST['isbnSelector'];
 				if ($isbnSelector == "contains")
-					$query .= " AND isbn RLIKE \"$isbnName\"";
+					$query .= " AND isbn RLIKE " . quote_smart($isbnName);
 				elseif ($isbnSelector == "does not contain")
-					$query .= " AND isbn NOT RLIKE \"$isbnName\"";
+					$query .= " AND isbn NOT RLIKE " . quote_smart($isbnName);
 				elseif ($isbnSelector == "is equal to")
-					$query .= " AND isbn = \"$isbnName\"";
+					$query .= " AND isbn = " . quote_smart($isbnName);
 				elseif ($isbnSelector == "is not equal to")
-					$query .= " AND isbn != \"$isbnName\"";
+					$query .= " AND isbn != " . quote_smart($isbnName);
 				elseif ($isbnSelector == "starts with")
-					$query .= " AND isbn RLIKE \"^$isbnName\"";
+					$query .= " AND isbn RLIKE " . quote_smart("^" . $isbnName);
 				elseif ($isbnSelector == "ends with")
-					$query .= " AND isbn RLIKE \"$isbnName$\"";
+					$query .= " AND isbn RLIKE " . quote_smart($isbnName . "$");
 			}
 
 
@@ -3853,17 +3855,17 @@
 				{
 					$languageSelector = $_POST['languageSelector'];
 					if ($languageSelector == "contains")
-						$query .= " AND language RLIKE \"$languageName\"";
+						$query .= " AND language RLIKE " . quote_smart($languageName);
 					elseif ($languageSelector == "does not contain")
-						$query .= " AND language NOT RLIKE \"$languageName\"";
+						$query .= " AND language NOT RLIKE " . quote_smart($languageName);
 					elseif ($languageSelector == "is equal to")
-						$query .= " AND language = \"$languageName\"";
+						$query .= " AND language = " . quote_smart($languageName);
 					elseif ($languageSelector == "is not equal to")
-						$query .= " AND language != \"$languageName\"";
+						$query .= " AND language != " . quote_smart($languageName);
 					elseif ($languageSelector == "starts with")
-						$query .= " AND language RLIKE \"^$languageName\"";
+						$query .= " AND language RLIKE " . quote_smart("^" . $languageName);
 					elseif ($languageSelector == "ends with")
-						$query .= " AND language RLIKE \"$languageName$\"";
+						$query .= " AND language RLIKE " . quote_smart($languageName . "$");
 				}
 		}
 		elseif ($languageRadio == "0")
@@ -3873,17 +3875,17 @@
 				{
 					$languageSelector2 = $_POST['languageSelector2'];
 					if ($languageSelector2 == "contains")
-						$query .= " AND language RLIKE \"$languageName2\"";
+						$query .= " AND language RLIKE " . quote_smart($languageName2);
 					elseif ($languageSelector2 == "does not contain")
-						$query .= " AND language NOT RLIKE \"$languageName2\"";
+						$query .= " AND language NOT RLIKE " . quote_smart($languageName2);
 					elseif ($languageSelector2 == "is equal to")
-						$query .= " AND language = \"$languageName2\"";
+						$query .= " AND language = " . quote_smart($languageName2);
 					elseif ($languageSelector2 == "is not equal to")
-						$query .= " AND language != \"$languageName2\"";
+						$query .= " AND language != " . quote_smart($languageName2);
 					elseif ($languageSelector2 == "starts with")
-						$query .= " AND language RLIKE \"^$languageName2\"";
+						$query .= " AND language RLIKE " . quote_smart("^" . $languageName2);
 					elseif ($languageSelector2 == "ends with")
-						$query .= " AND language RLIKE \"$languageName2$\"";
+						$query .= " AND language RLIKE " . quote_smart($languageName2 . "$");
 				}
 		}
 
@@ -3896,17 +3898,17 @@
 				{
 					$summaryLanguageSelector = $_POST['summaryLanguageSelector'];
 					if ($summaryLanguageSelector == "contains")
-						$query .= " AND summary_language RLIKE \"$summaryLanguageName\"";
+						$query .= " AND summary_language RLIKE " . quote_smart($summaryLanguageName);
 					elseif ($summaryLanguageSelector == "does not contain")
-						$query .= " AND summary_language NOT RLIKE \"$summaryLanguageName\"";
+						$query .= " AND summary_language NOT RLIKE " . quote_smart($summaryLanguageName);
 					elseif ($summaryLanguageSelector == "is equal to")
-						$query .= " AND summary_language = \"$summaryLanguageName\"";
+						$query .= " AND summary_language = " . quote_smart($summaryLanguageName);
 					elseif ($summaryLanguageSelector == "is not equal to")
-						$query .= " AND summary_language != \"$summaryLanguageName\"";
+						$query .= " AND summary_language != " . quote_smart($summaryLanguageName);
 					elseif ($summaryLanguageSelector == "starts with")
-						$query .= " AND summary_language RLIKE \"^$summaryLanguageName\"";
+						$query .= " AND summary_language RLIKE " . quote_smart("^" . $summaryLanguageName);
 					elseif ($summaryLanguageSelector == "ends with")
-						$query .= " AND summary_language RLIKE \"$summaryLanguageName$\"";
+						$query .= " AND summary_language RLIKE " . quote_smart($summaryLanguageName . "$");
 				}
 		}
 		elseif ($summaryLanguageRadio == "0")
@@ -3916,17 +3918,17 @@
 				{
 					$summaryLanguageSelector2 = $_POST['summaryLanguageSelector2'];
 					if ($summaryLanguageSelector2 == "contains")
-						$query .= " AND summary_language RLIKE \"$summaryLanguageName2\"";
+						$query .= " AND summary_language RLIKE " . quote_smart($summaryLanguageName2);
 					elseif ($summaryLanguageSelector2 == "does not contain")
-						$query .= " AND summary_language NOT RLIKE \"$summaryLanguageName2\"";
+						$query .= " AND summary_language NOT RLIKE " . quote_smart($summaryLanguageName2);
 					elseif ($summaryLanguageSelector2 == "is equal to")
-						$query .= " AND summary_language = \"$summaryLanguageName2\"";
+						$query .= " AND summary_language = " . quote_smart($summaryLanguageName2);
 					elseif ($summaryLanguageSelector2 == "is not equal to")
-						$query .= " AND summary_language != \"$summaryLanguageName2\"";
+						$query .= " AND summary_language != " . quote_smart($summaryLanguageName2);
 					elseif ($summaryLanguageSelector2 == "starts with")
-						$query .= " AND summary_language RLIKE \"^$summaryLanguageName2\"";
+						$query .= " AND summary_language RLIKE " . quote_smart("^" . $summaryLanguageName2);
 					elseif ($summaryLanguageSelector2 == "ends with")
-						$query .= " AND summary_language RLIKE \"$summaryLanguageName2$\"";
+						$query .= " AND summary_language RLIKE " . quote_smart($summaryLanguageName2 . "$");
 				}
 		}
 
@@ -3936,17 +3938,17 @@
 			{
 				$keywordsSelector = $_POST['keywordsSelector'];
 				if ($keywordsSelector == "contains")
-					$query .= " AND keywords RLIKE \"$keywordsName\"";
+					$query .= " AND keywords RLIKE " . quote_smart($keywordsName);
 				elseif ($keywordsSelector == "does not contain")
-					$query .= " AND keywords NOT RLIKE \"$keywordsName\"";
+					$query .= " AND keywords NOT RLIKE " . quote_smart($keywordsName);
 				elseif ($keywordsSelector == "is equal to")
-					$query .= " AND keywords = \"$keywordsName\"";
+					$query .= " AND keywords = " . quote_smart($keywordsName);
 				elseif ($keywordsSelector == "is not equal to")
-					$query .= " AND keywords != \"$keywordsName\"";
+					$query .= " AND keywords != " . quote_smart($keywordsName);
 				elseif ($keywordsSelector == "starts with")
-					$query .= " AND keywords RLIKE \"^$keywordsName\"";
+					$query .= " AND keywords RLIKE " . quote_smart("^" . $keywordsName);
 				elseif ($keywordsSelector == "ends with")
-					$query .= " AND keywords RLIKE \"$keywordsName$\"";
+					$query .= " AND keywords RLIKE " . quote_smart($keywordsName . "$");
 			}
 
 		// ... if the user has specified an abstract, add the value of '$abstractName' as an AND clause:
@@ -3955,17 +3957,17 @@
 			{
 				$abstractSelector = $_POST['abstractSelector'];
 				if ($abstractSelector == "contains")
-					$query .= " AND abstract RLIKE \"$abstractName\"";
+					$query .= " AND abstract RLIKE " . quote_smart($abstractName);
 				elseif ($abstractSelector == "does not contain")
-					$query .= " AND abstract NOT RLIKE \"$abstractName\"";
+					$query .= " AND abstract NOT RLIKE " . quote_smart($abstractName);
 				elseif ($abstractSelector == "is equal to")
-					$query .= " AND abstract = \"$abstractName\"";
+					$query .= " AND abstract = " . quote_smart($abstractName);
 				elseif ($abstractSelector == "is not equal to")
-					$query .= " AND abstract != \"$abstractName\"";
+					$query .= " AND abstract != " . quote_smart($abstractName);
 				elseif ($abstractSelector == "starts with")
-					$query .= " AND abstract RLIKE \"^$abstractName\"";
+					$query .= " AND abstract RLIKE " . quote_smart("^" . $abstractName);
 				elseif ($abstractSelector == "ends with")
-					$query .= " AND abstract RLIKE \"$abstractName$\"";
+					$query .= " AND abstract RLIKE " . quote_smart($abstractName . "$");
 			}
 
 
@@ -3978,17 +3980,17 @@
 				{
 					$areaSelector = $_POST['areaSelector'];
 					if ($areaSelector == "contains")
-						$query .= " AND area RLIKE \"$areaName\"";
+						$query .= " AND area RLIKE " . quote_smart($areaName);
 					elseif ($areaSelector == "does not contain")
-						$query .= " AND area NOT RLIKE \"$areaName\"";
+						$query .= " AND area NOT RLIKE " . quote_smart($areaName);
 					elseif ($areaSelector == "is equal to")
-						$query .= " AND area = \"$areaName\"";
+						$query .= " AND area = " . quote_smart($areaName);
 					elseif ($areaSelector == "is not equal to")
-						$query .= " AND area != \"$areaName\"";
+						$query .= " AND area != " . quote_smart($areaName);
 					elseif ($areaSelector == "starts with")
-						$query .= " AND area RLIKE \"^$areaName\"";
+						$query .= " AND area RLIKE " . quote_smart("^" . $areaName);
 					elseif ($areaSelector == "ends with")
-						$query .= " AND area RLIKE \"$areaName$\"";
+						$query .= " AND area RLIKE " . quote_smart($areaName . "$");
 				}
 		}
 		elseif ($areaRadio == "0")
@@ -3998,17 +4000,17 @@
 				{
 					$areaSelector2 = $_POST['areaSelector2'];
 					if ($areaSelector2 == "contains")
-						$query .= " AND area RLIKE \"$areaName2\"";
+						$query .= " AND area RLIKE " . quote_smart($areaName2);
 					elseif ($areaSelector2 == "does not contain")
-						$query .= " AND area NOT RLIKE \"$areaName2\"";
+						$query .= " AND area NOT RLIKE " . quote_smart($areaName2);
 					elseif ($areaSelector2 == "is equal to")
-						$query .= " AND area = \"$areaName2\"";
+						$query .= " AND area = " . quote_smart($areaName2);
 					elseif ($areaSelector2 == "is not equal to")
-						$query .= " AND area != \"$areaName2\"";
+						$query .= " AND area != " . quote_smart($areaName2);
 					elseif ($areaSelector2 == "starts with")
-						$query .= " AND area RLIKE \"^$areaName2\"";
+						$query .= " AND area RLIKE " . quote_smart("^" . $areaName2);
 					elseif ($areaSelector2 == "ends with")
-						$query .= " AND area RLIKE \"$areaName2$\"";
+						$query .= " AND area RLIKE " . quote_smart($areaName2 . "$");
 				}
 		}
 
@@ -4018,17 +4020,17 @@
 			{
 				$expeditionSelector = $_POST['expeditionSelector'];
 				if ($expeditionSelector == "contains")
-					$query .= " AND expedition RLIKE \"$expeditionName\"";
+					$query .= " AND expedition RLIKE " . quote_smart($expeditionName);
 				elseif ($expeditionSelector == "does not contain")
-					$query .= " AND expedition NOT RLIKE \"$expeditionName\"";
+					$query .= " AND expedition NOT RLIKE " . quote_smart($expeditionName);
 				elseif ($expeditionSelector == "is equal to")
-					$query .= " AND expedition = \"$expeditionName\"";
+					$query .= " AND expedition = " . quote_smart($expeditionName);
 				elseif ($expeditionSelector == "is not equal to")
-					$query .= " AND expedition != \"$expeditionName\"";
+					$query .= " AND expedition != " . quote_smart($expeditionName);
 				elseif ($expeditionSelector == "starts with")
-					$query .= " AND expedition RLIKE \"^$expeditionName\"";
+					$query .= " AND expedition RLIKE " . quote_smart("^" . $expeditionName);
 				elseif ($expeditionSelector == "ends with")
-					$query .= " AND expedition RLIKE \"$expeditionName$\"";
+					$query .= " AND expedition RLIKE " . quote_smart($expeditionName . "$");
 			}
 
 		// ... if the user has specified a conference, add the value of '$conferenceName' as an AND clause:
@@ -4037,17 +4039,17 @@
 			{
 				$conferenceSelector = $_POST['conferenceSelector'];
 				if ($conferenceSelector == "contains")
-					$query .= " AND conference RLIKE \"$conferenceName\"";
+					$query .= " AND conference RLIKE " . quote_smart($conferenceName);
 				elseif ($conferenceSelector == "does not contain")
-					$query .= " AND conference NOT RLIKE \"$conferenceName\"";
+					$query .= " AND conference NOT RLIKE " . quote_smart($conferenceName);
 				elseif ($conferenceSelector == "is equal to")
-					$query .= " AND conference = \"$conferenceName\"";
+					$query .= " AND conference = " . quote_smart($conferenceName);
 				elseif ($conferenceSelector == "is not equal to")
-					$query .= " AND conference != \"$conferenceName\"";
+					$query .= " AND conference != " . quote_smart($conferenceName);
 				elseif ($conferenceSelector == "starts with")
-					$query .= " AND conference RLIKE \"^$conferenceName\"";
+					$query .= " AND conference RLIKE " . quote_smart("^" . $conferenceName);
 				elseif ($conferenceSelector == "ends with")
-					$query .= " AND conference RLIKE \"$conferenceName$\"";
+					$query .= " AND conference RLIKE " . quote_smart($conferenceName . "$");
 			}
 
 		// ... if the user has specified a DOI, add the value of '$doiName' as an AND clause:
@@ -4056,17 +4058,17 @@
 			{
 				$doiSelector = $_POST['doiSelector'];
 				if ($doiSelector == "contains")
-					$query .= " AND doi RLIKE \"$doiName\"";
+					$query .= " AND doi RLIKE " . quote_smart($doiName);
 				elseif ($doiSelector == "does not contain")
-					$query .= " AND doi NOT RLIKE \"$doiName\"";
+					$query .= " AND doi NOT RLIKE " . quote_smart($doiName);
 				elseif ($doiSelector == "is equal to")
-					$query .= " AND doi = \"$doiName\"";
+					$query .= " AND doi = " . quote_smart($doiName);
 				elseif ($doiSelector == "is not equal to")
-					$query .= " AND doi != \"$doiName\"";
+					$query .= " AND doi != " . quote_smart($doiName);
 				elseif ($doiSelector == "starts with")
-					$query .= " AND doi RLIKE \"^$doiName\"";
+					$query .= " AND doi RLIKE " . quote_smart("^" . $doiName);
 				elseif ($doiSelector == "ends with")
-					$query .= " AND doi RLIKE \"$doiName$\"";
+					$query .= " AND doi RLIKE " . quote_smart($doiName . "$");
 			}
 
 		// ... if the user has specified an URL, add the value of '$urlName' as an AND clause:
@@ -4075,17 +4077,17 @@
 			{
 				$urlSelector = $_POST['urlSelector'];
 				if ($urlSelector == "contains")
-					$query .= " AND url RLIKE \"$urlName\"";
+					$query .= " AND url RLIKE " . quote_smart($urlName);
 				elseif ($urlSelector == "does not contain")
-					$query .= " AND url NOT RLIKE \"$urlName\"";
+					$query .= " AND url NOT RLIKE " . quote_smart($urlName);
 				elseif ($urlSelector == "is equal to")
-					$query .= " AND url = \"$urlName\"";
+					$query .= " AND url = " . quote_smart($urlName);
 				elseif ($urlSelector == "is not equal to")
-					$query .= " AND url != \"$urlName\"";
+					$query .= " AND url != " . quote_smart($urlName);
 				elseif ($urlSelector == "starts with")
-					$query .= " AND url RLIKE \"^$urlName\"";
+					$query .= " AND url RLIKE " . quote_smart("^" . $urlName);
 				elseif ($urlSelector == "ends with")
-					$query .= " AND url RLIKE \"$urlName$\"";
+					$query .= " AND url RLIKE " . quote_smart($urlName . "$");
 			}
 
 
@@ -4098,17 +4100,17 @@
 				{
 					$locationSelector = $_POST['locationSelector'];
 					if ($locationSelector == "contains")
-						$query .= " AND location RLIKE \"$locationName\"";
+						$query .= " AND location RLIKE " . quote_smart($locationName);
 					elseif ($locationSelector == "does not contain")
-						$query .= " AND location NOT RLIKE \"$locationName\"";
+						$query .= " AND location NOT RLIKE " . quote_smart($locationName);
 					elseif ($locationSelector == "is equal to")
-						$query .= " AND location = \"$locationName\"";
+						$query .= " AND location = " . quote_smart($locationName);
 					elseif ($locationSelector == "is not equal to")
-						$query .= " AND location != \"$locationName\"";
+						$query .= " AND location != " . quote_smart($locationName);
 					elseif ($locationSelector == "starts with")
-						$query .= " AND location RLIKE \"^$locationName\"";
+						$query .= " AND location RLIKE " . quote_smart("^" . $locationName);
 					elseif ($locationSelector == "ends with")
-						$query .= " AND location RLIKE \"$locationName$\"";
+						$query .= " AND location RLIKE " . quote_smart($locationName . "$");
 				}
 		}
 		elseif ($locationRadio == "0")
@@ -4118,17 +4120,17 @@
 				{
 					$locationSelector2 = $_POST['locationSelector2'];
 					if ($locationSelector2 == "contains")
-						$query .= " AND location RLIKE \"$locationName2\"";
+						$query .= " AND location RLIKE " . quote_smart($locationName2);
 					elseif ($locationSelector2 == "does not contain")
-						$query .= " AND location NOT RLIKE \"$locationName2\"";
+						$query .= " AND location NOT RLIKE " . quote_smart($locationName2);
 					elseif ($locationSelector2 == "is equal to")
-						$query .= " AND location = \"$locationName2\"";
+						$query .= " AND location = " . quote_smart($locationName2);
 					elseif ($locationSelector2 == "is not equal to")
-						$query .= " AND location != \"$locationName2\"";
+						$query .= " AND location != " . quote_smart($locationName2);
 					elseif ($locationSelector2 == "starts with")
-						$query .= " AND location RLIKE \"^$locationName2\"";
+						$query .= " AND location RLIKE " . quote_smart("^" . $locationName2);
 					elseif ($locationSelector2 == "ends with")
-						$query .= " AND location RLIKE \"$locationName2$\"";
+						$query .= " AND location RLIKE " . quote_smart($locationName2 . "$");
 				}
 		}
 
@@ -4138,17 +4140,17 @@
 			{
 				$callNumberSelector = $_POST['callNumberSelector'];
 				if ($callNumberSelector == "contains")
-					$query .= " AND call_number RLIKE \"$callNumberName\"";
+					$query .= " AND call_number RLIKE " . quote_smart($callNumberName);
 				elseif ($callNumberSelector == "does not contain")
-					$query .= " AND call_number NOT RLIKE \"$callNumberName\"";
+					$query .= " AND call_number NOT RLIKE " . quote_smart($callNumberName);
 				elseif ($callNumberSelector == "is equal to")
-					$query .= " AND call_number = \"$callNumberName\"";
+					$query .= " AND call_number = " . quote_smart($callNumberName);
 				elseif ($callNumberSelector == "is not equal to")
-					$query .= " AND call_number != \"$callNumberName\"";
+					$query .= " AND call_number != " . quote_smart($callNumberName);
 				elseif ($callNumberSelector == "starts with")
-					$query .= " AND call_number RLIKE \"^$callNumberName\"";
+					$query .= " AND call_number RLIKE " . quote_smart("^" . $callNumberName);
 				elseif ($callNumberSelector == "ends with")
-					$query .= " AND call_number RLIKE \"$callNumberName$\"";
+					$query .= " AND call_number RLIKE " . quote_smart($callNumberName . "$");
 			}
 
 		// ... if the user has specified a file, add the value of '$fileName' as an AND clause:
@@ -4159,17 +4161,17 @@
 				{
 					$fileSelector = $_POST['fileSelector'];
 					if ($fileSelector == "contains")
-						$query .= " AND file RLIKE \"$fileName\"";
+						$query .= " AND file RLIKE " . quote_smart($fileName);
 					elseif ($fileSelector == "does not contain")
-						$query .= " AND file NOT RLIKE \"$fileName\"";
+						$query .= " AND file NOT RLIKE " . quote_smart($fileName);
 					elseif ($fileSelector == "is equal to")
-						$query .= " AND file = \"$fileName\"";
+						$query .= " AND file = " . quote_smart($fileName);
 					elseif ($fileSelector == "is not equal to")
-						$query .= " AND file != \"$fileName\"";
+						$query .= " AND file != " . quote_smart($fileName);
 					elseif ($fileSelector == "starts with")
-						$query .= " AND file RLIKE \"^$fileName\"";
+						$query .= " AND file RLIKE " . quote_smart("^" . $fileName);
 					elseif ($fileSelector == "ends with")
-						$query .= " AND file RLIKE \"$fileName$\"";
+						$query .= " AND file RLIKE " . quote_smart($fileName . "$");
 				}
 		}
 
@@ -4182,9 +4184,9 @@
 				{
 					$copySelector = $_POST['copySelector'];
 					if ($copySelector == "is equal to")
-						$query .= " AND copy = \"$copyName\"";
+						$query .= " AND copy = " . quote_smart($copyName);
 					elseif ($copySelector == "is not equal to")
-						$query .= " AND copy != \"$copyName\"";
+						$query .= " AND copy != " . quote_smart($copyName);
 				}
 		}
 
@@ -4194,17 +4196,17 @@
 			{
 				$notesSelector = $_POST['notesSelector'];
 				if ($notesSelector == "contains")
-					$query .= " AND notes RLIKE \"$notesName\"";
+					$query .= " AND notes RLIKE " . quote_smart($notesName);
 				elseif ($notesSelector == "does not contain")
-					$query .= " AND notes NOT RLIKE \"$notesName\"";
+					$query .= " AND notes NOT RLIKE " . quote_smart($notesName);
 				elseif ($notesSelector == "is equal to")
-					$query .= " AND notes = \"$notesName\"";
+					$query .= " AND notes = " . quote_smart($notesName);
 				elseif ($notesSelector == "is not equal to")
-					$query .= " AND notes != \"$notesName\"";
+					$query .= " AND notes != " . quote_smart($notesName);
 				elseif ($notesSelector == "starts with")
-					$query .= " AND notes RLIKE \"^$notesName\"";
+					$query .= " AND notes RLIKE " . quote_smart("^" . $notesName);
 				elseif ($notesSelector == "ends with")
-					$query .= " AND notes RLIKE \"$notesName$\"";
+					$query .= " AND notes RLIKE " . quote_smart($notesName . "$");
 			}
 
 		if (isset($loginEmail)) // if a user is logged in and...
@@ -4218,17 +4220,17 @@
 					{
 						$userKeysSelector = $_POST['userKeysSelector'];
 						if ($userKeysSelector == "contains")
-							$query .= " AND user_keys RLIKE \"$userKeysName\"";
+							$query .= " AND user_keys RLIKE " . quote_smart($userKeysName);
 						elseif ($userKeysSelector == "does not contain")
-							$query .= " AND user_keys NOT RLIKE \"$userKeysName\"";
+							$query .= " AND user_keys NOT RLIKE " . quote_smart($userKeysName);
 						elseif ($userKeysSelector == "is equal to")
-							$query .= " AND user_keys = \"$userKeysName\"";
+							$query .= " AND user_keys = " . quote_smart($userKeysName);
 						elseif ($userKeysSelector == "is not equal to")
-							$query .= " AND user_keys != \"$userKeysName\"";
+							$query .= " AND user_keys != " . quote_smart($userKeysName);
 						elseif ($userKeysSelector == "starts with")
-							$query .= " AND user_keys RLIKE \"^$userKeysName\"";
+							$query .= " AND user_keys RLIKE " . quote_smart("^" . $userKeysName);
 						elseif ($userKeysSelector == "ends with")
-							$query .= " AND user_keys RLIKE \"$userKeysName$\"";
+							$query .= " AND user_keys RLIKE " . quote_smart($userKeysName . "$");
 					}
 			}
 			elseif ($userKeysRadio == "0")
@@ -4238,17 +4240,17 @@
 					{
 						$userKeysSelector2 = $_POST['userKeysSelector2'];
 						if ($userKeysSelector2 == "contains")
-							$query .= " AND user_keys RLIKE \"$userKeysName2\"";
+							$query .= " AND user_keys RLIKE " . quote_smart($userKeysName2);
 						elseif ($userKeysSelector2 == "does not contain")
-							$query .= " AND user_keys NOT RLIKE \"$userKeysName2\"";
+							$query .= " AND user_keys NOT RLIKE " . quote_smart($userKeysName2);
 						elseif ($userKeysSelector2 == "is equal to")
-							$query .= " AND user_keys = \"$userKeysName2\"";
+							$query .= " AND user_keys = " . quote_smart($userKeysName2);
 						elseif ($userKeysSelector2 == "is not equal to")
-							$query .= " AND user_keys != \"$userKeysName2\"";
+							$query .= " AND user_keys != " . quote_smart($userKeysName2);
 						elseif ($userKeysSelector2 == "starts with")
-							$query .= " AND user_keys RLIKE \"^$userKeysName2\"";
+							$query .= " AND user_keys RLIKE " . quote_smart("^" . $userKeysName2);
 						elseif ($userKeysSelector2 == "ends with")
-							$query .= " AND user_keys RLIKE \"$userKeysName2$\"";
+							$query .= " AND user_keys RLIKE " . quote_smart($userKeysName2 . "$");
 					}
 			}
 
@@ -4258,17 +4260,17 @@
 				{
 					$userNotesSelector = $_POST['userNotesSelector'];
 					if ($userNotesSelector == "contains")
-						$query .= " AND user_notes RLIKE \"$userNotesName\"";
+						$query .= " AND user_notes RLIKE " . quote_smart($userNotesName);
 					elseif ($userNotesSelector == "does not contain")
-						$query .= " AND user_notes NOT RLIKE \"$userNotesName\"";
+						$query .= " AND user_notes NOT RLIKE " . quote_smart($userNotesName);
 					elseif ($userNotesSelector == "is equal to")
-						$query .= " AND user_notes = \"$userNotesName\"";
+						$query .= " AND user_notes = " . quote_smart($userNotesName);
 					elseif ($userNotesSelector == "is not equal to")
-						$query .= " AND user_notes != \"$userNotesName\"";
+						$query .= " AND user_notes != " . quote_smart($userNotesName);
 					elseif ($userNotesSelector == "starts with")
-						$query .= " AND user_notes RLIKE \"^$userNotesName\"";
+						$query .= " AND user_notes RLIKE " . quote_smart("^" . $userNotesName);
 					elseif ($userNotesSelector == "ends with")
-						$query .= " AND user_notes RLIKE \"$userNotesName$\"";
+						$query .= " AND user_notes RLIKE " . quote_smart($userNotesName . "$");
 				}
 
 			// ... if the user has specified a user file, add the value of '$userFileName' as an AND clause:
@@ -4277,17 +4279,17 @@
 				{
 					$userFileSelector = $_POST['userFileSelector'];
 					if ($userFileSelector == "contains")
-						$query .= " AND user_file RLIKE \"$userFileName\"";
+						$query .= " AND user_file RLIKE " . quote_smart($userFileName);
 					elseif ($userFileSelector == "does not contain")
-						$query .= " AND user_file NOT RLIKE \"$userFileName\"";
+						$query .= " AND user_file NOT RLIKE " . quote_smart($userFileName);
 					elseif ($userFileSelector == "is equal to")
-						$query .= " AND user_file = \"$userFileName\"";
+						$query .= " AND user_file = " . quote_smart($userFileName);
 					elseif ($userFileSelector == "is not equal to")
-						$query .= " AND user_file != \"$userFileName\"";
+						$query .= " AND user_file != " . quote_smart($userFileName);
 					elseif ($userFileSelector == "starts with")
-						$query .= " AND user_file RLIKE \"^$userFileName\"";
+						$query .= " AND user_file RLIKE " . quote_smart("^" . $userFileName);
 					elseif ($userFileSelector == "ends with")
-						$query .= " AND user_file RLIKE \"$userFileName$\"";
+						$query .= " AND user_file RLIKE " . quote_smart($userFileName . "$");
 				}
 
 			// ... if the user has specified some user groups, add the value of '$userGroupsName' as an AND clause:
@@ -4299,17 +4301,17 @@
 					{
 						$userGroupsSelector = $_POST['userGroupsSelector'];
 						if ($userGroupsSelector == "contains")
-							$query .= " AND user_groups RLIKE \"$userGroupsName\"";
+							$query .= " AND user_groups RLIKE " . quote_smart($userGroupsName);
 						elseif ($userGroupsSelector == "does not contain")
-							$query .= " AND user_groups NOT RLIKE \"$userGroupsName\"";
+							$query .= " AND user_groups NOT RLIKE " . quote_smart($userGroupsName);
 						elseif ($userGroupsSelector == "is equal to")
-							$query .= " AND user_groups = \"$userGroupsName\"";
+							$query .= " AND user_groups = " . quote_smart($userGroupsName);
 						elseif ($userGroupsSelector == "is not equal to")
-							$query .= " AND user_groups != \"$userGroupsName\"";
+							$query .= " AND user_groups != " . quote_smart($userGroupsName);
 						elseif ($userGroupsSelector == "starts with")
-							$query .= " AND user_groups RLIKE \"^$userGroupsName\"";
+							$query .= " AND user_groups RLIKE " . quote_smart("^" . $userGroupsName);
 						elseif ($userGroupsSelector == "ends with")
-							$query .= " AND user_groups RLIKE \"$userGroupsName$\"";
+							$query .= " AND user_groups RLIKE " . quote_smart($userGroupsName . "$");
 					}
 			}
 			elseif ($userGroupsRadio == "0")
@@ -4319,17 +4321,17 @@
 					{
 						$userGroupsSelector2 = $_POST['userGroupsSelector2'];
 						if ($userGroupsSelector2 == "contains")
-							$query .= " AND user_groups RLIKE \"$userGroupsName2\"";
+							$query .= " AND user_groups RLIKE " . quote_smart($userGroupsName2);
 						elseif ($userGroupsSelector2 == "does not contain")
-							$query .= " AND user_groups NOT RLIKE \"$userGroupsName2\"";
+							$query .= " AND user_groups NOT RLIKE " . quote_smart($userGroupsName2);
 						elseif ($userGroupsSelector2 == "is equal to")
-							$query .= " AND user_groups = \"$userGroupsName2\"";
+							$query .= " AND user_groups = " . quote_smart($userGroupsName2);
 						elseif ($userGroupsSelector2 == "is not equal to")
-							$query .= " AND user_groups != \"$userGroupsName2\"";
+							$query .= " AND user_groups != " . quote_smart($userGroupsName2);
 						elseif ($userGroupsSelector2 == "starts with")
-							$query .= " AND user_groups RLIKE \"^$userGroupsName2\"";
+							$query .= " AND user_groups RLIKE " . quote_smart("^" . $userGroupsName2);
 						elseif ($userGroupsSelector2 == "ends with")
-							$query .= " AND user_groups RLIKE \"$userGroupsName2$\"";
+							$query .= " AND user_groups RLIKE " . quote_smart($userGroupsName2 . "$");
 					}
 			}
 
@@ -4339,17 +4341,17 @@
 				{
 					$citeKeySelector = $_POST['citeKeySelector'];
 					if ($citeKeySelector == "contains")
-						$query .= " AND cite_key RLIKE \"$citeKeyName\"";
+						$query .= " AND cite_key RLIKE " . quote_smart($citeKeyName);
 					elseif ($citeKeySelector == "does not contain")
-						$query .= " AND cite_key NOT RLIKE \"$citeKeyName\"";
+						$query .= " AND cite_key NOT RLIKE " . quote_smart($citeKeyName);
 					elseif ($citeKeySelector == "is equal to")
-						$query .= " AND cite_key = \"$citeKeyName\"";
+						$query .= " AND cite_key = " . quote_smart($citeKeyName);
 					elseif ($citeKeySelector == "is not equal to")
-						$query .= " AND cite_key != \"$citeKeyName\"";
+						$query .= " AND cite_key != " . quote_smart($citeKeyName);
 					elseif ($citeKeySelector == "starts with")
-						$query .= " AND cite_key RLIKE \"^$citeKeyName\"";
+						$query .= " AND cite_key RLIKE " . quote_smart("^" . $citeKeyName);
 					elseif ($citeKeySelector == "ends with")
-						$query .= " AND cite_key RLIKE \"$citeKeyName$\"";
+						$query .= " AND cite_key RLIKE " . quote_smart($citeKeyName . "$");
 				}
 		}
 
@@ -4359,38 +4361,38 @@
 			{
 				$serialSelector = $_POST['serialSelector'];
 				if ($serialSelector == "contains")
-					$query .= " AND serial RLIKE \"$serialNo\"";
+					$query .= " AND serial RLIKE " . quote_smart($serialNo);
 				elseif ($serialSelector == "does not contain")
-					$query .= " AND serial NOT RLIKE \"$serialNo\"";
+					$query .= " AND serial NOT RLIKE " . quote_smart($serialNo);
 				elseif ($serialSelector == "is equal to")
-					$query .= " AND serial = \"$serialNo\"";
+					$query .= " AND serial = " . quote_smart($serialNo);
 				elseif ($serialSelector == "is not equal to")
-					$query .= " AND serial != \"$serialNo\"";
+					$query .= " AND serial != " . quote_smart($serialNo);
 				elseif ($serialSelector == "starts with")
-					$query .= " AND serial RLIKE \"^$serialNo\"";
+					$query .= " AND serial RLIKE " . quote_smart("^" . $serialNo);
 				elseif ($serialSelector == "ends with")
-					$query .= " AND serial RLIKE \"$serialNo$\"";
+					$query .= " AND serial RLIKE " . quote_smart($serialNo . "$");
 				elseif ($serialSelector == "is greater than")
-					$query .= " AND serial > \"$serialNo\"";
+					$query .= " AND serial > " . quote_smart($serialNo);
 				elseif ($serialSelector == "is less than")
-					$query .= " AND serial < \"$serialNo\"";
+					$query .= " AND serial < " . quote_smart($serialNo);
 				elseif ($serialSelector == "is within range")
 					{
 						if (preg_match("/\d+/", $serialNo)) // if '$serialNo' does contain at least one number
 						{
 							// extract first number:
 							$serialNoStart = preg_replace("/^\D*(\d+).*/", "\\1", $serialNo);
-							$query .= " AND serial >= \"$serialNoStart\"";
+							$query .= " AND serial >= " . quote_smart($serialNoStart);
 
 							if (preg_match("/^\D*\d+\D+\d+/", $serialNo)) // if '$serialNo' does contain at least two numbers (which are separated by one or more non-digit characters)
 							{
 								// extract the second number:
 								$serialNoEnd = preg_replace("/^\D*\d+\D+(\d+).*/", "\\1", $serialNo);
-								$query .= " AND serial <= \"$serialNoEnd\"";
+								$query .= " AND serial <= " . quote_smart($serialNoEnd);
 							}
 						}
 						else // fallback if no number is given:
-							$query .= " AND serial RLIKE \"$serialNo\""; // this will never produce any results since serial is always numeric but we keep it here for reasons of consistency
+							$query .= " AND serial RLIKE " . quote_smart($serialNo); // this will never produce any results since serial is always numeric but we keep it here for reasons of consistency
 					}
 				elseif ($serialSelector == "is within list")
 					{
@@ -4398,7 +4400,7 @@
 						$serialNo = preg_replace("/\D+/", "|", $serialNo);
 						// strip "|" from beginning/end of string (if any):
 						$serialNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $serialNo);
-						$query .= " AND serial RLIKE \"^($serialNo)$\"";
+						$query .= " AND serial RLIKE " . quote_smart("^(" . $serialNo . ")$");
 					}
 			}
 
@@ -4411,17 +4413,17 @@
 				{
 					$typeSelector = $_POST['typeSelector'];
 					if ($typeSelector == "contains")
-						$query .= " AND type RLIKE \"$typeName\"";
+						$query .= " AND type RLIKE " . quote_smart($typeName);
 					elseif ($typeSelector == "does not contain")
-						$query .= " AND type NOT RLIKE \"$typeName\"";
+						$query .= " AND type NOT RLIKE " . quote_smart($typeName);
 					elseif ($typeSelector == "is equal to")
-						$query .= " AND type = \"$typeName\"";
+						$query .= " AND type = " . quote_smart($typeName);
 					elseif ($typeSelector == "is not equal to")
-						$query .= " AND type != \"$typeName\"";
+						$query .= " AND type != " . quote_smart($typeName);
 					elseif ($typeSelector == "starts with")
-						$query .= " AND type RLIKE \"^$typeName\"";
+						$query .= " AND type RLIKE " . quote_smart("^" . $typeName);
 					elseif ($typeSelector == "ends with")
-						$query .= " AND type RLIKE \"$typeName$\"";
+						$query .= " AND type RLIKE " . quote_smart($typeName . "$");
 				}
 		}
 		elseif ($typeRadio == "0")
@@ -4431,17 +4433,17 @@
 				{
 					$typeSelector2 = $_POST['typeSelector2'];
 					if ($typeSelector2 == "contains")
-						$query .= " AND type RLIKE \"$typeName2\"";
+						$query .= " AND type RLIKE " . quote_smart($typeName2);
 					elseif ($typeSelector2 == "does not contain")
-						$query .= " AND type NOT RLIKE \"$typeName2\"";
+						$query .= " AND type NOT RLIKE " . quote_smart($typeName2);
 					elseif ($typeSelector2 == "is equal to")
-						$query .= " AND type = \"$typeName2\"";
+						$query .= " AND type = " . quote_smart($typeName2);
 					elseif ($typeSelector2 == "is not equal to")
-						$query .= " AND type != \"$typeName2\"";
+						$query .= " AND type != " . quote_smart($typeName2);
 					elseif ($typeSelector2 == "starts with")
-						$query .= " AND type RLIKE \"^$typeName2\"";
+						$query .= " AND type RLIKE " . quote_smart("^" . $typeName2);
 					elseif ($typeSelector2 == "ends with")
-						$query .= " AND type RLIKE \"$typeName2$\"";
+						$query .= " AND type RLIKE " . quote_smart($typeName2 . "$");
 				}
 		}
 
@@ -4484,38 +4486,38 @@
 			{
 				$createdDateSelector = $_POST['createdDateSelector'];
 				if ($createdDateSelector == "contains")
-					$query .= " AND created_date RLIKE \"$createdDateNo\"";
+					$query .= " AND created_date RLIKE " . quote_smart($createdDateNo);
 				elseif ($createdDateSelector == "does not contain")
-					$query .= " AND created_date NOT RLIKE \"$createdDateNo\"";
+					$query .= " AND created_date NOT RLIKE " . quote_smart($createdDateNo);
 				elseif ($createdDateSelector == "is equal to")
-					$query .= " AND created_date = \"$createdDateNo\"";
+					$query .= " AND created_date = " . quote_smart($createdDateNo);
 				elseif ($createdDateSelector == "is not equal to")
-					$query .= " AND created_date != \"$createdDateNo\"";
+					$query .= " AND created_date != " . quote_smart($createdDateNo);
 				elseif ($createdDateSelector == "starts with")
-					$query .= " AND created_date RLIKE \"^$createdDateNo\"";
+					$query .= " AND created_date RLIKE " . quote_smart("^" . $createdDateNo);
 				elseif ($createdDateSelector == "ends with")
-					$query .= " AND created_date RLIKE \"$createdDateNo$\"";
+					$query .= " AND created_date RLIKE " . quote_smart($createdDateNo . "$");
 				elseif ($createdDateSelector == "is greater than")
-					$query .= " AND created_date > \"$createdDateNo\"";
+					$query .= " AND created_date > " . quote_smart($createdDateNo);
 				elseif ($createdDateSelector == "is less than")
-					$query .= " AND created_date < \"$createdDateNo\"";
+					$query .= " AND created_date < " . quote_smart($createdDateNo);
 				elseif ($createdDateSelector == "is within range")
 					{
 						if (preg_match("/\d{4}/", $createdDateNo)) // if '$createdDateNo' does contain at least one date spec (which, as a minimum, is defined by a four-digit year)
 						{
 							// extract first date spec:
 							$createdDateNoStart = preg_replace("/^[^\d-]*(\d{4}(?:-\d{2})?(?:-\d{2})?).*/", "\\1", $createdDateNo); // extracts e.g. "2005-10-27", "2005-10" or just "2005" (in that order)
-							$query .= " AND created_date >= \"$createdDateNoStart\"";
+							$query .= " AND created_date >= " . quote_smart($createdDateNoStart);
 
 							if (preg_match("/^[^\d-]*\d{4}(?:-\d{2})?(?:-\d{2})?[^\d-]+\d{4}(?:-\d{2})?(?:-\d{2})?/", $createdDateNo)) // if '$createdDateNo' does contain at least two date specs (which are separated by one or more non-digit/non-hyphen characters)
 							{
 								// extract the second date spec:
 								$createdDateNoEnd = preg_replace("/^[^\d-]*\d{4}(?:-\d{2})?(?:-\d{2})?[^\d-]+(\d{4}(?:-\d{2})?(?:-\d{2})?).*/", "\\1", $createdDateNo);
-								$query .= " AND created_date <= \"$createdDateNoEnd\"";
+								$query .= " AND created_date <= " . quote_smart($createdDateNoEnd);
 							}
 						}
 						else // fallback if no recognized date spec is given:
-							$query .= " AND created_date RLIKE \"$createdDateNo\"";
+							$query .= " AND created_date RLIKE " . quote_smart($createdDateNo);
 					}
 				elseif ($createdDateSelector == "is within list")
 					{
@@ -4523,7 +4525,7 @@
 						$createdDateNo = preg_replace("/[^\d-]+/", "|", $createdDateNo);
 						// strip "|" from beginning/end of string (if any):
 						$createdDateNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $createdDateNo);
-						$query .= " AND created_date RLIKE \"^($createdDateNo)$\"";
+						$query .= " AND created_date RLIKE " . quote_smart("^(" . $createdDateNo . ")$");
 					}
 			}
 
@@ -4533,38 +4535,38 @@
 			{
 				$createdTimeSelector = $_POST['createdTimeSelector'];
 				if ($createdTimeSelector == "contains")
-					$query .= " AND created_time RLIKE \"$createdTimeNo\"";
+					$query .= " AND created_time RLIKE " . quote_smart($createdTimeNo);
 				elseif ($createdTimeSelector == "does not contain")
-					$query .= " AND created_time NOT RLIKE \"$createdTimeNo\"";
+					$query .= " AND created_time NOT RLIKE " . quote_smart($createdTimeNo);
 				elseif ($createdTimeSelector == "is equal to")
-					$query .= " AND created_time = \"$createdTimeNo\"";
+					$query .= " AND created_time = " . quote_smart($createdTimeNo);
 				elseif ($createdTimeSelector == "is not equal to")
-					$query .= " AND created_time != \"$createdTimeNo\"";
+					$query .= " AND created_time != " . quote_smart($createdTimeNo);
 				elseif ($createdTimeSelector == "starts with")
-					$query .= " AND created_time RLIKE \"^$createdTimeNo\"";
+					$query .= " AND created_time RLIKE " . quote_smart("^" . $createdTimeNo);
 				elseif ($createdTimeSelector == "ends with")
-					$query .= " AND created_time RLIKE \"$createdTimeNo$\"";
+					$query .= " AND created_time RLIKE " . quote_smart($createdTimeNo . "$");
 				elseif ($createdTimeSelector == "is greater than")
-					$query .= " AND created_time > \"$createdTimeNo\"";
+					$query .= " AND created_time > " . quote_smart($createdTimeNo);
 				elseif ($createdTimeSelector == "is less than")
-					$query .= " AND created_time < \"$createdTimeNo\"";
+					$query .= " AND created_time < " . quote_smart($createdTimeNo);
 				elseif ($createdTimeSelector == "is within range")
 					{
 						if (preg_match("/\d{2}:\d{2}/", $createdTimeNo)) // if '$createdTimeNo' does contain at least one time spec (which, as a minimum, is defined by a HH:MM)
 						{
 							// extract first time spec:
 							$createdTimeNoStart = preg_replace("/^[^\d:]*(\d{2}:\d{2}(?::\d{2})?).*/", "\\1", $createdTimeNo); // extracts e.g. "23:59:59" or just "23:59" (in that order)
-							$query .= " AND created_time >= \"$createdTimeNoStart\"";
+							$query .= " AND created_time >= " . quote_smart($createdTimeNoStart);
 
 							if (preg_match("/^[^\d:]*\d{2}:\d{2}(?::\d{2})?[^\d:]+\d{2}:\d{2}(?::\d{2})?/", $createdTimeNo)) // if '$createdTimeNo' does contain at least two date specs (which are separated by one or more non-digit/non-colon characters)
 							{
 								// extract the second time spec:
 								$createdTimeNoEnd = preg_replace("/^[^\d:]*\d{2}:\d{2}(?::\d{2})?[^\d:]+(\d{2}:\d{2}(?::\d{2})?).*/", "\\1", $createdTimeNo);
-								$query .= " AND created_time <= \"$createdTimeNoEnd\"";
+								$query .= " AND created_time <= " . quote_smart($createdTimeNoEnd);
 							}
 						}
 						else // fallback if no recognized time spec is given:
-							$query .= " AND created_time RLIKE \"$createdTimeNo\"";
+							$query .= " AND created_time RLIKE " . quote_smart($createdTimeNo);
 					}
 				elseif ($createdTimeSelector == "is within list")
 					{
@@ -4572,7 +4574,7 @@
 						$createdTimeNo = preg_replace("/[^\d:]+/", "|", $createdTimeNo);
 						// strip "|" from beginning/end of string (if any):
 						$createdTimeNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $createdTimeNo);
-						$query .= " AND created_time RLIKE \"^($createdTimeNo)$\"";
+						$query .= " AND created_time RLIKE " . quote_smart("^(" . $createdTimeNo . ")$");
 					}
 			}
 
@@ -4585,17 +4587,17 @@
 				{
 					$createdBySelector = $_POST['createdBySelector'];
 					if ($createdBySelector == "contains")
-						$query .= " AND created_by RLIKE \"$createdByName\"";
+						$query .= " AND created_by RLIKE " . quote_smart($createdByName);
 					elseif ($createdBySelector == "does not contain")
-						$query .= " AND created_by NOT RLIKE \"$createdByName\"";
+						$query .= " AND created_by NOT RLIKE " . quote_smart($createdByName);
 					elseif ($createdBySelector == "is equal to")
-						$query .= " AND created_by = \"$createdByName\"";
+						$query .= " AND created_by = " . quote_smart($createdByName);
 					elseif ($createdBySelector == "is not equal to")
-						$query .= " AND created_by != \"$createdByName\"";
+						$query .= " AND created_by != " . quote_smart($createdByName);
 					elseif ($createdBySelector == "starts with")
-						$query .= " AND created_by RLIKE \"^$createdByName\"";
+						$query .= " AND created_by RLIKE " . quote_smart("^" . $createdByName);
 					elseif ($createdBySelector == "ends with")
-						$query .= " AND created_by RLIKE \"$createdByName$\"";
+						$query .= " AND created_by RLIKE " . quote_smart($createdByName . "$");
 				}
 		}
 		elseif ($createdByRadio == "0")
@@ -4605,17 +4607,17 @@
 				{
 					$createdBySelector2 = $_POST['createdBySelector2'];
 					if ($createdBySelector2 == "contains")
-						$query .= " AND created_by RLIKE \"$createdByName2\"";
+						$query .= " AND created_by RLIKE " . quote_smart($createdByName2);
 					elseif ($createdBySelector2 == "does not contain")
-						$query .= " AND created_by NOT RLIKE \"$createdByName2\"";
+						$query .= " AND created_by NOT RLIKE " . quote_smart($createdByName2);
 					elseif ($createdBySelector2 == "is equal to")
-						$query .= " AND created_by = \"$createdByName2\"";
+						$query .= " AND created_by = " . quote_smart($createdByName2);
 					elseif ($createdBySelector2 == "is not equal to")
-						$query .= " AND created_by != \"$createdByName2\"";
+						$query .= " AND created_by != " . quote_smart($createdByName2);
 					elseif ($createdBySelector2 == "starts with")
-						$query .= " AND created_by RLIKE \"^$createdByName2\"";
+						$query .= " AND created_by RLIKE " . quote_smart("^" . $createdByName2);
 					elseif ($createdBySelector2 == "ends with")
-						$query .= " AND created_by RLIKE \"$createdByName2$\"";
+						$query .= " AND created_by RLIKE " . quote_smart($createdByName2 . "$");
 				}
 		}
 
@@ -4625,38 +4627,38 @@
 			{
 				$modifiedDateSelector = $_POST['modifiedDateSelector'];
 				if ($modifiedDateSelector == "contains")
-					$query .= " AND modified_date RLIKE \"$modifiedDateNo\"";
+					$query .= " AND modified_date RLIKE " . quote_smart($modifiedDateNo);
 				elseif ($modifiedDateSelector == "does not contain")
-					$query .= " AND modified_date NOT RLIKE \"$modifiedDateNo\"";
+					$query .= " AND modified_date NOT RLIKE " . quote_smart($modifiedDateNo);
 				elseif ($modifiedDateSelector == "is equal to")
-					$query .= " AND modified_date = \"$modifiedDateNo\"";
+					$query .= " AND modified_date = " . quote_smart($modifiedDateNo);
 				elseif ($modifiedDateSelector == "is not equal to")
-					$query .= " AND modified_date != \"$modifiedDateNo\"";
+					$query .= " AND modified_date != " . quote_smart($modifiedDateNo);
 				elseif ($modifiedDateSelector == "starts with")
-					$query .= " AND modified_date RLIKE \"^$modifiedDateNo\"";
+					$query .= " AND modified_date RLIKE " . quote_smart("^" . $modifiedDateNo);
 				elseif ($modifiedDateSelector == "ends with")
-					$query .= " AND modified_date RLIKE \"$modifiedDateNo$\"";
+					$query .= " AND modified_date RLIKE " . quote_smart($modifiedDateNo . "$");
 				elseif ($modifiedDateSelector == "is greater than")
-					$query .= " AND modified_date > \"$modifiedDateNo\"";
+					$query .= " AND modified_date > " . quote_smart($modifiedDateNo);
 				elseif ($modifiedDateSelector == "is less than")
-					$query .= " AND modified_date < \"$modifiedDateNo\"";
+					$query .= " AND modified_date < " . quote_smart($modifiedDateNo);
 				elseif ($modifiedDateSelector == "is within range")
 					{
 						if (preg_match("/\d{4}/", $modifiedDateNo)) // if '$modifiedDateNo' does contain at least one date spec (which, as a minimum, is defined by a four-digit year)
 						{
 							// extract first date spec:
 							$modifiedDateNoStart = preg_replace("/^[^\d-]*(\d{4}(?:-\d{2})?(?:-\d{2})?).*/", "\\1", $modifiedDateNo); // extracts e.g. "2005-10-27", "2005-10" or just "2005" (in that order)
-							$query .= " AND modified_date >= \"$modifiedDateNoStart\"";
+							$query .= " AND modified_date >= " . quote_smart($modifiedDateNoStart);
 
 							if (preg_match("/^[^\d-]*\d{4}(?:-\d{2})?(?:-\d{2})?[^\d-]+\d{4}(?:-\d{2})?(?:-\d{2})?/", $modifiedDateNo)) // if '$modifiedDateNo' does contain at least two date specs (which are separated by one or more non-digit/non-hyphen characters)
 							{
 								// extract the second date spec:
 								$modifiedDateNoEnd = preg_replace("/^[^\d-]*\d{4}(?:-\d{2})?(?:-\d{2})?[^\d-]+(\d{4}(?:-\d{2})?(?:-\d{2})?).*/", "\\1", $modifiedDateNo);
-								$query .= " AND modified_date <= \"$modifiedDateNoEnd\"";
+								$query .= " AND modified_date <= " . quote_smart($modifiedDateNoEnd);
 							}
 						}
 						else // fallback if no recognized date spec is given:
-							$query .= " AND modified_date RLIKE \"$modifiedDateNo\"";
+							$query .= " AND modified_date RLIKE " . quote_smart($modifiedDateNo);
 					}
 				elseif ($modifiedDateSelector == "is within list")
 					{
@@ -4664,7 +4666,7 @@
 						$modifiedDateNo = preg_replace("/[^\d-]+/", "|", $modifiedDateNo);
 						// strip "|" from beginning/end of string (if any):
 						$modifiedDateNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $modifiedDateNo);
-						$query .= " AND modified_date RLIKE \"^($modifiedDateNo)$\"";
+						$query .= " AND modified_date RLIKE " . quote_smart("^(" . $modifiedDateNo . ")$");
 					}
 			}
 
@@ -4674,38 +4676,38 @@
 			{
 				$modifiedTimeSelector = $_POST['modifiedTimeSelector'];
 				if ($modifiedTimeSelector == "contains")
-					$query .= " AND modified_time RLIKE \"$modifiedTimeNo\"";
+					$query .= " AND modified_time RLIKE " . quote_smart($modifiedTimeNo);
 				elseif ($modifiedTimeSelector == "does not contain")
-					$query .= " AND modified_time NOT RLIKE \"$modifiedTimeNo\"";
+					$query .= " AND modified_time NOT RLIKE " . quote_smart($modifiedTimeNo);
 				elseif ($modifiedTimeSelector == "is equal to")
-					$query .= " AND modified_time = \"$modifiedTimeNo\"";
+					$query .= " AND modified_time = " . quote_smart($modifiedTimeNo);
 				elseif ($modifiedTimeSelector == "is not equal to")
-					$query .= " AND modified_time != \"$modifiedTimeNo\"";
+					$query .= " AND modified_time != " . quote_smart($modifiedTimeNo);
 				elseif ($modifiedTimeSelector == "starts with")
-					$query .= " AND modified_time RLIKE \"^$modifiedTimeNo\"";
+					$query .= " AND modified_time RLIKE " . quote_smart("^" . $modifiedTimeNo);
 				elseif ($modifiedTimeSelector == "ends with")
-					$query .= " AND modified_time RLIKE \"$modifiedTimeNo$\"";
+					$query .= " AND modified_time RLIKE " . quote_smart($modifiedTimeNo . "$");
 				elseif ($modifiedTimeSelector == "is greater than")
-					$query .= " AND modified_time > \"$modifiedTimeNo\"";
+					$query .= " AND modified_time > " . quote_smart($modifiedTimeNo);
 				elseif ($modifiedTimeSelector == "is less than")
-					$query .= " AND modified_time < \"$modifiedTimeNo\"";
+					$query .= " AND modified_time < " . quote_smart($modifiedTimeNo);
 				elseif ($modifiedTimeSelector == "is within range")
 					{
 						if (preg_match("/\d{2}:\d{2}/", $modifiedTimeNo)) // if '$modifiedTimeNo' does contain at least one time spec (which, as a minimum, is defined by a HH:MM)
 						{
 							// extract first time spec:
 							$modifiedTimeNoStart = preg_replace("/^[^\d:]*(\d{2}:\d{2}(?::\d{2})?).*/", "\\1", $modifiedTimeNo); // extracts e.g. "23:59:59" or just "23:59" (in that order)
-							$query .= " AND modified_time >= \"$modifiedTimeNoStart\"";
+							$query .= " AND modified_time >= " . quote_smart($modifiedTimeNoStart);
 
 							if (preg_match("/^[^\d:]*\d{2}:\d{2}(?::\d{2})?[^\d:]+\d{2}:\d{2}(?::\d{2})?/", $modifiedTimeNo)) // if '$modifiedTimeNo' does contain at least two date specs (which are separated by one or more non-digit/non-colon characters)
 							{
 								// extract the second time spec:
 								$modifiedTimeNoEnd = preg_replace("/^[^\d:]*\d{2}:\d{2}(?::\d{2})?[^\d:]+(\d{2}:\d{2}(?::\d{2})?).*/", "\\1", $modifiedTimeNo);
-								$query .= " AND modified_time <= \"$modifiedTimeNoEnd\"";
+								$query .= " AND modified_time <= " . quote_smart($modifiedTimeNoEnd);
 							}
 						}
 						else // fallback if no recognized time spec is given:
-							$query .= " AND modified_time RLIKE \"$modifiedTimeNo\"";
+							$query .= " AND modified_time RLIKE " . quote_smart($modifiedTimeNo);
 					}
 				elseif ($modifiedTimeSelector == "is within list")
 					{
@@ -4713,7 +4715,7 @@
 						$modifiedTimeNo = preg_replace("/[^\d:]+/", "|", $modifiedTimeNo);
 						// strip "|" from beginning/end of string (if any):
 						$modifiedTimeNo = preg_replace("/^\|?(.+?)\|?$/", "\\1", $modifiedTimeNo);
-						$query .= " AND modified_time RLIKE \"^($modifiedTimeNo)$\"";
+						$query .= " AND modified_time RLIKE " . quote_smart("^(" . $modifiedTimeNo . ")$");
 					}
 			}
 
@@ -4726,17 +4728,17 @@
 				{
 					$modifiedBySelector = $_POST['modifiedBySelector'];
 					if ($modifiedBySelector == "contains")
-						$query .= " AND modified_by RLIKE \"$modifiedByName\"";
+						$query .= " AND modified_by RLIKE " . quote_smart($modifiedByName);
 					elseif ($modifiedBySelector == "does not contain")
-						$query .= " AND modified_by NOT RLIKE \"$modifiedByName\"";
+						$query .= " AND modified_by NOT RLIKE " . quote_smart($modifiedByName);
 					elseif ($modifiedBySelector == "is equal to")
-						$query .= " AND modified_by = \"$modifiedByName\"";
+						$query .= " AND modified_by = " . quote_smart($modifiedByName);
 					elseif ($modifiedBySelector == "is not equal to")
-						$query .= " AND modified_by != \"$modifiedByName\"";
+						$query .= " AND modified_by != " . quote_smart($modifiedByName);
 					elseif ($modifiedBySelector == "starts with")
-						$query .= " AND modified_by RLIKE \"^$modifiedByName\"";
+						$query .= " AND modified_by RLIKE " . quote_smart("^" . $modifiedByName);
 					elseif ($modifiedBySelector == "ends with")
-						$query .= " AND modified_by RLIKE \"$modifiedByName$\"";
+						$query .= " AND modified_by RLIKE " . quote_smart($modifiedByName . "$");
 				}
 		}
 		elseif ($modifiedByRadio == "0")
@@ -4746,17 +4748,17 @@
 				{
 					$modifiedBySelector2 = $_POST['modifiedBySelector2'];
 					if ($modifiedBySelector2 == "contains")
-						$query .= " AND modified_by RLIKE \"$modifiedByName2\"";
+						$query .= " AND modified_by RLIKE " . quote_smart($modifiedByName2);
 					elseif ($modifiedBySelector2 == "does not contain")
-						$query .= " AND modified_by NOT RLIKE \"$modifiedByName2\"";
+						$query .= " AND modified_by NOT RLIKE " . quote_smart($modifiedByName2);
 					elseif ($modifiedBySelector2 == "is equal to")
-						$query .= " AND modified_by = \"$modifiedByName2\"";
+						$query .= " AND modified_by = " . quote_smart($modifiedByName2);
 					elseif ($modifiedBySelector2 == "is not equal to")
-						$query .= " AND modified_by != \"$modifiedByName2\"";
+						$query .= " AND modified_by != " . quote_smart($modifiedByName2);
 					elseif ($modifiedBySelector2 == "starts with")
-						$query .= " AND modified_by RLIKE \"^$modifiedByName2\"";
+						$query .= " AND modified_by RLIKE " . quote_smart("^" . $modifiedByName2);
 					elseif ($modifiedBySelector2 == "ends with")
-						$query .= " AND modified_by RLIKE \"$modifiedByName2$\"";
+						$query .= " AND modified_by RLIKE " . quote_smart($modifiedByName2 . "$");
 				}
 		}
 
@@ -4875,9 +4877,9 @@
 					$query .= ", file, url, doi, isbn, type"; // add 'file', 'url', 'doi', 'isbn' & 'type columns
 
 				if (isset($_SESSION['loginEmail'])) // if a user is logged in...
-					$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID . " WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\"";
+					$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . quote_smart($userID) . " WHERE serial RLIKE " . quote_smart("^(" . $recordSerialsString . ")$");
 				else // NO user logged in
-					$query .= " FROM $tableRefs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\"";
+					$query .= " FROM $tableRefs WHERE serial RLIKE " . quote_smart("^(" . $recordSerialsString . ")$");
 
 				if ($citeOrder == "year") // sort records first by year (descending), then in the usual way:
 					$query .= " ORDER BY year DESC, first_author, author_count, author, title";
@@ -4910,9 +4912,9 @@
 					$query .= ", file, url, doi, isbn, type"; // add 'file', 'url', 'doi', 'isbn' & 'type columns
 
 				if (isset($_SESSION['loginEmail'])) // if a user is logged in...
-					$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID . " WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY $orderBy";
+					$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . quote_smart($userID) . " WHERE serial RLIKE " . quote_smart("^(" . $recordSerialsString . ")$") . " ORDER BY $orderBy";
 				else // NO user logged in
-					$query .= " FROM $tableRefs WHERE serial RLIKE \"^(" . $recordSerialsString . ")$\" ORDER BY $orderBy";
+					$query .= " FROM $tableRefs WHERE serial RLIKE " . quote_smart("^(" . $recordSerialsString . ")$") . " ORDER BY $orderBy";
 			}
 
 		elseif (isset($_SESSION['loginEmail']) AND ereg("^(Remember|Add|Remove)$", $displayType)) // if a user (who's logged in) clicked the 'Remember', 'Add' or 'Remove' button...
@@ -4995,18 +4997,18 @@
 		$query .= " FROM $tableRefs"; // add FROM clause
 
 		if (isset($_SESSION['loginEmail'])) // if a user is logged in...
-			$query .= " LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID; // add LEFT JOIN part to FROM clause
+			$query .= " LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . quote_smart($userID); // add LEFT JOIN part to FROM clause
 
 		$query .= " WHERE"; // add WHERE clause:
 
 		if (!empty($recordSerialsArray) OR (empty($recordSerialsArray) AND empty($escapedRecordKeysArray)) OR (empty($recordSerialsArray) AND !isset($_SESSION['loginEmail']))) // the second condition ensures a valid SQL query if no serial numbers or cite keys were found, same for the third condition if a user isn't logged in and '$sourceText' did only contain cite keys
-			$query .= " serial RLIKE \"^(" . $recordSerialsString . ")$\""; // add any serial numbers to WHERE clause
+			$query .= " serial RLIKE " . quote_smart("^(" . $recordSerialsString . ")$"); // add any serial numbers to WHERE clause
 
 		if (!empty($recordSerialsArray) AND (!empty($escapedRecordKeysArray) AND isset($_SESSION['loginEmail'])))
 			$query .= " OR";
 
 		if (!empty($escapedRecordKeysArray) AND isset($_SESSION['loginEmail']))
-			$query .= " cite_key RLIKE \"^(" . $escapedRecordKeysString . ")$\""; // add any cite keys to WHERE clause
+			$query .= " cite_key RLIKE " . quote_smart\"^(" . $escapedRecordKeysString . ")$\""; // add any cite keys to WHERE clause
 
 		// add ORDER BY clause:
 		if ($citeOrder == "year") // sort records first by year (descending), then in the usual way:
@@ -5066,7 +5068,7 @@
 		$query .= " FROM $tableRefs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
 
 		if ($quickSearchName != "") // if the user typed a search string into the text entry field...
-			$query .= " AND $quickSearchSelector RLIKE \"$quickSearchName\""; // ...add search field name & value to the sql query
+			$query .= " AND $quickSearchSelector RLIKE " . quote_smart($quickSearchName); // ...add search field name & value to the sql query
 
 		$query .= " ORDER BY author, year DESC, publication"; // add the default ORDER BY clause
 
@@ -5105,7 +5107,7 @@
 
 		$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID; // add FROM clause
 
-		$query .= " WHERE user_groups RLIKE \"(^|.*;) *$groupSearchSelector *(;.*|$)\""; // add WHERE clause
+		$query .= " WHERE user_groups RLIKE " . quote_smart("(^|.*;) *" . $groupSearchSelector. " *(;.*|$)"); // add WHERE clause
 
 		$query .= $queryOrderBy; // add ORDER BY clause
 
@@ -5259,15 +5261,15 @@
 
 				if ($findUserKeys == "1") // if the user wants to search the 'user_keys' field...
 					if ($userKeysName != "") // if the user typed a search string into the text entry field...
-						$query .= " AND user_keys RLIKE \"$userKeysName\""; // ...add 'user_keys' field name & value to the sql query
+						$query .= " AND user_keys RLIKE " . quote_smart($userKeysName); // ...add 'user_keys' field name & value to the sql query
 
 				if ($findUserNotes == "1") // if the user wants to search the 'user_notes' field...
 					if ($userNotesName != "") // if the user typed a search string into the text entry field...
-						$query .= " AND user_notes RLIKE \"$userNotesName\""; // ...add 'user_notes' field name & value to the sql query
+						$query .= " AND user_notes RLIKE " . quote_smart($userNotesName); // ...add 'user_notes' field name & value to the sql query
 
 				if ($findUserFile == "1") // if the user wants to search the 'user_file' field...
 					if ($userFileName != "") // if the user typed a search string into the text entry field...
-						$query .= " AND user_file RLIKE \"$userFileName\""; // ...add 'user_file' field name & value to the sql query
+						$query .= " AND user_file RLIKE " . quote_smart($userFileName); // ...add 'user_file' field name & value to the sql query
 			}
 
 
@@ -5301,7 +5303,7 @@
 
 			$queryRefTableLeftJoinPart = " LEFT JOIN $refTableName ON serial = ref_id"; // ...add the appropriate 'LEFT JOIN...' part to the 'FROM' clause
 			if (eregi("^(user_keys|user_groups)$", $browseFieldSelector))
-				$queryRefTableLeftJoinPart .= " AND ref_user_id = " . $userID; // add the user's user_id as additional condition to this 'LEFT JOIN...' part
+				$queryRefTableLeftJoinPart .= " AND ref_user_id = " . quote_smart($userID); // add the user's user_id as additional condition to this 'LEFT JOIN...' part
 		}
 		else
 		{
@@ -5320,7 +5322,7 @@
 
 		$query .= $queryRefTableLeftJoinPart; // add additional 'LEFT JOIN...' part (if required)
 
-		$query .= " WHERE location RLIKE \"$loginEmail\""; // add (initial) WHERE clause
+		$query .= " WHERE location RLIKE " . quote_smart($loginEmail); // add (initial) WHERE clause
 
 		$query .= " GROUP BY $browseFieldName"; // add the GROUP BY clause
 

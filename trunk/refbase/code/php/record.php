@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./record.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   01-Aug-06, 21:11
+	// Modified:   22-Sep-06, 18:30
 
 	// Form that offers to add
 	// records or edit/delete
@@ -174,10 +174,10 @@
 		// (note: we also add the 'serial' column at the end in order to provide standardized input [compare processing of form 'sql_search.php' in 'search.php'])
 		if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
 			$query = "SELECT author, title, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, approved, notes, file, serial, location, type, call_number, created_date, created_time, created_by, modified_date, modified_time, modified_by, orig_record, contribution_id, online_publication, online_citation, marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key, related, serial, url, doi"
-					. " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id =" . $loginUserID . " WHERE serial RLIKE \"^(" . $serialNo . ")$\""; // since we'll only fetch one record, the ORDER BY clause is obsolete here
+					. " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id =" . quote_smart($loginUserID) . " WHERE serial RLIKE " . quote_smart("^(" . $serialNo . ")$"); // since we'll only fetch one record, the ORDER BY clause is obsolete here
 		else // if NO user logged in, don't display any user specific fields:
 			$query = "SELECT author, title, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, approved, notes, file, serial, location, type, call_number, created_date, created_time, created_by, modified_date, modified_time, modified_by, orig_record, contribution_id, online_publication, online_citation, serial, url, doi"
-					. " FROM $tableRefs WHERE serial RLIKE \"^(" . $serialNo . ")$\""; // since we'll only fetch one record, the ORDER BY clause is obsolete here
+					. " FROM $tableRefs WHERE serial RLIKE " . quote_smart("^(" . $serialNo . ")$"); // since we'll only fetch one record, the ORDER BY clause is obsolete here
 	}
 
 	// --------------------------------------------------------------------
