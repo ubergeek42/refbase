@@ -2461,7 +2461,7 @@ EOF;
 		if (!empty($serialsArray)) // if the 'related' field did contain any record serials
 		{
 			$serialsString = implode("|", $serialsArray);
-			$serialsString = "serial RLIKE " . qoute_smart("^(" . $serialsString . ")$");
+			$serialsString = "serial RLIKE " . quote_smart("^(" . $serialsString . ")$");
 			$queriesArray[] = $serialsString; // append the serial query to the end of the queries array
 		}
 

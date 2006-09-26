@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_details.php
 	// Created:    16-Apr-02, 10:55
-	// Modified:   26-Sep-06, 00:40
+	// Modified:   26-Sep-06, 16:50
 
 	// This script shows the user a user <form>. It can be used both for INSERTing a new user and for UPDATE-ing an existing user.
 	// If the user is logged in, then it is an UPDATE; otherwise, an INSERT. The script also shows error messages above widgets that
@@ -244,8 +244,8 @@
 ?>
 
 <form method="POST" action="user_validation.php">
-<input type="hidden" name="userID" value="<?php echo $userID ?>">
-<input type="hidden" name="email" value="<?php echo $formVars["email"] ?>">
+<input type="hidden" name="userID" value="<?php echo encodeHTML($userID) ?>">
+<input type="hidden" name="email" value="<?php echo encodeHTML($formVars["email"]) ?>">
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds a form with user details">
 <tr>
 	<td align="left" width="169">Title:</td>
@@ -263,98 +263,98 @@
 	<td align="left"><b>First Name:</b></td>
 	<td><?php echo fieldError("firstName", $errors); ?>
 
-		<input type="text" name="firstName" value="<?php echo $formVars["firstName"]; ?>" size="50">
+		<input type="text" name="firstName" value="<?php echo encodeHTML($formVars["firstName"]); ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left"><b>Last Name:</b></td>
 	<td><?php echo fieldError("lastName", $errors); ?>
 
-		<input type="text" name="lastName" value="<?php echo $formVars["lastName"]; ?>" size="50">
+		<input type="text" name="lastName" value="<?php echo encodeHTML($formVars["lastName"]); ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">Institution:</td>
 	<td><?php echo fieldError("institution", $errors); ?>
 
-		<input type="text" name="institution" value="<?php echo $formVars["institution"]; ?>" size="50">
+		<input type="text" name="institution" value="<?php echo encodeHTML($formVars["institution"]); ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left"><b>Institutional Abbreviation:</b></td>
 	<td><?php echo fieldError("abbrevInstitution", $errors); ?>
 
-		<input type="text" name="abbrevInstitution" value="<?php echo $formVars["abbrevInstitution"]; ?>" size="12">
+		<input type="text" name="abbrevInstitution" value="<?php echo encodeHTML($formVars["abbrevInstitution"]); ?>" size="12">
 	</td>
 </tr>
 <tr>
 	<td align="left">Corporate Institution:</td>
 	<td><?php echo fieldError("corporateInstitution", $errors); ?>
 
-		<input type="text" name="corporateInstitution" value="<?php echo $formVars["corporateInstitution"]; ?>" size="50">
+		<input type="text" name="corporateInstitution" value="<?php echo encodeHTML($formVars["corporateInstitution"]); ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">Work Address:</td>
 	<td><?php echo fieldError("address1", $errors); ?>
 
-		<input type="text" name="address1" value="<?php echo $formVars["address1"]; ?>" size="50">
+		<input type="text" name="address1" value="<?php echo encodeHTML($formVars["address1"]); ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left"></td>
 	<td><?php echo fieldError("address2", $errors); ?>
 
-		<input type="text" name="address2" value="<?php echo $formVars["address2"]; ?>" size="50">
+		<input type="text" name="address2" value="<?php echo encodeHTML($formVars["address2"]); ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left"></td>
 	<td><?php echo fieldError("address3", $errors); ?>
 
-		<input type="text" name="address3" value="<?php echo $formVars["address3"]; ?>" size="50">
+		<input type="text" name="address3" value="<?php echo encodeHTML($formVars["address3"]); ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">Zip Code:</td>
 	<td><?php echo fieldError("zipCode", $errors); ?>
 
-		<input type="text" name="zipCode" value="<?php echo $formVars["zipCode"]; ?>" size="12">
+		<input type="text" name="zipCode" value="<?php echo encodeHTML($formVars["zipCode"]); ?>" size="12">
 	</td>
 </tr>
 <tr>
 	<td align="left">City:</td>
 	<td><?php echo fieldError("city", $errors); ?>
 
-		<input type="text" name="city" value="<?php echo $formVars["city"]; ?>" size="50">
+		<input type="text" name="city" value="<?php echo encodeHTML($formVars["city"]); ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">State:</td>
 	<td><?php echo fieldError("state", $errors); ?>
 
-		<input type="text" name="state" value="<?php echo $formVars["state"]; ?>" size="50">
+		<input type="text" name="state" value="<?php echo encodeHTML($formVars["state"]); ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">Country:</td>
 	<td><?php echo fieldError("country", $errors); ?>
 
-		<input type="text" name="country" value="<?php echo $formVars["country"]; ?>" size="50">
+		<input type="text" name="country" value="<?php echo encodeHTML($formVars["country"]); ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">Phone:</td>
 	<td><?php echo fieldError("phone", $errors); ?>
 
-		<input type="text" name="phone" value="<?php echo $formVars["phone"]; ?>" size="50">
+		<input type="text" name="phone" value="<?php echo encodeHTML($formVars["phone"]); ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">URL:</td>
 	<td><?php echo fieldError("url", $errors); ?>
 
-		<input type="text" name="url" value="<?php echo $formVars["url"]; ?>" size="50">
+		<input type="text" name="url" value="<?php echo encodeHTML($formVars["url"]); ?>" size="50">
 	</td>
 </tr>
 <?php
@@ -377,21 +377,21 @@
 	<td align="left">Keywords:</td>
 	<td><?php echo fieldError("keywords", $errors); ?>
 
-		<input type="text" name="keywords" value="<?php echo $formVars["keywords"]; ?>" size="50">
+		<input type="text" name="keywords" value="<?php echo encodeHTML($formVars["keywords"]); ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">Notes:</td>
 	<td><?php echo fieldError("notes", $errors); ?>
 
-		<input type="text" name="notes" value="<?php echo $formVars["notes"]; ?>" size="50">
+		<input type="text" name="notes" value="<?php echo encodeHTML($formVars["notes"]); ?>" size="50">
 	</td>
 </tr>
 <tr>
 	<td align="left">Marked:</td>
 	<td><?php echo fieldError("marked", $errors); ?>
 
-		<input type="radio" name="marked" value="yes"<?php echo $markedRadioYesChecked; ?>>&nbsp;&nbsp;yes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="marked" value="no"<?php echo $markedRadioNoChecked; ?>>&nbsp;&nbsp;no
+		<input type="radio" name="marked" value="yes"<?php echo encodeHTML($markedRadioYesChecked); ?>>&nbsp;&nbsp;yes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="marked" value="no"<?php echo $markedRadioNoChecked; ?>>&nbsp;&nbsp;no
 	</td>
 </tr>
 <?php
@@ -405,7 +405,7 @@
 	<td align="left"><b>Email:</b></td>
 	<td><?php echo fieldError("email", $errors); ?>
 
-		<input type="text" name="email" value="<?php echo $formVars["email"]; ?>" size="30">
+		<input type="text" name="email" value="<?php echo encodeHTML($formVars["email"]); ?>" size="30">
 	</td>
 </tr>
 <tr>

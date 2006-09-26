@@ -330,7 +330,7 @@
 		$query .= ", modified_date = " . quote_smart($currentDate)
 				. ", modified_time = " . quote_smart($currentTime);
 
-		$query .= "language = \"en\", " // initially, english will be used as default language (the language setting can be changed by the user in 'user_options.php')
+		$query .= ", language = \"en\", " // initially, english will be used as default language (the language setting can be changed by the user in 'user_options.php')
 				. "last_login = NOW(), " // set 'last_login' field to the current date & time in 'DATETIME' format (which is 'YYYY-MM-DD HH:MM:SS', e.g.: '2003-12-31 23:45:59')
 				. "logins = 1 "; // set the number of logins to 1 (so that any subsequent login attempt can be counted correctly)
 	}
@@ -457,7 +457,8 @@
 
 		// Insert a row for this new user into the 'user_permissions' table:
 		$defaultUserPermissionsString = implode("\", \"", $defaultUserPermissions); // '$defaultUserPermissions' is defined in 'ini.inc.php'
-		$queryArray[] = "INSERT INTO $tableUserPermissions VALUES (NULL, " . quote_smart($userID) . ", " . quote_smart($defaultUserPermissionsString) . ")";
+		// TODO:quote_smart()
+		$queryArray[] = "INSERT INTO $tableUserPermissions VALUES (NULL, " . $userID . ", \"" . $defaultUserPermissionsString . "\")";
 
 
 		// Note: Refbase lets you define default formats/styles/types in 'ini.inc.php' by their name (and not by ID numbers) which means that
@@ -511,7 +512,8 @@
 		// Insert a row for this new user into the 'user_options' table:
 		$defaultUserOptionsString = implode("\", \"", $defaultUserOptions); // '$defaultUserOptions' is defined in 'ini.inc.php'
 		$defaultUserOptionsString = ereg_replace("\"\"", "NULL", $defaultUserOptionsString); // replace empty string with NULL
-		$queryArray[] = "INSERT INTO $tableUserOptions VALUES (NULL, " . quote_smart($userID) . ", " . quote_smart($defaultUserOptionsString) . ")";
+		// TODO: quote_smart()
+		$queryArray[] = "INSERT INTO $tableUserOptions VALUES (NULL, " . $userID . ", \"" . $defaultUserOptionsString . "\")";
 
 
 		// RUN the queries on the database through the connection:
