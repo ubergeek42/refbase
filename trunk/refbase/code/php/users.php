@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 00:25
-	// Modified:   31-Aug-06, 14:28
+	// Modified:   26-Sep-06, 09:15
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -612,7 +612,7 @@
 
 		$query .= " FROM $tableUsers"; // add FROM clause
 
-		$query .= " WHERE user_groups RLIKE \"(^|.*;) *$groupSearchSelector *(;.*|$)\""; // add WHERE clause
+		$query .= " WHERE user_groups RLIKE " . quote_smart("(^|.*;) *" . $groupSearchSelector . " *(;.*|$)"); // add WHERE clause
 
 		$query .= $queryOrderBy; // add ORDER BY clause
 

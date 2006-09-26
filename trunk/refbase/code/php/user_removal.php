@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_removal.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   30-Oct-05, 17:12
+	// Modified:   26-Sep-06, 08:35
 
 	// This script deletes a user from the 'users' and 'auth' tables.
 	// The script can be only called by the admin. If the removal succeeds, it redirects to 'users.php'.
@@ -72,25 +72,25 @@
 	{
 		// DELETE - construct queries to delete the relevant record(s)
 		// ... from the users table:
-		$queryArray[] = "DELETE FROM $tableUsers WHERE user_id = $userID";
+		$queryArray[] = "DELETE FROM $tableUsers WHERE user_id = " . quote_smart($userID);
 
 		// ... from the auth table:
-		$queryArray[] = "DELETE FROM $tableAuth WHERE user_id = $userID";
+		$queryArray[] = "DELETE FROM $tableAuth WHERE user_id = " . quote_smart($userID);
 
 		// ... from the user_permissions table:
-		$queryArray[] = "DELETE FROM $tableUserPermissions WHERE user_id = $userID";
+		$queryArray[] = "DELETE FROM $tableUserPermissions WHERE user_id =" . quote_smart($userID);
 
 		// ... from the user_formats table:
-		$queryArray[] = "DELETE FROM $tableUserFormats WHERE user_id = $userID";
+		$queryArray[] = "DELETE FROM $tableUserFormats WHERE user_id =" . quote_smart($userID);
 
 		// ... from the user_styles table:
-		$queryArray[] = "DELETE FROM $tableUserStyles WHERE user_id = $userID";
+		$queryArray[] = "DELETE FROM $tableUserStyles WHERE user_id =" . quote_smart($userID);
 
 		// ... from the user_types table:
-		$queryArray[] = "DELETE FROM $tableUserTypes WHERE user_id = $userID";
+		$queryArray[] = "DELETE FROM $tableUserTypes WHERE user_id =" . quote_smart($userID);
 
 		// ... from the user_options table:
-		$queryArray[] = "DELETE FROM $tableUserOptions WHERE user_id = $userID";
+		$queryArray[] = "DELETE FROM $tableUserOptions WHERE user_id =" . quote_smart($userID);
 	}
 
 	// --------------------------------------------------------------------

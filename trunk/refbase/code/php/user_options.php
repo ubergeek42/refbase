@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_options.php
 	// Created:    24-Oct-04, 19:31
-	// Modified:   21-Jun-06, 00:28
+	// Modified:   26-Sep-06, 00:45
 
 	// This script provides options which are individual for each user.
 	// 
@@ -143,7 +143,7 @@
 
 
 	// CONSTRUCT SQL QUERY:
-	$query = "SELECT first_name, last_name, email, language FROM $tableUsers WHERE user_id = " . $userID;
+	$query = "SELECT first_name, last_name, email, language FROM $tableUsers WHERE user_id = " . quote_smart($userID);
 
 	// (3a) RUN the query on the database through the connection:
 	$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
