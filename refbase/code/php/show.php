@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   26-Sep-06, 00:15
+	// Modified:   26-Sep-06, 17:40
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -556,7 +556,7 @@
 			$query .= connectConditionals();
 
 			if ($recordConditionalSelector == "is equal to")
-				$query .= " serial = " . quote_smart($serial);
+				$query .= " serial = \"" . $serial . "\"";
 
 			elseif ($recordConditionalSelector == "is within list")
 			{
@@ -565,12 +565,10 @@
 				// strip "|" from beginning/end of string (if any):
 				$serial = preg_replace("/^\|?(.+?)\|?$/", "\\1", $serial);
 
-				// TODO: quote_smart()
 				$query .= " serial RLIKE \"^(" . $serial . ")$\"";
 			}
 
 			else // $recordConditionalSelector == "contains"
-				// TODO: quote_smart()
 				$query .= " serial RLIKE \"" . $serial . "\"";
 		}
 
@@ -625,9 +623,9 @@
 			$query .= connectConditionals();
 
 			if (($searchOperatorDate == "=") AND ($searchOperatorTime == "="))
-				$query .= " " . $queryDateField . " = " . quote_smart($date) . " AND " . $queryTimeField . " = " . quote_smart($time);
+				$query .= " " . $queryDateField . " = \"" . $date . "\" AND " . $queryTimeField . " = \"" . $time . "\"";
 			else
-				$query .= " ((" . $queryDateField . " = " . quote_smart($date) . " AND " . $queryTimeField . " " . $searchOperatorTime . " " . quote_smart($time) . ") OR " . $queryDateField . " " . $searchOperatorDate . " " . quote_smart($date) . ")";
+				$query .= " ((" . $queryDateField . " = \"" . $date . "\" AND " . $queryTimeField . " " . $searchOperatorTime . " \"" . $time . "\") OR " . $queryDateField . " " . $searchOperatorDate . " \"" . $date . "\")";
 		}
 
 		elseif (!empty($date)) // if only the 'date' parameter is present (and not the 'time' parameter):
@@ -646,9 +644,9 @@
 			$query .= connectConditionals();
 
 			if ($when == "edited")
-				$query .= " modified_date " . $searchOperator . " " . quote_smart($date);
+				$query .= " modified_date " . $searchOperator . " \"" . $date . "\"";
 			else
-				$query .= " created_date " . $searchOperator . " " . quote_smart($date);
+				$query .= " created_date " . $searchOperator . " \"" . $date . "\"";
 		}
 
 		elseif (!empty($time)) // if only the 'time' parameter is present (and not the 'date' parameter):
@@ -667,23 +665,23 @@
 			$query .= connectConditionals();
 
 			if ($when == "edited")
-				$query .= " modified_time " . $searchOperator . " " . quote_smart($time);
+				$query .= " modified_time " . $searchOperator . " \"" . $time . "\"";
 			else
-				$query .= " created_time " . $searchOperator . " " . quote_smart($time);
+				$query .= " created_time " . $searchOperator . " \"" . $time . "\"";
 		}
 
 		if (!empty($year)) // if the 'year' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " year RLIKE " . quote_smart($year);
+			$query .= " year RLIKE \"" . $year . "\"";
 		}
 
 		if (!empty($author)) // if the 'author' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " author RLIKE " . quote_smart($author);
+			$query .= " author RLIKE \"" . $author . "\"";
 		}
 
 		if (!empty($without)) // if the 'without' parameter is present:
@@ -698,70 +696,70 @@
 		{
 			$query .= connectConditionals();
 
-			$query .= " title RLIKE " . quote_smart($title);
+			$query .= " title RLIKE \"" . $title . "\"";
 		}
 
 		if (!empty($publication)) // if the 'publication' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " publication RLIKE " . quote_smart($publication);
+			$query .= " publication RLIKE \"" . $publication . "\"";
 		}
 
 		if (!empty($abbrevJournal)) // if the 'abbrev_journal' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " abbrev_journal RLIKE " . quote_smart($abbrevJournal);
+			$query .= " abbrev_journal RLIKE \"" . $abbrevJournal . "\"";
 		}
 
 		if (!empty($keywords)) // if the 'keywords' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " keywords RLIKE " . quote_smart($keywords);
+			$query .= " keywords RLIKE \"" . $keywords . "\"";
 		}
 
 		if (!empty($abstract)) // if the 'abstract' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " abstract RLIKE " . quote_smart($abstract);
+			$query .= " abstract RLIKE \"" . $abstract . "\"";
 		}
 
 		if (!empty($area)) // if the 'area' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " area RLIKE " . quote_smart($area);
+			$query .= " area RLIKE \"" . $area . "\"";
 		}
 
 		if (!empty($notes)) // if the 'notes' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " notes RLIKE " . quote_smart($notes);
+			$query .= " notes RLIKE \"" . $notes . "\"";
 		}
 
 		if (!empty($location)) // if the 'location' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " location RLIKE " . quote_smart($location);
+			$query .= " location RLIKE \"" . $location . "\"";
 		}
 
 		if (!empty($type)) // if the 'type' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " type RLIKE " . quote_smart($type);
+			$query .= " type RLIKE \"" . $type . "\"";
 		}
 
 		if (!empty($contributionID)) // if the 'contribution_id' parameter is present:
 		{
 			$query .= connectConditionals();
 
-			$query .= " contribution_id RLIKE " . quote_smart($contributionID);
+			$query .= " contribution_id RLIKE \"" . $contributionID . "\"";
 		}
 
 		if (!empty($thesis)) // if the 'thesis' parameter is present:
@@ -773,21 +771,21 @@
 			elseif ($thesis == "no")
 				$query .= " thesis IS NULL";
 			else
-				$query .= " thesis RLIKE " . quote_smart($thesis);
+				$query .= " thesis RLIKE \"" . $thesis . "\"";
 		}
 
 		if (!empty($selected) AND !empty($userID)) // if the 'selected' parameter is present (in order to search for user specific fields (like 'selected'), the 'userID' parameter must be given as well!):
 		{
 			$query .= connectConditionals();
 
-			$query .= " selected RLIKE " . quote_smart($selected); // we use 'selected RLIKE "..."' instead of 'selected = "..."' to allow command line utilities to query for '-s=.+' which will display records with 'selected=yes' AND with 'selected=no'
+			$query .= " selected RLIKE \"" . $selected . "\""; // we use 'selected RLIKE "..."' instead of 'selected = "..."' to allow command line utilities to query for '-s=.+' which will display records with 'selected=yes' AND with 'selected=no'
 		}
 
 		if (!empty($marked) AND !empty($userID)) // if the 'ismarked' parameter is present (in order to search for user specific fields (like 'marked'), the 'userID' parameter must be given as well!):
 		{
 			$query .= connectConditionals();
 
-			$query .= " marked RLIKE " . quote_smart($marked); // regarding the use of RLIKE, see note for 'selected'
+			$query .= " marked RLIKE \"" . $marked . "\""; // regarding the use of RLIKE, see note for 'selected'
 		}
 
 		if (!empty($citeKey) AND !empty($userID)) // if the 'cite_key' parameter is present (in order to search for user specific fields (like 'cite_key'), the 'userID' parameter must be given as well!):
@@ -795,7 +793,7 @@
 			$query .= connectConditionals();
 
 			if ($recordConditionalSelector == "is equal to")
-				$query .= " cite_key = " . quote_smart($citeKey);
+				$query .= " cite_key = \"" . $citeKey . "\"";
 
 			elseif ($recordConditionalSelector == "is within list")
 			{
@@ -805,12 +803,11 @@
 				// strip "|" from beginning/end of string (if any):
 				$citeKey = preg_replace("/^\|?(.+?)\|?$/", "\\1", $citeKey);
 
-				// TODO: quote_smart()
 				$query .= " cite_key RLIKE \"^(" . $citeKey . ")$\"";
 			}
 
 			else // $recordConditionalSelector == "contains"
-				$query .= " cite_key RLIKE " . quote_smart($citeKey);
+				$query .= " cite_key RLIKE \"" . $citeKey . "\"";
 		}
 
 		if (!empty($callNumber)) // if the 'call_number' parameter is present:
@@ -821,7 +818,7 @@
 			$callNumberPrefix = getCallNumberPrefix(); // function 'getCallNumberPrefix()' is defined in 'include.inc.php'
 
 			if ($recordConditionalSelector == "is equal to")
-				$query .= " call_number RLIKE " . quote_smart("(^|.*;) *" . $callNumberPrefix . " @ " . $callNumber . " *(;.*|$)");
+				$query .= " call_number RLIKE \"(^|.*;) *" . $callNumberPrefix . " @ " . $callNumber . " *(;.*|$)\"";
 
 			elseif ($recordConditionalSelector == "is within list")
 			{
@@ -831,11 +828,11 @@
 				// strip "|" from beginning/end of string (if any):
 				$callNumber = preg_replace("/^\|?(.+?)\|?$/", "\\1", $callNumber);
 
-				$query .= " call_number RLIKE " . quote_smart("(^|.*;) *" . $callNumberPrefix . " @ (" . $callNumber . ") *(;.*|$)");
+				$query .= " call_number RLIKE \"(^|.*;) *" . $callNumberPrefix . " @ (" . $callNumber . ") *(;.*|$)\"";
 			}
 
 			else // $recordConditionalSelector == "contains"
-				$query .= " call_number RLIKE " . quote_smart($callNumberPrefix . " @ [^@;]*" . $callNumber . "[^@;]*");
+				$query .= " call_number RLIKE \"" . $callNumberPrefix . " @ [^@;]*" . $callNumber . "[^@;]*\"";
 		}
 
 		if (!empty($where)) // if the 'where' parameter is present:
