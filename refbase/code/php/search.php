@@ -387,8 +387,8 @@
 
 	// --------------------------------------------------------------------
 
-	if (isset($_POST["loginEmail"]))
-		$loginEmail = $_POST["loginEmail"]; // extract the email address of the currently logged in user
+	if (isset($_REQUEST["loginEmail"]))
+		$loginEmail = $_REQUEST["loginEmail"]; // extract the email address of the currently logged in user
 
 	if (isset($_SESSION['loginEmail'])) // if a user is logged in...
 		$userID = getUserID($loginEmail); // ...get the user's 'user_id' using his/her 'loginEmail' (function 'getUserID()' is defined in 'include.inc.php')
@@ -1849,49 +1849,49 @@
 		$query = "SELECT"; // (Note: we care about the wrong "SELECT, author" etc. syntax later on...)
 
 		// ... if the user has checked the checkbox next to 'Author', we'll add that column to the SELECT query:
-		if (isset($_POST['showAuthor']))
+		if (isset($_REQUEST['showAuthor']))
 		{
-			$showAuthor = $_POST['showAuthor'];
+			$showAuthor = $_REQUEST['showAuthor'];
 			if ($showAuthor == "1")
 				$query .= ", author"; // add 'author' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Title', we'll add that column to the SELECT query:
-		if (isset($_POST['showTitle']))
+		if (isset($_REQUEST['showTitle']))
 		{
-			$showTitle = $_POST['showTitle'];
+			$showTitle = $_REQUEST['showTitle'];
 			if ($showTitle == "1")
 				$query .= ", title"; // add 'title' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Year', we'll add that column to the SELECT query:
-		if (isset($_POST['showYear']))
+		if (isset($_REQUEST['showYear']))
 		{
-			$showYear = $_POST['showYear'];
+			$showYear = $_REQUEST['showYear'];
 			if ($showYear == "1")
 				$query .= ", year"; // add 'year' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Publication', we'll add that column to the SELECT query:
-		if (isset($_POST['showPublication']))
+		if (isset($_REQUEST['showPublication']))
 		{
-			$showPublication = $_POST['showPublication'];
+			$showPublication = $_REQUEST['showPublication'];
 			if ($showPublication == "1")
 				$query .= ", publication"; // add 'publication' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Volume', we'll add that column to the SELECT query:
-		if (isset($_POST['showVolume']))
+		if (isset($_REQUEST['showVolume']))
 		{
-			$showVolume = $_POST['showVolume'];
+			$showVolume = $_REQUEST['showVolume'];
 			if ($showVolume == "1")
 				$query .= ", volume"; // add 'volume' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Pages', we'll add that column to the SELECT query:
-		if (isset($_POST['showPages']))
+		if (isset($_REQUEST['showPages']))
 		{
-			$showPages = $_POST['showPages'];
+			$showPages = $_REQUEST['showPages'];
 			if ($showPages == "1")
 				$query .= ", pages"; // add 'pages' column
 		}
@@ -1918,10 +1918,10 @@
 		// ---------------------------------------
 
 		// ... if the user has specified an author, add the value of '$authorName' as an AND clause:
-		$authorName = $_POST['authorName'];
+		$authorName = $_REQUEST['authorName'];
 		if ($authorName != "")
 			{
-				$authorSelector = $_POST['authorSelector'];
+				$authorSelector = $_REQUEST['authorSelector'];
 				if ($authorSelector == "contains")
 					$query .= " AND author RLIKE " . quote_smart($authorName);
 				elseif ($authorSelector == "does not contain")
@@ -1937,10 +1937,10 @@
 			}
 
 		// ... if the user has specified a title, add the value of '$titleName' as an AND clause:
-		$titleName = $_POST['titleName'];
+		$titleName = $_REQUEST['titleName'];
 		if ($titleName != "")
 			{
-				$titleSelector = $_POST['titleSelector'];
+				$titleSelector = $_REQUEST['titleSelector'];
 				if ($titleSelector == "contains")
 					$query .= " AND title RLIKE " . quote_smart($titleName);
 				elseif ($titleSelector == "does not contain")
@@ -1956,10 +1956,10 @@
 			}
 
 		// ... if the user has specified a year, add the value of '$yearNo' as an AND clause:
-		$yearNo = $_POST['yearNo'];
+		$yearNo = $_REQUEST['yearNo'];
 		if ($yearNo != "")
 			{
-				$yearSelector = $_POST['yearSelector'];
+				$yearSelector = $_REQUEST['yearSelector'];
 				if ($yearSelector == "contains")
 					$query .= " AND year RLIKE " . quote_smart($yearNo);
 				elseif ($yearSelector == "does not contain")
@@ -2005,13 +2005,13 @@
 			}
 
 		// ... if the user has specified a publication, add the value of '$publicationName' as an AND clause:
-		$publicationRadio = $_POST['publicationRadio'];
+		$publicationRadio = $_REQUEST['publicationRadio'];
 		if ($publicationRadio == "1")
 		{
-			$publicationName = $_POST['publicationName'];
+			$publicationName = $_REQUEST['publicationName'];
 			if ($publicationName != "All" && $publicationName != "")
 				{
-					$publicationSelector = $_POST['publicationSelector'];
+					$publicationSelector = $_REQUEST['publicationSelector'];
 					if ($publicationSelector == "contains")
 						$query .= " AND publication RLIKE " . quote_smart($publicationName);
 					elseif ($publicationSelector == "does not contain")
@@ -2028,10 +2028,10 @@
 		}
 		elseif ($publicationRadio == "0")
 		{
-			$publicationName2 = $_POST['publicationName2'];
+			$publicationName2 = $_REQUEST['publicationName2'];
 			if ($publicationName2 != "")
 				{
-					$publicationSelector2 = $_POST['publicationSelector2'];
+					$publicationSelector2 = $_REQUEST['publicationSelector2'];
 					if ($publicationSelector2 == "contains")
 						$query .= " AND publication RLIKE " . quote_smart($publicationName2);
 					elseif ($publicationSelector2 == "does not contain")
@@ -2048,10 +2048,10 @@
 		}
 
 		// ... if the user has specified a volume, add the value of '$volumeNo' as an AND clause:
-		$volumeNo = $_POST['volumeNo'];
+		$volumeNo = $_REQUEST['volumeNo'];
 		if ($volumeNo != "")
 			{
-				$volumeSelector = $_POST['volumeSelector'];
+				$volumeSelector = $_REQUEST['volumeSelector'];
 				if ($volumeSelector == "contains")
 					$query .= " AND volume RLIKE " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "does not contain")
@@ -2097,10 +2097,10 @@
 			}
 
 		// ... if the user has specified some pages, add the value of '$pagesNo' as an AND clause:
-		$pagesNo = $_POST['pagesNo'];
+		$pagesNo = $_REQUEST['pagesNo'];
 		if ($pagesNo != "")
 			{
-				$pagesSelector = $_POST['pagesSelector'];
+				$pagesSelector = $_REQUEST['pagesSelector'];
 				if ($pagesSelector == "contains")
 					$query .= " AND pages RLIKE " . quote_smart($pagesNo);
 				elseif ($pagesSelector == "does not contain")
@@ -2119,33 +2119,33 @@
 		// Construct the ORDER BY clause:
 		// TODO?: quote_smart (haven't yey tested)
 		// A) extract first level sort option:
-		$sortSelector1 = $_POST['sortSelector1'];
+		$sortSelector1 = $_REQUEST['sortSelector1'];
 		// when field name = 'pages' then sort by 'first_page' instead:
 		$sortSelector1 = str_replace("pages", "first_page", $sortSelector1);
 
-		$sortRadio1 = $_POST['sortRadio1'];
+		$sortRadio1 = $_REQUEST['sortRadio1'];
 		if ($sortRadio1 == "0") // sort ascending
 			$query .= " ORDER BY $sortSelector1";
 		else // sort descending
 			$query .= " ORDER BY $sortSelector1 DESC";
 
 		// B) extract second level sort option:
-		$sortSelector2 = $_POST['sortSelector2'];
+		$sortSelector2 = $_REQUEST['sortSelector2'];
 		// when field name = 'pages' then sort by 'first_page' instead:
 		$sortSelector2 = str_replace("pages", "first_page", $sortSelector2);
 
-		$sortRadio2 = $_POST['sortRadio2'];
+		$sortRadio2 = $_REQUEST['sortRadio2'];
 		if ($sortRadio2 == "0") // sort ascending
 			$query .= ", $sortSelector2";
 		else // sort descending
 			$query .= ", $sortSelector2 DESC";
 
 		// C) extract third level sort option:
-		$sortSelector3 = $_POST['sortSelector3'];
+		$sortSelector3 = $_REQUEST['sortSelector3'];
 		// when field name = 'pages' then sort by 'first_page' instead:
 		$sortSelector3 = str_replace("pages", "first_page", $sortSelector3);
 
-		$sortRadio3 = $_POST['sortRadio3'];
+		$sortRadio3 = $_REQUEST['sortRadio3'];
 		if ($sortRadio3 == "0") // sort ascending
 			$query .= ", $sortSelector3";
 		else // sort descending
@@ -2166,97 +2166,97 @@
 		$query = "SELECT"; // (Note: we care about the wrong "SELECT, author" etc. syntax later on...)
 
 		// ... if the user has checked the checkbox next to 'Author', we'll add that column to the SELECT query:
-		if (isset($_POST['showAuthor']))
+		if (isset($_REQUEST['showAuthor']))
 		{
-			$showAuthor = $_POST['showAuthor'];
+			$showAuthor = $_REQUEST['showAuthor'];
 			if ($showAuthor == "1")
 				$query .= ", author"; // add 'author' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Title', we'll add that column to the SELECT query:
-		if (isset($_POST['showTitle']))
+		if (isset($_REQUEST['showTitle']))
 		{
-			$showTitle = $_POST['showTitle'];
+			$showTitle = $_REQUEST['showTitle'];
 			if ($showTitle == "1")
 				$query .= ", title"; // add 'title' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Year', we'll add that column to the SELECT query:
-		if (isset($_POST['showYear']))
+		if (isset($_REQUEST['showYear']))
 		{
-			$showYear = $_POST['showYear'];
+			$showYear = $_REQUEST['showYear'];
 			if ($showYear == "1")
 				$query .= ", year"; // add 'year' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Editor', we'll add that column to the SELECT query:
-		if (isset($_POST['showEditor']))
+		if (isset($_REQUEST['showEditor']))
 		{
-			$showEditor = $_POST['showEditor'];
+			$showEditor = $_REQUEST['showEditor'];
 			if ($showEditor == "1")
 				$query .= ", editor"; // add 'editor' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Series', we'll add that column to the SELECT query:
-		if (isset($_POST['showSeriesTitle']))
+		if (isset($_REQUEST['showSeriesTitle']))
 		{
-			$showSeriesTitle = $_POST['showSeriesTitle'];
+			$showSeriesTitle = $_REQUEST['showSeriesTitle'];
 			if ($showSeriesTitle == "1")
 				$query .= ", series_title"; // add 'series_title' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Volume', we'll add that column to the SELECT query:
-		if (isset($_POST['showVolume']))
+		if (isset($_REQUEST['showVolume']))
 		{
-			$showVolume = $_POST['showVolume'];
+			$showVolume = $_REQUEST['showVolume'];
 			if ($showVolume == "1")
 				$query .= ", series_volume"; // add 'series_volume' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Pages', we'll add that column to the SELECT query:
-		if (isset($_POST['showPages']))
+		if (isset($_REQUEST['showPages']))
 		{
-			$showPages = $_POST['showPages'];
+			$showPages = $_REQUEST['showPages'];
 			if ($showPages == "1")
 				$query .= ", pages"; // add 'pages' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Publisher', we'll add that column to the SELECT query:
-		if (isset($_POST['showPublisher']))
+		if (isset($_REQUEST['showPublisher']))
 		{
-			$showPublisher = $_POST['showPublisher'];
+			$showPublisher = $_REQUEST['showPublisher'];
 			if ($showPublisher == "1")
 				$query .= ", publisher"; // add 'publisher' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Place', we'll add that column to the SELECT query:
-		if (isset($_POST['showPlace']))
+		if (isset($_REQUEST['showPlace']))
 		{
-			$showPlace = $_POST['showPlace'];
+			$showPlace = $_REQUEST['showPlace'];
 			if ($showPlace == "1")
 				$query .= ", place"; // add 'place' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Signature', we'll add that column to the SELECT query:
-		if (isset($_POST['showCallNumber']))
+		if (isset($_REQUEST['showCallNumber']))
 		{
-			$showCallNumber = $_POST['showCallNumber'];
+			$showCallNumber = $_REQUEST['showCallNumber'];
 			if ($showCallNumber == "1")
 				$query .= ", call_number"; // add 'call_number' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Keywords', we'll add that column to the SELECT query:
-		if (isset($_POST['showKeywords']))
+		if (isset($_REQUEST['showKeywords']))
 		{
-			$showKeywords = $_POST['showKeywords'];
+			$showKeywords = $_REQUEST['showKeywords'];
 			if ($showKeywords == "1")
 				$query .= ", keywords"; // add 'keywords' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Notes', we'll add that column to the SELECT query:
-		if (isset($_POST['showNotes']))
+		if (isset($_REQUEST['showNotes']))
 		{
-			$showNotes = $_POST['showNotes'];
+			$showNotes = $_REQUEST['showNotes'];
 			if ($showNotes == "1")
 				$query .= ", notes"; // add 'notes' column
 		}
@@ -2285,10 +2285,10 @@
 		// ---------------------------------------
 
 		// ... if the user has specified an author, add the value of '$authorName' as an AND clause:
-		$authorName = $_POST['authorName'];
+		$authorName = $_REQUEST['authorName'];
 		if ($authorName != "")
 			{
-				$authorSelector = $_POST['authorSelector'];
+				$authorSelector = $_REQUEST['authorSelector'];
 				if ($authorSelector == "contains")
 					$query .= " AND author RLIKE " . quote_smart($authorName);
 				elseif ($authorSelector == "does not contain")
@@ -2304,10 +2304,10 @@
 			}
 
 		// ... if the user has specified a title, add the value of '$titleName' as an AND clause:
-		$titleName = $_POST['titleName'];
+		$titleName = $_REQUEST['titleName'];
 		if ($titleName != "")
 			{
-				$titleSelector = $_POST['titleSelector'];
+				$titleSelector = $_REQUEST['titleSelector'];
 				if ($titleSelector == "contains")
 					$query .= " AND title RLIKE " . quote_smart($titleName);
 				elseif ($titleSelector == "does not contain")
@@ -2323,10 +2323,10 @@
 			}
 
 		// ... if the user has specified a year, add the value of '$yearNo' as an AND clause:
-		$yearNo = $_POST['yearNo'];
+		$yearNo = $_REQUEST['yearNo'];
 		if ($yearNo != "")
 			{
-				$yearSelector = $_POST['yearSelector'];
+				$yearSelector = $_REQUEST['yearSelector'];
 				if ($yearSelector == "contains")
 					$query .= " AND year RLIKE " . quote_smart($yearNo);
 				elseif ($yearSelector == "does not contain")
@@ -2372,10 +2372,10 @@
 			}
 
 		// ... if the user has specified an editor, add the value of '$editorName' as an AND clause:
-		$editorName = $_POST['editorName'];
+		$editorName = $_REQUEST['editorName'];
 		if ($editorName != "")
 			{
-				$editorSelector = $_POST['editorSelector'];
+				$editorSelector = $_REQUEST['editorSelector'];
 				if ($editorSelector == "contains")
 					$query .= " AND editor RLIKE " . quote_smart($editorName);
 				elseif ($editorSelector == "does not contain")
@@ -2391,13 +2391,13 @@
 			}
 
 		// ... if the user has specified a series title, add the value of '$seriesTitleName' as an AND clause:
-		$seriesTitleRadio = $_POST['seriesTitleRadio'];
+		$seriesTitleRadio = $_REQUEST['seriesTitleRadio'];
 		if ($seriesTitleRadio == "1")
 		{
-			$seriesTitleName = $_POST['seriesTitleName'];
+			$seriesTitleName = $_REQUEST['seriesTitleName'];
 			if ($seriesTitleName != "All" && $seriesTitleName != "")
 				{
-					$seriesTitleSelector = $_POST['seriesTitleSelector'];
+					$seriesTitleSelector = $_REQUEST['seriesTitleSelector'];
 					if ($seriesTitleSelector == "contains")
 						$query .= " AND series_title RLIKE " . quote_smart($seriesTitleName);
 					elseif ($seriesTitleSelector == "does not contain")
@@ -2414,10 +2414,10 @@
 		}
 		elseif ($seriesTitleRadio == "0")
 		{
-			$seriesTitleName2 = $_POST['seriesTitleName2'];
+			$seriesTitleName2 = $_REQUEST['seriesTitleName2'];
 			if ($seriesTitleName2 != "")
 				{
-					$seriesTitleSelector2 = $_POST['seriesTitleSelector2'];
+					$seriesTitleSelector2 = $_REQUEST['seriesTitleSelector2'];
 					if ($seriesTitleSelector2 == "contains")
 						$query .= " AND series_title RLIKE " . quote_smart($seriesTitleName2);
 					elseif ($seriesTitleSelector2 == "does not contain")
@@ -2434,10 +2434,10 @@
 		}
 
 		// ... if the user has specified a series volume, add the value of '$volumeNo' as an AND clause:
-		$volumeNo = $_POST['volumeNo'];
+		$volumeNo = $_REQUEST['volumeNo'];
 		if ($volumeNo != "")
 			{
-				$volumeSelector = $_POST['volumeSelector'];
+				$volumeSelector = $_REQUEST['volumeSelector'];
 				if ($volumeSelector == "contains")
 					$query .= " AND series_volume RLIKE " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "does not contain")
@@ -2483,10 +2483,10 @@
 			}
 
 		// ... if the user has specified some pages, add the value of '$pagesNo' as an AND clause:
-		$pagesNo = $_POST['pagesNo'];
+		$pagesNo = $_REQUEST['pagesNo'];
 		if ($pagesNo != "")
 			{
-				$pagesSelector = $_POST['pagesSelector'];
+				$pagesSelector = $_REQUEST['pagesSelector'];
 				if ($pagesSelector == "contains")
 					$query .= " AND pages RLIKE " . quote_smart($pagesNo);
 				elseif ($pagesSelector == "does not contain")
@@ -2502,10 +2502,10 @@
 			}
 
 		// ... if the user has specified a publisher, add the value of '$publisherName' as an AND clause:
-		$publisherName = $_POST['publisherName'];
+		$publisherName = $_REQUEST['publisherName'];
 		if ($publisherName != "")
 			{
-				$publisherSelector = $_POST['publisherSelector'];
+				$publisherSelector = $_REQUEST['publisherSelector'];
 				if ($publisherSelector == "contains")
 					$query .= " AND publisher RLIKE " . quote_smart($publisherName);
 				elseif ($publisherSelector == "does not contain")
@@ -2521,10 +2521,10 @@
 			}
 
 		// ... if the user has specified a place, add the value of '$placeName' as an AND clause:
-		$placeName = $_POST['placeName'];
+		$placeName = $_REQUEST['placeName'];
 		if ($placeName != "")
 			{
-				$placeSelector = $_POST['placeSelector'];
+				$placeSelector = $_REQUEST['placeSelector'];
 				if ($placeSelector == "contains")
 					$query .= " AND place RLIKE " . quote_smart($placeName);
 				elseif ($placeSelector == "does not contain")
@@ -2540,10 +2540,10 @@
 			}
 
 		// ... if the user has specified a call number, add the value of '$callNumberName' as an AND clause:
-		$callNumberName = $_POST['callNumberName'];
+		$callNumberName = $_REQUEST['callNumberName'];
 		if ($callNumberName != "")
 			{
-				$callNumberSelector = $_POST['callNumberSelector'];
+				$callNumberSelector = $_REQUEST['callNumberSelector'];
 				if ($callNumberSelector == "contains")
 					$query .= " AND call_number RLIKE " . quote_smart($callNumberName);
 				elseif ($callNumberSelector == "does not contain")
@@ -2559,10 +2559,10 @@
 			}
 
 		// ... if the user has specified some keywords, add the value of '$keywordsName' as an AND clause:
-		$keywordsName = $_POST['keywordsName'];
+		$keywordsName = $_REQUEST['keywordsName'];
 		if ($keywordsName != "")
 			{
-				$keywordsSelector = $_POST['keywordsSelector'];
+				$keywordsSelector = $_REQUEST['keywordsSelector'];
 				if ($keywordsSelector == "contains")
 					$query .= " AND keywords RLIKE " . quote_smart($keywordsName);
 				elseif ($keywordsSelector == "does not contain")
@@ -2578,10 +2578,10 @@
 			}
 
 		// ... if the user has specified some notes, add the value of '$notesName' as an AND clause:
-		$notesName = $_POST['notesName'];
+		$notesName = $_REQUEST['notesName'];
 		if ($notesName != "")
 			{
-				$notesSelector = $_POST['notesSelector'];
+				$notesSelector = $_REQUEST['notesSelector'];
 				if ($notesSelector == "contains")
 					$query .= " AND notes RLIKE " . quote_smart($notesName);
 				elseif ($notesSelector == "does not contain")
@@ -2599,33 +2599,33 @@
 
 		// Construct the ORDER BY clause:
 		// A) extract first level sort option:
-		$sortSelector1 = $_POST['sortSelector1'];
+		$sortSelector1 = $_REQUEST['sortSelector1'];
 		// when field name = 'pages' then sort by 'first_page' instead:
 		$sortSelector1 = str_replace("pages", "first_page", $sortSelector1);
 
-		$sortRadio1 = $_POST['sortRadio1'];
+		$sortRadio1 = $_REQUEST['sortRadio1'];
 		if ($sortRadio1 == "0") // sort ascending
 			$query .= " ORDER BY $sortSelector1";
 		else // sort descending
 			$query .= " ORDER BY $sortSelector1 DESC";
 
 		// B) extract second level sort option:
-		$sortSelector2 = $_POST['sortSelector2'];
+		$sortSelector2 = $_REQUEST['sortSelector2'];
 		// when field name = 'pages' then sort by 'first_page' instead:
 		$sortSelector2 = str_replace("pages", "first_page", $sortSelector2);
 
-		$sortRadio2 = $_POST['sortRadio2'];
+		$sortRadio2 = $_REQUEST['sortRadio2'];
 		if ($sortRadio2 == "0") // sort ascending
 			$query .= ", $sortSelector2";
 		else // sort descending
 			$query .= ", $sortSelector2 DESC";
 
 		// C) extract third level sort option:
-		$sortSelector3 = $_POST['sortSelector3'];
+		$sortSelector3 = $_REQUEST['sortSelector3'];
 		// when field name = 'pages' then sort by 'first_page' instead:
 		$sortSelector3 = str_replace("pages", "first_page", $sortSelector3);
 
-		$sortRadio3 = $_POST['sortRadio3'];
+		$sortRadio3 = $_REQUEST['sortRadio3'];
 		if ($sortRadio3 == "0") // sort ascending
 			$query .= ", $sortSelector3";
 		else // sort descending
@@ -2645,433 +2645,433 @@
 		$query = "SELECT"; // (Note: we care about the wrong "SELECT, author" etc. syntax later on...)
 
 		// ... if the user has checked the checkbox next to 'Author', we'll add that column to the SELECT query:
-		if (isset($_POST['showAuthor']))
+		if (isset($_REQUEST['showAuthor']))
 		{
-			$showAuthor = $_POST['showAuthor'];
+			$showAuthor = $_REQUEST['showAuthor'];
 			if ($showAuthor == "1")
 				$query .= ", author"; // add 'author' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Address', we'll add that column to the SELECT query:
-		if (isset($_POST['showAddress']))
+		if (isset($_REQUEST['showAddress']))
 		{
-			$showAddress = $_POST['showAddress'];
+			$showAddress = $_REQUEST['showAddress'];
 			if ($showAddress == "1")
 				$query .= ", address"; // add 'address' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Corporate Author', we'll add that column to the SELECT query:
-		if (isset($_POST['showCorporateAuthor']))
+		if (isset($_REQUEST['showCorporateAuthor']))
 		{
-			$showCorporateAuthor = $_POST['showCorporateAuthor'];
+			$showCorporateAuthor = $_REQUEST['showCorporateAuthor'];
 			if ($showCorporateAuthor == "1")
 				$query .= ", corporate_author"; // add 'corporate_author' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Thesis', we'll add that column to the SELECT query:
-		if (isset($_POST['showThesis']))
+		if (isset($_REQUEST['showThesis']))
 		{
-			$showThesis = $_POST['showThesis'];
+			$showThesis = $_REQUEST['showThesis'];
 			if ($showThesis == "1")
 				$query .= ", thesis"; // add 'thesis' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Title', we'll add that column to the SELECT query:
-		if (isset($_POST['showTitle']))
+		if (isset($_REQUEST['showTitle']))
 		{
-			$showTitle = $_POST['showTitle'];
+			$showTitle = $_REQUEST['showTitle'];
 			if ($showTitle == "1")
 				$query .= ", title"; // add 'title' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Original Title', we'll add that column to the SELECT query:
-		if (isset($_POST['showOrigTitle']))
+		if (isset($_REQUEST['showOrigTitle']))
 		{
-			$showOrigTitle = $_POST['showOrigTitle'];
+			$showOrigTitle = $_REQUEST['showOrigTitle'];
 			if ($showOrigTitle == "1")
 				$query .= ", orig_title"; // add 'orig_title' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Year', we'll add that column to the SELECT query:
-		if (isset($_POST['showYear']))
+		if (isset($_REQUEST['showYear']))
 		{
-			$showYear = $_POST['showYear'];
+			$showYear = $_REQUEST['showYear'];
 			if ($showYear == "1")
 				$query .= ", year"; // add 'year' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Publication', we'll add that column to the SELECT query:
-		if (isset($_POST['showPublication']))
+		if (isset($_REQUEST['showPublication']))
 		{
-			$showPublication = $_POST['showPublication'];
+			$showPublication = $_REQUEST['showPublication'];
 			if ($showPublication == "1")
 				$query .= ", publication"; // add 'publication' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Abbreviated Journal', we'll add that column to the SELECT query:
-		if (isset($_POST['showAbbrevJournal']))
+		if (isset($_REQUEST['showAbbrevJournal']))
 		{
-			$showAbbrevJournal = $_POST['showAbbrevJournal'];
+			$showAbbrevJournal = $_REQUEST['showAbbrevJournal'];
 			if ($showAbbrevJournal == "1")
 				$query .= ", abbrev_journal"; // add 'abbrev_journal' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Editor', we'll add that column to the SELECT query:
-		if (isset($_POST['showEditor']))
+		if (isset($_REQUEST['showEditor']))
 		{
-			$showEditor = $_POST['showEditor'];
+			$showEditor = $_REQUEST['showEditor'];
 			if ($showEditor == "1")
 				$query .= ", editor"; // add 'editor' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Volume', we'll add that column to the SELECT query:
-		if (isset($_POST['showVolume']))
+		if (isset($_REQUEST['showVolume']))
 		{
-			$showVolume = $_POST['showVolume'];
+			$showVolume = $_REQUEST['showVolume'];
 			if ($showVolume == "1")
 				$query .= ", volume"; // add 'volume' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Issue', we'll add that column to the SELECT query:
-		if (isset($_POST['showIssue']))
+		if (isset($_REQUEST['showIssue']))
 		{
-			$showIssue = $_POST['showIssue'];
+			$showIssue = $_REQUEST['showIssue'];
 			if ($showIssue == "1")
 				$query .= ", issue"; // add 'issue' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Pages', we'll add that column to the SELECT query:
-		if (isset($_POST['showPages']))
+		if (isset($_REQUEST['showPages']))
 		{
-			$showPages = $_POST['showPages'];
+			$showPages = $_REQUEST['showPages'];
 			if ($showPages == "1")
 				$query .= ", pages"; // add 'pages' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Series', we'll add that column to the SELECT query:
-		if (isset($_POST['showSeriesTitle']))
+		if (isset($_REQUEST['showSeriesTitle']))
 		{
-			$showSeriesTitle = $_POST['showSeriesTitle'];
+			$showSeriesTitle = $_REQUEST['showSeriesTitle'];
 			if ($showSeriesTitle == "1")
 				$query .= ", series_title"; // add 'series_title' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Abbreviated Series Title', we'll add that column to the SELECT query:
-		if (isset($_POST['showAbbrevSeriesTitle']))
+		if (isset($_REQUEST['showAbbrevSeriesTitle']))
 		{
-			$showAbbrevSeriesTitle = $_POST['showAbbrevSeriesTitle'];
+			$showAbbrevSeriesTitle = $_REQUEST['showAbbrevSeriesTitle'];
 			if ($showAbbrevSeriesTitle == "1")
 				$query .= ", abbrev_series_title"; // add 'abbrev_series_title' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Series Editor', we'll add that column to the SELECT query:
-		if (isset($_POST['showSeriesEditor']))
+		if (isset($_REQUEST['showSeriesEditor']))
 		{
-			$showSeriesEditor = $_POST['showSeriesEditor'];
+			$showSeriesEditor = $_REQUEST['showSeriesEditor'];
 			if ($showSeriesEditor == "1")
 				$query .= ", series_editor"; // add 'series_editor' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Series Volume', we'll add that column to the SELECT query:
-		if (isset($_POST['showSeriesVolume']))
+		if (isset($_REQUEST['showSeriesVolume']))
 		{
-			$showSeriesVolume = $_POST['showSeriesVolume'];
+			$showSeriesVolume = $_REQUEST['showSeriesVolume'];
 			if ($showSeriesVolume == "1")
 				$query .= ", series_volume"; // add 'series_volume' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Series Issue', we'll add that column to the SELECT query:
-		if (isset($_POST['showSeriesIssue']))
+		if (isset($_REQUEST['showSeriesIssue']))
 		{
-			$showSeriesIssue = $_POST['showSeriesIssue'];
+			$showSeriesIssue = $_REQUEST['showSeriesIssue'];
 			if ($showSeriesIssue == "1")
 				$query .= ", series_issue"; // add 'series_issue' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Publisher', we'll add that column to the SELECT query:
-		if (isset($_POST['showPublisher']))
+		if (isset($_REQUEST['showPublisher']))
 		{
-			$showPublisher = $_POST['showPublisher'];
+			$showPublisher = $_REQUEST['showPublisher'];
 			if ($showPublisher == "1")
 				$query .= ", publisher"; // add 'publisher' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Place of Publication', we'll add that column to the SELECT query:
-		if (isset($_POST['showPlace']))
+		if (isset($_REQUEST['showPlace']))
 		{
-			$showPlace = $_POST['showPlace'];
+			$showPlace = $_REQUEST['showPlace'];
 			if ($showPlace == "1")
 				$query .= ", place"; // add 'place' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Edition', we'll add that column to the SELECT query:
-		if (isset($_POST['showEdition']))
+		if (isset($_REQUEST['showEdition']))
 		{
-			$showEdition = $_POST['showEdition'];
+			$showEdition = $_REQUEST['showEdition'];
 			if ($showEdition == "1")
 				$query .= ", edition"; // add 'edition' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Medium', we'll add that column to the SELECT query:
-		if (isset($_POST['showMedium']))
+		if (isset($_REQUEST['showMedium']))
 		{
-			$showMedium = $_POST['showMedium'];
+			$showMedium = $_REQUEST['showMedium'];
 			if ($showMedium == "1")
 				$query .= ", medium"; // add 'medium' column
 		}
 
 		// ... if the user has checked the checkbox next to 'ISSN', we'll add that column to the SELECT query:
-		if (isset($_POST['showISSN']))
+		if (isset($_REQUEST['showISSN']))
 		{
-			$showISSN = $_POST['showISSN'];
+			$showISSN = $_REQUEST['showISSN'];
 			if ($showISSN == "1")
 				$query .= ", issn"; // add 'issn' column
 		}
 
 		// ... if the user has checked the checkbox next to 'ISBN', we'll add that column to the SELECT query:
-		if (isset($_POST['showISBN']))
+		if (isset($_REQUEST['showISBN']))
 		{
-			$showISBN = $_POST['showISBN'];
+			$showISBN = $_REQUEST['showISBN'];
 			if ($showISBN == "1")
 				$query .= ", isbn"; // add 'isbn' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Language', we'll add that column to the SELECT query:
-		if (isset($_POST['showLanguage']))
+		if (isset($_REQUEST['showLanguage']))
 		{
-			$showLanguage = $_POST['showLanguage'];
+			$showLanguage = $_REQUEST['showLanguage'];
 			if ($showLanguage == "1")
 				$query .= ", language"; // add 'language' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Summary Language', we'll add that column to the SELECT query:
-		if (isset($_POST['showSummaryLanguage']))
+		if (isset($_REQUEST['showSummaryLanguage']))
 		{
-			$showSummaryLanguage = $_POST['showSummaryLanguage'];
+			$showSummaryLanguage = $_REQUEST['showSummaryLanguage'];
 			if ($showSummaryLanguage == "1")
 				$query .= ", summary_language"; // add 'summary_language' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Keywords', we'll add that column to the SELECT query:
-		if (isset($_POST['showKeywords']))
+		if (isset($_REQUEST['showKeywords']))
 		{
-			$showKeywords = $_POST['showKeywords'];
+			$showKeywords = $_REQUEST['showKeywords'];
 			if ($showKeywords == "1")
 				$query .= ", keywords"; // add 'keywords' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Abstract', we'll add that column to the SELECT query:
-		if (isset($_POST['showAbstract']))
+		if (isset($_REQUEST['showAbstract']))
 		{
-			$showAbstract = $_POST['showAbstract'];
+			$showAbstract = $_REQUEST['showAbstract'];
 			if ($showAbstract == "1")
 				$query .= ", abstract"; // add 'abstract' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Area', we'll add that column to the SELECT query:
-		if (isset($_POST['showArea']))
+		if (isset($_REQUEST['showArea']))
 		{
-			$showArea = $_POST['showArea'];
+			$showArea = $_REQUEST['showArea'];
 			if ($showArea == "1")
 				$query .= ", area"; // add 'area' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Expedition', we'll add that column to the SELECT query:
-		if (isset($_POST['showExpedition']))
+		if (isset($_REQUEST['showExpedition']))
 		{
-			$showExpedition = $_POST['showExpedition'];
+			$showExpedition = $_REQUEST['showExpedition'];
 			if ($showExpedition == "1")
 				$query .= ", expedition"; // add 'expedition' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Conference', we'll add that column to the SELECT query:
-		if (isset($_POST['showConference']))
+		if (isset($_REQUEST['showConference']))
 		{
-			$showConference = $_POST['showConference'];
+			$showConference = $_REQUEST['showConference'];
 			if ($showConference == "1")
 				$query .= ", conference"; // add 'conference' column
 		}
 
 		// ... if the user has checked the checkbox next to 'DOI', we'll add that column to the SELECT query:
-		if (isset($_POST['showDOI']))
+		if (isset($_REQUEST['showDOI']))
 		{
-			$showDOI = $_POST['showDOI'];
+			$showDOI = $_REQUEST['showDOI'];
 			if ($showDOI == "1")
 				$query .= ", doi"; // add 'doi' column
 		}
 
 		// ... if the user has checked the checkbox next to 'URL', we'll add that column to the SELECT query:
-		if (isset($_POST['showURL']))
+		if (isset($_REQUEST['showURL']))
 		{
-			$showURL = $_POST['showURL'];
+			$showURL = $_REQUEST['showURL'];
 			if ($showURL == "1")
 				$query .= ", url"; // add 'url' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Location', we'll add that column to the SELECT query:
-		if (isset($_POST['showLocation']))
+		if (isset($_REQUEST['showLocation']))
 		{
-			$showLocation = $_POST['showLocation'];
+			$showLocation = $_REQUEST['showLocation'];
 			if ($showLocation == "1")
 				$query .= ", location"; // add 'location' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Call Number', we'll add that column to the SELECT query:
-		if (isset($_POST['showCallNumber']))
+		if (isset($_REQUEST['showCallNumber']))
 		{
-			$showCallNumber = $_POST['showCallNumber'];
+			$showCallNumber = $_REQUEST['showCallNumber'];
 			if ($showCallNumber == "1")
 				$query .= ", call_number"; // add 'call_number' column
 		}
 
 		// ... if the user has checked the checkbox next to 'File Name', we'll add that column to the SELECT query:
-		if (isset($_POST['showFile']))
+		if (isset($_REQUEST['showFile']))
 		{
-			$showFile = $_POST['showFile'];
+			$showFile = $_REQUEST['showFile'];
 			if ($showFile == "1")
 				$query .= ", file"; // add 'file' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Copy', we'll add that column to the SELECT query:
-		if (isset($_POST['showCopy']))
+		if (isset($_REQUEST['showCopy']))
 		{
-			$showCopy = $_POST['showCopy'];
+			$showCopy = $_REQUEST['showCopy'];
 			if ($showCopy == "1")
 				$query .= ", copy"; // add 'copy' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Notes', we'll add that column to the SELECT query:
-		if (isset($_POST['showNotes']))
+		if (isset($_REQUEST['showNotes']))
 		{
-			$showNotes = $_POST['showNotes'];
+			$showNotes = $_REQUEST['showNotes'];
 			if ($showNotes == "1")
 				$query .= ", notes"; // add 'notes' column
 		}
 
 		// ... if the user has checked the checkbox next to 'User Keys', we'll add that column to the SELECT query:
-		if (isset($_POST['showUserKeys']))
+		if (isset($_REQUEST['showUserKeys']))
 		{
-			$showUserKeys = $_POST['showUserKeys'];
+			$showUserKeys = $_REQUEST['showUserKeys'];
 			if ($showUserKeys == "1")
 				$query .= ", user_keys"; // add 'user_keys' column
 		}
 
 		// ... if the user has checked the checkbox next to 'User Notes', we'll add that column to the SELECT query:
-		if (isset($_POST['showUserNotes']))
+		if (isset($_REQUEST['showUserNotes']))
 		{
-			$showUserNotes = $_POST['showUserNotes'];
+			$showUserNotes = $_REQUEST['showUserNotes'];
 			if ($showUserNotes == "1")
 				$query .= ", user_notes"; // add 'user_notes' column
 		}
 
 		// ... if the user has checked the checkbox next to 'User File', we'll add that column to the SELECT query:
-		if (isset($_POST['showUserFile']))
+		if (isset($_REQUEST['showUserFile']))
 		{
-			$showUserFile = $_POST['showUserFile'];
+			$showUserFile = $_REQUEST['showUserFile'];
 			if ($showUserFile == "1")
 				$query .= ", user_file"; // add 'user_file' column
 		}
 
 		// ... if the user has checked the checkbox next to 'User Groups', we'll add that column to the SELECT query:
-		if (isset($_POST['showUserGroups']))
+		if (isset($_REQUEST['showUserGroups']))
 		{
-			$showUserGroups = $_POST['showUserGroups'];
+			$showUserGroups = $_REQUEST['showUserGroups'];
 			if ($showUserGroups == "1")
 				$query .= ", user_groups"; // add 'user_groups' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Cite Key', we'll add that column to the SELECT query:
-		if (isset($_POST['showCiteKey']))
+		if (isset($_REQUEST['showCiteKey']))
 		{
-			$showCiteKey = $_POST['showCiteKey'];
+			$showCiteKey = $_REQUEST['showCiteKey'];
 			if ($showCiteKey == "1")
 				$query .= ", cite_key"; // add 'cite_key' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Serial', we'll add that column to the SELECT query:
-		if (isset($_POST['showSerial']))
+		if (isset($_REQUEST['showSerial']))
 		{
-			$showSerial = $_POST['showSerial'];
+			$showSerial = $_REQUEST['showSerial'];
 			if ($showSerial == "1")
 				$query .= ", serial"; // add 'serial' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Type', we'll add that column to the SELECT query:
-		if (isset($_POST['showType']))
+		if (isset($_REQUEST['showType']))
 		{
-			$showType = $_POST['showType'];
+			$showType = $_REQUEST['showType'];
 			if ($showType == "1")
 				$query .= ", type"; // add 'type' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Marked', we'll add that column to the SELECT query:
-		if (isset($_POST['showMarked']))
+		if (isset($_REQUEST['showMarked']))
 		{
-			$showMarked = $_POST['showMarked'];
+			$showMarked = $_REQUEST['showMarked'];
 			if ($showMarked == "1")
 				$query .= ", marked"; // add 'marked' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Selected', we'll add that column to the SELECT query:
-		if (isset($_POST['showSelected']))
+		if (isset($_REQUEST['showSelected']))
 		{
-			$showSelected = $_POST['showSelected'];
+			$showSelected = $_REQUEST['showSelected'];
 			if ($showSelected == "1")
 				$query .= ", selected"; // add 'selected' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Approved', we'll add that column to the SELECT query:
-		if (isset($_POST['showApproved']))
+		if (isset($_REQUEST['showApproved']))
 		{
-			$showApproved = $_POST['showApproved'];
+			$showApproved = $_REQUEST['showApproved'];
 			if ($showApproved == "1")
 				$query .= ", approved"; // add 'approved' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Date Created', we'll add that column to the SELECT query:
-		if (isset($_POST['showCreatedDate']))
+		if (isset($_REQUEST['showCreatedDate']))
 		{
-			$showCreatedDate = $_POST['showCreatedDate'];
+			$showCreatedDate = $_REQUEST['showCreatedDate'];
 			if ($showCreatedDate == "1")
 				$query .= ", created_date"; // add 'created_date' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Time Created', we'll add that column to the SELECT query:
-		if (isset($_POST['showCreatedTime']))
+		if (isset($_REQUEST['showCreatedTime']))
 		{
-			$showCreatedTime = $_POST['showCreatedTime'];
+			$showCreatedTime = $_REQUEST['showCreatedTime'];
 			if ($showCreatedTime == "1")
 				$query .= ", created_time"; // add 'created_time' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Created By', we'll add that column to the SELECT query:
-		if (isset($_POST['showCreatedBy']))
+		if (isset($_REQUEST['showCreatedBy']))
 		{
-			$showCreatedBy = $_POST['showCreatedBy'];
+			$showCreatedBy = $_REQUEST['showCreatedBy'];
 			if ($showCreatedBy == "1")
 				$query .= ", created_by"; // add 'created_by' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Date Modified', we'll add that column to the SELECT query:
-		if (isset($_POST['showModifiedDate']))
+		if (isset($_REQUEST['showModifiedDate']))
 		{
-			$showModifiedDate = $_POST['showModifiedDate'];
+			$showModifiedDate = $_REQUEST['showModifiedDate'];
 			if ($showModifiedDate == "1")
 				$query .= ", modified_date"; // add 'modified_date' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Time Modified', we'll add that column to the SELECT query:
-		if (isset($_POST['showModifiedTime']))
+		if (isset($_REQUEST['showModifiedTime']))
 		{
-			$showModifiedTime = $_POST['showModifiedTime'];
+			$showModifiedTime = $_REQUEST['showModifiedTime'];
 			if ($showModifiedTime == "1")
 				$query .= ", modified_time"; // add 'modified_time' column
 		}
 
 		// ... if the user has checked the checkbox next to 'Modified By', we'll add that column to the SELECT query:
-		if (isset($_POST['showModifiedBy']))
+		if (isset($_REQUEST['showModifiedBy']))
 		{
-			$showModifiedBy = $_POST['showModifiedBy'];
+			$showModifiedBy = $_REQUEST['showModifiedBy'];
 			if ($showModifiedBy == "1")
 				$query .= ", modified_by"; // add 'modified_by' column
 		}
@@ -3100,10 +3100,10 @@
 		// ---------------------------------------
 
 		// ... if the user has specified an author, add the value of '$authorName' as an AND clause:
-		$authorName = $_POST['authorName'];
+		$authorName = $_REQUEST['authorName'];
 		if ($authorName != "")
 			{
-				$authorSelector = $_POST['authorSelector'];
+				$authorSelector = $_REQUEST['authorSelector'];
 				if ($authorSelector == "contains")
 					$query .= " AND author RLIKE " . quote_smart($authorName);
 				elseif ($authorSelector == "does not contain")
@@ -3119,10 +3119,10 @@
 			}
 
 		// ... if the user has specified an address, add the value of '$addressName' as an AND clause:
-		$addressName = $_POST['addressName'];
+		$addressName = $_REQUEST['addressName'];
 		if ($addressName != "")
 			{
-				$addressSelector = $_POST['addressSelector'];
+				$addressSelector = $_REQUEST['addressSelector'];
 				if ($addressSelector == "contains")
 					$query .= " AND address RLIKE " . quote_smart($addressName);
 				elseif ($addressSelector == "does not contain")
@@ -3138,10 +3138,10 @@
 			}
 
 		// ... if the user has specified a corporate author, add the value of '$corporateAuthorName' as an AND clause:
-		$corporateAuthorName = $_POST['corporateAuthorName'];
+		$corporateAuthorName = $_REQUEST['corporateAuthorName'];
 		if ($corporateAuthorName != "")
 			{
-				$corporateAuthorSelector = $_POST['corporateAuthorSelector'];
+				$corporateAuthorSelector = $_REQUEST['corporateAuthorSelector'];
 				if ($corporateAuthorSelector == "contains")
 					$query .= " AND corporate_author RLIKE " . quote_smart($corporateAuthorName);
 				elseif ($corporateAuthorSelector == "does not contain")
@@ -3157,13 +3157,13 @@
 			}
 
 		// ... if the user has specified a thesis, add the value of '$thesisName' as an AND clause:
-		$thesisRadio = $_POST['thesisRadio'];
+		$thesisRadio = $_REQUEST['thesisRadio'];
 		if ($thesisRadio == "1")
 		{
-			$thesisName = $_POST['thesisName'];
+			$thesisName = $_REQUEST['thesisName'];
 			if ($thesisName != "All" && $thesisName != "")
 				{
-					$thesisSelector = $_POST['thesisSelector'];
+					$thesisSelector = $_REQUEST['thesisSelector'];
 					if ($thesisSelector == "contains")
 						$query .= " AND thesis RLIKE " . quote_smart($thesisName);
 					elseif ($thesisSelector == "does not contain")
@@ -3180,10 +3180,10 @@
 		}
 		elseif ($thesisRadio == "0")
 		{
-			$thesisName2 = $_POST['thesisName2'];
+			$thesisName2 = $_REQUEST['thesisName2'];
 			if ($thesisName2 != "")
 				{
-					$thesisSelector2 = $_POST['thesisSelector2'];
+					$thesisSelector2 = $_REQUEST['thesisSelector2'];
 					if ($thesisSelector2 == "contains")
 						$query .= " AND thesis RLIKE " . quote_smart($thesisName2);
 					elseif ($thesisSelector2 == "does not contain")
@@ -3200,10 +3200,10 @@
 		}
 
 		// ... if the user has specified a title, add the value of '$titleName' as an AND clause:
-		$titleName = $_POST['titleName'];
+		$titleName = $_REQUEST['titleName'];
 		if ($titleName != "")
 			{
-				$titleSelector = $_POST['titleSelector'];
+				$titleSelector = $_REQUEST['titleSelector'];
 				if ($titleSelector == "contains")
 					$query .= " AND title RLIKE " . quote_smart($titleName);
 				elseif ($titleSelector == "does not contain")
@@ -3219,10 +3219,10 @@
 			}
 
 		// ... if the user has specified an original title, add the value of '$origTitleName' as an AND clause:
-		$origTitleName = $_POST['origTitleName'];
+		$origTitleName = $_REQUEST['origTitleName'];
 		if ($origTitleName != "")
 			{
-				$origTitleSelector = $_POST['origTitleSelector'];
+				$origTitleSelector = $_REQUEST['origTitleSelector'];
 				if ($origTitleSelector == "contains")
 					$query .= " AND orig_title RLIKE " . quote_smart($origTitleName);
 				elseif ($origTitleSelector == "does not contain")
@@ -3238,10 +3238,10 @@
 			}
 
 		// ... if the user has specified a year, add the value of '$yearNo' as an AND clause:
-		$yearNo = $_POST['yearNo'];
+		$yearNo = $_REQUEST['yearNo'];
 		if ($yearNo != "")
 			{
-				$yearSelector = $_POST['yearSelector'];
+				$yearSelector = $_REQUEST['yearSelector'];
 				if ($yearSelector == "contains")
 					$query .= " AND year RLIKE " . quote_smart($yearNo);
 				elseif ($yearSelector == "does not contain")
@@ -3287,13 +3287,13 @@
 			}
 
 		// ... if the user has specified a publication, add the value of '$publicationName' as an AND clause:
-		$publicationRadio = $_POST['publicationRadio'];
+		$publicationRadio = $_REQUEST['publicationRadio'];
 		if ($publicationRadio == "1")
 		{
-			$publicationName = $_POST['publicationName'];
+			$publicationName = $_REQUEST['publicationName'];
 			if ($publicationName != "All" && $publicationName != "")
 				{
-					$publicationSelector = $_POST['publicationSelector'];
+					$publicationSelector = $_REQUEST['publicationSelector'];
 					if ($publicationSelector == "contains")
 						$query .= " AND publication RLIKE " . quote_smart($publicationName);
 					elseif ($publicationSelector == "does not contain")
@@ -3310,10 +3310,10 @@
 		}
 		elseif ($publicationRadio == "0")
 		{
-			$publicationName2 = $_POST['publicationName2'];
+			$publicationName2 = $_REQUEST['publicationName2'];
 			if ($publicationName2 != "")
 				{
-					$publicationSelector2 = $_POST['publicationSelector2'];
+					$publicationSelector2 = $_REQUEST['publicationSelector2'];
 					if ($publicationSelector2 == "contains")
 						$query .= " AND publication RLIKE " . quote_smart($publicationName2);
 					elseif ($publicationSelector2 == "does not contain")
@@ -3330,13 +3330,13 @@
 		}
 
 		// ... if the user has specified an abbreviated journal, add the value of '$abbrevJournalName' as an AND clause:
-		$abbrevJournalRadio = $_POST['abbrevJournalRadio'];
+		$abbrevJournalRadio = $_REQUEST['abbrevJournalRadio'];
 		if ($abbrevJournalRadio == "1")
 		{
-			$abbrevJournalName = $_POST['abbrevJournalName'];
+			$abbrevJournalName = $_REQUEST['abbrevJournalName'];
 			if ($abbrevJournalName != "All" && $abbrevJournalName != "")
 				{
-					$abbrevJournalSelector = $_POST['abbrevJournalSelector'];
+					$abbrevJournalSelector = $_REQUEST['abbrevJournalSelector'];
 					if ($abbrevJournalSelector == "contains")
 						$query .= " AND abbrev_journal RLIKE " . quote_smart($abbrevJournalName);
 					elseif ($abbrevJournalSelector == "does not contain")
@@ -3353,10 +3353,10 @@
 		}
 		elseif ($abbrevJournalRadio == "0")
 		{
-			$abbrevJournalName2 = $_POST['abbrevJournalName2'];
+			$abbrevJournalName2 = $_REQUEST['abbrevJournalName2'];
 			if ($abbrevJournalName2 != "")
 				{
-					$abbrevJournalSelector2 = $_POST['abbrevJournalSelector2'];
+					$abbrevJournalSelector2 = $_REQUEST['abbrevJournalSelector2'];
 					if ($abbrevJournalSelector2 == "contains")
 						$query .= " AND abbrev_journal RLIKE " . quote_smart($abbrevJournalName2);
 					elseif ($abbrevJournalSelector2 == "does not contain")
@@ -3373,10 +3373,10 @@
 		}
 
 		// ... if the user has specified an editor, add the value of '$editorName' as an AND clause:
-		$editorName = $_POST['editorName'];
+		$editorName = $_REQUEST['editorName'];
 		if ($editorName != "")
 			{
-				$editorSelector = $_POST['editorSelector'];
+				$editorSelector = $_REQUEST['editorSelector'];
 				if ($editorSelector == "contains")
 					$query .= " AND editor RLIKE " . quote_smart($editorName);
 				elseif ($editorSelector == "does not contain")
@@ -3392,10 +3392,10 @@
 			}
 
 		// ... if the user has specified a volume, add the value of '$volumeNo' as an AND clause:
-		$volumeNo = $_POST['volumeNo'];
+		$volumeNo = $_REQUEST['volumeNo'];
 		if ($volumeNo != "")
 			{
-				$volumeSelector = $_POST['volumeSelector'];
+				$volumeSelector = $_REQUEST['volumeSelector'];
 				if ($volumeSelector == "contains")
 					$query .= " AND volume RLIKE " . quote_smart($volumeNo);
 				elseif ($volumeSelector == "does not contain")
@@ -3441,10 +3441,10 @@
 			}
 
 		// ... if the user has specified an issue, add the value of '$issueNo' as an AND clause:
-		$issueNo = $_POST['issueNo'];
+		$issueNo = $_REQUEST['issueNo'];
 		if ($issueNo != "")
 			{
-				$issueSelector = $_POST['issueSelector'];
+				$issueSelector = $_REQUEST['issueSelector'];
 				if ($issueSelector == "contains")
 					$query .= " AND issue RLIKE " . quote_smart($issueNo);
 				elseif ($issueSelector == "does not contain")
@@ -3460,10 +3460,10 @@
 			}
 
 		// ... if the user has specified some pages, add the value of '$pagesNo' as an AND clause:
-		$pagesNo = $_POST['pagesNo'];
+		$pagesNo = $_REQUEST['pagesNo'];
 		if ($pagesNo != "")
 			{
-				$pagesSelector = $_POST['pagesSelector'];
+				$pagesSelector = $_REQUEST['pagesSelector'];
 				if ($pagesSelector == "contains")
 					$query .= " AND pages RLIKE " . quote_smart($pagesNo);
 				elseif ($pagesSelector == "does not contain")
@@ -3480,13 +3480,13 @@
 
 
 		// ... if the user has specified a series title, add the value of '$seriesTitleName' as an AND clause:
-		$seriesTitleRadio = $_POST['seriesTitleRadio'];
+		$seriesTitleRadio = $_REQUEST['seriesTitleRadio'];
 		if ($seriesTitleRadio == "1")
 		{
-			$seriesTitleName = $_POST['seriesTitleName'];
+			$seriesTitleName = $_REQUEST['seriesTitleName'];
 			if ($seriesTitleName != "All" && $seriesTitleName != "")
 				{
-					$seriesTitleSelector = $_POST['seriesTitleSelector'];
+					$seriesTitleSelector = $_REQUEST['seriesTitleSelector'];
 					if ($seriesTitleSelector == "contains")
 						$query .= " AND series_title RLIKE " . quote_smart($seriesTitleName);
 					elseif ($seriesTitleSelector == "does not contain")
@@ -3503,10 +3503,10 @@
 		}
 		elseif ($seriesTitleRadio == "0")
 		{
-			$seriesTitleName2 = $_POST['seriesTitleName2'];
+			$seriesTitleName2 = $_REQUEST['seriesTitleName2'];
 			if ($seriesTitleName2 != "")
 				{
-					$seriesTitleSelector2 = $_POST['seriesTitleSelector2'];
+					$seriesTitleSelector2 = $_REQUEST['seriesTitleSelector2'];
 					if ($seriesTitleSelector2 == "contains")
 						$query .= " AND series_title RLIKE " . quote_smart($seriesTitleName2);
 					elseif ($seriesTitleSelector2 == "does not contain")
@@ -3523,13 +3523,13 @@
 		}
 
 		// ... if the user has specified an abbreviated series title, add the value of '$abbrevSeriesTitleName' as an AND clause:
-		$abbrevSeriesTitleRadio = $_POST['abbrevSeriesTitleRadio'];
+		$abbrevSeriesTitleRadio = $_REQUEST['abbrevSeriesTitleRadio'];
 		if ($abbrevSeriesTitleRadio == "1")
 		{
-			$abbrevSeriesTitleName = $_POST['abbrevSeriesTitleName'];
+			$abbrevSeriesTitleName = $_REQUEST['abbrevSeriesTitleName'];
 			if ($abbrevSeriesTitleName != "All" && $abbrevSeriesTitleName != "")
 				{
-					$abbrevSeriesTitleSelector = $_POST['abbrevSeriesTitleSelector'];
+					$abbrevSeriesTitleSelector = $_REQUEST['abbrevSeriesTitleSelector'];
 					if ($abbrevSeriesTitleSelector == "contains")
 						$query .= " AND abbrev_series_title RLIKE " . quote_smart($abbrevSeriesTitleName);
 					elseif ($abbrevSeriesTitleSelector == "does not contain")
@@ -3546,10 +3546,10 @@
 		}
 		elseif ($abbrevSeriesTitleRadio == "0")
 		{
-			$abbrevSeriesTitleName2 = $_POST['abbrevSeriesTitleName2'];
+			$abbrevSeriesTitleName2 = $_REQUEST['abbrevSeriesTitleName2'];
 			if ($abbrevSeriesTitleName2 != "")
 				{
-					$abbrevSeriesTitleSelector2 = $_POST['abbrevSeriesTitleSelector2'];
+					$abbrevSeriesTitleSelector2 = $_REQUEST['abbrevSeriesTitleSelector2'];
 					if ($abbrevSeriesTitleSelector2 == "contains")
 						$query .= " AND abbrev_series_title RLIKE " . quote_smart($abbrevSeriesTitleName2);
 					elseif ($abbrevSeriesTitleSelector2 == "does not contain")
@@ -3566,10 +3566,10 @@
 		}
 
 		// ... if the user has specified a series editor, add the value of '$seriesEditorName' as an AND clause:
-		$seriesEditorName = $_POST['seriesEditorName'];
+		$seriesEditorName = $_REQUEST['seriesEditorName'];
 		if ($seriesEditorName != "")
 			{
-				$seriesEditorSelector = $_POST['seriesEditorSelector'];
+				$seriesEditorSelector = $_REQUEST['seriesEditorSelector'];
 				if ($seriesEditorSelector == "contains")
 					$query .= " AND series_editor RLIKE " . quote_smart($seriesEditorName);
 				elseif ($seriesEditorSelector == "does not contain")
@@ -3586,10 +3586,10 @@
 
 
 		// ... if the user has specified a series volume, add the value of '$seriesVolumeNo' as an AND clause:
-		$seriesVolumeNo = $_POST['seriesVolumeNo'];
+		$seriesVolumeNo = $_REQUEST['seriesVolumeNo'];
 		if ($seriesVolumeNo != "")
 			{
-				$seriesVolumeSelector = $_POST['seriesVolumeSelector'];
+				$seriesVolumeSelector = $_REQUEST['seriesVolumeSelector'];
 				if ($seriesVolumeSelector == "contains")
 					$query .= " AND series_volume RLIKE " . quote_smart($seriesVolumeNo);
 				elseif ($seriesVolumeSelector == "does not contain")
@@ -3635,10 +3635,10 @@
 			}
 
 		// ... if the user has specified a series issue, add the value of '$seriesIssueNo' as an AND clause:
-		$seriesIssueNo = $_POST['seriesIssueNo'];
+		$seriesIssueNo = $_REQUEST['seriesIssueNo'];
 		if ($seriesIssueNo != "")
 			{
-				$seriesIssueSelector = $_POST['seriesIssueSelector'];
+				$seriesIssueSelector = $_REQUEST['seriesIssueSelector'];
 				if ($seriesIssueSelector == "contains")
 					$query .= " AND series_issue RLIKE " . quote_smart($seriesIssueNo);
 				elseif ($seriesIssueSelector == "does not contain")
@@ -3654,13 +3654,13 @@
 			}
 
 		// ... if the user has specified a publisher, add the value of '$publisherName' as an AND clause:
-		$publisherRadio = $_POST['publisherRadio'];
+		$publisherRadio = $_REQUEST['publisherRadio'];
 		if ($publisherRadio == "1")
 		{
-			$publisherName = $_POST['publisherName'];
+			$publisherName = $_REQUEST['publisherName'];
 			if ($publisherName != "All" && $publisherName != "")
 				{
-					$publisherSelector = $_POST['publisherSelector'];
+					$publisherSelector = $_REQUEST['publisherSelector'];
 					if ($publisherSelector == "contains")
 						$query .= " AND publisher RLIKE " . quote_smart($publisherName);
 					elseif ($publisherSelector == "does not contain")
@@ -3677,10 +3677,10 @@
 		}
 		elseif ($publisherRadio == "0")
 		{
-			$publisherName2 = $_POST['publisherName2'];
+			$publisherName2 = $_REQUEST['publisherName2'];
 			if ($publisherName2 != "")
 				{
-					$publisherSelector2 = $_POST['publisherSelector2'];
+					$publisherSelector2 = $_REQUEST['publisherSelector2'];
 					if ($publisherSelector2 == "contains")
 						$query .= " AND publisher RLIKE " . quote_smart($publisherName2);
 					elseif ($publisherSelector2 == "does not contain")
@@ -3697,13 +3697,13 @@
 		}
 
 		// ... if the user has specified a place, add the value of '$placeName' as an AND clause:
-		$placeRadio = $_POST['placeRadio'];
+		$placeRadio = $_REQUEST['placeRadio'];
 		if ($placeRadio == "1")
 		{
-			$placeName = $_POST['placeName'];
+			$placeName = $_REQUEST['placeName'];
 			if ($placeName != "All" && $placeName != "")
 				{
-					$placeSelector = $_POST['placeSelector'];
+					$placeSelector = $_REQUEST['placeSelector'];
 					if ($placeSelector == "contains")
 						$query .= " AND place RLIKE " . quote_smart($placeName);
 					elseif ($placeSelector == "does not contain")
@@ -3720,10 +3720,10 @@
 		}
 		elseif ($placeRadio == "0")
 		{
-			$placeName2 = $_POST['placeName2'];
+			$placeName2 = $_REQUEST['placeName2'];
 			if ($placeName2 != "")
 				{
-					$placeSelector2 = $_POST['placeSelector2'];
+					$placeSelector2 = $_REQUEST['placeSelector2'];
 					if ($placeSelector2 == "contains")
 						$query .= " AND place RLIKE " . quote_smart($placeName2);
 					elseif ($placeSelector2 == "does not contain")
@@ -3740,10 +3740,10 @@
 		}
 
 		// ... if the user has specified an edition, add the value of '$editionNo' as an AND clause:
-		$editionNo = $_POST['editionNo'];
+		$editionNo = $_REQUEST['editionNo'];
 		if ($editionNo != "")
 			{
-				$editionSelector = $_POST['editionSelector'];
+				$editionSelector = $_REQUEST['editionSelector'];
 				if ($editionSelector == "contains")
 					$query .= " AND edition RLIKE " . quote_smart($editionNo);
 				elseif ($editionSelector == "does not contain")
@@ -3789,10 +3789,10 @@
 			}
 
 		// ... if the user has specified a medium, add the value of '$mediumName' as an AND clause:
-		$mediumName = $_POST['mediumName'];
+		$mediumName = $_REQUEST['mediumName'];
 		if ($mediumName != "")
 			{
-				$mediumSelector = $_POST['mediumSelector'];
+				$mediumSelector = $_REQUEST['mediumSelector'];
 				if ($mediumSelector == "contains")
 					$query .= " AND medium RLIKE " . quote_smart($mediumName);
 				elseif ($mediumSelector == "does not contain")
@@ -3808,10 +3808,10 @@
 			}
 
 		// ... if the user has specified an ISSN, add the value of '$issnName' as an AND clause:
-		$issnName = $_POST['issnName'];
+		$issnName = $_REQUEST['issnName'];
 		if ($issnName != "")
 			{
-				$issnSelector = $_POST['issnSelector'];
+				$issnSelector = $_REQUEST['issnSelector'];
 				if ($issnSelector == "contains")
 					$query .= " AND issn RLIKE " . quote_smart($issnName);
 				elseif ($issnSelector == "does not contain")
@@ -3827,10 +3827,10 @@
 			}
 
 		// ... if the user has specified an ISBN, add the value of '$isbnName' as an AND clause:
-		$isbnName = $_POST['isbnName'];
+		$isbnName = $_REQUEST['isbnName'];
 		if ($isbnName != "")
 			{
-				$isbnSelector = $_POST['isbnSelector'];
+				$isbnSelector = $_REQUEST['isbnSelector'];
 				if ($isbnSelector == "contains")
 					$query .= " AND isbn RLIKE " . quote_smart($isbnName);
 				elseif ($isbnSelector == "does not contain")
@@ -3847,13 +3847,13 @@
 
 
 		// ... if the user has specified a language, add the value of '$languageName' as an AND clause:
-		$languageRadio = $_POST['languageRadio'];
+		$languageRadio = $_REQUEST['languageRadio'];
 		if ($languageRadio == "1")
 		{
-			$languageName = $_POST['languageName'];
+			$languageName = $_REQUEST['languageName'];
 			if ($languageName != "All" && $languageName != "")
 				{
-					$languageSelector = $_POST['languageSelector'];
+					$languageSelector = $_REQUEST['languageSelector'];
 					if ($languageSelector == "contains")
 						$query .= " AND language RLIKE " . quote_smart($languageName);
 					elseif ($languageSelector == "does not contain")
@@ -3870,10 +3870,10 @@
 		}
 		elseif ($languageRadio == "0")
 		{
-			$languageName2 = $_POST['languageName2'];
+			$languageName2 = $_REQUEST['languageName2'];
 			if ($languageName2 != "")
 				{
-					$languageSelector2 = $_POST['languageSelector2'];
+					$languageSelector2 = $_REQUEST['languageSelector2'];
 					if ($languageSelector2 == "contains")
 						$query .= " AND language RLIKE " . quote_smart($languageName2);
 					elseif ($languageSelector2 == "does not contain")
@@ -3890,13 +3890,13 @@
 		}
 
 		// ... if the user has specified a summary language, add the value of '$summaryLanguageName' as an AND clause:
-		$summaryLanguageRadio = $_POST['summaryLanguageRadio'];
+		$summaryLanguageRadio = $_REQUEST['summaryLanguageRadio'];
 		if ($summaryLanguageRadio == "1")
 		{
-			$summaryLanguageName = $_POST['summaryLanguageName'];
+			$summaryLanguageName = $_REQUEST['summaryLanguageName'];
 			if ($summaryLanguageName != "All" && $summaryLanguageName != "")
 				{
-					$summaryLanguageSelector = $_POST['summaryLanguageSelector'];
+					$summaryLanguageSelector = $_REQUEST['summaryLanguageSelector'];
 					if ($summaryLanguageSelector == "contains")
 						$query .= " AND summary_language RLIKE " . quote_smart($summaryLanguageName);
 					elseif ($summaryLanguageSelector == "does not contain")
@@ -3913,10 +3913,10 @@
 		}
 		elseif ($summaryLanguageRadio == "0")
 		{
-			$summaryLanguageName2 = $_POST['summaryLanguageName2'];
+			$summaryLanguageName2 = $_REQUEST['summaryLanguageName2'];
 			if ($summaryLanguageName2 != "")
 				{
-					$summaryLanguageSelector2 = $_POST['summaryLanguageSelector2'];
+					$summaryLanguageSelector2 = $_REQUEST['summaryLanguageSelector2'];
 					if ($summaryLanguageSelector2 == "contains")
 						$query .= " AND summary_language RLIKE " . quote_smart($summaryLanguageName2);
 					elseif ($summaryLanguageSelector2 == "does not contain")
@@ -3933,10 +3933,10 @@
 		}
 
 		// ... if the user has specified some keywords, add the value of '$keywordsName' as an AND clause:
-		$keywordsName = $_POST['keywordsName'];
+		$keywordsName = $_REQUEST['keywordsName'];
 		if ($keywordsName != "")
 			{
-				$keywordsSelector = $_POST['keywordsSelector'];
+				$keywordsSelector = $_REQUEST['keywordsSelector'];
 				if ($keywordsSelector == "contains")
 					$query .= " AND keywords RLIKE " . quote_smart($keywordsName);
 				elseif ($keywordsSelector == "does not contain")
@@ -3952,10 +3952,10 @@
 			}
 
 		// ... if the user has specified an abstract, add the value of '$abstractName' as an AND clause:
-		$abstractName = $_POST['abstractName'];
+		$abstractName = $_REQUEST['abstractName'];
 		if ($abstractName != "")
 			{
-				$abstractSelector = $_POST['abstractSelector'];
+				$abstractSelector = $_REQUEST['abstractSelector'];
 				if ($abstractSelector == "contains")
 					$query .= " AND abstract RLIKE " . quote_smart($abstractName);
 				elseif ($abstractSelector == "does not contain")
@@ -3972,13 +3972,13 @@
 
 
 		// ... if the user has specified an area, add the value of '$areaName' as an AND clause:
-		$areaRadio = $_POST['areaRadio'];
+		$areaRadio = $_REQUEST['areaRadio'];
 		if ($areaRadio == "1")
 		{
-			$areaName = $_POST['areaName'];
+			$areaName = $_REQUEST['areaName'];
 			if ($areaName != "All" && $areaName != "")
 				{
-					$areaSelector = $_POST['areaSelector'];
+					$areaSelector = $_REQUEST['areaSelector'];
 					if ($areaSelector == "contains")
 						$query .= " AND area RLIKE " . quote_smart($areaName);
 					elseif ($areaSelector == "does not contain")
@@ -3995,10 +3995,10 @@
 		}
 		elseif ($areaRadio == "0")
 		{
-			$areaName2 = $_POST['areaName2'];
+			$areaName2 = $_REQUEST['areaName2'];
 			if ($areaName2 != "")
 				{
-					$areaSelector2 = $_POST['areaSelector2'];
+					$areaSelector2 = $_REQUEST['areaSelector2'];
 					if ($areaSelector2 == "contains")
 						$query .= " AND area RLIKE " . quote_smart($areaName2);
 					elseif ($areaSelector2 == "does not contain")
@@ -4015,10 +4015,10 @@
 		}
 
 		// ... if the user has specified an expedition, add the value of '$expeditionName' as an AND clause:
-		$expeditionName = $_POST['expeditionName'];
+		$expeditionName = $_REQUEST['expeditionName'];
 		if ($expeditionName != "")
 			{
-				$expeditionSelector = $_POST['expeditionSelector'];
+				$expeditionSelector = $_REQUEST['expeditionSelector'];
 				if ($expeditionSelector == "contains")
 					$query .= " AND expedition RLIKE " . quote_smart($expeditionName);
 				elseif ($expeditionSelector == "does not contain")
@@ -4034,10 +4034,10 @@
 			}
 
 		// ... if the user has specified a conference, add the value of '$conferenceName' as an AND clause:
-		$conferenceName = $_POST['conferenceName'];
+		$conferenceName = $_REQUEST['conferenceName'];
 		if ($conferenceName != "")
 			{
-				$conferenceSelector = $_POST['conferenceSelector'];
+				$conferenceSelector = $_REQUEST['conferenceSelector'];
 				if ($conferenceSelector == "contains")
 					$query .= " AND conference RLIKE " . quote_smart($conferenceName);
 				elseif ($conferenceSelector == "does not contain")
@@ -4053,10 +4053,10 @@
 			}
 
 		// ... if the user has specified a DOI, add the value of '$doiName' as an AND clause:
-		$doiName = $_POST['doiName'];
+		$doiName = $_REQUEST['doiName'];
 		if ($doiName != "")
 			{
-				$doiSelector = $_POST['doiSelector'];
+				$doiSelector = $_REQUEST['doiSelector'];
 				if ($doiSelector == "contains")
 					$query .= " AND doi RLIKE " . quote_smart($doiName);
 				elseif ($doiSelector == "does not contain")
@@ -4072,10 +4072,10 @@
 			}
 
 		// ... if the user has specified an URL, add the value of '$urlName' as an AND clause:
-		$urlName = $_POST['urlName'];
+		$urlName = $_REQUEST['urlName'];
 		if ($urlName != "")
 			{
-				$urlSelector = $_POST['urlSelector'];
+				$urlSelector = $_REQUEST['urlSelector'];
 				if ($urlSelector == "contains")
 					$query .= " AND url RLIKE " . quote_smart($urlName);
 				elseif ($urlSelector == "does not contain")
@@ -4092,13 +4092,13 @@
 
 
 		// ... if the user has specified a location, add the value of '$locationName' as an AND clause:
-		$locationRadio = $_POST['locationRadio'];
+		$locationRadio = $_REQUEST['locationRadio'];
 		if ($locationRadio == "1")
 		{
-			$locationName = $_POST['locationName'];
+			$locationName = $_REQUEST['locationName'];
 			if ($locationName != "All" && $locationName != "")
 				{
-					$locationSelector = $_POST['locationSelector'];
+					$locationSelector = $_REQUEST['locationSelector'];
 					if ($locationSelector == "contains")
 						$query .= " AND location RLIKE " . quote_smart($locationName);
 					elseif ($locationSelector == "does not contain")
@@ -4115,10 +4115,10 @@
 		}
 		elseif ($locationRadio == "0")
 		{
-			$locationName2 = $_POST['locationName2'];
+			$locationName2 = $_REQUEST['locationName2'];
 			if ($locationName2 != "")
 				{
-					$locationSelector2 = $_POST['locationSelector2'];
+					$locationSelector2 = $_REQUEST['locationSelector2'];
 					if ($locationSelector2 == "contains")
 						$query .= " AND location RLIKE " . quote_smart($locationName2);
 					elseif ($locationSelector2 == "does not contain")
@@ -4135,10 +4135,10 @@
 		}
 
 		// ... if the user has specified a call number, add the value of '$callNumberName' as an AND clause:
-		$callNumberName = $_POST['callNumberName'];
+		$callNumberName = $_REQUEST['callNumberName'];
 		if ($callNumberName != "")
 			{
-				$callNumberSelector = $_POST['callNumberSelector'];
+				$callNumberSelector = $_REQUEST['callNumberSelector'];
 				if ($callNumberSelector == "contains")
 					$query .= " AND call_number RLIKE " . quote_smart($callNumberName);
 				elseif ($callNumberSelector == "does not contain")
@@ -4154,12 +4154,12 @@
 			}
 
 		// ... if the user has specified a file, add the value of '$fileName' as an AND clause:
-		if (isset($_POST['fileName'])) // the file text entry form may be hidden if the user has no permission to see any files
+		if (isset($_REQUEST['fileName'])) // the file text entry form may be hidden if the user has no permission to see any files
 		{
-			$fileName = $_POST['fileName'];
+			$fileName = $_REQUEST['fileName'];
 			if ($fileName != "")
 				{
-					$fileSelector = $_POST['fileSelector'];
+					$fileSelector = $_REQUEST['fileSelector'];
 					if ($fileSelector == "contains")
 						$query .= " AND file RLIKE " . quote_smart($fileName);
 					elseif ($fileSelector == "does not contain")
@@ -4179,10 +4179,10 @@
 		if (isset($loginEmail)) // if a user is logged in and...
 		{
 			// ... if the user has specified a copy status, add the value of '$copyName' as an AND clause:
-			$copyName = $_POST['copyName'];
+			$copyName = $_REQUEST['copyName'];
 			if ($copyName != "All" && $copyName != "")
 				{
-					$copySelector = $_POST['copySelector'];
+					$copySelector = $_REQUEST['copySelector'];
 					if ($copySelector == "is equal to")
 						$query .= " AND copy = " . quote_smart($copyName);
 					elseif ($copySelector == "is not equal to")
@@ -4191,10 +4191,10 @@
 		}
 
 		// ... if the user has specified some notes, add the value of '$notesName' as an AND clause:
-		$notesName = $_POST['notesName'];
+		$notesName = $_REQUEST['notesName'];
 		if ($notesName != "")
 			{
-				$notesSelector = $_POST['notesSelector'];
+				$notesSelector = $_REQUEST['notesSelector'];
 				if ($notesSelector == "contains")
 					$query .= " AND notes RLIKE " . quote_smart($notesName);
 				elseif ($notesSelector == "does not contain")
@@ -4212,13 +4212,13 @@
 		if (isset($loginEmail)) // if a user is logged in and...
 		{
 			// ... if the user has specified some user keys, add the value of '$userKeysName' as an AND clause:
-			$userKeysRadio = $_POST['userKeysRadio'];
+			$userKeysRadio = $_REQUEST['userKeysRadio'];
 			if ($userKeysRadio == "1")
 			{
-				$userKeysName = $_POST['userKeysName'];
+				$userKeysName = $_REQUEST['userKeysName'];
 				if ($userKeysName != "All" && $userKeysName != "")
 					{
-						$userKeysSelector = $_POST['userKeysSelector'];
+						$userKeysSelector = $_REQUEST['userKeysSelector'];
 						if ($userKeysSelector == "contains")
 							$query .= " AND user_keys RLIKE " . quote_smart($userKeysName);
 						elseif ($userKeysSelector == "does not contain")
@@ -4235,10 +4235,10 @@
 			}
 			elseif ($userKeysRadio == "0")
 			{
-				$userKeysName2 = $_POST['userKeysName2'];
+				$userKeysName2 = $_REQUEST['userKeysName2'];
 				if ($userKeysName2 != "")
 					{
-						$userKeysSelector2 = $_POST['userKeysSelector2'];
+						$userKeysSelector2 = $_REQUEST['userKeysSelector2'];
 						if ($userKeysSelector2 == "contains")
 							$query .= " AND user_keys RLIKE " . quote_smart($userKeysName2);
 						elseif ($userKeysSelector2 == "does not contain")
@@ -4255,10 +4255,10 @@
 			}
 
 			// ... if the user has specified some user notes, add the value of '$userNotesName' as an AND clause:
-			$userNotesName = $_POST['userNotesName'];
+			$userNotesName = $_REQUEST['userNotesName'];
 			if ($userNotesName != "")
 				{
-					$userNotesSelector = $_POST['userNotesSelector'];
+					$userNotesSelector = $_REQUEST['userNotesSelector'];
 					if ($userNotesSelector == "contains")
 						$query .= " AND user_notes RLIKE " . quote_smart($userNotesName);
 					elseif ($userNotesSelector == "does not contain")
@@ -4274,10 +4274,10 @@
 				}
 
 			// ... if the user has specified a user file, add the value of '$userFileName' as an AND clause:
-			$userFileName = $_POST['userFileName'];
+			$userFileName = $_REQUEST['userFileName'];
 			if ($userFileName != "")
 				{
-					$userFileSelector = $_POST['userFileSelector'];
+					$userFileSelector = $_REQUEST['userFileSelector'];
 					if ($userFileSelector == "contains")
 						$query .= " AND user_file RLIKE " . quote_smart($userFileName);
 					elseif ($userFileSelector == "does not contain")
@@ -4293,13 +4293,13 @@
 				}
 
 			// ... if the user has specified some user groups, add the value of '$userGroupsName' as an AND clause:
-			$userGroupsRadio = $_POST['userGroupsRadio'];
+			$userGroupsRadio = $_REQUEST['userGroupsRadio'];
 			if ($userGroupsRadio == "1")
 			{
-				$userGroupsName = $_POST['userGroupsName'];
+				$userGroupsName = $_REQUEST['userGroupsName'];
 				if ($userGroupsName != "All" && $userGroupsName != "")
 					{
-						$userGroupsSelector = $_POST['userGroupsSelector'];
+						$userGroupsSelector = $_REQUEST['userGroupsSelector'];
 						if ($userGroupsSelector == "contains")
 							$query .= " AND user_groups RLIKE " . quote_smart($userGroupsName);
 						elseif ($userGroupsSelector == "does not contain")
@@ -4316,10 +4316,10 @@
 			}
 			elseif ($userGroupsRadio == "0")
 			{
-				$userGroupsName2 = $_POST['userGroupsName2'];
+				$userGroupsName2 = $_REQUEST['userGroupsName2'];
 				if ($userGroupsName2 != "")
 					{
-						$userGroupsSelector2 = $_POST['userGroupsSelector2'];
+						$userGroupsSelector2 = $_REQUEST['userGroupsSelector2'];
 						if ($userGroupsSelector2 == "contains")
 							$query .= " AND user_groups RLIKE " . quote_smart($userGroupsName2);
 						elseif ($userGroupsSelector2 == "does not contain")
@@ -4336,10 +4336,10 @@
 			}
 
 			// ... if the user has specified a cite key, add the value of '$citeKeyName' as an AND clause:
-			$citeKeyName = $_POST['citeKeyName'];
+			$citeKeyName = $_REQUEST['citeKeyName'];
 			if ($citeKeyName != "")
 				{
-					$citeKeySelector = $_POST['citeKeySelector'];
+					$citeKeySelector = $_REQUEST['citeKeySelector'];
 					if ($citeKeySelector == "contains")
 						$query .= " AND cite_key RLIKE " . quote_smart($citeKeyName);
 					elseif ($citeKeySelector == "does not contain")
@@ -4356,10 +4356,10 @@
 		}
 
 		// ... if the user has specified a serial, add the value of '$serialNo' as an AND clause:
-		$serialNo = $_POST['serialNo'];
+		$serialNo = $_REQUEST['serialNo'];
 		if ($serialNo != "")
 			{
-				$serialSelector = $_POST['serialSelector'];
+				$serialSelector = $_REQUEST['serialSelector'];
 				if ($serialSelector == "contains")
 					$query .= " AND serial RLIKE " . quote_smart($serialNo);
 				elseif ($serialSelector == "does not contain")
@@ -4405,13 +4405,13 @@
 			}
 
 		// ... if the user has specified a type, add the value of '$typeName' as an AND clause:
-		$typeRadio = $_POST['typeRadio'];
+		$typeRadio = $_REQUEST['typeRadio'];
 		if ($typeRadio == "1")
 		{
-			$typeName = $_POST['typeName'];
+			$typeName = $_REQUEST['typeName'];
 			if ($typeName != "All" && $typeName != "")
 				{
-					$typeSelector = $_POST['typeSelector'];
+					$typeSelector = $_REQUEST['typeSelector'];
 					if ($typeSelector == "contains")
 						$query .= " AND type RLIKE " . quote_smart($typeName);
 					elseif ($typeSelector == "does not contain")
@@ -4428,10 +4428,10 @@
 		}
 		elseif ($typeRadio == "0")
 		{
-			$typeName2 = $_POST['typeName2'];
+			$typeName2 = $_REQUEST['typeName2'];
 			if ($typeName2 != "")
 				{
-					$typeSelector2 = $_POST['typeSelector2'];
+					$typeSelector2 = $_REQUEST['typeSelector2'];
 					if ($typeSelector2 == "contains")
 						$query .= " AND type RLIKE " . quote_smart($typeName2);
 					elseif ($typeSelector2 == "does not contain")
@@ -4450,9 +4450,9 @@
 		if (isset($loginEmail)) // if a user is logged in and...
 		{
 			// ... if the user has selected a radio button for 'Marked', add the corresponding value for 'marked' as an AND clause:
-			if (isset($_POST['markedRadio']))
+			if (isset($_REQUEST['markedRadio']))
 			{
-				$markedRadio = $_POST['markedRadio'];
+				$markedRadio = $_REQUEST['markedRadio'];
 				if ($markedRadio == "1")
 					$query .= " AND marked = \"yes\"";
 				elseif ($markedRadio == "0")
@@ -4460,9 +4460,9 @@
 			}
 
 			// ... if the user has selected a radio button for 'Selected', add the corresponding value for 'selected' as an AND clause:
-			if (isset($_POST['selectedRadio']))
+			if (isset($_REQUEST['selectedRadio']))
 			{
-				$selectedRadio = $_POST['selectedRadio'];
+				$selectedRadio = $_REQUEST['selectedRadio'];
 				if ($selectedRadio == "1")
 					$query .= " AND selected = \"yes\"";
 				elseif ($selectedRadio == "0")
@@ -4471,9 +4471,9 @@
 		}
 
 		// ... if the user has selected a radio button for 'Approved', add the corresponding value for 'approved' as an AND clause:
-		if (isset($_POST['approvedRadio']))
+		if (isset($_REQUEST['approvedRadio']))
 		{
-			$approvedRadio = $_POST['approvedRadio'];
+			$approvedRadio = $_REQUEST['approvedRadio'];
 			if ($approvedRadio == "1")
 				$query .= " AND approved = \"yes\"";
 			elseif ($approvedRadio == "0")
@@ -4481,10 +4481,10 @@
 		}
 
 		// ... if the user has specified a created date, add the value of '$createdDateNo' as an AND clause:
-		$createdDateNo = $_POST['createdDateNo'];
+		$createdDateNo = $_REQUEST['createdDateNo'];
 		if ($createdDateNo != "")
 			{
-				$createdDateSelector = $_POST['createdDateSelector'];
+				$createdDateSelector = $_REQUEST['createdDateSelector'];
 				if ($createdDateSelector == "contains")
 					$query .= " AND created_date RLIKE " . quote_smart($createdDateNo);
 				elseif ($createdDateSelector == "does not contain")
@@ -4530,10 +4530,10 @@
 			}
 
 		// ... if the user has specified a created time, add the value of '$createdTimeNo' as an AND clause:
-		$createdTimeNo = $_POST['createdTimeNo'];
+		$createdTimeNo = $_REQUEST['createdTimeNo'];
 		if ($createdTimeNo != "")
 			{
-				$createdTimeSelector = $_POST['createdTimeSelector'];
+				$createdTimeSelector = $_REQUEST['createdTimeSelector'];
 				if ($createdTimeSelector == "contains")
 					$query .= " AND created_time RLIKE " . quote_smart($createdTimeNo);
 				elseif ($createdTimeSelector == "does not contain")
@@ -4579,13 +4579,13 @@
 			}
 
 		// ... if the user has specified a created by, add the value of '$createdByName' as an AND clause:
-		$createdByRadio = $_POST['createdByRadio'];
+		$createdByRadio = $_REQUEST['createdByRadio'];
 		if ($createdByRadio == "1")
 		{
-			$createdByName = $_POST['createdByName'];
+			$createdByName = $_REQUEST['createdByName'];
 			if ($createdByName != "All" && $createdByName != "")
 				{
-					$createdBySelector = $_POST['createdBySelector'];
+					$createdBySelector = $_REQUEST['createdBySelector'];
 					if ($createdBySelector == "contains")
 						$query .= " AND created_by RLIKE " . quote_smart($createdByName);
 					elseif ($createdBySelector == "does not contain")
@@ -4602,10 +4602,10 @@
 		}
 		elseif ($createdByRadio == "0")
 		{
-			$createdByName2 = $_POST['createdByName2'];
+			$createdByName2 = $_REQUEST['createdByName2'];
 			if ($createdByName2 != "")
 				{
-					$createdBySelector2 = $_POST['createdBySelector2'];
+					$createdBySelector2 = $_REQUEST['createdBySelector2'];
 					if ($createdBySelector2 == "contains")
 						$query .= " AND created_by RLIKE " . quote_smart($createdByName2);
 					elseif ($createdBySelector2 == "does not contain")
@@ -4622,10 +4622,10 @@
 		}
 
 		// ... if the user has specified a modified date, add the value of '$modifiedDateNo' as an AND clause:
-		$modifiedDateNo = $_POST['modifiedDateNo'];
+		$modifiedDateNo = $_REQUEST['modifiedDateNo'];
 		if ($modifiedDateNo != "")
 			{
-				$modifiedDateSelector = $_POST['modifiedDateSelector'];
+				$modifiedDateSelector = $_REQUEST['modifiedDateSelector'];
 				if ($modifiedDateSelector == "contains")
 					$query .= " AND modified_date RLIKE " . quote_smart($modifiedDateNo);
 				elseif ($modifiedDateSelector == "does not contain")
@@ -4671,10 +4671,10 @@
 			}
 
 		// ... if the user has specified a modified time, add the value of '$modifiedTimeNo' as an AND clause:
-		$modifiedTimeNo = $_POST['modifiedTimeNo'];
+		$modifiedTimeNo = $_REQUEST['modifiedTimeNo'];
 		if ($modifiedTimeNo != "")
 			{
-				$modifiedTimeSelector = $_POST['modifiedTimeSelector'];
+				$modifiedTimeSelector = $_REQUEST['modifiedTimeSelector'];
 				if ($modifiedTimeSelector == "contains")
 					$query .= " AND modified_time RLIKE " . quote_smart($modifiedTimeNo);
 				elseif ($modifiedTimeSelector == "does not contain")
@@ -4720,13 +4720,13 @@
 			}
 
 		// ... if the user has specified a modified by, add the value of '$modifiedByName' as an AND clause:
-		$modifiedByRadio = $_POST['modifiedByRadio'];
+		$modifiedByRadio = $_REQUEST['modifiedByRadio'];
 		if ($modifiedByRadio == "1")
 		{
-			$modifiedByName = $_POST['modifiedByName'];
+			$modifiedByName = $_REQUEST['modifiedByName'];
 			if ($modifiedByName != "All" && $modifiedByName != "")
 				{
-					$modifiedBySelector = $_POST['modifiedBySelector'];
+					$modifiedBySelector = $_REQUEST['modifiedBySelector'];
 					if ($modifiedBySelector == "contains")
 						$query .= " AND modified_by RLIKE " . quote_smart($modifiedByName);
 					elseif ($modifiedBySelector == "does not contain")
@@ -4743,10 +4743,10 @@
 		}
 		elseif ($modifiedByRadio == "0")
 		{
-			$modifiedByName2 = $_POST['modifiedByName2'];
+			$modifiedByName2 = $_REQUEST['modifiedByName2'];
 			if ($modifiedByName2 != "")
 				{
-					$modifiedBySelector2 = $_POST['modifiedBySelector2'];
+					$modifiedBySelector2 = $_REQUEST['modifiedBySelector2'];
 					if ($modifiedBySelector2 == "contains")
 						$query .= " AND modified_by RLIKE " . quote_smart($modifiedByName2);
 					elseif ($modifiedBySelector2 == "does not contain")
@@ -4767,13 +4767,13 @@
 		$query .= " ORDER BY ";
 
 		// A) extract first level sort option:
-		$sortSelector1 = $_POST['sortSelector1'];
+		$sortSelector1 = $_REQUEST['sortSelector1'];
 		if ($sortSelector1 != "")
 			{
 				// when field name = 'pages' then sort by 'first_page' instead:
 				$sortSelector1 = str_replace("pages", "first_page", $sortSelector1);
 
-				$sortRadio1 = $_POST['sortRadio1'];
+				$sortRadio1 = $_REQUEST['sortRadio1'];
 				if ($sortRadio1 == "0") // sort ascending
 					$query .= "$sortSelector1";
 				else // sort descending
@@ -4781,13 +4781,13 @@
 			}
 
 		// B) extract second level sort option:
-		$sortSelector2 = $_POST['sortSelector2'];
+		$sortSelector2 = $_REQUEST['sortSelector2'];
 		if ($sortSelector2 != "")
 			{
 				// when field name = 'pages' then sort by 'first_page' instead:
 				$sortSelector2 = str_replace("pages", "first_page", $sortSelector2);
 
-				$sortRadio2 = $_POST['sortRadio2'];
+				$sortRadio2 = $_REQUEST['sortRadio2'];
 				if ($sortRadio2 == "0") // sort ascending
 					$query .= ", $sortSelector2";
 				else // sort descending
@@ -4795,13 +4795,13 @@
 			}
 
 		// C) extract third level sort option:
-		$sortSelector3 = $_POST['sortSelector3'];
+		$sortSelector3 = $_REQUEST['sortSelector3'];
 		if ($sortSelector3 != "")
 			{
 				// when field name = 'pages' then sort by 'first_page' instead:
 				$sortSelector3 = str_replace("pages", "first_page", $sortSelector3);
 
-				$sortRadio3 = $_POST['sortRadio3'];
+				$sortRadio3 = $_REQUEST['sortRadio3'];
 				if ($sortRadio3 == "0") // sort ascending
 					$query .= ", $sortSelector3";
 				else // sort descending
@@ -4950,9 +4950,9 @@
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
 		// Extract form elements (that are unique to the 'extract.php' form):
-		$sourceText = $_POST['sourceText']; // get the source text that contains the record serial numbers/cite keys
-		$startDelim = $_POST['startDelim']; // get the start delimiter that precedes record serial numbers/cite keys
-		$endDelim = $_POST['endDelim']; // get the end delimiter that follows record serial numbers/cite keys
+		$sourceText = $_REQUEST['sourceText']; // get the source text that contains the record serial numbers/cite keys
+		$startDelim = $_REQUEST['startDelim']; // get the start delimiter that precedes record serial numbers/cite keys
+		$endDelim = $_REQUEST['endDelim']; // get the end delimiter that follows record serial numbers/cite keys
 
 		$startDelim = preg_quote($startDelim); // escape any potential meta-characters
 		$endDelim = preg_quote($endDelim); // escape any potential meta-characters
