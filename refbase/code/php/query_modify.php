@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./query_modify.php
 	// Created:    23-May-04, 20:42
-	// Modified:   26-Sep-06, 17:20
+	// Modified:   28-Sep-06, 22:35
 
 	// This php script will perform adding, editing & deleting of user queries.
 	// It then relocates back to the main page ('index.php') so that the user
@@ -144,7 +144,8 @@
 			$oldQuery = rawurldecode($oldQuery); // ...URL decode old query URL (it was URL encoded before incorporation into a hidden tag of the 'record' form to avoid any HTML syntax errors)
 											// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_POST'!
 											//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
-		$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
+		$oldQuery = stripSlashesIfMagicQuotes($oldQuery); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
+//		$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
 	}
 	else
 		$oldQuery = "";
@@ -227,7 +228,7 @@
 					. ", show_rows = " . quote_smart($showRows)
 					. ", cite_style_selector = " . quote_smart($citeStyle)
 					. ", cite_order = " . quote_smart($citeOrder)
-					. "WHERE query_id = " . quote_smart($queryID);
+					. " WHERE query_id = " . quote_smart($queryID);
 	}
 
 	elseif ($queryAction == "delet")
