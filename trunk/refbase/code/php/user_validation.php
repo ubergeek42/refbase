@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_validation.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   26-Sep-06, 09:15
+	// Modified:   28-Sep-06, 00:41
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -281,7 +281,7 @@
 		$query .= ", modified_date = " . quote_smart($currentDate)
 				. ", modified_time = " . quote_smart($currentTime);
 
-		$query .= "WHERE user_id = $userID";
+		$query .= " WHERE user_id = " . quote_smart($userID);
 	}
 	// If an authorized user uses 'user_details.php' to add a new user (-> 'userID' is empty!):
 	// INSERTs are allowed to:
@@ -330,9 +330,9 @@
 		$query .= ", modified_date = " . quote_smart($currentDate)
 				. ", modified_time = " . quote_smart($currentTime);
 
-		$query .= ", language = \"en\", " // initially, english will be used as default language (the language setting can be changed by the user in 'user_options.php')
-				. "last_login = NOW(), " // set 'last_login' field to the current date & time in 'DATETIME' format (which is 'YYYY-MM-DD HH:MM:SS', e.g.: '2003-12-31 23:45:59')
-				. "logins = 1 "; // set the number of logins to 1 (so that any subsequent login attempt can be counted correctly)
+		$query .= ", language = \"en\"" // initially, english will be used as default language (the language setting can be changed by the user in 'user_options.php')
+				. ", last_login = NOW()" // set 'last_login' field to the current date & time in 'DATETIME' format (which is 'YYYY-MM-DD HH:MM:SS', e.g.: '2003-12-31 23:45:59')
+				. ", logins = 1 "; // set the number of logins to 1 (so that any subsequent login attempt can be counted correctly)
 	}
 	// if '$addNewUsers' is set to 'admin': MAIL feedback to new user & send data to admin for approval:
 	// no user is logged in (since 'user_details.php' cannot be called w/o a 'userID' by a logged in user,
@@ -457,7 +457,7 @@
 
 		// Insert a row for this new user into the 'user_permissions' table:
 		$defaultUserPermissionsString = implode("\", \"", $defaultUserPermissions); // '$defaultUserPermissions' is defined in 'ini.inc.php'
-		// TODO:quote_smart()
+		// TODO: quote_smart()
 		$queryArray[] = "INSERT INTO $tableUserPermissions VALUES (NULL, " . $userID . ", \"" . $defaultUserPermissionsString . "\")";
 
 
