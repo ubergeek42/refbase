@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   22-Sep-06, 18:00
+	// Modified:   30-Sep-06, 00:29
 
 	// This file contains important
 	// functions that are shared
@@ -700,8 +700,8 @@
 
 						// if the 'prefix_call_number' option is set to "true", any 'call_number' string will be prefixed with
 						// the correct call number prefix of the currently logged-in user (e.g. 'IPÖ @ msteffens @ '):
-            //
-            // TODO: Sanitize this using quote_smart
+						//
+						// TODO: Sanitize this using quote_smart
 						if ((isset($_SESSION['loginEmail'])) AND (isset($importDataArray['options']['prefix_call_number'])) AND ($importDataArray['options']['prefix_call_number'] == "true"))
 						{
 							if (empty($recordData['call_number'])) // similar to the GUI behaviour, we'll also add a call number prefix if the 'call_number' field is empty
@@ -1566,7 +1566,7 @@ EOF;
 					}
 				else // $refineSearchActionCheckbox == "1" // if the user marked the checkbox next to "Exclude matches"
 					{
-						$query = eregi_replace("WHERE","WHERE ($fieldSelector NOT RLIKE " . qoute_smart($refineSearchName) . " OR $fieldSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
+						$query = eregi_replace("WHERE","WHERE ($fieldSelector NOT RLIKE " . quote_smart($refineSearchName) . " OR $fieldSelector IS NULL) AND",$query); // ...add search field name & value to the sql query
 					}
 				$query = eregi_replace(' AND serial RLIKE "\.\+"','',$query); // remove any 'AND serial RLIKE ".+"' which isn't required anymore
 			}
@@ -2526,7 +2526,7 @@ EOF;
 		if ($queryTable == $tableUserData) // for the current user, get all entries within the 'user_data' table that refer to the selected records (listed in '$recordSerialsString'):
 			$query = "SELECT record_id, user_groups FROM $tableUserData WHERE record_id RLIKE " . quote_smart("^(" . $recordSerialsString . ")$") . " AND user_id = " . quote_smart($userID);
 		elseif ($queryTable == $tableUsers) // for the admin, get all entries within the 'users' table that refer to the selected records (listed in '$recordSerialsString'):
-      $query = "SELECT user_id as record_id, user_groups FROM $tableUsers WHERE user_id RLIKE " . quote_smart("^(" . $recordSerialsString . ")$");
+			$query = "SELECT user_id as record_id, user_groups FROM $tableUsers WHERE user_id RLIKE " . quote_smart("^(" . $recordSerialsString . ")$");
 			// (note that by using 'user_id as record_id' we can use the term 'record_id' as identifier of the primary key for both tables)
 
 
@@ -2928,7 +2928,7 @@ EOF;
 
 		// CONSTRUCT SQL QUERY:
 		// get the path for the record entry in table 'depends' whose field 'depends_external' matches that in '$externalUtilityName':
-		$query = "SELECT depends_path FROM $tableDepends WHERE depends_external = " . qoute_smart($externalUtilityName);
+		$query = "SELECT depends_path FROM $tableDepends WHERE depends_external = " . quote_smart($externalUtilityName);
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 		$row = mysql_fetch_array($result);
@@ -3588,25 +3588,71 @@ EOF;
 
 	// --------------------------------------------------------------------
 
-	// Quote variable to make safe
-	function quote_smart($value) {
-		// Stripslashes
+	// Quote variable to make safe (and escape special characters in a string for use in a SQL statement):
+	function quote_smart($value)
+	{
+		// Remove slashes from value if 'magic_quotes_gpc = On':
 		$value = stripSlashesIfMagicQuotes($value);
 		
-		// Quote if not a number or a numeric string
-		if (!is_numeric($value)) {
-			$value = "'" . mysql_real_escape_string($value) . "'";
+		// Quote & escape special chars if not a number or a numeric string:
+		if (!is_numeric($value))
+		{
+			$value = "\"" . escapeSQL($value) . "\"";
 	 	}
+
 		return $value;
 	}
 
-	// Removes slashes from the input string if 'magic_quotes_gpc = On'
+	// --------------------------------------------------------------------
+
+	// Removes slashes from the input string if 'magic_quotes_gpc = On':
 	function stripSlashesIfMagicQuotes($sourceString)
 	{
 		$magicQuotes = ini_get("magic_quotes_gpc"); // check the value of the 'magic_quotes_gpc' directive in 'php.ini'
 
 		if ($magicQuotes) // magic_quotes_gpc = On
-			$sourceString = stripslashes($sourceString);
+			$sourceString = convertSlashes($sourceString);
+
+		return $sourceString;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Fix escape sequences within a string (i.e., remove 'unwanted' slashes):
+	function convertSlashes($sourceString)
+	{
+		// $sourceString = stripslashes($sourceString);
+
+		// Note that function 'stripslashes()' cannot be used here since it may remove too many slashes!
+		// As an example, assume a user input in 'show.php' like this:
+		// 
+		//   <my cite_key> ... <is within list> ... Mock++1997Bacteria
+		// 
+		// 'Mock++1997Bacteria' gets preg_quote()d in 'show.php' to 'Mock\+\+1997Bacteria'. This
+		// is necessary to escape any potential grep metacharacters inside the user's cite keys.
+		// 
+		// So, for an input of '^(Mock\+\+1997Bacteria)$', following scenario will occur with 'magic_quotes_gpc = On':
+		// 
+		// Case 1 ('convertSlashes()' uses 'stripslashes()'):
+		//   'show.php' -> 'quote_smart()' -> 'stripSlashesIfMagicQuotes()' -> 'convertSlashes()':        ^(Mock++1997Bacteria)$   -> this step incorrectly strips the slashes!
+		//   'show.php' -> 'quote_smart()' -> 'escapeSQL()':                                              ^(Mock++1997Bacteria)$
+		//   'show.php' -> 'quote_smart()':                                                              "^(Mock++1997Bacteria)$"
+		//   'search.php' receives:                                                                     \"^(Mock++1997Bacteria)$\"
+		//   'search.php' -> 'verifySQLQuery()' -> 'stripSlashesIfMagicQuotes()' -> 'convertSlashes()':  "^(Mock++1997Bacteria)$"
+		// 
+		// Case 2 ('convertSlashes()' uses 'str_replace'):
+		//   'show.php' -> 'quote_smart()' -> 'stripSlashesIfMagicQuotes()' -> 'convertSlashes()':        ^(Mock\+\+1997Bacteria)$
+		//   'show.php' -> 'quote_smart()' -> 'escapeSQL()':                                              ^(Mock\\+\\+1997Bacteria)$
+		//   'show.php' -> 'quote_smart()':                                                              "^(Mock\\+\\+1997Bacteria)$"
+		//   'search.php' receives:                                                                     \"^(Mock\\\\+\\\\+1997Bacteria)$\"
+		//   'search.php' -> 'verifySQLQuery()' -> 'stripSlashesIfMagicQuotes()' -> 'convertSlashes()':  "^(Mock\\+\\+1997Bacteria)$"
+		// 
+		// This means that 'stripslashes()' fails while the code below seems to work:
+
+		$sourceString = str_replace('\"', '"', $sourceString); // replace any \" with "
+		$sourceString = str_replace("\\'", "'", $sourceString); // replace any \' with '
+		$sourceString = str_replace("\\\\", "\\", $sourceString);
+		// $sourceString = eregi_replace('(\\\\)+', '\\\\', $sourceString); // instead of the previous line, this would kinda work if SQL strings aren't quote_smart()ed
 
 		return $sourceString;
 	}
@@ -3962,10 +4008,22 @@ EOF;
 		}
 
 		// fix escape sequences within the SQL query:
-		$query = str_replace('\"','"',$sqlQuery); // replace any \" with "
-		$query = eregi_replace('(\\\\)+','\\\\',$query);
+		$query = stripSlashesIfMagicQuotes($sqlQuery);
 
 		return $query;
+	}
+
+	// --------------------------------------------------------------------
+
+	// this function uses 'mysql_real_escape_string()' to:
+	// - prepend backslashes to \, ', "
+	// - replace the characters \x00, \n, \r, and \x1a with a MySQL acceptable representation
+	//   for queries (e.g., the newline character is replaced with the litteral string '\n')
+	function escapeSQL($sourceString)
+	{
+		$sourceString = mysql_real_escape_string($sourceString);
+
+		return $sourceString;
 	}
 
 	// --------------------------------------------------------------------
@@ -4008,8 +4066,9 @@ EOF;
 	function explainSQLQuery($sourceSQLQuery)
 	{
 		// fix escape sequences within the SQL query:
-		$translatedSQL = str_replace('\"','"',$sourceSQLQuery); // replace any \" with "
-		$translatedSQL = ereg_replace('(\\\\)+','\\\\',$translatedSQL);
+		$translatedSQL = stripSlashesIfMagicQuotes($sourceSQLQuery);
+//		$translatedSQL = str_replace('\"','"',$sourceSQLQuery); // replace any \" with "
+//		$translatedSQL = ereg_replace('(\\\\)+','\\\\',$translatedSQL);
 
 		// define an array of search & replace actions:
 		// (Note that the order of array elements IS important since it defines when a search/replace action gets executed)
@@ -4042,7 +4101,8 @@ EOF;
 	// Extract the 'WHERE' clause from an SQL query:
 	function extractWhereClause($query)
 	{
-		$queryWhereClause = preg_replace("/^.+?WHERE (.+?)(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$).*?$/i","\\1",$query);
+		// Note: we include the SQL commands SELECT/INSERT/UPDATE/DELETE in an attempt to sanitize a given WHERE clause from SQL injection attacks
+		$queryWhereClause = preg_replace("/^.+?WHERE (.+?)(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|[ ;]SELECT|[ ;]INSERT|[ ;]UPDATE|[ ;]DELETE|$).*?$/i","\\1",$query);
 
 		return $queryWhereClause;
 	}
@@ -4217,7 +4277,7 @@ EOF;
 						. $userIDTableSpec
 						. "INDEX (" . $fieldName . "_id, " . $fieldName . ", ref_id))";
 
-    // TODO: Sanitize with quote_smart
+		// TODO: Sanitize with quote_smart
 		foreach ($fieldValuesArray as $fieldValue)
 			$queryArray[] = "INSERT INTO " . $tableName . " VALUES " . $fieldValue;
 
