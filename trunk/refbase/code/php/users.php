@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./users.php
 	// Created:    29-Jun-03, 00:25
-	// Modified:   26-Sep-06, 09:15
+	// Modified:   28-Sep-06, 22:03
 
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -153,8 +153,9 @@
 	if ($formType == "sqlSearch") // the admin used a link with an embedded sql query for searching...
 	{
 		$query = eregi_replace(" FROM $tableUsers",", user_id FROM $tableUsers",$sqlQuery); // add 'user_id' column (which is required in order to obtain unique checkbox names as well as for use in the 'getUserID()' function)
-		$query = str_replace('\"','"',$query); // replace any \" with "
-		$query = str_replace('\\\\','\\',$query);
+		$query = stripSlashesIfMagicQuotes($query); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
+//		$query = str_replace('\"','"',$query); // replace any \" with "
+//		$query = str_replace('\\\\','\\',$query);
 	}
 
 	// --- 'Search within Results' & 'Display Options' forms within 'users.php': ---------------

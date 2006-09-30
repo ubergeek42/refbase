@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./record.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   22-Sep-06, 18:30
+	// Modified:   28-Sep-06, 21:58
 
 	// Form that offers to add
 	// records or edit/delete
@@ -85,8 +85,9 @@
 	else
 		$oldQuery = ""; // if the 'oldQuery' parameter wasn't set we set the '$oldQuery' variable to the empty string ("") to prevent 'Undefined index: oldQuery...' notification messages
 	
-	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
-	$oldQuery = ereg_replace('(\\\\)+','\\\\',$oldQuery);
+	$oldQuery = stripSlashesIfMagicQuotes($oldQuery); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
+//	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
+//	$oldQuery = ereg_replace('(\\\\)+','\\\\',$oldQuery);
 
 	// Setup some required variables:
 
@@ -345,9 +346,9 @@
 				foreach($_REQUEST as $varname => $value)
 				{
 					// remove slashes from parameter values if 'magic_quotes_gpc = On':
-					$value = stripSlashesIfMagicQuotes($value); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
+					$_REQUEST[$varname] = stripSlashesIfMagicQuotes($value); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
 
-					$_REQUEST[$varname] = preg_replace("/\\\\([\"'])/", "\\1", $value); // replace any \" with " and any \' with '
+//					$_REQUEST[$varname] = preg_replace("/\\\\([\"'])/", "\\1", $value); // replace any \" with " and any \' with '
 				}
 
 				// read field data from a GET/POST request:
@@ -575,9 +576,9 @@
 					foreach($formVars as $varname => $value)
 					{
 						// remove slashes from parameter values if 'magic_quotes_gpc = On':
-						$value = stripSlashesIfMagicQuotes($value); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
+						$formVars[$varname] = stripSlashesIfMagicQuotes($value); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
 
-						$formVars[$varname] = preg_replace("/\\\\([\"'])/", "\\1", $value); // replace any \" with " and any \' with '
+//						$formVars[$varname] = preg_replace("/\\\\([\"'])/", "\\1", $value); // replace any \" with " and any \' with '
 					}
 
 					$authorName = $formVars['authorName'];

@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./query_manager.php
 	// Created:    04-Feb-04, 22:29
-	// Modified:   22-Sep-06, 18:00
+	// Modified:   28-Sep-06, 22:33
 
 	// This script enables you to manage your custom queries.
 	// It offers a form to save the current query or update/delete any of your saved queries.
@@ -111,7 +111,8 @@
 			$oldQuery = rawurldecode($oldQuery); // ...URL decode old query URL
 											// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
 											//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
-		$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
+		$oldQuery = stripSlashesIfMagicQuotes($oldQuery); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
+//		$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
 	}
 	else
 		$oldQuery = ""; // if the 'oldQuery' parameter wasn't set we set the '$oldQuery' variable to the empty string ("") to prevent 'Undefined index: oldQuery...' notification messages
@@ -253,8 +254,9 @@
 				$displayType = $_REQUEST['displayType']; // extract the type of display requested by the user (either 'Display', 'Cite' or '')
 
 				$sqlQuery = $_REQUEST['sqlQuery']; // accept any previous SQL queries
-					$sqlQuery = str_replace('\"','"',$sqlQuery); // convert \" into "
-					$sqlQuery = str_replace('\\\\','\\',$sqlQuery);
+				$sqlQuery = stripSlashesIfMagicQuotes($sqlQuery); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
+//				$sqlQuery = str_replace('\"','"',$sqlQuery); // convert \" into "
+//				$sqlQuery = str_replace('\\\\','\\',$sqlQuery);
 		
 				$showQuery = $_REQUEST['showQuery']; // extract the $showQuery parameter
 				$showLinks = $_REQUEST['showLinks']; // extract the $showLinks parameter
@@ -283,8 +285,9 @@
 		$queryViewType = $formVars['queryViewType'];
 
 		$sqlQuery = $formVars['sqlQuery'];
-			$sqlQuery = str_replace('\"','"',$sqlQuery); // convert \" into "
-			$sqlQuery = str_replace('\\\\','\\',$sqlQuery);
+		$sqlQuery = stripSlashesIfMagicQuotes($sqlQuery); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
+//		$sqlQuery = str_replace('\"','"',$sqlQuery); // convert \" into "
+//		$sqlQuery = str_replace('\\\\','\\',$sqlQuery);
 
 		if (isset($formVars['showQuery']))
 			$showQuery = $formVars['showQuery'];
