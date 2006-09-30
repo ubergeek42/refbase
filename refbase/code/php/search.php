@@ -5,12 +5,13 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   26-Sep-06, 16:00
-	// TODO: Refactor so that query builder will use a few common functions
+	// Modified:   29-Sep-06, 20:11
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
 	// 2) Details view, shows all fields -> displayDetails() function; 3) Citation view -> generateCitations() function
+
+	// TODO: Refactor so that query builder will use a few common functions
 
 	/*
 	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
@@ -97,12 +98,12 @@
 		{
 			if (eregi("^cli", $client)) 
 			{
-				echo $loc["NoPermission"] . $loc["NoPermission_ForDisplayDetails"]."!\n\n";
+				echo $loc["NoPermission"] . $loc["NoPermission_ForDisplayDetails"] . "!\n\n";
 			}
 			else
 			{
 				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForDisplayDetails"]."!</span></b>";
+				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForDisplayDetails"] . "!</span></b>";
 
 				// Write back session variables:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -119,12 +120,12 @@
 		{
 			if (eregi("^cli", $client)) 
 			{
-				echo $loc["NoPermission"] . $loc["NoPermission_ForCite"]."!\n\n";
+				echo $loc["NoPermission"] . $loc["NoPermission_ForCite"] . "!\n\n";
 			}
 			else
 			{
 				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForCite"]."!</span></b>";
+				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForCite"] . "!</span></b>";
 
 				// Write back session variables:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -144,12 +145,12 @@
 		{
 			if (eregi("^cli", $client)) 
 			{
-				echo $loc["NoPermission"] . $loc["NoPermission_ForExport"]."!\n\n";
+				echo $loc["NoPermission"] . $loc["NoPermission_ForExport"] . "!\n\n";
 			}
 			else
 			{
 				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForExport"]."!</span></b>";
+				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForExport"] . "!</span></b>";
 
 				// Write back session variables:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -173,7 +174,7 @@
 			if ($formType == "sqlSearch" AND !ereg(".+/search.php", $referer)) // if the calling URL contained 'formType=sqlSearch' but wasn't sent by 'search.php' (but, e.g., by 'sql_search.php')
 			{
 				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForSQL"]."!</span></b>";
+				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForSQL"] . "!</span></b>";
 
 				// Write back session variables:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -537,8 +538,9 @@
 				$oldQuery = rawurldecode($oldQuery); // ...URL decode old query URL (it was URL encoded before incorporation into a hidden tag of the 'queryResults' form to avoid any HTML syntax errors)
 												// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
 												//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
-			$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
-			$oldQuery = ereg_replace('(\\\\)+','\\\\',$oldQuery);
+			$oldQuery = stripSlashesIfMagicQuotes($oldQuery); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
+//			$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
+//			$oldQuery = ereg_replace('(\\\\)+','\\\\',$oldQuery);
 		}
 
 	// Third, find out how many rows are available and (if there were rows found) seek to the current offset:
@@ -863,8 +865,11 @@
 								echo "<img src=\"img/caution.gif\" alt=\"(duplicate)\" title=\"duplicate record\" width=\"5\" height=\"16\" hspace=\"0\" border=\"0\">";
 						}
 
-						// add <abbr> block which works as a microformat that allows applications to identify objects on web pages; see <http://unapi.info/specs/> for more info
-						echo "<div class=\"unapi\"><abbr class=\"unapi-id\" title=\"" . $databaseBaseURL . "show.php?record=" . $row["serial"] . "\"></abbr></div>";
+						if ($displayType != "Browse")
+						{
+							// add <abbr> block which works as a microformat that allows applications to identify objects on web pages; see <http://unapi.info/specs/> for more info
+							echo "<div class=\"unapi\"><abbr class=\"unapi-id\" title=\"" . $databaseBaseURL . "show.php?record=" . $row["serial"] . "\"></abbr></div>";
+						}
 
 						echo "\n\t</td>";
 					}
@@ -1933,7 +1938,7 @@
 				elseif ($authorSelector == "starts with")
 					$query .= " AND author RLIKE " . quote_smart("^" . $authorName);
 				elseif ($authorSelector == "ends with")
-					$query .= " AND author RLIKE " . quote_smart($authorName ."$");
+					$query .= " AND author RLIKE " . quote_smart($authorName . "$");
 			}
 
 		// ... if the user has specified a title, add the value of '$titleName' as an AND clause:
@@ -3215,7 +3220,7 @@
 				elseif ($titleSelector == "starts with")
 					$query .= " AND title RLIKE " . quote_smart("^" . $titleName);
 				elseif ($titleSelector == "ends with")
-						$query .= " AND title RLIKE " . quote_smart($titleName . "$");
+					$query .= " AND title RLIKE " . quote_smart($titleName . "$");
 			}
 
 		// ... if the user has specified an original title, add the value of '$origTitleName' as an AND clause:
