@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_details.php
 	// Created:    16-Apr-02, 10:55
-	// Modified:   26-Sep-06, 16:50
+	// Modified:   27-Sep-06, 23:52
 
 	// This script shows the user a user <form>. It can be used both for INSERTing a new user and for UPDATE-ing an existing user.
 	// If the user is logged in, then it is an UPDATE; otherwise, an INSERT. The script also shows error messages above widgets that
@@ -391,7 +391,7 @@
 	<td align="left">Marked:</td>
 	<td><?php echo fieldError("marked", $errors); ?>
 
-		<input type="radio" name="marked" value="yes"<?php echo encodeHTML($markedRadioYesChecked); ?>>&nbsp;&nbsp;yes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="marked" value="no"<?php echo $markedRadioNoChecked; ?>>&nbsp;&nbsp;no
+		<input type="radio" name="marked" value="yes"<?php echo $markedRadioYesChecked; ?>>&nbsp;&nbsp;yes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="marked" value="no"<?php echo $markedRadioNoChecked; ?>>&nbsp;&nbsp;no
 	</td>
 </tr>
 <?php

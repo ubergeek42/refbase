@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_options.php
 	// Created:    24-Oct-04, 19:31
-	// Modified:   26-Sep-06, 17:00
+	// Modified:   28-Sep-06, 00:00
 
 	// This script provides options which are individual for each user.
 	// 
@@ -311,7 +311,7 @@
 	<td align="left" width="169">Use language:</td>
 	<td><?php echo fieldError("languageName", $errors); ?>
 
-		<select name="languageName"<?php echo encodeHTML($languagePopupDisabled); ?>><?php echo $languageOptionTags; ?>
+		<select name="languageName"<?php echo $languagePopupDisabled; ?>><?php echo $languageOptionTags; ?>
 
 		</select>
 	</td>
