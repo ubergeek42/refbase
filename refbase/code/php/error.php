@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./error.php
 	// Created:    5-Jan-03, 16:35
-	// Modified:   21-Jun-06, 23:55
+	// Modified:   28-Sep-06, 22:30
 
 	// This php script will display an error page
 	// showing any error that did occur. It will display
@@ -43,11 +43,13 @@
 	// Check if any error occurred while processing the database UPDATE/INSERT/DELETE
 	$errorNo = $_REQUEST['errorNo'];
 	$errorMsg = $_REQUEST['errorMsg'];
-	$errorMsg = ereg_replace("\\\\(['\"])","\\1",$errorMsg); // replace any \" or \' with " or ', respectively
+	$errorMsg = stripSlashesIfMagicQuotes($errorMsg); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
+//	$errorMsg = ereg_replace("\\\\(['\"])","\\1",$errorMsg); // replace any \" or \' with " or ', respectively
 
 	// Extract the header message that was returned by originating script:
 	$HeaderString = $_REQUEST['headerMsg'];
-	$HeaderString = ereg_replace("(\\\\)+(['\"])","\\2",$HeaderString); // replace any \" or \' with " or ', respectively (Note: the expression '\\\\' describes only *one* backslash! -> '\')
+	$HeaderString = stripSlashesIfMagicQuotes($HeaderString);
+//	$HeaderString = ereg_replace("(\\\\)+(['\"])","\\2",$HeaderString); // replace any \" or \' with " or ', respectively (Note: the expression '\\\\' describes only *one* backslash! -> '\')
 
 	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
 	// ('' will produce the default 'Web' output style)
@@ -58,7 +60,8 @@
 
 	// Extract generic variables from the request:
 	$oldQuery = $_REQUEST['oldQuery']; // fetch the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
-	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
+	$oldQuery = stripSlashesIfMagicQuotes($oldQuery);
+//	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
 
 	if (isset($_SERVER['HTTP_REFERER']))
 		$referer = $_SERVER['HTTP_REFERER'];

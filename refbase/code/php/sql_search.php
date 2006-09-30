@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sql_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   26-Sep-06, 12:30
+	// Modified:   28-Sep-06, 22:02
 
 	// Search form that offers to specify a custom sql query.
 	// It offers some output options (like how many records to display per page)
@@ -65,9 +65,9 @@
 	if ($customQuery == "1") // the script was called with parameters
 		{
 			$sqlQuery = $_REQUEST['sqlQuery']; // accept any previous SQL queries
-				$sqlQuery = str_replace('\"','"',$sqlQuery); // convert \" into "
-				$sqlQuery = str_replace('\\\\','\\',$sqlQuery);
-//				$sqlQuery = str_replace('\\\\\\\'','\'',$sqlQuery); // convert \\\' into '
+			$sqlQuery = stripSlashesIfMagicQuotes($sqlQuery);
+//			$sqlQuery = str_replace('\"','"',$sqlQuery); // convert \" into "
+//			$sqlQuery = str_replace('\\\\','\\',$sqlQuery);
 
 			$showQuery = $_REQUEST['showQuery']; // extract the $showQuery parameter
 			if ("$showQuery" == "1")
@@ -92,7 +92,8 @@
 				$oldQuery = rawurldecode($oldQuery); // ...URL decode old query URL
 												// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
 												//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
-			$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
+			$oldQuery = stripSlashesIfMagicQuotes($oldQuery);
+//			$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
 		}
 	else // if there was no previous SQL query provide the default one:
 		{
