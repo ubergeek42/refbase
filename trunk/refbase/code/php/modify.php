@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./modify.php
 	// Created:    18-Dec-02, 23:08
-	// Modified:   26-Sep-06, 17:10
+	// Modified:   29-Sep-06, 23:46
 
 	// This php script will perform adding, editing & deleting of records.
 	// It then calls 'receipt.php' which displays links to the modified/added record
@@ -193,7 +193,8 @@
 		$oldQuery = rawurldecode($oldQuery); // ...URL decode old query URL (it was URL encoded before incorporation into a hidden tag of the 'record' form to avoid any HTML syntax errors)
 										// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_POST'!
 										//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
-	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
+	$oldQuery = stripSlashesIfMagicQuotes($oldQuery); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
+//	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
 
 
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE
@@ -707,7 +708,7 @@
 					. "address = " . quote_smart($addressName) . ", "
 					. "corporate_author = " . quote_smart($corporateAuthorName) . ", "
 					. "keywords = " . quote_smart($keywordsName) . ", "
-					. "abstract = " .  quote_smart($abstractName) . ", "
+					. "abstract = " . quote_smart($abstractName) . ", "
 					. "publisher = " . quote_smart($publisherName) . ", "
 					. "place = " . quote_smart($placeName) . ", "
 					. "editor = " . quote_smart($editorName) . ", "
@@ -778,15 +779,14 @@
 								. "record_id = " . quote_smart($serialNo) . ", "
 								. "user_id = " . quote_smart($loginUserID) . ", " // '$loginUserID' is provided as session variable
 								. "data_id = NULL"; // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
-
 	}
 
 	elseif ($recordAction == "delet") // (Note that if you delete the mother record within the 'refs' table, the corresponding child entry within the 'user_data' table will remain!)
 	{
 			// Instead of deleting data, deleted records will be moved to the "deleted" table. Data will be stored within the "deleted" table
 			// until they are removed manually. This is to provide the admin with a simple recovery method in case a user did delete some data by accident...
-			// INSERT - construct queries to add data as new record
 
+			// INSERT - construct queries to add data as new record
 			$queryDeleted = "INSERT INTO $tableDeleted SET "
 					. "author = " . quote_smart($authorName) . ", "
 					. "first_author = " . quote_smart($firstAuthor) . ", "
@@ -803,7 +803,7 @@
 					. "address = " . quote_smart($addressName) . ", "
 					. "corporate_author = " . quote_smart($corporateAuthorName) . ", "
 					. "keywords = " . quote_smart($keywordsName) . ", "
-					. "abstract = " .  quote_smart($abstractName) . ", "
+					. "abstract = " . quote_smart($abstractName) . ", "
 					. "publisher = " . quote_smart($publisherName) . ", "
 					. "place = " . quote_smart($placeName) . ", "
 					. "editor = " . quote_smart($editorName) . ", "
@@ -853,7 +853,8 @@
 
 	else // if the form does NOT contain a valid serial number, we'll have to add the data:
 	{
-	$queryRefs = "INSERT INTO $tableRefs SET "
+			// INSERT - construct queries to add data as new record
+			$queryRefs = "INSERT INTO $tableRefs SET "
 					. "author = " . quote_smart($authorName) . ", "
 					. "first_author = " . quote_smart($firstAuthor) . ", "
 					. "author_count = " . quote_smart($authorCount) . ", "
@@ -912,33 +913,13 @@
 			// '$queryUserData' will be set up after '$queryRefs' has been conducted (see below), since the serial number of the newly created 'refs' record is required for the '$queryUserData' query
 	}
 
-	// Apply some clean-up to the sql query:
+	// Apply some clean-up to the SQL query:
 	// if a field of type=NUMBER is empty, we set it back to NULL (otherwise the empty string would be converted to "0")
-	if (ereg("^$|^0$",$volumeNumericNo))
-	{
-		$queryRefs = ereg_replace("\"$volumeNumericNo\"", "NULL", $queryRefs);
-		$queryDeleted = ereg_replace("\"$volumeNumericNo\"", "NULL", $queryDeleted);
-	}
-	if (ereg("^$|^0$",$firstPage))
-	{
-		$queryRefs = ereg_replace("\"$firstPage\"", "NULL", $queryRefs);
-		$queryDeleted = ereg_replace("\"$firstPage\"", "NULL", $queryDeleted);
-	}
-	if (ereg("^$|^0$",$seriesVolumeNumericNo))
-	{
-		$queryRefs = ereg_replace("\"$seriesVolumeNumericNo\"", "NULL", $queryRefs);
-		$queryDeleted = ereg_replace("\"$seriesVolumeNumericNo\"", "NULL", $queryDeleted);
-	}
-	if (ereg("^$|^0$",$editionNo))
-	{
-		$queryRefs = ereg_replace("\"$editionNo\"", "NULL", $queryRefs);
-		$queryDeleted = ereg_replace("\"$editionNo\"", "NULL", $queryDeleted);
-	}
-	if (ereg("^$|^0$",$origRecord))
-	{
-		$queryRefs = ereg_replace("\"$origRecord\"", "NULL", $queryRefs);
-		$queryDeleted = ereg_replace("\"$origRecord\"", "NULL", $queryDeleted);
-	}
+	if (ereg("(year|volume_numeric|first_page|series_volume_numeric|edition|orig_record) = [\"']0?[\"']", $queryRefs))
+		$queryRefs = preg_replace("/(year|volume_numeric|first_page|series_volume_numeric|edition|orig_record) = [\"']0?[\"']/", "\\1 = NULL", $queryRefs);
+
+	if (ereg("(year|volume_numeric|first_page|series_volume_numeric|edition|orig_record) = [\"']0?[\"']", $queryDeleted))
+		$queryDeleted = preg_replace("/(year|volume_numeric|first_page|series_volume_numeric|edition|orig_record) = [\"']0?[\"']/", "\\1 = NULL", $queryDeleted);
 
 	// --------------------------------------------------------------------
 
