@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import.php
 	// Created:    17-Feb-06, 20:57
-	// Modified:   03-Sep-06, 22:48
+	// Modified:   02-Oct-06, 17:38
 
 	// Import form that offers to import records from Reference Manager (RIS), Cambridge Scientific Abstracts (CSA),
 	// RefWorks Tagged Format, ISI Web of Science, PubMed MEDLINE, PubMed XML, MODS XML, Endnote Tagged Text, BibTeX or COPAC.
@@ -27,6 +27,14 @@
 	// START A SESSION:
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
 	start_session(true);
+
+	// --------------------------------------------------------------------
+
+	// Initialize preferred display language:
+	// (note that 'locales.inc.php' has to be included *after* the call to the 'start_session()' function)
+	include 'includes/locales.inc.php'; // include the locales
+
+	// --------------------------------------------------------------------
 
 	// Extract session variables:
 	if (isset($_SESSION['errors']))
@@ -114,12 +122,6 @@
 		else
 			$sourceText = "";
 
-		// check if we need to set the checkbox in front of "Display original source data":
-		if (isset($formVars['showSource'])) // the user did mark the 'showSource' checkbox
-			$showSource = $formVars['showSource'];
-		else
-			$showSource = "";
-
 		if (isset($formVars['importRecordsRadio'])) // 'importRecordsRadio' is only set if user has 'batch_import' permission
 			$importRecordsRadio = $formVars['importRecordsRadio'];
 		else
@@ -148,7 +150,6 @@
 
 		// (A) main import form:
 		$sourceText = "";
-		$showSource = "1";
 		$importRecordsRadio = "only";
 		$importRecords = "1";
 		$skipBadRecords = "";
@@ -162,14 +163,15 @@
 
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(encodeHTML($officialDatabaseName) . $pageTitle, "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
+	displayHTMLhead(encodeHTML($officialDatabaseName) . $pageTitle, "index,follow", "Import records into the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
 	showPageHeader($HeaderString, "");
 
 	// (2b) Start <form> and <table> holding the form elements of the main import form:
-	echo "\n<form action=\"import_modify.php\" method=\"POST\">"
+	echo "\n<form enctype=\"multipart/form-data\" action=\"import_modify.php\" method=\"POST\">"
 		. "\n<input type=\"hidden\" name=\"formType\" value=\"import\">"
 		. "\n<input type=\"hidden\" name=\"submit\" value=\"Import\">" // provide a default value for the 'submit' form tag. Otherwise, some browsers may not recognize the correct output format when a user hits <enter> within a form field (instead of clicking the "Import" button)
-		. "\n<input type=\"hidden\" name=\"showLinks\" value=\"1\">"; // embed '$showLinks=1' so that links get displayed on any 'display details' page
+		. "\n<input type=\"hidden\" name=\"showLinks\" value=\"1\">" // embed '$showLinks=1' so that links get displayed on any 'display details' page
+		. "\n<input type=\"hidden\" name=\"showSource\" value=\"1\">"; // for particular formats (e.g., CSA or MEDLINE) original source data will be displayed alongside the parsed data for easier comparison
 
 	if (isset($errors['badRecords']))
 	{
@@ -217,16 +219,29 @@
 
 	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the main import form\">"
 			. "\n<tr>\n\t<td width=\"94\" valign=\"top\"><b>" . $textEntryFormLabel . ":</b></td>\n\t<td width=\"10\">&nbsp;</td>"
-			. "\n\t<td colspan=\"3\">" . fieldError("sourceText", $errors) . $skipBadRecordsInputMain . "<textarea name=\"sourceText\" rows=\"6\" cols=\"60\" title=\"paste your records here\">$sourceText</textarea></td>"
+			. "\n\t<td colspan=\"3\">" . fieldError("sourceText", $errors) . $skipBadRecordsInputMain . "<textarea name=\"sourceText\" rows=\"6\" cols=\"63\" title=\"paste your records here\">$sourceText</textarea></td>"
 			. "\n</tr>";
 
-	if (!empty($showSource))
-		$showSourceCheckBoxIsChecked = " checked"; // mark the 'Display original source data' checkbox
-	else
-		$showSourceCheckBoxIsChecked = "";
+	// the code for the next table row is kept a bit more modular than necessary to allow for easy changes in the future
+	if (isset($_SESSION['user_permissions']) AND ereg("(allow_batch_import)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does contain 'allow_batch_import'...
+		echo "\n<tr>\n\t<td" . $rowSpan . ">&nbsp;</td>\n\t<td" . $rowSpan . ">&nbsp;</td>";
 
-	echo "\n<tr>\n\t<td valign=\"top\"" . $rowSpan . "><b>Options:</b></td>\n\t<td" . $rowSpan . ">&nbsp;</td>"
-		. "\n\t<td width=\"215\" valign=\"top\"" . $rowSpan . "><input type=\"checkbox\" name=\"showSource\" value=\"1\"$showSourceCheckBoxIsChecked title=\"mark this checkbox if original source data shall be displayed alongside the parsed data for easy comparison\">&nbsp;&nbsp;Display original source data</td>";
+	if (isset($_SESSION['user_permissions']) AND ereg("(allow_batch_import)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does contain 'allow_batch_import'...
+	{
+		// display a file upload button:
+		$uploadButtonLock = "";
+		$uploadTitle = $loc["DescriptionFileImport"];
+
+		echo "\n\t<td width=\"215\" valign=\"top\"" . $rowSpan . ">" . fieldError("uploadFile", $errors) . "<input type=\"file\" name=\"uploadFile\" size=\"17\"$uploadButtonLock title=\"$uploadTitle\"></td>";
+	}
+//	else
+//	{
+//		// note that we currently simply hide the upload button if the user doesn't have the 'allow_batch_import' permission (i.e., the two lines below are currently without effect):
+//		$uploadButtonLock = " disabled"; // disabling of the upload button doesn't seem to work in all browsers (e.g., it doesn't work in Safari on MacOSX Panther, but does work with Mozilla & Camino) ?:-/
+//		$uploadTitle = $loc["NoPermission"] . $loc["NoPermission_ForFileImport"]; // similarily, not all browsers will show title strings for disabled buttons (Safari does, Mozilla & Camino do not)
+//
+//		echo "\n\t<td width=\"215\"" . $rowSpan . ">&nbsp;</td>";
+//	}
 
 	if (isset($_SESSION['user_permissions']) AND ereg("(allow_batch_import)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does contain 'allow_batch_import'...
 	{
@@ -247,12 +262,13 @@
 				. "\n<tr>"
 				. "\n\t<td valign=\"top\">" . fieldError("importRecords", $errors) . "<input type=\"radio\" name=\"importRecordsRadio\" value=\"only\"$importRecordsRadioOnlyChecked title=\"choose 'Only' if you just want to import particular records from the pasted source data\">&nbsp;Only:&nbsp;&nbsp;<input type=\"text\" name=\"importRecords\" value=\"$importRecords\" size=\"5\" title=\"enter the record number(s) here: e.g. enter '1-5' to import the first five records; or enter '1 3-5 7' to import records 1, 3, 4, 5 and 7\"></td>";
 	}
-	else
-	{
-		echo "\n\t<td colspan=\"2\">&nbsp;</td>";
-	}
+//	else
+//	{
+//		echo "\n\t<td colspan=\"2\">&nbsp;</td>";
+//	}
 
-	echo "\n</tr>";
+	if (isset($_SESSION['user_permissions']) AND ereg("(allow_batch_import)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does contain 'allow_batch_import'...
+		echo "\n</tr>";
 
 	echo "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>";
 
@@ -279,11 +295,11 @@
 	echo "\n<form action=\"import_modify.php\" method=\"POST\">"
 			. "\n<input type=\"hidden\" name=\"formType\" value=\"importPubMed\">"
 			. "\n<input type=\"hidden\" name=\"submit\" value=\"Import\">" // provide a default value for the 'submit' form tag. Otherwise, some browsers may not recognize the correct output format when a user hits <enter> within a form field (instead of clicking the "Import" button)
-			. "\n<input type=\"hidden\" name=\"showSource\" value=\"1\"$showSourceCheckBoxIsChecked>"; // we set this value from the main import form so that the state of the main import form is identical upon a submit error
+			. "\n<input type=\"hidden\" name=\"showSource\" value=\"1\">"; // in case of the MEDLINE format, original source data will be displayed alongside the parsed data for easier comparison
 
 	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the PubMed import form\">"
 			. "\n<tr>\n\t<td width=\"94\" valign=\"top\"><b>PubMed IDs:</b></td>\n\t<td width=\"10\">&nbsp;</td>"
-			. "\n\t<td colspan=\"3\">" . fieldError("pubmedIDs", $errors) . $skipBadRecordsInputPubmed . "<input type=\"text\" name=\"pubmedIDs\" value=\"$pubmedIDs\" size=\"63\" title=\"enter any PubMed IDs, multiple IDs must be delimited by any non-digit chars\"></td>"
+			. "\n\t<td colspan=\"3\">" . fieldError("pubmedIDs", $errors) . $skipBadRecordsInputPubmed . "<input type=\"text\" name=\"pubmedIDs\" value=\"$pubmedIDs\" size=\"66\" title=\"enter any PubMed IDs, multiple IDs must be delimited by any non-digit chars\"></td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
 			. "\n\t<td colspan=\"3\">\n\t\t<input type=\"submit\" name=\"submit\" value=\"Import\"$importButtonLock title=\"$importTitlePubmed\">\n\t</td>"
