@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   30-Sep-06, 00:29
+	// Modified:   02-Oct-06, 17:39
 
 	// This file contains important
 	// functions that are shared
@@ -2415,7 +2415,7 @@ EOF;
 			$uploadFileInfo["type"] = $HTTP_POST_VARS[$name . "_type"];
 		}
 
-		if ($uploadFileInfo["tmp_name"] == "none") // on some systems (PHP versions) the 'tmp_name' element might contain 'none' if there was no file being uploaded
+		if (isset($uploadFileInfo["tmp_name"]) && ($uploadFileInfo["tmp_name"] == "none")) // on some systems (PHP versions) the 'tmp_name' element might contain 'none' if there was no file being uploaded
 			$uploadFileInfo["tmp_name"] = ""; // in order to standardize array output we replace 'none' with an empty string
 
 		return $uploadFileInfo;
