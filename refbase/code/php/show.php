@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   29-Sep-06, 20:56
+	// Modified:   03-Oct-06, 21:46
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -41,7 +41,7 @@
 	// (they control how found records are presented on screen)
 
 	// Extract the ID of the client from which the query originated:
-	// this identifier is used to identify queries that originated from the refbase command line client ("cli-refbase-1.0.1") or from a bookmarklet (e.g., "jsb-refbase-1.0")
+	// this identifier is used to identify queries that originated from the refbase command line clients ("cli-refbase-1.1", "cli-refbase_import-1.0") or from a bookmarklet (e.g., "jsb-refbase-1.0")
 	if (isset($_REQUEST['client']))
 		$client = $_REQUEST['client'];
 	else
@@ -495,7 +495,7 @@
 			//          As a result, you won't be able to see your collegues selected publications by using an URL like '../show.php?author=steffens&userID=2&selected=yes&submit=Cite&citeOrder=year'
 			//          On the other hand, if the 'cite_key' field isn't included within the SELECT clause, user-specific cite keys can't be written out instead of serials when citing as "Text Citation".
 			//          Since the latter is of minor importance we'll require $citeStyle == "Text Citation" here:
-			if (($citeStyle == "Text Citation") AND !empty($userID)) // if the selected cite style is "Text Citation" & the 'userID' parameter was specified...
+			if (!empty($userID)) // if the 'userID' parameter was specified...
 					$query .= ", cite_key"; // add user-specific fields which are required in Citation view
 
 			$query .= ", serial"; // add 'serial' column
