@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import/bibutils/import_end2refbase.php
 	// Created:    24-Feb-06, 02:07
-	// Modified:   26-Feb-06, 19:01
+	// Modified:   02-Oct-06, 12:41
 
 	// This is an import format file (which must reside within the 'import/' sub-directory of your refbase root directory). It contains a version of the
 	// 'importRecords()' function that imports records from 'Endnote'-formatted data, i.e. data that were formatted according to the export format used
@@ -19,8 +19,6 @@
 
 	// Requires the following packages (available under the GPL):
 	//    - bibutils <http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html>
-
-	include 'includes/execute.inc.php';
 
 	function importRecords($sourceText, $importRecordsRadio, $importRecordNumbersArray)
 	{
