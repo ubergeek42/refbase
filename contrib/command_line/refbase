@@ -6,7 +6,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./refbase
 # Created:    06-Jun-06, 18:00
-# Modified:   14-Jun-06, 13:21
+# Modified:   03-Oct-06, 22:40
 
 # REFBASE -- a refbase command line interface
 
@@ -17,24 +17,23 @@
 #             To view some usage examples type 'refbase -X'
 #             Further information is available at <http://cli.refbase.net/>
 
-# Version:    1.0.1
+# Version:    1.1
 
 # Requires:   - a shell with Perl execution capabilities
-#             - the Perl CPAN modules LWP::Simple and URI::URL
+#             - the Perl CPAN modules LWP::UserAgent, HTTP::Request::Common, HTTP::Response, HTTP::Cookies and URI::URL
 #             - access to an up-to-date refbase CVS version
 
 # Limits:     - Currently, this utility supports search & retrieve, but does not support update actions such as add, edit or delete.
 #             - This script is currently just an interface to 'show.php', which for example does not support arbitrary sort orders.
-#             - User authentication has not been implemented. This means that, except for querying the user-specific fields 'cite_key',
-#               'marked' and 'selected', this script cannot access other user-specific information or display user-specific cite keys.
 #             - Specifying the record offset (using '-S|--start') as well as the number of records to be returned (using '-R|--rows') will
-#               only work for the formats 'html', 'rtf', 'latex', 'markdown', 'text' and 'srw', since the other formats are designed to
-#               always export the entire result set. Note that for 'html', '--start' is adjusted to the next lower value that is an
+#               only work for the formats 'html', 'rtf', 'pdf', 'latex', 'markdown', 'ascii' and 'srw', since the other formats are designed
+#               to always export the entire result set. Note that for 'html', '--start' is adjusted to the next lower value that is an
 #               exact multiple of '--rows' (which ensures correct behaviour of the browse links).
+#             - The authentication mechanism is currently limited in that a given password will be transferred as parameter in the POST request
 
 # --------------------------------------------------------------------------------------------------------------
 
-my $version = "1.0.1";
+$version = "1.1";
 
 # Configure variables:
 
@@ -43,13 +42,14 @@ my $version = "1.0.1";
 #          your local refbase installation; one hash key must be named 'default',
 #          all other keys can be freely chosen
 #        - by default, the server labeled with key 'default' will be queried
-my %hosts = (
+%hosts = (
 				'default' => 'http://polaris.ipoe.uni-kiel.de/refs/',
-				'local'   => 'http://localhost/refs/'
+				'local'   => 'http://localhost/refs/',
+				'beta'    => 'http://beta.refbase.net/'
 );
 
 # Specify the default values for all options that are not explicitly specified:
-my %params = (
+%params = (
 				# query options:
 				'author'          => '',    # -a|--author
 				'abstract'        => '',    # -b|--abstract
@@ -76,7 +76,7 @@ my %params = (
 
 				# output options:
 				'citeStyle'   => '',        # -C|--style     => desired citation style, given name must match an entry within the database's MySQL table 'styles' (keep empty to use the database default)
-				'format'      => 'ascii',   # -F|--format    => output format must be 'html', 'rtf', 'pdf', 'latex', 'markdown', 'ascii', 'bibtex', 'endnote', 'ris', 'mods', 'srw', 'odf' or '' (the empty string '' will produce the default 'html' output style)
+				'format'      => 'ascii',   # -F|--format    => output format must be 'html', 'rtf', 'pdf', 'latex', 'markdown', 'ascii', 'bibtex', 'endnote', 'ris', 'mods', 'srw', 'odf' or '' (the empty string '' will produce the default 'ascii' output style)
 				'showLinks'   => '1',       # -L|--showlinks => hide/display links column in HTML output; must be '0', '1', or '' (the empty string '' will produce the default output style, i.e. print any links)
 				'citeOrder'   => 'author',  # -O|--order     => cite order must be 'author', 'year', 'type', 'type-year' or '' (the empty string '' will produce the default 'author' sort order)
 				'showQuery'   => '0',       # -Q|--showquery => hide/display SQL query in ASCII output; must be '0', '1', or '' (the empty string '' will produce the default output style, i.e. not showing the SQL query)
@@ -90,13 +90,26 @@ my %params = (
 
 );
 
+# Specify the default login credentials for a refbase user account:
+%loginParams = (
+				'loginEmail'     => '', # -U|--user     -> the login email address of an existing refbase user
+				'loginPassword'  => ''  # -P|--password -> the password for the given user account
+);
+
+# Specify the location of the cookie jar file:
+# This file will be used to store & retrieve cookies
+$cookieJarFile = "$ENV{HOME}/.lwpcookies.txt";
+
 # --------------------------------------------------------------------------------
 
-use LWP::Simple; # more info: <http://search.cpan.org/~gaas/libwww-perl-5.805/lib/LWP/Simple.pm>
+use LWP::UserAgent; # more info: <http://search.cpan.org/~gaas/libwww-perl-5.805/lib/LWP/UserAgent.pm>
+use HTTP::Request::Common; # more info: <http://search.cpan.org/~gaas/libwww-perl-5.805/lib/HTTP/Request/Common.pm>
+use HTTP::Response; # more info: <http://search.cpan.org/~gaas/libwww-perl-5.805/lib/HTTP/Response.pm>
+use HTTP::Cookies; # more info: <http://search.cpan.org/~gaas/libwww-perl-5.805/lib/HTTP/Cookies.pm>
 use URI::URL; # more info: <http://search.cpan.org/~gaas/URI-1.35/URI/URL.pm>
 
-my $host = $hosts{'default'};
-my $optCt = 0;
+$host = $hosts{'default'};
+$optCt = 0;
 
 # Extract options:
 
@@ -135,12 +148,16 @@ else {
 		elsif ($_ =~ /^(?:-C|--style)=(.+)$/) { $params{'citeStyle'} = $1; }
 		elsif ($_ =~ /^(?:-F|--format)=(.+)$/) { $params{'format'} = $1; }
 		elsif ($_ =~ /^(?:-L|--showlinks)=(.+)$/) { $params{'showLinks'} = $1; }
-		elsif ($_ =~ /^(?:-H|--host)=(.+)$/) { $host = $1; }
 		elsif ($_ =~ /^(?:-O|--order)=(.+)$/) { $params{'citeOrder'} = $1; }
 		elsif ($_ =~ /^(?:-Q|--showquery)=(.+)$/) { $params{'showQuery'} = $1; }
 		elsif ($_ =~ /^(?:-R|--rows)=(.+)$/) { $params{'showRows'} = $1; }
 		elsif ($_ =~ /^(?:-S|--start)=(.+)$/) { $params{'startRecord'} = $1; }
 		elsif ($_ =~ /^(?:-V|--view)=(.+)$/) { $params{'viewType'} = $1; }
+
+		# extract server options:
+		elsif ($_ =~ /^(?:-H|--host)=(.+)$/) { $host = $1; }
+		elsif ($_ =~ /^(?:-P|--password)=(.+)$/) { $loginParams{'loginPassword'} = $1; }
+		elsif ($_ =~ /^(?:-U|--user)=(.+)$/) { $loginParams{'loginEmail'} = $1; }
 	}
 }
 
@@ -200,12 +217,73 @@ if (($params{'citeType'} eq 'html') && ($params{'records'} =~ /^[0-9]+$/)) {
 # construct URL:
 # (uses URI::URL)
 $script = "show.php";
-my $url = url($host . $script);
+$url = url($host . $script);
 $url->query_form(%params);
 
-# send GET request & print returned results to STDOUT (or, if the request fails, to STDERR):
-# (uses LWP::Simple)
-getprint($url);
+# initialize new user agent:
+# (uses LWP::UserAgent)
+$userAgent = LWP::UserAgent->new;
+
+# set user agent string:
+$userAgent->agent("refbase/" . $version . " (http://cli.refbase.net/) ");
+
+# set cookie jar object:
+# LWP will collect cookies and respond to cookie requests via its cookie jar, thus
+# enabling the user agent to fetch a PHP session ID from the refbase login response
+# and automatically resend it upon next request
+$userAgent->cookie_jar({ file => $cookieJarFile, autosave => 1 });
+
+# attempt to authenticate using the given login credentials:
+if (($loginParams{'loginEmail'} ne '') && ($loginParams{'loginPassword'} ne '')) {
+	$loginSuccessful = &login(0); # call the 'login' subroutine
+}
+
+# send GET request:
+# (uses HTTP::Request::Common & HTTP::Response)
+$request = GET $url;
+$response = $userAgent->request($request); # or use: $response = $userAgent->get($url);
+
+# Print returned results to STDOUT (or, if the request fails, to STDERR):
+if ($response->is_error()) {
+	print STDERR $response->status_line, "\n";
+}
+else {
+	print $response->content();
+}
+
+# --------------------------------------------------------------------------------
+
+# Login with login credentials given in '%loginParams':
+sub login
+{
+	local ($status) = @_;
+
+	# construct URL:
+	# (uses URI::URL)
+	$loginScript = "user_login.php";
+	$loginURL = url($host . $loginScript);
+
+	# send POST request:
+	# (uses HTTP::Request::Common & HTTP::Response)
+	$request = POST $loginURL, \%loginParams;
+	$response = $userAgent->request($request);
+	
+	if ($response->is_error()) {
+		print STDERR $response->status_line, "\n";
+		exit $status;
+	}
+	else {
+		$location = $response->header('Location');
+
+		# upon successful login, refbase will redirect to 'index.php'
+		if ($location =~ /index.php/) {
+			return 1; # login successful
+		}
+		else {
+			return 0; # login NOT successful
+		}
+	}
+}
 
 # --------------------------------------------------------------------------------
 
@@ -216,61 +294,74 @@ sub usage
 
 	print "\nrefbase command line client, v" . $version . " by Matthias Steffens, http://cli.refbase.net/\n\n"
 
-			. "Usage:   refbase [OPTIONS]\n\n"
+		. "Usage:   refbase [OPTIONS]\n\n"
 
-			. "Notes:   - At least one query option must be given and unrecognized options will be ignored.\n"
-			. "         - If multiple options are given, they will by default be connected with 'AND'. Use\n"
-			. "           '--query=or' to connect multiple options with 'OR'.\n"
-			. "         - Options syntax: [OPTION]=[VALUE], e.g. '-a=steffens' or '--author=\"steffens, m\"'.\n"
-			. "         - Returns up to '--rows' number of records beginning with '--start'. If all given\n"
-			. "           query options are empty, all database records will be returned.\n"
-			. "         - Note that '--records' assumes a list of full record serials separated by non-digit\n"
-			. "           characters while '--serial' allows for partial matches.\n"
-			. "         - For each option, default values can be specified at the top of the script.\n"
-			. "           Current defaults are given in parentheses.\n\n"
+		. "Notes:   - At least one query option must be given and unrecognized options will be ignored.\n"
+		. "         - If multiple options are given, they will by default be connected with 'AND'. Use\n"
+		. "           '--query=or' to connect multiple options with 'OR'.\n"
+		. "         - Options syntax: [OPTION]=[VALUE], e.g. '-a=steffens' or '--author=\"steffens, m\"'.\n"
+		. "         - Returns up to '--rows' number of records beginning with '--start'. If all given\n"
+		. "           query options are empty, all database records will be returned.\n"
+		. "         - Note that '--records' assumes a list of full record serials separated by non-digit\n"
+		. "           characters while '--serial' allows for partial matches.\n"
+		. "         - For each option, default values can be specified at the top of the script.\n"
+		. "           Current defaults are given in parentheses.\n\n"
 
-			. "General Options:   -h, --help        - display this help text\n"
-			. "                   -v, --version     - display version information\n"
-			. "                   -X, --examples    - display usage examples\n\n"
+		. "General Options:   -h, --help        - display this help text\n"
+		. "                   -v, --version     - display version information\n"
+		. "                   -X, --examples    - display usage examples\n\n"
 
-			. "Query Options:     -a, --author      - search author field ('" . $params{'author'} . "')\n"
-			. "                   -b, --abstract    - search abstract field ('" . $params{'abstract'} . "')\n"
-			. "                   -c, --citekey     - search cite_key field, requires '-u, --userid' ('" . $params{'cite_key'} . "')\n"
-			. "                   -d, --date        - search by creation date ('" . $params{'date'} . "')\n"
-			. "                   -e, --area        - search area field ('" . $params{'area'} . "')\n"
-			. "                   -f, --thesis      - search thesis field ('" . $params{'thesis'} . "')\n"
-			. "                   -i, --contribid   - search contribution_id field ('" . $params{'contribution_id'} . "')\n"
-			. "                   -j, --journal     - search abbrev_journal field ('" . $params{'abbrev_journal'} . "')\n"
-			. "                   -k, --keywords    - search keywords field ('" . $params{'keywords'} . "')\n"
-			. "                   -l, --location    - search location field ('" . $params{'location'} . "')\n"
-			. "                   -m, --marked      - search marked field, requires '-u, --userid' ('" . $params{'ismarked'} . "')\n"
-			. "                   -n, --notes       - search notes field ('" . $params{'notes'} . "')\n"
-			. "                   -p, --publication - search publication field ('" . $params{'publication'} . "')\n"
-			. "                   -q, --query       - query type, possible values: and, or ('" . $params{'queryType'} . "')\n"
-			. "                   -r, --records     - search serial field ('" . $params{'records'} . "')\n"
-			. "                   -s, --selected    - search selected field, requires '-u, --userid' ('" . $params{'selected'} . "')\n"
-			. "                   -t, --title       - search title field ('" . $params{'title'} . "')\n"
-			. "                   -u, --userid      - join with user-specific data from user ID ('" . $params{'userID'} . "')\n"
-			. "                   -w, --where       - search by using a raw sql where clause ('" . $params{'where'} . "')\n"
-			. "                   -x, --type        - search type field ('" . $params{'type'} . "')\n"
-			. "                   -y, --year        - search year field ('" . $params{'year'} . "')\n"
-			. "                   -z, --serial      - search serial field (partial matches) ('" . $params{'serial'} . "')\n\n"
+		. "Query Options:     -a, --author      - search author field ('" . $params{'author'} . "')\n"
+		. "                   -b, --abstract    - search abstract field ('" . $params{'abstract'} . "')\n"
+		. "                   -c, --citekey     - search cite_key field, requires '-u, --userid' ('" . $params{'cite_key'} . "')\n"
+		. "                   -d, --date        - search by creation date ('" . $params{'date'} . "')\n"
+		. "                   -e, --area        - search area field ('" . $params{'area'} . "')\n"
+		. "                   -f, --thesis      - search thesis field ('" . $params{'thesis'} . "')\n"
+		. "                   -i, --contribid   - search contribution_id field ('" . $params{'contribution_id'} . "')\n"
+		. "                   -j, --journal     - search abbrev_journal field ('" . $params{'abbrev_journal'} . "')\n"
+		. "                   -k, --keywords    - search keywords field ('" . $params{'keywords'} . "')\n"
+		. "                   -l, --location    - search location field ('" . $params{'location'} . "')\n"
+		. "                   -m, --marked      - search marked field, requires '-u, --userid' ('" . $params{'ismarked'} . "')\n"
+		. "                   -n, --notes       - search notes field ('" . $params{'notes'} . "')\n"
+		. "                   -p, --publication - search publication field ('" . $params{'publication'} . "')\n"
+		. "                   -q, --query       - query type, possible values: and, or ('" . $params{'queryType'} . "')\n"
+		. "                   -r, --records     - search serial field ('" . $params{'records'} . "')\n"
+		. "                   -s, --selected    - search selected field, requires '-u, --userid' ('" . $params{'selected'} . "')\n"
+		. "                   -t, --title       - search title field ('" . $params{'title'} . "')\n"
+		. "                   -u, --userid      - join with user-specific data from user ID ('" . $params{'userID'} . "')\n"
+		. "                   -w, --where       - search by using a raw sql where clause ('" . $params{'where'} . "')\n"
+		. "                   -x, --type        - search type field ('" . $params{'type'} . "')\n"
+		. "                   -y, --year        - search year field ('" . $params{'year'} . "')\n"
+		. "                   -z, --serial      - search serial field (partial matches) ('" . $params{'serial'} . "')\n\n"
 
-			. "Output Options:    -C, --style       - citation style ('" . $params{'citeStyle'} . "')\n"
-			. "                   -F, --format      - output format ('" . $params{'format'} . "')\n"
-			. "                                       possible values: html, rtf, pdf, latex, markdown, ascii,\n"
-			. "                                                        bibtex, endnote, ris, mods, srw, odf\n"
-			. "                   -H, --host        - URL of the refbase database ('" . $host . "')\n"
-			. "                   -L, --showlinks   - hide/display links column in html output ('" . $params{'showLinks'} . "')\n"
-			. "                                       possible values: 0, 1\n"
-			. "                   -O, --order       - sort order of returned records ('" . $params{'citeOrder'} . "')\n"
-			. "                                       possible values: author, year, type, type-year\n"
-			. "                   -Q, --showquery   - hide/display SQL query in ASCII output ('" . $params{'showQuery'} . "')\n"
-			. "                                       possible values: 0, 1\n"
-			. "                   -R, --rows        - number of records to be returned ('" . $params{'showRows'} . "')\n"
-			. "                   -S, --start       - number of first record to be returned ('" . $params{'startRecord'} . "')\n"
-			. "                   -V, --view        - view type of html output ('" . $params{'viewType'} . "')\n"
-			. "                                       possible values: web, print\n\n";
+		. "Output Options:    -C, --style       - citation style ('" . $params{'citeStyle'} . "')\n"
+		. "                   -F, --format      - output format ('" . $params{'format'} . "')\n"
+		. "                                       possible values: html, rtf, pdf, latex, markdown, ascii,\n"
+		. "                                                        bibtex, endnote, ris, mods, srw, odf\n"
+		. "                   -L, --showlinks   - hide/display links column in html output ('" . $params{'showLinks'} . "')\n"
+		. "                                       possible values: 0, 1\n"
+		. "                   -O, --order       - sort order of returned records ('" . $params{'citeOrder'} . "')\n"
+		. "                                       possible values: author, year, type, type-year\n"
+		. "                   -Q, --showquery   - hide/display SQL query in ASCII output ('" . $params{'showQuery'} . "')\n"
+		. "                                       possible values: 0, 1\n"
+		. "                   -R, --rows        - number of records to be returned ('" . $params{'showRows'} . "')\n"
+		. "                   -S, --start       - number of first record to be returned ('" . $params{'startRecord'} . "')\n"
+		. "                   -V, --view        - view type of html output ('" . $params{'viewType'} . "')\n"
+		. "                                       possible values: web, print\n\n"
+
+		. "Server Options:    -H, --host        - URL of the refbase database ('" . $host . "')\n"
+		. "                                       defined shortcuts: " . join(', ', keys(%hosts)) . "\n"
+		. "                   -P, --password    - password for given user account";
+
+	if ($loginParams{'loginPassword'} ne '') {
+		print "\n                                       (a default pwd has been defined)\n";
+	}
+	else {
+		print " ('')\n";
+	}
+
+	print "                   -U, --user        - login email address of an existing refbase user\n"
+		. "                                       ('" . $loginParams{'loginEmail'} . "')\n\n";
 
 	exit $status;
 }
