@@ -9,7 +9,7 @@
 	//
 	// File:       ./includes/import.inc.php
 	// Created:    13-Jan-06, 21:00
-	// Modified:   03-Sep-06, 23:06
+	// Modified:   03-Oct-06, 21:12
 
 	// This file contains functions
 	// that are used when importing
@@ -1513,6 +1513,8 @@
 			}
 			fclose($handle);
 		}
+		else
+			$sourceData = "Error occurred: Failed to open " . $sourceURL; // network error
 
 		return $sourceData;
 	}
