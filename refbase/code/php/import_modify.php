@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import_modify.php
 	// Created:    17-Feb-06, 20:57
-	// Modified:   03-Sep-06, 22:42
+	// Modified:   02-Oct-06, 19:24
 
 	// This php script accepts input from 'import.php' and will process records exported from Endnote, Reference Manager (RIS), BibTeX, ISI Web of Science,
 	// Pubmed, CSA or Copac. In case of a single record, the script will call 'record.php' with all provided fields pre-filled. The user can then verify
@@ -19,6 +19,7 @@
 	// Incorporate some include files:
 	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
 	include 'includes/include.inc.php'; // include common functions
+	include 'includes/execute.inc.php'; // include functions that deal with execution of shell commands
 	include 'includes/import.inc.php'; // include common import functions
 	include 'initialize/ini.inc.php'; // include common variables
 
@@ -35,16 +36,13 @@
 	foreach($_REQUEST as $varname => $value)
 	{
 		// remove slashes from parameter values if 'magic_quotes_gpc = On':
-		$value = stripSlashesIfMagicQuotes($value); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
-
-//		$formVars[$varname] = preg_replace("/\\\\([\"'])/", "\\1", $value); // replace any \" with " and any \' with '
-		$formVars[$varname] = $value;
+		$formVars[$varname] = stripSlashesIfMagicQuotes($value); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
 	}
 
 	// --------------------------------------------------------------------
 
 	// Extract the ID of the client from which the query originated:
-	// this identifier is used to identify queries that originated from the refbase command line client ("cli-refbase-1.0.1") or from a bookmarklet (e.g., "jsb-refbase-1.0.0")
+	// this identifier is used to identify queries that originated from the refbase command line clients ("cli-refbase-1.0.1", "cli-refbase_import-1.0") or from a bookmarklet (e.g., "jsb-refbase-1.0.0")
 	if (isset($formVars['client']))
 		$client = $formVars['client'];
 	else
@@ -97,6 +95,7 @@
 	$formType = $formVars['formType'];
 
 	// In case of the main import form, get the source text containing the bibliographic record(s):
+	// Note that data from any successfully uploaded file will override data pasted into the 'sourceText' text entry field
 	if (isset($formVars['sourceText']))
 		$sourceText = $formVars['sourceText'];
 	else
@@ -148,6 +147,93 @@
 		$skipBadRecords = $formVars['skipBadRecords'];
 	else
 		$skipBadRecords = "";
+
+	// Check if a file was uploaded:
+	// (note that to have file uploads work, HTTP file uploads must be allowed within your 'php.ini' configuration file
+	//  by setting the 'file_uploads' parameter to 'On'!)
+	// extract file information into a four (or five) element associative array containing the following information about the file:
+
+	//     name     - original name of file on client
+	//     type     - MIME type of file
+	//     tmp_name - name of temporary file on server
+	//     error    - holds an error number >0 if something went wrong, otherwise 0 (I don't know when this element was added. It may not be present in your PHP version... ?:-/)
+	//     size     - size of file in bytes
+
+	// depending what happend on upload, they will contain the following values (PHP 4.1 and above):
+	//              no file upload  upload exceeds 'upload_max_filesize'  successful upload
+	//              --------------  ------------------------------------  -----------------
+	//     name           ""                       [name]                      [name]
+	//     type           ""                         ""                        [type]
+	//     tmp_name    "" OR "none"                  ""                      [tmp_name]
+	//     error          4                          1                           0
+	//     size           0                          0                         [size]
+	$uploadFile = getUploadInfo("uploadFile"); // function 'getUploadInfo()' is defined in 'include.inc.php'
+
+	$tmpFilePath = "";
+
+	// Validate the 'uploadFile' field:
+	// TODO: Move code that validates file uploads into its own function (and merge with related code from 'modify.php')
+	// (which must not exceed the 'upload_max_filesize' specified within your 'php.ini' configuration file)
+	if (!empty($uploadFile) && !empty($uploadFile["name"])) // if the user attempted to upload a file
+	{
+		// The 'is_uploaded_file()' function returns 'true' if the file indicated by '$uploadFile["tmp_name"]' was uploaded via HTTP POST. This is useful to help ensure
+		// that a malicious user hasn't tried to trick the script into working on files upon which it should not be working - for instance, /etc/passwd.
+		if (is_uploaded_file($uploadFile["tmp_name"]))
+		{
+			if (empty($uploadFile["tmp_name"])) // no tmp file exists => we assume that the maximum upload file size was exceeded!
+			// or check via 'error' element instead: "if ($uploadFile["error"] == 1)" (the 'error' element exists since PHP 4.2.0)
+			{
+				$maxFileSize = ini_get("upload_max_filesize");
+				$fileError = "File size must not be greater than " . $maxFileSize . ":";
+		
+				$errors["uploadFile"] = $fileError; // inform the user that the maximum upload file size was exceeded
+			}
+			else // a tmp file exists...
+			{
+				// prevent hackers from gaining access to the systems 'passwd' file (this should be prevented by the 'is_uploaded_file()' function but anyhow):
+				if (eregi("^passwd$", $uploadFile["name"])) // file name must not be 'passwd'
+					$errors["uploadFile"] = "This file name is not allowed!";
+				// check for invalid file name extensions:
+				elseif (eregi("\.(exe|com|bat|zip|php|phps|php3|cgi)$", $uploadFile["name"])) // file name has an invalid file name extension (adjust the regex pattern if you want more relaxed file name validation)
+					$errors["uploadFile"] = "You cannot upload this type of file!"; // file name must not end with .exe, .com, .bat, .zip, .php, .phps, .php3 or .cgi
+				else
+					$tmpFilePath = $uploadFile["tmp_name"];
+			}
+		}
+		else
+		{
+			// I'm not sure if this actually works --RAK
+			switch($uploadFile["error"])
+			{
+				case 0: // no error; possible file attack!
+					$errors["uploadFile"] = "There was a problem with your upload.";
+				case 1: // uploaded file exceeds the 'upload_max_filesize' directive in 'php.ini'
+					$maxFileSize = ini_get("upload_max_filesize");
+					$fileError = "File size must not be greater than " . $maxFileSize . ":";
+					$errors["uploadFile"] = $fileError;
+				case 2: // uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the html form (Note: refbase doesn't currently specify MAX_FILE_SIZE but anyhow...)
+					$errors["uploadFile"] = "The file you are trying to upload is too big.";
+				case 3: // uploaded file was only partially uploaded
+					$errors["uploadFile"] = "The file you are trying to upload was only partially uploaded.";
+				case 4: // no file was uploaded
+					$errors["uploadFile"] = "You must select a file for upload.";
+				case 6:
+					$errors["uploadFile"] = "Missing a temporary folder.";
+				default: // a default error, just in case!  :)
+					$errors["uploadFile"] = "There was a problem with your upload.";
+			}
+		}
+	}
+
+	if (!empty($uploadFile) && !empty($tmpFilePath)) // if there was a file uploaded successfully
+	{
+		// Get file contents:
+		$fileData = readFromFile($tmpFilePath); // function 'readFromFile()' is defined in 'execute.inc.php'
+
+		if (!empty($fileData))
+			// data from any successfully uploaded file will override data pasted into the 'sourceText' text entry field
+			$sourceText = $fileData;
+	}
 
 	// --------------------------------------------------------------------
 
@@ -339,6 +425,10 @@
 			$errors["skipBadRecords"] = "Skip records with unrecognized data format";
 		}
 	}
+	else
+	{
+		$errors["badRecords"] = "all";
+	}
 
 	// --------------------------------------------------------------------
 
@@ -350,14 +440,40 @@
 		// - the user did mark the 'Skip records with unrecognized data format' checkbox
 		if (!(($errors["badRecords"] == "some") AND ($skipBadRecords == "1")))
 		{
-			// ...otherwise we'll redirect back to the import form and present the error message(s):
+			// ...otherwise we'll present the error message(s):
 
-			// Write back session variables:
-			saveSessionVariable("errors", $errors); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-			saveSessionVariable("formVars", $formVars);
+			if (eregi("^cli", $client)) // if the query originated from a command line client such as the refbase CLI clients ("cli-refbase-1.1", "cli-refbase_import-1.0")
+			{
+				echo "There were validation errors regarding the data you submitted:\n\n";
 
-			// Redirect the browser back to the import form:
-			header("Location: " . $referer);
+				if (($errors["badRecords"] == "all") && (!empty($errors["skipBadRecords"])))
+					$skipBadInfo = $errors["skipBadRecords"] . "\n\n";
+				elseif ($errors["badRecords"] == "some")
+					$skipBadInfo = "Use '--skipbad=1' to skip records with unrecognized data format.\n\n";
+				else
+					$skipBadInfo = "";
+
+				unset($errors["badRecords"]);
+				unset($errors["skipBadRecords"]);
+
+				foreach ($errors as $varname => $value)
+				{
+					$value = ereg_replace("<br>", "\n            ", $value);
+					echo $varname . ": " . $value . "\n\n";
+				}
+
+				echo $skipBadInfo;
+			}
+			else
+			{
+				// Write back session variables:
+				saveSessionVariable("errors", $errors); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+				saveSessionVariable("formVars", $formVars);
+	
+				// Redirect the browser back to the import form:
+				header("Location: " . $referer);
+			}
+
 			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		}
 	}
@@ -370,7 +486,7 @@
 
 	$importedRecordsArray = array();
 
-	if (count($importRecordNumbersRecognizedFormatArray) == 1) // if this is the only record we'll need to import:
+	if ((count($importRecordNumbersRecognizedFormatArray) == 1) AND !eregi("^cli", $client)) // if this is the only record we'll need to import -AND- if the import didn't originate from a refbase command line client:
 	{
 		foreach ($importDataArray['records'][0] as $fieldParameterKey => $fieldParameterValue)
 			$importDataArray['records'][0][$fieldParameterKey] = $fieldParameterKey . "=" . rawurlencode($fieldParameterValue); // copy parameter name and equals sign in front of parameter value
@@ -435,22 +551,29 @@
 			$headerMessage = $importedRecordsCount . " records have been successfully imported:";
 
 		// DISPLAY all newly added records:
-		header("Location: show.php?records=" . $recordSerialsQueryString . "&headerMsg=" . rawurlencode($headerMessage));
+		header("Location: show.php?records=" . $recordSerialsQueryString . "&headerMsg=" . rawurlencode($headerMessage) . "&client=" . $client);
 	}
 	else // nothing imported
 	{
-		// we'll file again this additional error element here so that the 'errors' session variable isn't empty causing 'import.php' to re-load the form data that were submitted by the user
-		$errors["badRecords"] = "all";
+		if (eregi("^cli", $client)) // if the query originated from a command line client such as the refbase CLI clients ("cli-refbase-1.1", "cli-refbase_import-1.0")
+		{
+			echo "No records imported!\n\n";
+		}
+		else
+		{
+			// we'll file again this additional error element here so that the 'errors' session variable isn't empty causing 'import.php' to re-load the form data that were submitted by the user
+			$errors["badRecords"] = "all";
 
-		// save an appropriate error message:
-		$HeaderString = "<b><span class=\"warning\">No records imported!</span></b>";
+			// save an appropriate error message:
+			$HeaderString = "<b><span class=\"warning\">No records imported!</span></b>";
 
-		// Write back session variables:
-		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-		saveSessionVariable("errors", $errors);
-		saveSessionVariable("formVars", $formVars);
+			// Write back session variables:
+			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+			saveSessionVariable("errors", $errors);
+			saveSessionVariable("formVars", $formVars);
 
-		header("Location: " . $referer); // redirect to the calling page (normally, 'import.php')
+			header("Location: " . $referer); // redirect to the calling page (normally, 'import.php')
+		}
 	}
 
 	// --------------------------------------------------------------------
