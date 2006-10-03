@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./cite/formats/cite_ascii.php
 	// Created:    10-Jun-06, 02:54
-	// Modified:   09-Sep-06, 16:42
+	// Modified:   01-Oct-06, 20:41
 
 	// This is a citation format file (which must reside within the 'cite/formats/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecords()' function that outputs a reference list from selected records in plain text format. Plain text output is
@@ -88,34 +88,35 @@
 				}
 
 				// Write plain TEXT paragraph:
-				if (eregi("^cli", $client)) // when outputting results to a command line client, we'll prefix the record with it's serial number
+				if (eregi("^cli", $client)) // when outputting results to a command line client, we'll prefix the record with it's serial number (and it's user-specific cite key, if available)
 				{
-					// Note that it would be also nice to output the user's cite key but this would require that the CLI client supports user authentication
-
 					// This is a stupid hack that maps the names of the '$row' array keys to those used
 					// by the '$formVars' array (which is required by function 'generateCiteKey()')
 					// (eventually, the '$formVars' array should use the MySQL field names as names for its array keys)
-//					$formVars = buildFormVarsArray($row); // function 'buildFormVarsArray()' is defined in 'include.inc.php'
+					$formVars = buildFormVarsArray($row); // function 'buildFormVarsArray()' is defined in 'include.inc.php'
 
 					// Generate or extract the cite key for this record:
 					// NOTE: currently, the following placeholders are not available for citation output:
 					//       <:keywords:>, <:issn:>, <:area:>, <:notes:>, <:userKeys:>
 					//       if the cite key specification uses one of these placeholders, it will get ignored
-//					$citeKey = generateCiteKey($formVars); // function 'generateCiteKey()' is defined in 'include.inc.php'
+					$citeKey = generateCiteKey($formVars); // function 'generateCiteKey()' is defined in 'include.inc.php'
 
 					$plainTextData .= "[" . $row['serial'] . "] ";
 
-//					if (!empty($citeKey))
+					if (!empty($citeKey))
 						// Use the custom cite key that's been build according to the user's individual export options:
-//						$plainTextData .= "{" . $citeKey . "} ";
+						$plainTextData .= "{" . $citeKey . "} ";
 				}
 
 				$plainTextData .= $record . "\n\n"; // create paragraph with encoded record text
 			}
 		}
 
-		if (eregi("^cli", $client)) // when outputting results to a command line client, we'll append some info about the number of rows displayed/found, the database name/URL and optionally display the SQL query
+		if (eregi("^cli", $client)) // when outputting results to a command line client, we'll prefix any header message and append some info about the number of rows displayed/found, the database name/URL and optionally display the SQL query
 		{
+			if (!empty($headerMsg))
+				$plainTextData = $headerMsg . "\n\n" . $plainTextData; // prefix any passed header message
+
 			// Calculate the maximum result number on each page:
 			if (($rowOffset + $showRows) < $rowsFound)
 				$showMaxRow = ($rowOffset + $showRows); // maximum result number on each page
