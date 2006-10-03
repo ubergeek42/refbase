@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./rss.php
 	// Created:    25-Sep-04, 12:10
-	// Modified:   05-Jun-06, 01:26
+	// Modified:   09-Sep-06, 15:20
 
 	// This script will generate a dynamic RSS feed for the current query.
 	// Usage: Perform your query until you've got the desired results. Then, copy the "RSS" link in the header
@@ -77,7 +77,7 @@
 	// CONSTRUCT SQL QUERY:
 
 	// Note: the 'verifySQLQuery()' function that gets called below will add the user specific fields to the 'SELECT' clause and the
-	// 'LEFT JOIN...' part to the 'FROM' clause of the SQL query if a user is logged in. It will also add 'serial', 'file', 'url', 'doi' & 'isbn' columns
+	// 'LEFT JOIN...' part to the 'FROM' clause of the SQL query if a user is logged in. It will also add 'orig_record', 'serial', 'file', 'url', 'doi', 'isbn' & 'type' columns
 	// as required. Therefore it's sufficient to provide just the plain SQL query here:
 	$sqlQuery = "SELECT type, author, year, title, publication, abbrev_journal, volume, issue, pages, thesis, editor, publisher, place, abbrev_series_title, series_title, series_editor, series_volume, series_issue, language, author_count, online_publication, online_citation, doi, created_date, created_time, created_by, modified_date, modified_time, modified_by, serial";
 

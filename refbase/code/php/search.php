@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   29-Sep-06, 20:11
+	// Modified:   02-Oct-06, 18:22
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -53,7 +53,7 @@
 	// [ !! NOTE !!: for details see <http://www.php.net/release_4_2_1.php> & <http://www.php.net/manual/en/language.variables.predefined.php> ]
 
 	// Extract the ID of the client from which the query originated:
-	// this identifier is used to identify queries that originated from the refbase command line client ("cli-refbase-1.0.1") or from a bookmarklet (e.g., "jsb-refbase-1.0")
+	// this identifier is used to identify queries that originated from the refbase command line clients ("cli-refbase-1.1", "cli-refbase_import-1.0") or from a bookmarklet (e.g., "jsb-refbase-1.0")
 	if (isset($_REQUEST['client']))
 		$client = $_REQUEST['client'];
 	else
@@ -1562,7 +1562,7 @@
 
 			If (empty($citeFormatFile))
 			{
-				if (eregi("^cli", $client)) // if the query originated from a command line client such as the "refbase" CLI client ("cli-refbase-1.0")
+				if (eregi("^cli", $client)) // if the query originated from a command line client such as the refbase CLI clients ("cli-refbase-1.1", "cli-refbase_import-1.0")
 					$citeType = "ASCII";
 				else
 					$citeType = "html";
@@ -5344,7 +5344,7 @@
 	{
 		global $client;
 
-		if (eregi("^cli", $client)) // if the query originated from a command line client such as the "refbase" CLI client ("cli-refbase-1.0")
+		if (eregi("^cli", $client)) // if the query originated from a command line client such as the refbase CLI clients ("cli-refbase-1.1", "cli-refbase_import-1.0")
 		{
 			$nothingFoundFeedback = "Nothing found!\n\n"; // return plain text
 		}

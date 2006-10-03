@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_receipt.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   26-Sep-06, 08:30
+	// Modified:   03-Oct-06, 22:02
 
 	// This script shows the user a receipt for their user UPDATE or INSERT.
 	// It carries out no database actions and can be bookmarked.
@@ -83,7 +83,7 @@
 	// --------------------------------------------------------------------
 
 	// For regular users, validate that the correct userID has been passed to the script:
- 	if (isset($_SESSION['loginEmail']) && ($loginEmail != $adminLoginEmail))
+	if (isset($_SESSION['loginEmail']) && ($loginEmail != $adminLoginEmail))
 		// check this user matches the userID (viewing user account details is only allowed to the admin)
 		if ($userID != getUserID($loginEmail))
 		{
@@ -100,8 +100,8 @@
 	// ('' or anything else will be treated equal to 'edit').
 	// We actually extract the variable 'userAction' only if the admin is logged in
 	// (since only the admin will be allowed to delete a user):
- 	if (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail)) // ('$adminLoginEmail' is specified in 'ini.inc.php')
- 	{
+	if (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail)) // ('$adminLoginEmail' is specified in 'ini.inc.php')
+	{
 		if (isset($_REQUEST['userAction']))
 			$userAction = $_REQUEST['userAction'];
 		else
@@ -189,7 +189,6 @@
 		echo "\n<tr>\n\t<td>" . $confirmationText . "</td>\n</tr>";
 
 		echo "\n</table>";
-
 	}
 
 	// --------------------------------------------------------------------
