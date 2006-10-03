@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/header.inc.php
 	// Created:    28-Jul-02, 11:21
-	// Modified:   07-Sep-06, 17:30
+	// Modified:   10-Sep-06, 01:18
 
 	// This is the header include file.
 	// It contains functions that provide the HTML header
@@ -24,6 +24,7 @@
 		global $contentTypeCharset; // these variables are specified in 'ini.inc.php' 
 		global $defaultStyleSheet;
 		global $printStyleSheet;
+		global $databaseBaseURL;
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 		"http://www.w3.org/TR/html4/loose.dtd">
@@ -68,7 +69,8 @@
 		}
 ?>
 
-	<link rel="unapi-server" type="application/xml" title="unAPI" href="<?php global $databaseBaseURL; echo $databaseBaseURL; ?>unapi.php"><?php
+	<link rel="unapi-server" type="application/xml" title="unAPI" href="<?php echo $databaseBaseURL; ?>unapi.php"><?php
+
 		if (!empty($includeJavaScriptFile))
 		{
 ?>
