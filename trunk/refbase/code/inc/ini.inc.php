@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   09-Sep-06, 02:59
+	// Modified:   03-Oct-06, 22:04
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -208,11 +208,11 @@
 
 	// Default setting that controls how non-ASCII characters will be treated in auto-generated cite keys:
 	// (this default setting can be overwritten by user-specific settings)
-  	//   - "strip": removes any non-ASCII characters
-  	//   - "keep": keeps any non-ASCII characters (note that bibutils may strip any non-ASCII chars from cite
-  	//             keys when exporting to Endnote, RIS or BibTeX, depending on the bibutils version you're using)
-  	//   - "transliterate": attempts to transliterate most of the non-ASCII characters and strips all non-ASCII
-  	//                      chars that can't be converted into ASCII equivalents (this is the recommended option)
+	//   - "strip": removes any non-ASCII characters
+	//   - "keep": keeps any non-ASCII characters (note that bibutils may strip any non-ASCII chars from cite
+	//             keys when exporting to Endnote, RIS or BibTeX, depending on the bibutils version you're using)
+	//   - "transliterate": attempts to transliterate most of the non-ASCII characters and strips all non-ASCII
+	//                      chars that can't be converted into ASCII equivalents (this is the recommended option)
 	$handleNonASCIICharsInCiteKeysDefault = "transliterate"; // possible values: "strip", "keep", "transliterate"
 
 
@@ -297,10 +297,10 @@
 
 
 	// Specify if files should be moved into sub-directories:
-  	//   - "never": files will always be copied to the root files dir (i.e. don't use any sub-directories)
+	//   - "never": files will always be copied to the root files dir (i.e. don't use any sub-directories)
 	//   - "always": auto-generate new sub-directories if required (according to the naming scheme
 	//               given in '$dirNamingScheme', see below)
-  	//   - "existing": only copy files into sub-directories if the sub-directory already exists
+	//   - "existing": only copy files into sub-directories if the sub-directory already exists
 	$moveFilesIntoSubDirectories = "always"; // possible values: "never", "always", "existing"
 
 
@@ -341,10 +341,10 @@
 
 
 	// Specify how non-ASCII characters shall be treated in file/directory names:
-  	//   - "strip": removes any non-ASCII characters
-  	//   - "keep": keeps any non-ASCII characters (which, depending on your file system, may cause problems!)
-  	//   - "transliterate": attempts to transliterate most of the non-ASCII characters and strips all non-ASCII
-  	//                      chars that can't be converted into ASCII equivalents (this is the recommended option)
+	//   - "strip": removes any non-ASCII characters
+	//   - "keep": keeps any non-ASCII characters (which, depending on your file system, may cause problems!)
+	//   - "transliterate": attempts to transliterate most of the non-ASCII characters and strips all non-ASCII
+	//                      chars that can't be converted into ASCII equivalents (this is the recommended option)
 	$handleNonASCIIChars = "transliterate"; // possible values: "strip", "keep", "transliterate"
 
 
@@ -365,16 +365,16 @@
 
 
 	// Choose whether case transformations shall be applied to the file/directory names:
-  	//   - "no": don't perform any case tranformations (i.e, keep the file/directory names as is)
-  	//   - "lower": transform all characters to lower case
-  	//   - "upper": transform all characters to upper case
+	//   - "no": don't perform any case tranformations (i.e, keep the file/directory names as is)
+	//   - "lower": transform all characters to lower case
+	//   - "upper": transform all characters to upper case
 	// (note that case transformations will be always performed regardless of any other file/directory
 	// related settings)
-  	// File names:
-  	$changeCaseInFileNames = "no"; // possible values: "no", "lower", "upper"
+	// File names:
+	$changeCaseInFileNames = "no"; // possible values: "no", "lower", "upper"
 
 	// DIR names:
-  	$changeCaseInDirNames = "lower"; // possible values: "no", "lower", "upper"
+	$changeCaseInDirNames = "lower"; // possible values: "no", "lower", "upper"
 
 
 	// Default options for placeholders used by the file/directory name, cite key and
