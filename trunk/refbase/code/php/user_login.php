@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_login.php
 	// Created:    5-Jan-03, 23:20
-	// Modified:   26-Sep-06, 00:40
+	// Modified:   01-Oct-06, 12:33
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -304,15 +304,15 @@
 	</tr>
 </table>
 </form><?php
+
+		// --------------------------------------------------------------------
+
+		// DISPLAY THE HTML FOOTER:
+		// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
+		showPageFooter($HeaderString, "");
+
+		displayHTMLfoot();
+
+		// --------------------------------------------------------------------
 	}
-
-	// --------------------------------------------------------------------
-
-	// DISPLAY THE HTML FOOTER:
-	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
-	showPageFooter($HeaderString, "");
-
-	displayHTMLfoot();
-
-	// --------------------------------------------------------------------
 ?>
