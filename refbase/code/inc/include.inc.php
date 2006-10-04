@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   02-Oct-06, 17:39
+	// Modified:   04-Oct-06, 15:43
 
 	// This file contains important
 	// functions that are shared
@@ -3598,6 +3598,11 @@ EOF;
 		if (!is_numeric($value))
 		{
 			$value = "\"" . escapeSQL($value) . "\"";
+	 	}
+	 	// Quote numbers with leading zeros (which would otherwise get stripped):
+	 	elseif (preg_match("/^0+\d+$/", $value))
+	 	{
+			$value = "\"" . $value . "\"";
 	 	}
 
 		return $value;
