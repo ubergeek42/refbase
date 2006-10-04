@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./user_options_modify.php
 	// Created:    26-Oct-04, 20:57
-	// Modified:   28-Sep-06, 16:17
+	// Modified:   04-Oct-06, 15:55
 
 	// This script validates user options selected within the form provided by 'user_options.php'.
 	// If validation succeeds, it UPDATEs the corresponding table fields for that user and redirects to a receipt page;
@@ -178,7 +178,7 @@
 				$insertTypesQuery = "INSERT INTO $tableUserTypes VALUES ";
 
 				foreach ($selectedTypesNOTInEnabledUserTypesArray as $newUserTypeID)
-					$insertTypesQueryValues[] = "(NULL, quote_smart($newUserTypeID), quote_smart($userID), 'true')";
+					$insertTypesQueryValues[] = "(NULL, " . quote_smart($newUserTypeID) . ", " . quote_smart($userID) . ", 'true')";
 
 				$queryArray[] = $insertTypesQuery . implode(", ", $insertTypesQueryValues) . ";";
 			}
@@ -212,7 +212,7 @@
 				$insertStylesQuery = "INSERT INTO $tableUserStyles VALUES ";
 
 				foreach ($selectedStylesNOTInEnabledUserStylesArray as $newUserStyleID)
-					$insertStylesQueryValues[] = "(NULL, quote_smart($newUserStyleID), quote_smart($userID), 'true')";
+					$insertStylesQueryValues[] = "(NULL, " . quote_smart($newUserStyleID) . ", " . quote_smart($userID) . ", 'true')";
 
 				$queryArray[] = $insertStylesQuery . implode(", ", $insertStylesQueryValues) . ";";
 			}
@@ -246,7 +246,7 @@
 				$insertFormatsQuery = "INSERT INTO $tableUserFormats VALUES ";
 
 				foreach ($selectedFormatsNOTInEnabledUserFormatsArray as $newUserFormatID)
-					$insertFormatsQueryValues[] = "(NULL, quote_smart($newUserFormatID), quote_smart($userID), 'true')";
+					$insertFormatsQueryValues[] = "(NULL, " . quote_smart($newUserFormatID) . ", " . quote_smart($userID) . ", 'true')";
 
 				$queryArray[] = $insertFormatsQuery . implode(", ", $insertFormatsQueryValues) . ";";
 			}
@@ -280,7 +280,7 @@
 				$insertFormatsQuery = "INSERT INTO $tableUserFormats VALUES ";
 
 				foreach ($selectedFormatsNOTInEnabledUserFormatsArray as $newUserFormatID)
-					$insertFormatsQueryValues[] = "(NULL, quote_smart($newUserFormatID), quote_smart($userID), 'true')";
+					$insertFormatsQueryValues[] = "(NULL, " . quote_smart($newUserFormatID) . ", " . quote_smart($userID) . ", 'true')";
 
 				$queryArray[] = $insertFormatsQuery . implode(", ", $insertFormatsQueryValues) . ";";
 			}
