@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./advanced_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   18-Jun-06, 17:25
+	// Modified:   06-Oct-06, 23:34
 
 	// Search form providing access to all fields of the database.
 	// It offers some output options (like how many records to display per page)
@@ -1150,7 +1150,13 @@
 		</select>
 	</td>
 	<td><input type="text" name="notesName" size="42"></td>
-</tr>
+</tr><?php
+
+	// we only show a text entry form for the 'location' field if the user is logged in:
+	if (isset($_SESSION['loginEmail']))
+	{
+?>
+
 <tr>
 	<td valign="middle"><input type="checkbox" name="showLocation" value="1"></td>
 	<td><b><?php echo $loc["Location"]; ?>:</b></td>
@@ -1212,7 +1218,10 @@
 		</select>
 	</td>
 	<td><input type="text" name="locationName2" size="42"></td>
-</tr>
+</tr><?php
+	}
+?>
+
 <tr>
 	<td valign="middle"><input type="checkbox" name="showCallNumber" value="1"></td>
 	<td><b><?php echo $loc["CallNumber"]; ?>:</b></td>
@@ -1339,7 +1348,13 @@
 		</select>
 	</td>
 	<td><input type="text" name="createdTimeNo" size="42"></td>
-</tr>
+</tr><?php
+
+	// we only show a text entry form for the 'created_by' field if the user is logged in:
+	if (isset($_SESSION['loginEmail']))
+	{
+?>
+
 <tr>
 	<td valign="middle"><input type="checkbox" name="showCreatedBy" value="1"></td>
 	<td><b><?php echo $loc["Creator"]; ?>:</b></td>
@@ -1401,7 +1416,10 @@
 		</select>
 	</td>
 	<td><input type="text" name="createdByName2" size="42"></td>
-</tr>
+</tr><?php
+	}
+?>
+
 <tr>
 	<td>&nbsp;</td>
 	<td>&nbsp;</td>
@@ -1430,7 +1448,13 @@
 		</select>
 	</td>
 	<td><input type="text" name="modifiedTimeNo" size="42"></td>
-</tr>
+</tr><?php
+
+	// we only show a text entry form for the 'modified_by' field if the user is logged in:
+	if (isset($_SESSION['loginEmail']))
+	{
+?>
+
 <tr>
 	<td valign="middle"><input type="checkbox" name="showModifiedBy" value="1"></td>
 	<td><b><?php echo $loc["Modifier"]; ?>:</b></td>
@@ -1493,6 +1517,7 @@
 	</td>
 	<td><input type="text" name="modifiedByName2" size="42"></td>
 </tr><?php
+	}
 
 	// --------------------------------------------------------------------
 
