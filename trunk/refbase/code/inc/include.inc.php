@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   04-Oct-06, 15:43
+	// Modified:   06-Oct-06, 21:29
 
 	// This file contains important
 	// functions that are shared
@@ -52,6 +52,10 @@
 		// Initialize the session:
 		if (!isset($_SESSION["sessionID"]))
 		{
+			// Ensure that cookies are enabled:
+			if (ini_get('session.use_cookies') == 0) // if 'session.use_cookies' is OFF for the current directory
+				ini_set('session.use_cookies', 1); // enable storage of sessions within cookies
+
 			session_start();
 
 			$sessionID = session_id(); // get the current session ID
@@ -778,6 +782,47 @@
 	{
 		if (!empty($author))
 		{
+			// Standardize contents of the author field (which will ensure correct sorting upon Citation output):
+			// - shorten author's full given name(s) to initial(s)
+			// - remove any delimiters (such as dots and/or whitespace) from author's initials
+
+			// Call the 'reArrangeAuthorContents()' function (defined in 'include.inc.php') in order to re-order contents of the author field. Required Parameters:
+			//   1. input:  contents of the author field
+			//   2. input:  boolean value that specifies whether the author's family name comes first (within one author) in the source string
+			//              ('true' means that the family name is followed by the given name (or initials), 'false' if it's the other way around)
+			//
+			//   3. input:  pattern describing old delimiter that separates different authors
+			//   4. output: for all authors except the last author: new delimiter that separates different authors
+			//   5. output: for the last author: new delimiter that separates the last author from all other authors
+			//
+			//   6. input:  pattern describing old delimiter that separates author name & initials (within one author)
+			//   7. output: for the first author: new delimiter that separates author name & initials (within one author)
+			//   8. output: for all authors except the first author: new delimiter that separates author name & initials (within one author)
+			//   9. output: new delimiter that separates multiple initials (within one author)
+			//  10. output: for the first author: boolean value that specifies if initials go *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+			//  11. output: for all authors except the first author: boolean value that specifies if initials go *before* the author's name ['true'], or *after* the author's name ['false'] (which is the default in the db)
+			//  12. output: boolean value that specifies whether an author's full given name(s) shall be shortened to initial(s)
+			//
+			//  13. output: if the number of authors is greater than the given number (integer >= 1), only the first author will be included along with the string given in (14); keep empty if all authors shall be returned
+			//  14. output: string that's appended to the first author if number of authors is greater than the number given in (13); the actual number of authors can be printed by including '__NUMBER_OF_AUTHORS__' (without quotes) within the string
+			//
+			//  15. output: boolean value that specifies whether the re-ordered string shall be returned with higher ASCII chars HTML encoded
+			$author = reArrangeAuthorContents($author, // 1.
+												true, // 2.
+												" *; *", // 3.
+												"; ", // 4.
+												"; ", // 5.
+												" *, *", // 6.
+												", ", // 7.
+												", ", // 8.
+												"", // 9.
+												false, // 10.
+												false, // 11.
+												true, // 12.
+												"", // 13.
+												"", // 14.
+												false); // 15.
+
 			// 'first_author' field:
 			$firstAuthor = ereg_replace("^([^;]+).*", "\\1", $author); // extract first author from 'author' field
 			$firstAuthor = trim($firstAuthor); // remove leading & trailing whitespace (if any)
@@ -3886,43 +3931,17 @@ EOF;
 		// - the variable '$fileVisibility' is set to 'user-specific' AND the 'user_permissions' session variable contains 'allow_download'
 		if (!($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND ereg("allow_download", $_SESSION['user_permissions'])))))
 		{
-			// if the 'file' field is part of the SELECT or ORDER BY statement...
-			if (eregi("(SELECT |ORDER BY |, *)file",$sqlQuery))
-			{
-				// if the 'SELECT' clause contains the 'file' field:
-				if (preg_match("/SELECT(.(?!FROM))+?file/i",$sqlQuery))
-				{
-					// save an appropriate error message:
-					$HeaderString = "<b><span class=\"warning\">Display of file field was omitted!</span></b>";
-					// note: we don't write out any error message if the file field does only occur within the 'ORDER' clause (but not within the 'SELECT' clause)
+			// remove 'file' field from SQL query:
+			$sqlQuery = stripFieldFromSQLQuery($sqlQuery, "file", true);
+		}
 
-					// Write back session variable:
-					saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-				}
 
-				$sqlQuery = eregi_replace("(SELECT|ORDER BY) file( DESC)?", "\\1 ", $sqlQuery); // ...delete 'file' field from beginning of 'SELECT' or 'ORDER BY' clause
-				$sqlQuery = eregi_replace(", *file( DESC)?", "", $sqlQuery); // ...delete any other occurrences of the 'file' field from 'SELECT' or 'ORDER BY' clause
-				$sqlQuery = eregi_replace("(SELECT|ORDER BY) *, *", "\\1 ", $sqlQuery); // ...remove any field delimiters that directly follow the 'SELECT' or 'ORDER BY' terms
-
-				$sqlQuery = preg_replace("/SELECT *(?=FROM)/i", "SELECT author, title, year, publication, volume, pages ", $sqlQuery); // ...supply generic 'SELECT' clause if it did ONLY contain the 'file' field
-				$sqlQuery = preg_replace("/ORDER BY *(?=LIMIT|GROUP BY|HAVING|PROCEDURE|FOR UPDATE|LOCK IN|$)/i", "ORDER BY author, year DESC, publication", $sqlQuery); // ...supply generic 'ORDER BY' clause if it did ONLY contain the 'file' field
-			}
-
-			// if the 'file' field is part of the WHERE clause...
-			if (eregi("WHERE.+file",$sqlQuery)) // this simple pattern works since we have already stripped any file field(s) from the ORDER BY clause
-			{
-				// Note: in the patterns below we'll attempt to account for parentheses but this won't catch all cases!
-				$sqlQuery = preg_replace("/WHERE( *\( *?)* *file.+?(?= AND| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","WHERE\\1",$sqlQuery); // ...delete the 'file' field from 'WHERE' clause
-				$sqlQuery = preg_replace("/( *\( *?)*( *AND)? *file.+?(?=( *\) *?)* +(AND|ORDER BY|LIMIT|GROUP BY|HAVING|PROCEDURE|FOR UPDATE|LOCK IN|$))/i","\\1",$sqlQuery); // ...delete the 'file' field from 'WHERE' clause
-				$sqlQuery = preg_replace("/WHERE( *\( *?)* *AND/i","WHERE\\1",$sqlQuery); // ...delete any superfluous 'AND' that wasn't removed properly by the two regex patterns above
-				$sqlQuery = preg_replace("/WHERE( *\( *?)*(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i","WHERE serial RLIKE \".+\"",$sqlQuery); // ...supply generic 'WHERE' clause if it did ONLY contain the 'file' field
-
-				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">Querying of file field was omitted!</span></b>"; // save an appropriate error message
-
-				// Write back session variable:
-				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-			}
+		// disallow display/querying of the 'location' field if the user is NOT logged in:
+		// (this is mostly done to shield user email addresses from exposure to search engines and/or email harvesting robots)
+		if (!isset($_SESSION['loginEmail']))
+		{
+			// remove 'location' field from SQL query:
+			$sqlQuery = stripFieldFromSQLQuery($sqlQuery, "location", true);
 		}
 
 
@@ -3940,7 +3959,7 @@ EOF;
 					// note: we don't write out any error message if the user-specific fields do only occur within the 'ORDER' clause (but not within the 'SELECT' clause)
 
 					// Write back session variable:
-					saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+					saveSessionVariable("HeaderString", $HeaderString);
 				}
 
 				$sqlQuery = eregi_replace("(SELECT|ORDER BY) (marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related)( DESC)?", "\\1 ", $sqlQuery); // ...delete any user-specific fields from beginning of 'SELECT' or 'ORDER BY' clause
@@ -3972,7 +3991,7 @@ EOF;
 				$HeaderString = "<b><span class=\"warning\">Querying of user-specific fields was omitted!</span></b>"; // save an appropriate error message
 
 				// Write back session variable:
-				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+				saveSessionVariable("HeaderString", $HeaderString);
 			}
 		}
 
@@ -3991,10 +4010,14 @@ EOF;
 				}
 			}
 
-			// if we're going to display record details for a logged in user, we have to ensure the display of user-specific fields (which may have been deleted from a query due to a previous logout action);
+			// if we're going to display record details for a logged in user, we have to ensure the display of the 'location' field as well as the user-specific fields (which may have been deleted from a query due to a previous logout action);
 			// in 'Display Details' view, the 'call_number' and 'serial' fields are the last generic fields before any user-specific fields:
 			if ((eregi("^(Display|Export)$",$displayType)) AND (eregi(", call_number, serial FROM $tableRefs",$sqlQuery))) // if the user-specific fields are missing from the SELECT statement...
 				$sqlQuery = eregi_replace(", call_number, serial FROM $tableRefs",", call_number, serial, marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key, related FROM $tableRefs",$sqlQuery); // ...add all user-specific fields to the 'SELECT' clause
+
+			// in 'Display Details' view, the 'location' field should occur within the SELECT statement before the 'call_number' and 'serial' fields:
+			if ((eregi("^(Display|Export)$",$displayType)) AND (preg_match("/(?<!location,) call_number, serial(?=(, marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key, related)? FROM $tableRefs)/i",$sqlQuery))) // if the 'location' field is missing from the SELECT statement...
+				$sqlQuery = preg_replace("/(?<!location), call_number, serial(?=(, marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key, related)? FROM $tableRefs)/i",", location, call_number, serial",$sqlQuery); // ...add the 'location' field to the 'SELECT' clause
 
 			if ((eregi("^(Display|Export|RSS)$",$displayType)) AND (!eregi("LEFT JOIN $tableUserData",$sqlQuery))) // if the 'LEFT JOIN...' statement isn't already part of the 'FROM' clause...
 				$sqlQuery = eregi_replace(" FROM $tableRefs"," FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = $loginUserID",$sqlQuery); // ...add the 'LEFT JOIN...' part to the 'FROM' clause
@@ -4016,6 +4039,58 @@ EOF;
 		$query = stripSlashesIfMagicQuotes($sqlQuery);
 
 		return $query;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Removes the field given in '$field' from the SQL query and
+	// issues a warning if '$issueWarning == true':
+	function stripFieldFromSQLQuery($sqlQuery, $field, $issueWarning = true)
+	{
+		// note that, upon multiple warnings, only the last warning message will be displayed
+
+		// if the given '$field' is part of the SELECT or ORDER BY statement...
+		if (eregi("(SELECT |ORDER BY |, *)" . $field, $sqlQuery))
+		{
+			// if the 'SELECT' clause contains '$field':
+			if ($issueWarning AND (preg_match("/SELECT(.(?!FROM))+?" . $field . "/i", $sqlQuery)))
+			{
+				// save an appropriate error message:
+				$HeaderString = "<b><span class=\"warning\">Display of " . $field . " field was omitted!</span></b>";
+				// note: we don't write out any error message if the given '$field' does only occur within the 'ORDER' clause (but not within the 'SELECT' clause)
+
+				// Write back session variable:
+				saveSessionVariable("HeaderString", $HeaderString);
+			}
+
+			$sqlQuery = eregi_replace("(SELECT|ORDER BY) " . $field . "( DESC)?", "\\1 ", $sqlQuery); // ...delete '$field' from beginning of 'SELECT' or 'ORDER BY' clause
+			$sqlQuery = eregi_replace(", *" . $field . "( DESC)?", "", $sqlQuery); // ...delete any other occurrences of '$field' from 'SELECT' or 'ORDER BY' clause
+			$sqlQuery = eregi_replace("(SELECT|ORDER BY) *, *", "\\1 ", $sqlQuery); // ...remove any field delimiters that directly follow the 'SELECT' or 'ORDER BY' terms
+
+			$sqlQuery = preg_replace("/SELECT *(?=FROM)/i", "SELECT author, title, year, publication, volume, pages ", $sqlQuery); // ...supply generic 'SELECT' clause if it did ONLY contain the given '$field'
+			$sqlQuery = preg_replace("/ORDER BY *(?=LIMIT|GROUP BY|HAVING|PROCEDURE|FOR UPDATE|LOCK IN|$)/i", "ORDER BY author, year DESC, publication", $sqlQuery); // ...supply generic 'ORDER BY' clause if it did ONLY contain the given '$field'
+		}
+
+		// if the given '$field' is part of the WHERE clause...
+		if (eregi("WHERE.+" . $field, $sqlQuery)) // this simple pattern works since we have already stripped any instance(s) of the given '$field' from the ORDER BY clause
+		{
+			// Note: in the patterns below we'll attempt to account for parentheses but this won't catch all cases!
+			$sqlQuery = preg_replace("/WHERE( *\( *?)* *" . $field . ".+?(?= AND| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i", "WHERE\\1", $sqlQuery); // ...delete '$field' from 'WHERE' clause
+			$sqlQuery = preg_replace("/( *\( *?)*( *AND)? *" . $field . ".+?(?=( *\) *?)* +(AND|ORDER BY|LIMIT|GROUP BY|HAVING|PROCEDURE|FOR UPDATE|LOCK IN|$))/i", "\\1", $sqlQuery); // ...delete '$field' from 'WHERE' clause
+			$sqlQuery = preg_replace("/WHERE( *\( *?)* *AND/i","WHERE\\1",$sqlQuery); // ...delete any superfluous 'AND' that wasn't removed properly by the two regex patterns above
+			$sqlQuery = preg_replace("/WHERE( *\( *?)*(?= ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i", "WHERE serial RLIKE \".+\"", $sqlQuery); // ...supply generic 'WHERE' clause if it did ONLY contain the given '$field'
+
+			if ($issueWarning)
+			{
+				// save an appropriate error message:
+				$HeaderString = "<b><span class=\"warning\">Querying of " . $field . " field was omitted!</span></b>"; // save an appropriate error message
+
+				// Write back session variable:
+				saveSessionVariable("HeaderString", $HeaderString);
+			}
+		}
+
+		return $sqlQuery;
 	}
 
 	// --------------------------------------------------------------------
