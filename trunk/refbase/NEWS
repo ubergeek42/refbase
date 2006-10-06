@@ -2,10 +2,79 @@ This file presents a summary of the main fixes and enhancements.
 See the 'ChangeLog' or the cvs entries on SourceForge for a detailed history:
   <http://cvs.sourceforge.net/viewcvs.py/refbase/refbase/>
 
+refbase-0.9.0
+[xx-xxx-2006]
+-------------
+
+Installation:
+
+- Searches path and common locations for supporting binaries
+
+Import/Add Records:
+
+- Import from Endnote, Reference Manager (RIS), RefWorks, BibTeX, MODS XML, ISI
+  Web of Science, PubMed (MEDLINE or XML), and COPAC
+
+- Import of multiple records
+
+- Import from a file
+
+- Import from PubMed ID
+
+- Automatic detection of bibliographic format
+
+- Automatic file renaming
+
+- Command line client
+
+Search/Display/Export:
+
+- ODF XML export for use with OpenOffice.org
+
+- OpenURL support
+
+- Formatted citation export (RTF, PDF, LaTeX, Markdown)
+
+- SRU/W <http://wiki.refbase.net/index.php/SRU>
+
+- COinS metadata <http://wiki.refbase.net/index.php/COinS>
+
+- UnAPI
+
+- Command line client
+
+- Better transliteration between character sets
+
+
+  Changes
+---------
+
+- The number of records that are returned by default is specified by
+  '$defaultNumberOfRecords' (defined in 'ini.inc.php')
+
+- Additional localization
+
+- Better quoting of MySQL queries (user-inputted data can contain slashes and
+  quotation marks)
+
+- Improvements in session management
+
+- Search queries may be submitted via GET rather than POST
+
+
+Bug fixes:
+-----------
+
+- Fixes to MODS XML export
+
+- Opening tags have been replaced with '<?php' for compatibility
+
+
+
 
 refbase-0.8.0
 -------------
-[xx-xxx-2005]
+[05-Apr-2005]
 
   Feature additions
 -------------------
