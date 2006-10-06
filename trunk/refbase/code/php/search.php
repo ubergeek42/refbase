@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   02-Oct-06, 18:22
+	// Modified:   06-Oct-06, 13:36
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -341,7 +341,7 @@
 
 	// For a normal user we only allow the use of SELECT queries (the admin is allowed to do everything that is allowed by his GRANT privileges):
 	// NOTE: This does only provide for minimal security!
-	//		 To avoid further security risks you should grant the mysql user (who's specified in 'db.inc.php') only those
+	//		 To avoid further security risks you should grant the MySQL user (who's specified in 'db.inc.php') only those
 	//		 permissions that are required to access the literature database. This can be done by use of a GRANT statement:
 	//		 GRANT SELECT,INSERT,UPDATE,DELETE ON MYSQL_DATABASE_NAME_GOES_HERE.* TO MYSQL_USER_NAME_GOES_HERE@localhost IDENTIFIED BY 'MYSQL_PASSWORD_GOES_HERE';
 
@@ -350,17 +350,19 @@
 	{
 		if ((!isset($loginEmail)) OR ((isset($loginEmail)) AND ($loginEmail != $adminLoginEmail))) // if the user isn't logged in -OR- any normal user is logged in...
 		{
+			$tablesArray = array($tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserOptions, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers);
+			$forbiddenSQLCommandsArray = array("DROP DATABASE", "DROP TABLE"); // the refbase MySQL user shouldn't have permissions for these commands anyhow, but by listing & checking for them here, we can return a more appropriate error message
 			$notPermitted = false;
 
 			// ...and the user did use anything other than a SELECT query:
-			if (!eregi("^SELECT", $sqlQuery))
+			if (!eregi("^SELECT", $sqlQuery) OR eregi(join("|", $forbiddenSQLCommandsArray), $sqlQuery))
 			{
 				$notPermitted = true;
 				// save an appropriate error message:
 				$HeaderString = "<b><span class=\"warning\">You're only permitted to execute SELECT queries!</span></b>";
 			}
-			// ...or the user tries to hack the SQL query (by providing the string "FROM refs" within the SELECT statement) -OR- if the user attempts to query anything other than the 'refs' or 'user_data' table:
-			elseif ((preg_match("/FROM $tableRefs.+ FROM /i", $sqlQuery)) OR (!preg_match("/FROM $tableRefs( LEFT JOIN $tableUserData ON serial ?= ?record_id AND user_id ?= ?\d*)?(?= WHERE| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i", $sqlQuery)))
+			// ...or the user tries to hack the SQL query (by providing e.g. the string "FROM refs" within the SELECT statement) -OR- if the user attempts to query anything other than the 'refs' or 'user_data' table:
+			elseif ((preg_match("/FROM .*(" . join("|", $tablesArray) . ").+ FROM /i", $sqlQuery)) OR (!preg_match("/FROM $tableRefs( LEFT JOIN $tableUserData ON serial ?= ?record_id AND user_id ?= ?\d*)?(?= WHERE| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i", $sqlQuery)))
 			{
 				$notPermitted = true;
 				// save an appropriate error message:
