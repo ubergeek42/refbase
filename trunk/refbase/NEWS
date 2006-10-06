@@ -25,9 +25,13 @@ Import/Add Records:
 
 - Automatic file renaming
 
+- Automatic generation of cite keys
+
 - Command line client
 
 Search/Display/Export:
+
+- Short, permanent links to records
 
 - ODF XML export for use with OpenOffice.org
 
@@ -43,11 +47,17 @@ Search/Display/Export:
 
 - Command line client
 
+- "Show All" link
+
+- "is within range" and "is within list" searching of numeric fields
+
 - Better transliteration between character sets
 
 
   Changes
 ---------
+
+- Masking of fields which may contain e-mail addresses to prevent spam
 
 - The number of records that are returned by default is specified by
   '$defaultNumberOfRecords' (defined in 'ini.inc.php')
@@ -61,14 +71,20 @@ Search/Display/Export:
 
 - Search queries may be submitted via GET rather than POST
 
+- The admin can now control which links shall be displayed in List view and
+  Citation view
+
 
 Bug fixes:
 -----------
+
+- Improvements in protection against disallowed searches
 
 - Fixes to MODS XML export
 
 - Opening tags have been replaced with '<?php' for compatibility
 
+- The user-specific language setting is now honoured correctly.
 
 
 
