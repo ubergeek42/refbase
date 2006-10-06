@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./record.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   28-Sep-06, 21:58
+	// Modified:   06-Oct-06, 21:46
 
 	// Form that offers to add
 	// records or edit/delete
@@ -234,8 +234,20 @@
 				$conferenceName = encodeHTML($row['conference']);
 				$notesName = encodeHTML($row['notes']);
 				$approvedRadio = encodeHTML($row['approved']);
-				$locationName = encodeHTML($row['location']);
-				$rawLocationName = $row['location']; // we'll save the unencoded location string to a separate variable since it will be needed when generating the delete button
+
+				// we only show the contents of the 'location' field if the user is logged in:
+				// (this is mostly done to shield user email addresses from exposure to search engines and/or email harvesting robots)
+				if (isset($loginEmail))
+				{
+					$locationName = encodeHTML($row['location']);
+					$rawLocationName = $row['location']; // we'll save the unencoded location string to a separate variable since it will be needed when generating the delete button
+				}
+				else
+				{
+					$locationName = "";
+					$rawLocationName = "";
+				}
+
 				$callNumberName = $row['call_number']; // contents of the 'call_number' field will get encoded depending on who's logged in (normal user vs. admin)
 													// (for normal users being logged in, the field's contents won't get HTML encoded at all, since the data will
 													//  get *rawurlencoded* when including them within a hidden form tag; for the admin being logged in, the data
