@@ -7,10 +7,9 @@ Author
 
 About
 -----
-  refbase does not yet have a facility to import many references from desktop
-  citation managers via a web interface.  A future version of refbase will have
-  this feature, but this style file and php script will allow Endnote users to
-  transfer data into refbase at the command line.
+  This is an alternative to refbase's web-based import of Endnote data.  It
+  allows  Endnote users to export a text file which can be imported into the
+  refbase MySQL database.
 
 Use
 ---
