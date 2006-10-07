@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   06-Oct-06, 13:36
+	// Modified:   07-Oct-06, 22:09
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -752,7 +752,11 @@
 
 					//    2b) Build a FORM containing options to refine the search results:
 					//        First, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
-					$refineSearchSelectorElements1 = "author, title, year, keywords, abstract, type, publication, abbrev_journal, volume, issue, pages, thesis, publisher, place, editor, series_title, language, area, notes, location, call_number, serial"; // these columns will be always visible (no matter whether the user is logged in or not)
+					//        TODO for 2b+2c: users should be able to choose via the web interface which columns are included in the popup menus
+					$refineSearchSelectorElements1 = "author, title, year, keywords, abstract, type, publication, abbrev_journal, volume, issue, pages, thesis, publisher, place, editor, series_title, language, area, notes"; // these columns will be always visible (no matter whether the user is logged in or not)
+					if (isset($_SESSION['loginEmail']))
+						$refineSearchSelectorElements1 .= ", location"; // we only add the 'location' field if the user is logged in
+					$refineSearchSelectorElements1 .= ", call_number, serial";
 					$refineSearchSelectorElements2 = "marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key"; // these columns will be only visible to logged in users (in this case: the user specific fields from table 'user_data')
 					$refineSearchSelectorElementSelected = $selectedField; // this column will be selected by default
 					//        Call the 'buildRefineSearchElements()' function (defined in 'include.inc.php') which does the actual work:
@@ -760,7 +764,10 @@
 
 					//    2c) Build a FORM containing display options (show/hide columns or change the number of records displayed per page):
 					//        Again, specify which colums should be available in the popup menu (column items must be separated by a comma or comma+space!):
-					$displayOptionsSelectorElements1 = "author, title, year, keywords, abstract, type, publication, abbrev_journal, volume, issue, pages, thesis, publisher, place, editor, series_title, language, area, notes, location, call_number, serial"; // these columns will be always visible (no matter whether the user is logged in or not)
+					$displayOptionsSelectorElements1 = "author, title, year, keywords, abstract, type, publication, abbrev_journal, volume, issue, pages, thesis, publisher, place, editor, series_title, language, area, notes"; // these columns will be always visible (no matter whether the user is logged in or not)
+					if (isset($_SESSION['loginEmail']))
+						$displayOptionsSelectorElements1 .= ", location"; // we only add the 'location' field if the user is logged in
+					$displayOptionsSelectorElements1 .= ", call_number, serial";
 					$displayOptionsSelectorElements2 = "marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key"; // these columns will be only visible to logged in users (in this case: the user specific fields from table 'user_data')
 					$displayOptionsSelectorElementSelected = $selectedField; // this column will be selected by default
 					//        Call the 'buildDisplayOptionsElements()' function (defined in 'include.inc.php') which does the actual work:
