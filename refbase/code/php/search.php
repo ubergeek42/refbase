@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   07-Oct-06, 22:09
+	// Modified:   07-Oct-06, 23:08
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -4911,7 +4911,10 @@
 		elseif (ereg("^(Display|Export)$", $displayType)) // (hitting <enter> within the 'ShowRows' text entry field will act as if the user clicked the 'Display' button)
 			{
 				// for the selected records, select all fields that are visible in Details view:
-				$query = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial";
+				$query = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved";
+				if (isset($_SESSION['loginEmail']))
+					$query .= ", location"; // we only add the 'location' field if the user is logged in
+				$query .= ", call_number, serial";
 
 				if ($displayType == "Export") // for export, we add some additional fields:
 					$query .= ", online_publication, online_citation";
@@ -5429,11 +5432,12 @@
 		if (in_array("details", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_details_view'...
 		{
 			// ... display a link that opens the Details view for this record:
+			// TODO: make lines below more readable, i.e., setup SQL query first, then rawurlencode
 			if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
 				$links .= "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20cite_key%2C%20related%20"
 						. "FROM%20" . $tableRefs . "%20LEFT%20JOIN%20" . $tableUserData . "%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
-			else // if NO user logged in, don't display any user specific fields:
-				$links .= "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%20"
+			else // if NO user logged in, don't display any user specific fields and hide the 'location' field:
+				$links .= "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20call_number%2C%20serial%20"
 						. "FROM%20" . $tableRefs . "%20";
 
 			$links .= "WHERE%20serial%20RLIKE%20%22%5E%28" . $row["serial"]

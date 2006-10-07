@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./receipt.php
 	// Created:    02-Jan-03, 22:43
-	// Modified:   29-Sep-06, 21:07
+	// Modified:   07-Oct-06, 22:39
 
 	// This php script will display a feedback page after any action of
 	// adding/editing/deleting a record. It will display links to the
@@ -106,7 +106,7 @@
 		$sqlQuery = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial, marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key, related"
 				. " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . quote_smart($loginUserID) . " WHERE serial RLIKE " . quote_smart("^(" . $serialNo . ")$") . " ORDER BY author, year DESC, publication"; // we simply use the fixed default ORDER BY clause here
 	else // if NO user logged in, don't display any user specific fields:
-		$sqlQuery = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial"
+		$sqlQuery = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, call_number, serial"
 				. " FROM $tableRefs WHERE serial RLIKE " . quote_smart("^(" . $serialNo . ")$") . " ORDER BY author, year DESC, publication"; // we simply use the fixed default ORDER BY clause here
 
 	$sqlQuery = rawurlencode($sqlQuery);
