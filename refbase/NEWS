@@ -1,55 +1,69 @@
 This file presents a summary of the main fixes and enhancements.
 See the 'ChangeLog' or the cvs entries on SourceForge for a detailed history:
-  <http://cvs.sourceforge.net/viewcvs.py/refbase/refbase/>
+  <http://refbase.cvs.sourceforge.net/refbase/>
 
 refbase-0.9.0
-[xx-xxx-2006]
 -------------
+[xx-xxx-2006]
 
-Installation:
+  Feature additions
+-------------------
+
+Installation/Update:
 
 - Searches path and common locations for supporting binaries
+  <http://install.refbase.net>
 
 Import/Add Records:
 
-- Import from Endnote, Reference Manager (RIS), RefWorks, BibTeX, MODS XML, ISI
-  Web of Science, PubMed (MEDLINE or XML), and COPAC
+- Import from Endnote, Reference Manager (RIS), RefWorks, BibTeX, MODS XML,
+  ISI Web of Science, PubMed (MEDLINE or XML), Cambridge Scientific Abstracts
+  and COPAC (with automatic detection of bibliographic format)
+  <http://import.refbase.net>
 
 - Import of multiple records
 
-- Import from a file
+- Import from a file or from PubMed ID
 
-- Import from PubMed ID
+- Automatic file renaming and creation of subdirectories via placeholders
+  <http://placeholders.refbase.net>
 
-- Automatic detection of bibliographic format
+- Command line client to batch import records <http://cli.refbase.net>
 
-- Automatic file renaming
+Search/Display:
 
-- Automatic generation of cite keys
+- Improved query API with short, permanent links to records
+  <http://linking.refbase.net>
 
-- Command line client
+- SRU/W (Search & Retrieve via URL) web service <http://sru.refbase.net>
 
-Search/Display/Export:
+- OpenURL support <http://openurl.refbase.net>
 
-- Short, permanent links to records
+- Embedding of COinS metadata within HTML pages <http://coins.refbase.net>
 
-- ODF XML export for use with OpenOffice.org
+- UnAPI support <http://unapi.refbase.net>
 
-- OpenURL support
-
-- Formatted citation export (RTF, PDF, LaTeX, Markdown)
-
-- SRU/W <http://wiki.refbase.net/index.php/SRU>
-
-- COinS metadata <http://wiki.refbase.net/index.php/COinS>
-
-- UnAPI
-
-- Command line client
+- Command line client to search & retrieve records <http://cli.refbase.net>
 
 - "Show All" link
 
+- Links that display all records which were added/edited since a user's last
+  login
+
 - "is within range" and "is within list" searching of numeric fields
+
+- French localization
+
+Export/Citation:
+
+- ODF XML export for use with OpenOffice.org <http://openoffice.refbase.net>
+
+- Formatted citation export (RTF, PDF, LaTeX, Markdown, ASCII)
+
+- Automatic generation of user-specific cite keys and text citations
+
+- Sort by resource type (i.e., peer-reviewed publications, monographs, book
+  contributions, theses, etc) when outputting citations
 
 - Better transliteration between character sets
 
@@ -59,10 +73,9 @@ Search/Display/Export:
 
 - Masking of fields which may contain e-mail addresses to prevent spam
 
-- The number of records that are returned by default is specified by
-  '$defaultNumberOfRecords' (defined in 'ini.inc.php')
+- The number of records that are returned by default can now be customized
 
-- Additional localization
+- Improved localization support
 
 - Better quoting of MySQL queries (user-inputted data can contain slashes and
   quotation marks)
@@ -75,7 +88,7 @@ Search/Display/Export:
   Citation view
 
 
-Bug fixes:
+  Bug fixes
 -----------
 
 - Improvements in protection against disallowed searches
@@ -84,7 +97,7 @@ Bug fixes:
 
 - Opening tags have been replaced with '<?php' for compatibility
 
-- The user-specific language setting is now honoured correctly.
+- The user-specific language setting is now honoured correctly
 
 
 
