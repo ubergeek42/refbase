@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./show.php
 	// Created:    02-Nov-03, 14:10
-	// Modified:   03-Oct-06, 21:46
+	// Modified:   07-Oct-06, 22:44
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
@@ -477,7 +477,10 @@
 		// Build SELECT clause:
 		if (ereg("^(Display|Export)$", $displayType)) // select all fields required to display record details or to export a record:
 		{
-			$query = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved, location, call_number, serial";
+			$query = "SELECT author, title, type, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, notes, approved";
+			if (isset($_SESSION['loginEmail']))
+				$query .= ", location"; // we only add the 'location' field if the user is logged in
+			$query .= ", call_number, serial";
 		//           (the above string MUST end with ", call_number, serial" in order to have the described query completion feature work correctly!
 
 			if ($displayType == "Export") // for export, we inject some additional fields into the SELECT clause (again, we must add these additional fields *before* ", call_number, serial" in order to have the described query completion feature work correctly!)
