@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./includes/include.inc.php
 	// Created:    16-Apr-02, 10:54
-	// Modified:   06-Oct-06, 21:29
+	// Modified:   07-Oct-06, 21:10
 
 	// This file contains important
 	// functions that are shared
@@ -3479,7 +3479,12 @@ EOF;
 		if ($useArrayKeysAsValues)
 		{
 			foreach ($itemArray as $itemID => $item)
-				$optionTags .= "\n$prefix<option value=\"$itemID\">$item</option>";
+			{
+				if (!empty($item))
+					$optionTags .= "\n$prefix<option value=\"$itemID\">$item</option>";
+				else // empty items will also get an empty value:
+					$optionTags .= "\n$prefix<option value=\"\"></option>";
+			}
 		}
 		else
 		{
