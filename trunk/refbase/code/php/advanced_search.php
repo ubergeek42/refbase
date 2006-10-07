@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./advanced_search.php
 	// Created:    29-Jul-02, 16:39
-	// Modified:   06-Oct-06, 23:34
+	// Modified:   07-Oct-06, 21:52
 
 	// Search form providing access to all fields of the database.
 	// It offers some output options (like how many records to display per page)
@@ -90,7 +90,7 @@
 	$dropDownItems2 = buildSelectMenuOptions($dropDownConditionals2Array, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
 
 
-	$dropDownFieldNameArray = array("author" => $loc["DropDownFieldName_Author"],
+	$dropDownFieldNames1Array = array("author" => $loc["DropDownFieldName_Author"],
 									"address" => $loc["DropDownFieldName_Address"],
 									"corporate_author" => $loc["DropDownFieldName_CorporateAuthor"],
 									"thesis" => $loc["DropDownFieldName_Thesis"],
@@ -132,26 +132,37 @@
 									"conference" => $loc["DropDownFieldName_Conference"],
 									"",
 									"doi" => $loc["DropDownFieldName_Doi"],
-									"url" => $loc["DropDownFieldName_Url"],
-									"file" => $loc["DropDownFieldName_File"],
-									"",
-									"notes" => $loc["DropDownFieldName_Notes"],
-									"location" => $loc["DropDownFieldName_Location"],
-									"call_number" => $loc["DropDownFieldName_CallNumber"],
+									"url" => $loc["DropDownFieldName_Url"]);
+
+	if (isset($_SESSION['loginEmail'])) // we only include the 'file' field if the user is logged in
+		$dropDownFieldNames1Array["file"] = $loc["DropDownFieldName_File"];
+
+	$dropDownFieldNames1Array[] = "";
+	$dropDownFieldNames1Array["notes"] = $loc["DropDownFieldName_Notes"];
+
+	if (isset($_SESSION['loginEmail'])) // we only include the 'location' field if the user is logged in
+		$dropDownFieldNames1Array["location"] = $loc["DropDownFieldName_Location"];
+
+	$dropDownFieldNames2Array = array("call_number" => $loc["DropDownFieldName_CallNumber"],
 									"",
 									"serial" => $loc["DropDownFieldName_Serial"],
 									"type" => $loc["DropDownFieldName_Type"],
 									"approved" => $loc["DropDownFieldName_Approved"],
 									"",
 									"created_date" => $loc["DropDownFieldName_CreatedDate"],
-									"created_time" => $loc["DropDownFieldName_CreatedTime"],
-									"created_by" => $loc["DropDownFieldName_CreatedBy"],
-									"",
-									"modified_date" => $loc["DropDownFieldName_ModifiedDate"],
-									"modified_time" => $loc["DropDownFieldName_ModifiedTime"],
-									"modified_by" => $loc["DropDownFieldName_ModifiedBy"]);
+									"created_time" => $loc["DropDownFieldName_CreatedTime"]);
 
-	$dropDownItems3 = buildSelectMenuOptions($dropDownFieldNameArray, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
+	if (isset($_SESSION['loginEmail'])) // we only include the 'created_by' field if the user is logged in
+		$dropDownFieldNames2Array["created_by"] = $loc["DropDownFieldName_CreatedBy"];
+
+	$dropDownFieldNames2Array[] = "";
+	$dropDownFieldNames2Array["modified_date"] = $loc["DropDownFieldName_ModifiedDate"];
+	$dropDownFieldNames2Array["modified_time"] = $loc["DropDownFieldName_ModifiedTime"];
+
+	if (isset($_SESSION['loginEmail'])) // we only include the 'modified_by' field if the user is logged in
+		$dropDownFieldNames2Array["modified_by"] = $loc["DropDownFieldName_ModifiedBy"];
+
+	$dropDownItems3 = buildSelectMenuOptions(array_merge($dropDownFieldNames1Array,$dropDownFieldNames2Array), "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
 
 	// (2b) Start <form> and <table> holding the form elements:
 ?>
