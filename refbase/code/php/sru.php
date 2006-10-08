@@ -5,11 +5,11 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./sru.php
 	// Created:    17-May-05, 16:22
-	// Modified:   26-Sep-06, 00:30
+	// Modified:   08-Oct-06, 16:29
 
 	// This script serves as a (faceless) routing page which takes a SRU query and
 	// converts the query into a native refbase query which is then passed to 'search.php'.
-	// More info is given at <http://wiki.refbase.net/index.php/Search/Retrieve_web_services>.
+	// More info is given at <http://sru.refbase.net/>.
 
 	// Supports 'explain' and 'searchRetrieve' operations (but not 'scan') and outputs
 	// records as MODS XML wrapped into SRW XML. Allows to query all global refbase fields

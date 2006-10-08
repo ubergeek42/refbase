@@ -5,11 +5,11 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./unapi.php
 	// Created:    15-Jul-06, 11:59
-	// Modified:   09-Aug-06, 22:11
+	// Modified:   08-Oct-06, 16:32
 
 	// This script serves as a (faceless) routing page which takes a query to the unAPI server
 	// and converts the query into a native refbase query which is then passed to 'show.php'.
-	// More info is given at <http://wiki.refbase.net/index.php/UnAPI_server>.
+	// More info is given at <http://unapi.refbase.net/>.
 
 	// Examples for recognized unAPI queries:
 	// (your server URL will be different, of course)
