@@ -346,9 +346,9 @@
 					<b>Help:</b>
 				</td>
 				<td valign="top">
-					<xsl:text>This form gets dynamically created from the SRU explain response, it exposes indexes and capabilities offered by the refbase SRU server.</xsl:text>
+					<xsl:text>This form gets dynamically created from the </xsl:text><a href="http://www.loc.gov/standards/sru/" target="top">SRU</a><xsl:text> explain response, it exposes indexes and capabilities offered by the refbase SRU server.</xsl:text>
 					<xsl:text> Queries must be specified as </xsl:text><a href="http://www.loc.gov/standards/sru/cql/index.html" target="top">CQL (Common Query Language)</a><xsl:text>, an introduction to CQL is given </xsl:text><a href="http://zing.z3950.org/cql/intro.html" target="top">here</a><xsl:text>.</xsl:text>
-					<xsl:text> Please see the </xsl:text><a href="http://wiki.refbase.net/index.php/Search/Retrieve_web_services" target="top">refbase online documentation</a>
+					<xsl:text> Please see the </xsl:text><a href="http://sru.refbase.net/" target="top">refbase online documentation</a>
 					<xsl:text> for more information about the SRU web service.</xsl:text>
 				</td>
 			</tr>
