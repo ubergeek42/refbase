@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   03-Oct-06, 22:04
+	// Modified:   08-Oct-06, 16:42
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -328,7 +328,7 @@
 	// <:recordIdentifier:>, <:randomNumber:>
 	// Notes: - some of these placeholders offer options (e.g. how many words/items shall be extracted
 	//          from the given field), please see the refbase online documentation for more info about
-	//          placeholders and their syntax: <http://wiki.refbase.net/index.php/Placeholder_syntax>
+	//          placeholders and their syntax: <http://placeholders.refbase.net/>
 	//        - existing file extensions will be kept untouched by this naming scheme
 	//        - you're allowed to use any characters between (or within) placeholders except the delimiters
 	//          '<', '>' and ':'
@@ -380,7 +380,7 @@
 	// Default options for placeholders used by the file/directory name, cite key and
 	// link auto-generation features:
 	// Notes: - please see the refbase online documentation for more info about placeholders and
-	//          their syntax: <http://wiki.refbase.net/index.php/Placeholder_syntax>
+	//          their syntax: <http://placeholders.refbase.net/>
 	//
 	// Default options for '<:authors:>':
 	// syntax: "[USE_MAX_NUMBER_OF_AUTHORS|AUTHOR_CONNECTOR|ET_AL_IDENTIFIER]"
