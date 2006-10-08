@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./install.php
 	// Created:    07-Jan-04, 22:00
-	// Modified:   22-Sep-06, 18:00
+	// Modified:   08-Oct-06, 16:28
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -228,7 +228,7 @@
 
 			<input type="text" name="pathToBibutils" value="<?php echo $formVars["pathToBibutils"]; ?>" size="30">
 		</td>
-		<td valign="top"><a href="http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html" target="top" title="bibutils home page"><em>bibutils</em></a> provides additional import and export funtionality to refbase. It is optional, but highly recommended. The install script attempts to locate <em>bibutils</em> for you. If you can't access <em>bibutils</em> from your path, please fill this value in manually (and, if you think other people might have <em>bibutils</em> installed to the same path, <a href="http://wiki.refbase.net/index.php/RefbaseWiki:Community_Portal" target="top" title="refbase forums &amp; mailinglists">report</a> it to the refbase developers). The path must end with a slash!</td>
+		<td valign="top"><a href="http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html" target="top" title="bibutils home page"><em>bibutils</em></a> provides additional import and export funtionality to refbase. It is optional, but highly recommended. The install script attempts to locate <em>bibutils</em> for you. If you can't access <em>bibutils</em> from your path, please fill this value in manually (and, if you think other people might have <em>bibutils</em> installed to the same path, <a href="http://support.refbase.net/" target="top" title="refbase forums &amp; mailinglists">report</a> it to the refbase developers). The path must end with a slash!</td>
 	</tr>
 	<tr>
 		<td valign="top"><b>Default character set:</b></td>
@@ -246,7 +246,7 @@
 		<td valign="top" align="right">
 			<input type="submit" name="submit" value="Install">
 		</td>
-		<td valign="top"><span class="warning">CAUTION:</span> Note that, if there's already an existing refbase database with the name specified in <em>$databaseName</em>, clicking the <em>Install</em> button will overwrite ALL data in that database! If you'd like to install the refbase tables into another existing database, you must ensure that there are no table name conflicts (<a href="http://wiki.refbase.net/index.php/Installing_refbase#Installation_over_an_existing_database" target="top" title="howto install refbase over an existing database">more info</a>).</td>
+		<td valign="top"><span class="warning">CAUTION:</span> Note that, if there's already an existing refbase database with the name specified in <em>$databaseName</em>, clicking the <em>Install</em> button will overwrite ALL data in that database! If you'd like to install the refbase tables into another existing database, you must ensure that there are no table name conflicts (<a href="http://install.refbase.net/" target="top" title="howto install refbase over an existing database">more info</a>).</td>
 	</tr>
 </table>
 </form><?php

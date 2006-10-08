@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./import.php
 	// Created:    17-Feb-06, 20:57
-	// Modified:   02-Oct-06, 17:38
+	// Modified:   08-Oct-06, 16:25
 
 	// Import form that offers to import records from Reference Manager (RIS), Cambridge Scientific Abstracts (CSA),
 	// RefWorks Tagged Format, ISI Web of Science, PubMed MEDLINE, PubMed XML, MODS XML, Endnote Tagged Text, BibTeX or COPAC.
@@ -319,7 +319,7 @@
 			. "<a href=\"http://www.pubmed.gov/\" target=\"top\">PubMed</a> (MEDLINE or XML), "
 			. "<a href=\"" . $importCSArecordsURL . "\" target=\"top\">Cambridge Scientific Abstracts</a> (CSA) " // '$importCSArecordsURL' is defined in 'ini.inc.php'
 			. "and <a href=\"http://www.copac.ac.uk/\" target=\"top\">COPAC</a>."
-			. " Please see the <a href=\"http://wiki.refbase.net/index.php/Importing_Records\" target=\"top\">refbase online documentation</a> for more information about the supported formats and any requirements in format structure.</td>"
+			. " Please see the <a href=\"http://import.refbase.net/\" target=\"top\">refbase online documentation</a> for more information about the supported formats and any requirements in format structure.</td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
 			. "\n\t<td colspan=\"3\">The lower form allows you to import records by their <a href=\"http://www.pubmed.gov/\" target=\"top\">PubMed</a> ID (PMID). Just enter one or more PubMed IDs (delimited by any non-digit characters) and press the <em>Import</em> button.</td>"
