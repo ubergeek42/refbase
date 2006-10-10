@@ -11,11 +11,14 @@
   // Author:     Richard Karnesky <mailto:karnesky@gmail.com>
   //
   // Created:    06-Sep-06, 16:30
-  // Modified:   09-Sep-06, 19:28
+  // Modified:   10-Oct-06, 14:45
 
   // This include file contains functions that generate OpenURL and COinS data.
   // More info about the OpenURL standard (including pointers to further documentation) is available
   // at <http://en.wikipedia.org/wiki/OpenURL>. For more info about COinS, see <http://ocoins.info/>.
+
+  // TODO: Multiple aus have the same array key, so we apped a number that is later stripped
+  //       Cleanup if possible
 
   // Include refbase markup -> plain text search & replace patterns
   include 'includes/transtab_refbase_ascii.inc.php';
@@ -38,6 +41,7 @@
 
     foreach ($co as $coKey => $coValue) {
       $coKey = ereg_replace("rft.", "", $coKey);
+      $coKey = ereg_replace("au[0-9]*", "au", $coKey);
       $openURL .= "&amp;" . $coKey . "=" . rawurlencode($coValue);
     }
 
@@ -66,6 +70,7 @@
     foreach ($co as $coKey => $coValue) {
       // 'urlencode()' differs from 'rawurlencode() (i.e., RFC1738 encoding)
       // in that spaces are encoded as plus (+) signs
+      $coKey = ereg_replace("au[0-9]*", "au", $coKey);
       $coins .= "&amp;" . $coKey . "=" . urlencode($coValue);
     }
 
@@ -176,7 +181,7 @@
         $co["rft.spage"] = $row['pages'];
     }
 
-    // aulast, aufirst (author)
+    // aulast, aufirst, author (author)
     if (!empty($row['author'])) {
       $author = $row['author'];
       $aulast = extractAuthorsLastName(" *; *", " *, *", 1, $author);
@@ -185,6 +190,21 @@
         $co["rft.aulast"] = $aulast;
       if (!empty($aufirst))
         $co["rft.aufirst"] = $aufirst;
+      // TODO: cleanup and put this function in include.inc.php?
+      $authorcount = count(split(" *; *", $author));
+      for ($i=0; $i < $authorcount-1; $i++){
+        $aul = extractAuthorsLastName(" *; *", " *, *", $i+2, $author);
+        $auf = extractAuthorsGivenName(" *; *", " *, *", $i+2, $author);
+        if (!empty($aul)) {
+          $au = $aul;
+          if (!empty($auf))
+            $au .= ", ";
+        }
+        if (!empty($auf))
+          $au .= $auf;
+        if (!empty($au))
+          $co["rft.au".$i] = $au;
+      }
     }
 
     // pub (publisher)
