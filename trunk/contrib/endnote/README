@@ -29,6 +29,10 @@ Use
   Part III: Check it!
   - As this is a preliminary script that has undergone little testing, it is
     suggested that you look at 'import.txt' in spreadsheet software.
+  - New versions of Endnote dump UTF-8 data.  You should be able to use this as
+    is if you have a UTF-8 database.  If you don't have a UTF-8 database, you
+    should convert the file to the character encoding you do use (using iconv,
+    recode, or <http://www.motobit.com/util/charset-codepage-conversion.asp>).
   Part IV: MySQL [*]
   - From within your MySQL command line interpreter (mysql -u root literature -p):
       LOAD DATA LOCAL INFILE "import.txt" INTO TABLE refs; 
