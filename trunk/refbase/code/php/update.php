@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./update.php
 	// Created:    01-Mar-05, 20:47
-	// Modified:   19-Oct-06, 13:00
+	// Modified:   19-Oct-06, 13:30
 
 	// This file will update any refbase MySQL database installation from v0.8.0 (and, to a certain extent, intermediate cvs versions) to v0.9.0.
 	// (Note that this script currently doesn't offer any conversion from 'latin1' to 'utf8')
@@ -251,6 +251,27 @@
 			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
         showErrorMsg("The following error occurred while trying to crate the user_options table:", "");
 
+    // (2.2) Insert default user options for anyone who's not logged in
+    $values = "(NULL, 0, 'yes', 'yes', 'no', 'no', '<:authors:><:year:>', 'yes', 'transliterate', 'no', '<:authors[2| & | et al.]:>< :year:>< {:recordIdentifier:}>')";
+    insertIfNotExists("user_id", 0, $tableUserOptions, $values);
+
+    // (2.3) Insert default user options for all users
+    $values = "NULL, 1, 'yes', 'yes', 'no', 'yes', '<:authors[2|+|++]:><:year:>', 'yes', 'transliterate', 'no', '<:authors[2| & | et al.]:>< :year:>< {:recordIdentifier:}>')";
+    // Check how many users are contained in table 'users':
+  	$queryUserIDs = "SELECT user_id FROM " . $databaseName . ".users";
+
+ 		// Run the query on the mysql database through the connection:
+  	if (!($result = @ mysql_query ($queryUserIDs, $connection)))
+  		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+  			showErrorMsg("The following error occurred while trying to query the database:", "");
+
+   		$rowsFound = @ mysql_num_rows($result);
+   		if ($rowsFound > 0) { // If there were rows (= user IDs) found ...
+        while ($row = @ mysql_fetch_array($result)) {
+          insertIfNotExists("user_id", $row['user_id'], $tableUserOptions, $values);
+        }
+      }
+    
     // (3) Errors
 		// If any of the new tables/fields exist already, we stop script execution and issue an error message:
 		if (!empty($resultArray1))
@@ -389,5 +410,19 @@
 			echo "\n\t\t\t<b><span class=\"warning\">" . $errors[$fieldName] . "</span></b>\n\t\t\t<br>";
 	}
 
+	// --------------------------------------------------------------------
+  // Check for the presence of a value in a table.
+  // If it doesn't exist, add the given row to that same table.
+  function insertIfNotExists($keyColumn, $keyValue, $table, $values) {
+    $query = "SELECT " . $keyColumn . " FROM " . $table . " WHERE " . $keyColumn . "=" . quote_smart($keyValue);
+    if (!($result = @ mysql_query ($query, $connection)))
+      if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+        showErrorMsg("The following error occurred while trying to query the database:", "");
+
+    $rowsFound = @ mysql_num_rows($result);
+    if ($rowsFound == 0)
+      $query = "INSERT INTO " . $table . " VALUES " . quote_smart($values);
+  }
+	// --------------------------------------------------------------------
 	// --------------------------------------------------------------------
 ?>
