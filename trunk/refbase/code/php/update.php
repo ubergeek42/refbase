@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./update.php
 	// Created:    01-Mar-05, 20:47
-	// Modified:   19-Oct-06, 17:30
+	// Modified:   19-Oct-06, 18:30
 
 	// This file will update any refbase MySQL database installation from v0.8.0 (and, to a certain extent, intermediate cvs versions) to v0.9.0.
 	// (Note that this script currently doesn't offer any conversion from 'latin1' to 'utf8')
@@ -272,9 +272,44 @@
         }
       }
       
-      // (2.4) Add field allow_browse_view to table user_permissions
-      $properties="ENUM('yes','no') NOT NULL AFTER allow_print_view";
-      addColumnIfNotExists("allow_browse_view", $tableUserPermissions, $properties);
+    // (2.4) Add field allow_browse_view to table user_permissions
+    $properties="ENUM('yes','no') NOT NULL AFTER allow_print_view";
+    addColumnIfNotExists("allow_browse_view", $tableUserPermissions, $properties);
+
+    // (2.5) Disable the Browse view feature (which isn't done yet) for all users
+    $query= "UPDATE " . $tableUserPermissions . " SET allow_browse_view = 'no'";
+  	if (!($result = @ mysql_query ($query, $connection)))
+  	  if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+        showErrorMsg("The following error occurred while trying to disable browse view:", "");
+
+    // (2.6) Update table styles
+    $query = "UPDATE " . $tableStyles . " SET style_spec = REPLACE(style_spec,'cite_','styles/cite_') WHERE style_spec RLIKE '^cite_'";
+  	if (!($result = @ mysql_query ($query, $connection)))
+  	  if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+        showErrorMsg("The following error occurred while trying to update the styles table:", "");
+    $values = "(NULL, 'Ann Glaciol', 'true', 'styles/cite_AnnGlaciol_JGlaciol.php', '5', '1')";
+    insertIfNotExists("style_name", "Ann Glaciol", $tableStyles, $values);
+    $values = "(NULL, 'J Glaciol', 'true', 'styles/cite_AnnGlaciol_JGlaciol.php', '6', '1')";
+    insertIfNotExists("style_name", "J Glaciol", $tableStyles, $values);
+
+    // (2.7) Add the french language option to table languages
+    $values = "(NULL, 'fr', 'true', '3')";
+    insertIfNotExists("language_name", "fr", $tableLanguages, $values);
+
+    // (2.8) Alter table specification for table formats
+    $query = "ALTER table " . $tableFormats . " MODIFY format_type enum('export','import','cite') NOT NULL default 'export'";
+  	if (!($result = @ mysql_query ($query, $connection)))
+  	  if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+        showErrorMsg("The following error occurred while trying to update the formats table:", "");
+
+    // (2.9) Update existing formats in table formats
+    $query = "UPDATE " . $tableFormats . " SET format_name = 'BibTeX' WHERE format_name = 'Bibtex'";
+  	if (!($result = @ mysql_query ($query, $connection)))
+  	  if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+        showErrorMsg("The following error occurred while trying to update the formats table:", "");
+
+    // (2.10) Replace existing import formats with updated/new ones in table formats
+    // (2.11) Add new export & cite formats in table formats
 
     // (3) Errors
 		// If any of the new tables/fields exist already, we stop script execution and issue an error message:
