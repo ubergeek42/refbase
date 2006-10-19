@@ -256,7 +256,6 @@
     insertIfNotExists("user_id", 0, $tableUserOptions, $values);
 
     // (2.3) Insert default user options for all users
-    $values = "NULL, 1, 'yes', 'yes', 'no', 'yes', '<:authors[2|+|++]:><:year:>', 'yes', 'transliterate', 'no', '<:authors[2| & | et al.]:>< :year:>< {:recordIdentifier:}>')";
     // Check how many users are contained in table 'users':
   	$queryUserIDs = "SELECT user_id FROM " . $databaseName . ".users";
 
@@ -268,10 +267,15 @@
    		$rowsFound = @ mysql_num_rows($result);
    		if ($rowsFound > 0) { // If there were rows (= user IDs) found ...
         while ($row = @ mysql_fetch_array($result)) {
+          $values = "NULL, " . $row['user_id'] . ", 'yes', 'yes', 'no', 'yes', '<:authors[2|+|++]:><:year:>', 'yes', 'transliterate', 'no', '<:authors[2| & | et al.]:>< :year:>< {:recordIdentifier:}>')";
           insertIfNotExists("user_id", $row['user_id'], $tableUserOptions, $values);
         }
       }
-    
+      
+      // (2.4) Add field allow_browse_view to table user_permissions
+      $properties="ENUM('yes','no') NOT NULL AFTER allow_print_view";
+      addColumnIfNotExists("allow_browse_view", $tableUserPermissions, $properties);
+
     // (3) Errors
 		// If any of the new tables/fields exist already, we stop script execution and issue an error message:
 		if (!empty($resultArray1))
@@ -420,9 +424,32 @@
         showErrorMsg("The following error occurred while trying to query the database:", "");
 
     $rowsFound = @ mysql_num_rows($result);
-    if ($rowsFound == 0)
-      $query = "INSERT INTO " . $table . " VALUES " . quote_smart($values);
+    if ($rowsFound == 0) {
+      $query = "INSERT INTO literature." . $table . " VALUES " . $values;
+      if (!($result = @ mysql_query ($query, $connection)))
+        if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+          showErrorMsg("The following error occurred while trying to INSERT into " . $table, "");
+    }
   }
 	// --------------------------------------------------------------------
+  // Check for presence of a column in a table.
+  // If it doesn't exist, adde it to that same table.
+  function addColumnIfNotExists($column, $table, $properties) {
+    $present = false;
+    $queryFields = "SHOW FIELDS FROM " . $table;
+  	// Run the query on the mysql database through the connection:
+    if (!($result = @ mysql_query ($queryFields, $connection)))
+  		if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+  			showErrorMsg("The following error occurred while trying to query the database:", "");
+    while ($row = @ mysql_fetch_array($result)) // for all fields found, check if their names match the field names which we want to add using 'update.sql':
+      if ($row["Field"] ==  $column)
+        $present = true;
+    if (!$present) {
+      $query = "ALTER TABLE " . $table . "  ADD COLUMN " . $column . " " . $properties;
+      if (!($result = @ mysql_query ($query, $connection)))
+        if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+          showErrorMsg("The following error occurred while trying to INSERT into " . $table, "");
+    }
+  }
 	// --------------------------------------------------------------------
 ?>
