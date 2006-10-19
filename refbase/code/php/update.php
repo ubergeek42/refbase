@@ -5,9 +5,9 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./update.php
 	// Created:    01-Mar-05, 20:47
-	// Modified:   26-Sep-06, 00:40
+	// Modified:   19-Oct-06, 13:00
 
-	// This file will update any refbase MySQL database installation from v0.7 to v0.8.
+	// This file will update any refbase MySQL database installation from v0.8.0 (and, to a certain extent, intermediate cvs versions) to v0.9.0.
 	// (Note that this script currently doesn't offer any conversion from 'latin1' to 'utf8')
 	// CAUTION: YOU MUST REMOVE THIS SCRIPT FROM YOUR WEB DIRECTORY AFTER THE UPDATE!!
 
@@ -52,30 +52,10 @@
 	else
 		$adminPassword = "";
 
-	if (isset($_POST['pathToMYSQL']))
-		$pathToMYSQL = $_POST['pathToMYSQL'];
-	else
-		$pathToMYSQL = "";
-
-	if (isset($_POST['databaseStructureFile']))
-		$databaseStructureFile = $_POST['databaseStructureFile'];
-	else
-		$databaseStructureFile = "";
-
-	if (isset($_POST['pathToBibutils']))
-		$pathToBibutils = $_POST['pathToBibutils'];
-	else
-		$pathToBibutils = "";
-
-//	if (isset($_POST['defaultCharacterSet']))
-//		$defaultCharacterSet = $_POST['defaultCharacterSet'];
-//	else
-//		$defaultCharacterSet = "";
-
 	// --------------------------------------------------------------------
 
 	// Check the correct parameters have been passed:
-	if (empty($adminUserName) AND empty($adminPassword) AND empty($pathToMYSQL) AND empty($databaseStructureFile))
+	if (empty($adminUserName) AND empty($adminPassword))
 	{
 		// if 'update.php' was called without any valid parameters:
 		//Display an update form:
@@ -105,17 +85,13 @@
 			// provide the default values:
 			$formVars["adminUserName"] = "root";
 			$formVars["adminPassword"] = "";
-			$formVars["pathToMYSQL"] = "/usr/local/mysql/bin/mysql";
-			$formVars["databaseStructureFile"] = "./update.sql";
-			$formVars["pathToBibutils"] = "/usr/local/bin/";
-//			$formVars["defaultCharacterSet"] = "latin1";
 		}
 
 		// If there's no stored message available:
 		if (!isset($_SESSION['HeaderString']))
 		{
 			if (empty($errors)) // provide the default message:
-				$HeaderString = "To update refbase v0.7 please fill out the form below and click the <em>Update</em> button:";
+				$HeaderString = "To update refbase v0.8.0 please fill out the form below and click the <em>Update</em> button:";
 			else // -> there were errors when validating the fields
 				$HeaderString = "<b><span class=\"warning\">There were validation errors regarding the details you entered. Please check the comments above the respective fields:</span></b>";
 		}
@@ -133,18 +109,6 @@
 			$viewType = $_REQUEST['viewType'];
 		else
 			$viewType = "";
-
-//		// For the default character set, make sure that the correct popup menu entry is selected upon reload:
-//		if ($formVars["defaultCharacterSet"] == "utf8")
-//		{
-//			$latin1CharacterSetSelected = "";
-//			$unicodeCharacterSetSelected = " selected";
-//		}
-//		else // $formVars["defaultCharacterSet"] is 'latin1' or ''
-//		{
-//			$latin1CharacterSetSelected = " selected";
-//			$unicodeCharacterSetSelected = "";
-//		}
 
 		// Show the login status:
 		showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
@@ -194,48 +158,6 @@
 		<td valign="top">Please enter the password for the administrative user you've specified above.</td>
 	</tr>
 	<tr>
-		<td valign="top"><b>Path to the MySQL application:</b></td>
-		<td valign="top"><?php echo fieldError("pathToMYSQL", $errors); ?>
-
-			<input type="text" name="pathToMYSQL" value="<?php echo $formVars["pathToMYSQL"]; ?>" size="30">
-		</td>
-		<td valign="top">Specify the full path to the 'mysql' command line interpreter. The given path represents a common location on unix systems, but yours may vary.</td>
-	</tr>
-	<tr>
-		<td valign="top"><b>Path to the database structure file:</b></td>
-		<td valign="top"><?php echo fieldError("databaseStructureFile", $errors); ?>
-
-			<input type="text" name="databaseStructureFile" value="<?php echo $formVars["databaseStructureFile"]; ?>" size="30">
-		</td>
-		<td valign="top">The SQL file <em>update.sql</em> will insert any new database tables and update your existing tables.</td>
-	</tr>
-	<tr>
-		<td valign="top"><b>Path to the bibutils directory [optional]:</b></td>
-		<td valign="top"><?php echo fieldError("pathToBibutils", $errors); ?>
-
-			<input type="text" name="pathToBibutils" value="<?php echo $formVars["pathToBibutils"]; ?>" size="30">
-		</td>
-		<td valign="top">If you'd like to use the export functionality you need to install <a href="http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html" title="bibutils home page">bibutils</a> and enter the full path to the bibutils utilities here. The given path just serves as an example and your path spec may be different. The path must end with a slash!</td>
-	</tr><?php
-// Currently, there's no support for character set transformation:
-/*
-?>
-
-	<tr>
-		<td valign="top"><b>Default character set:</b></td>
-		<td valign="top"><?php echo fieldError("defaultCharacterSet", $errors); ?>
-
-			<select name="defaultCharacterSet">
-				<option<?php echo $latin1CharacterSetSelected; ?>>latin1</option>
-				<option<?php echo $unicodeCharacterSetSelected; ?>>utf8</option>
-			</select>
-		</td>
-		<td valign="top">Specify the default character set for the MySQL database used by refbase. Note that 'utf8' (Unicode) requires MySQL 4.1.x or greater, otherwise 'latin1' (i.e., 'ISO-8859-1 West European') will be used by default.</td>
-	</tr><?php
-*/
-?>
-
-	<tr>
 		<td valign="top">&nbsp;</td>
 		<td valign="top" align="right">
 			<input type="submit" name="submit" value="Update">
@@ -280,75 +202,6 @@
 			// The 'adminPassword' field cannot be a null string
 			$errors["adminPassword"] = "This field cannot be blank:";
 
-
-		// Validate the 'pathToMYSQL' field:
-		if (empty($formVars["pathToMYSQL"]))
-			// The 'pathToMYSQL' field cannot be a null string
-			$errors["pathToMYSQL"] = "This field cannot be blank:";
-
-		elseif (ereg("[;|]", $formVars["pathToMYSQL"]))
-			// For security reasons, the 'pathToMYSQL' field cannot contain the characters ';' or '|' (which would tie multiple shell commands together)
-			$errors["pathToMYSQL"] = "Due to security reasons this field cannot contain the characters ';' or '|':";
-
-		elseif (is_dir($formVars["pathToMYSQL"]))
-			// Check if the specified path resolves to a directory
-			$errors["pathToMYSQL"] = "You cannot specify a directory! Please give the path to the mysql command:";
-
-		elseif (!is_readable($formVars["pathToMYSQL"]))
-			// Check if the specified path resolves to the mysql application
-			$errors["pathToMYSQL"] = "Your path specification is invalid (command not found):";
-
-//		Note: Currently, the checks for whether the function is executable or whether it is mysql have been commented out,
-//			  since they don't seem to work on windows! (see <http://sourceforge.net/forum/forum.php?thread_id=1021143&forum_id=218758>)
-
-//		elseif (!is_executable($formVars["pathToMYSQL"]))
-//			// Check if the given file is executable
-//			$errors["pathToMYSQL"] = "This file does not appear to be an executable command:";
-
-//		elseif (!ereg("(^|.*/)mysql$", $formVars["pathToMYSQL"]))
-//			// Make sure that the given file is 'mysql'
-//			$errors["pathToMYSQL"] = "This does not appear to be the 'mysql' command line interpreter:";
-
-
-		// Validate the 'databaseStructureFile' field:
-		if (empty($formVars["databaseStructureFile"]))
-			// The 'databaseStructureFile' field cannot be a null string
-			$errors["databaseStructureFile"] = "This field cannot be blank:";
-
-		elseif (ereg("[;|]", $formVars["databaseStructureFile"]))
-			// For security reasons, the 'databaseStructureFile' field cannot contain the characters ';' or '|' (which would tie multiple shell commands together)
-			$errors["databaseStructureFile"] = "Due to security reasons this field cannot contain the characters ';' or '|':";
-
-		elseif (is_dir($formVars["databaseStructureFile"]))
-			// Check if the specified path resolves to a directory
-			$errors["databaseStructureFile"] = "You cannot specify a directory! Please give the path to the database structure file:";
-
-		elseif (!is_readable($formVars["databaseStructureFile"]))
-			// Check if the specified path resolves to the database structure file
-			$errors["databaseStructureFile"] = "Your path specification is invalid (file not found):";
-
-
-		// Validate the 'pathToBibutils' field:
-		if (!empty($formVars["pathToBibutils"])) // we'll only validate the 'pathToBibutils' field if it isn't empty (installation of bibutils is optional)
-		{
-			if (ereg("[;|]", $formVars["pathToBibutils"]))
-				// For security reasons, the 'pathToBibutils' field cannot contain the characters ';' or '|' (which would tie multiple shell commands together)
-				$errors["pathToBibutils"] = "Due to security reasons this field cannot contain the characters ';' or '|':";
-	
-			elseif (!is_readable($formVars["pathToBibutils"]))
-				// Check if the specified path resolves to an existing directory
-				$errors["pathToBibutils"] = "Your path specification is invalid (directory not found):";
-	
-			elseif (!is_dir($formVars["pathToBibutils"]))
-				// Check if the specified path resolves to a directory (and not a file)
-				$errors["pathToBibutils"] = "You must specify a directory! Please give the path to the directory containing the bibutils utilities:";
-		}
-
-
-		// Validate the 'defaultCharacterSet' field:
-		// Note: Currently we're not generating an error & rooting back to the update form, if the user did choose 'utf8' but has some MySQL version < 4.1 installed.
-		//       In this case, we'll simply ignore the setting and 'latin1' will be used by default.
-
 		// --------------------------------------------------------------------
 
 		// Now the script has finished the validation, check if there were any errors:
@@ -373,65 +226,32 @@
 			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 				showErrorMsg("The following error occurred while trying to connect to the host:", "");
 
-		if (!(mysql_select_db($adminDatabaseName, $connection)))
+		if (!(mysql_select_db($databaseName, $connection)))
 			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 				showErrorMsg("The following error occurred while trying to connect to the database:", "");
 
-
-//		// First, check if we're a dealing with MySQL version 4.1.x or greater:
-//		// (MySQL 4.1.x is required if the refbase MySQL database/tables shall be updated using Unicode/UTF-8 as default character set)
-//		$queryCheckVersion = "SELECT VERSION()";
-
-//		// Run the version check query on the mysql database through the connection:
-//		if (!($result = @ mysql_query ($queryCheckVersion, $connection)))
-//			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-//				showErrorMsg("The following error occurred while trying to query the database:", "");
-
-//		// Extract result:
-//		$row = mysql_fetch_row($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
-//		$mysqlVersionString = $row[0]; // extract the contents of the first (and only) row (returned version string will be something like "4.0.20-standard" etc.)
-//		$mysqlVersion = preg_replace("/^(\d+\.\d+).+/", "\\1", $mysqlVersionString); // extract main version number (e.g. "4.0") from version string
-
 		// --------------------------------------------------------------------
 
-		// First, check which tables do exist within the user's existing literature database:
-		$queryTables = "SHOW TABLES FROM " . $databaseName;
-
-		// Run the query on the mysql database through the connection:
-		if (!($result = @ mysql_query ($queryTables, $connection)))
+    // (2) SQL queries
+		// (2.1) Create new MySQL table user_options
+    if (!($result = @ mysql_query ("CREATE TABLE IF NOT EXISTS ". $tableUserOptions .
+      " (option_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, ".
+      "user_id MEDIUMINT UNSIGNED NOT NULL, ".
+      "export_cite_keys ENUM('yes','no') NOT NULL, ".
+      "autogenerate_cite_keys ENUM('yes','no') NOT NULL, ".
+      "prefer_autogenerated_cite_keys ENUM('no','yes') NOT NULL, ".
+      "use_custom_cite_key_format ENUM('no','yes') NOT NULL, ".
+      "cite_key_format VARCHAR(255), ".
+      "uniquify_duplicate_cite_keys ENUM('yes','no') NOT NULL, ".
+      "nonascii_chars_in_cite_keys ENUM('transliterate','strip','keep'), ".
+      "use_custom_text_citation_format ENUM('no','yes') NOT NULL, ".
+      "text_citation_format VARCHAR(255), ".
+      "INDEX (user_id));",
+      $connection)))
 			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("The following error occurred while trying to query the database:", "");
+        showErrorMsg("The following error occurred while trying to crate the user_options table:", "");
 
-		$resultArray1 = array();
-		$addTablesArray = array("depends", "formats", "languages", "queries", "styles", "types", "user_formats", "user_permissions", "user_styles", "user_types");
-
-		while ($row = @ mysql_fetch_array($result)) // for all database tables found, check if their names match the table names which we want to add using 'update.sql':
-		{
-			if (in_array($row[0], $addTablesArray))
-				$resultArray1[] = "Table <em>" . $row[0] . "</em> already exists!";
-		}
-
-		// Second, check if fields which we're going to add do exist already:
-		$updateTablesArray = array("deleted", "refs", "user_data", "users");
-		$addFieldsArray = array("deleted.series_volume_numeric", "refs.series_volume_numeric", "user_data.user_groups", "user_data.cite_key", "user_data.related", "users.user_groups");
-
-		foreach($updateTablesArray as $updateTable)
-		{
-			$queryFields = "SHOW FIELDS FROM " . $updateTable . " FROM " . $databaseName;
-
-			// Run the query on the mysql database through the connection:
-			if (!($result = @ mysql_query ($queryFields, $connection)))
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-					showErrorMsg("The following error occurred while trying to query the database:", "");
-
-			while ($row = @ mysql_fetch_array($result)) // for all fields found, check if their names match the field names which we want to add using 'update.sql':
-			{
-				$thisField = $updateTable . "." . $row["Field"];
-				if (in_array($thisField, $addFieldsArray))
-					$resultArray1[] = "Field <em>" . $row["Field"] . "</em> in table <em>" . $updateTable . "</em> already exists!";
-			}
-		}
-
+    // (3) Errors
 		// If any of the new tables/fields exist already, we stop script execution and issue an error message:
 		if (!empty($resultArray1))
 		{
@@ -450,16 +270,6 @@
 			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		}
 
-		// IMPORT the literature database structure from file:
-		exec($pathToMYSQL . " -h " . $hostName . " -u " . $adminUserName . " -p" . $adminPassword . " --database=" . $databaseName . " < " . $databaseStructureFile . " 2>&1", $resultArray2);
-
-		// User note from <http://de2.php.net/manual/en/ref.exec.php> regarding the use of PHP's 'exec()' command:
-		// From 'eremy at ntb dot co dot nz' (28-Sep-2003 03:18):
-		// If an error occurs in the code you're trying to exec(), it can be challenging to figure out what's going
-		// wrong, since php echoes back the stdout stream rather than the stderr stream where all the useful error
-		// reporting's done. The solution is to add the code "2>&1" to the end of your shell command, which redirects
-		// stderr to stdout, which you can then easily print using something like print `shellcommand 2>&1`.
-
 		if (!empty($resultArray2))
 		{
 			$HeaderString = "Update process interrupted! The following errors occurred while updating your database:";
@@ -471,67 +281,7 @@
 			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		}
 
-
-		// Prepare the update queries and proceed with the actual update procedure:
-
-		$queryArray = array(); // initialize array variable
-
-		// Check how many users are contained in table 'users':
-		$queryUserIDs = "SELECT user_id FROM " . $databaseName . ".users";
-
-		// Run the query on the mysql database through the connection:
-		if (!($result = @ mysql_query ($queryUserIDs, $connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("The following error occurred while trying to query the database:", "");
-
-		// Extract result:
-		$rowsFound = @ mysql_num_rows($result);
-		if ($rowsFound > 0) // If there were rows (= user IDs) found ...
-		{
-			// Prepare queries which update the 'user_*' tables:
-			$queryInsertUserFormats = "INSERT INTO " . $databaseName . ".user_formats VALUES ";
-			$queryInsertUserStyles = "INSERT INTO " . $databaseName . ".user_styles VALUES ";
-			$queryInsertUserTypes = "INSERT INTO " . $databaseName . ".user_types VALUES ";
-			$queryInsertUserPermissions = "INSERT INTO " . $databaseName . ".user_permissions VALUES ";
-
-			$i = 0;
-			while ($row = @ mysql_fetch_array($result)) // for all user IDs found, insert corresponding user entries into the 'user_*' tables:
-			{
-				if ($i++ != 0)
-				{
-					$queryInsertUserFormats .= ", ";
-					$queryInsertUserStyles .= ", ";
-					$queryInsertUserTypes .= ", ";
-					$queryInsertUserPermissions .= ", ";
-				}
-
-				$queryInsertUserFormats .= "(NULL, 1, " . $row['user_id'] . ", 'true'), (NULL, 2, " . $row['user_id'] . ", 'true'), (NULL, 3, " . $row['user_id'] . ", 'true'), (NULL, 4, " . $row['user_id'] . ", 'true'), (NULL, 5, " . $row['user_id'] . ", 'true'), (NULL, 6, " . $row['user_id'] . ", 'true'), (NULL, 7, " . $row['user_id'] . ", 'true'), (NULL, 8, " . $row['user_id'] . ", 'true'), (NULL, 9, " . $row['user_id'] . ", 'true'), (NULL, 10, " . $row['user_id'] . ", 'true'), (NULL, 11, " . $row['user_id'] . ", 'true')";
-				$queryInsertUserStyles .= "(NULL, 1, " . $row['user_id'] . ", 'true'), (NULL, 2, " . $row['user_id'] . ", 'true'), (NULL, 3, " . $row['user_id'] . ", 'true'), (NULL, 4, " . $row['user_id'] . ", 'true'), (NULL, 5, " . $row['user_id'] . ", 'true')";
-				$queryInsertUserTypes .= "(NULL, 1, " . $row['user_id'] . ", 'true'), (NULL, 2, " . $row['user_id'] . ", 'true'), (NULL, 3, " . $row['user_id'] . ", 'true'), (NULL, 4, " . $row['user_id'] . ", 'true'), (NULL, 5, " . $row['user_id'] . ", 'true'), (NULL, 6, " . $row['user_id'] . ", 'true')";
-				$queryInsertUserPermissions .= "(NULL, " . $row['user_id'] . ", 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'no')";
-			}
-
-			$queryArray[] = $queryInsertUserFormats;
-			$queryArray[] = $queryInsertUserStyles;
-			$queryArray[] = $queryInsertUserTypes;
-			$queryArray[] = $queryInsertUserPermissions;
-		}
-
-		if (!empty($pathToBibutils)) // we'll only update the bibutils path if '$pathToBibutils' isn't empty (installation of bibutils is optional)
-			// Prepare query which updates the path to the bibutils utilities in table 'depends':
-			$queryArray[] = "UPDATE " . $databaseName . ".depends SET depends_path = " . quote_smart($pathToBibutils) . " WHERE depends_external = \"bibutils\""; // update the bibutils path spec
-		else // we set the 'depends_enabled' field in table 'depends' to 'false' to indicate that bibutils isn't installed
-			$queryArray[] = "UPDATE " . $databaseName . ".depends SET depends_enabled = \"false\" WHERE depends_external = \"bibutils\""; // disable bibutils functionality
-
-
-		// (2) Run the UPDATE queries on the mysql database through the connection:
-		foreach($queryArray as $query)
-			if (!($result = @ mysql_query ($query, $connection)))
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-					showErrorMsg("The following error occurred while trying to query the database:", "");
-
-
-		// (5) Close the database connection:
+		// (4) Close the database connection:
 		if (!(mysql_close($connection)))
 			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 				showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
@@ -598,7 +348,7 @@
 ?>
 
 	<tr>
-		<td colspan="2"><h3>Welcome to refbase v0.8!</h3></td>
+		<td colspan="2"><h3>Welcome to refbase v0.9.0!</h3></td>
 	</tr>
 	<tr>
 		<td valign="top"><b>Important Note:</b></td>
