@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./update.php
 	// Created:    01-Mar-05, 20:47
-	// Modified:   19-Oct-06, 13:30
+	// Modified:   19-Oct-06, 17:30
 
 	// This file will update any refbase MySQL database installation from v0.8.0 (and, to a certain extent, intermediate cvs versions) to v0.9.0.
 	// (Note that this script currently doesn't offer any conversion from 'latin1' to 'utf8')
@@ -219,7 +219,7 @@
 
 		// --------------------------------------------------------------------
 
-		// If we made it here, then the data is considered valid!
+    // If we made it here, then the data is considered valid!
 
 		// (1) Open the database connection and use the mysql database:
 		if (!($connection = @ mysql_connect($hostName,$adminUserName,$adminPassword)))
@@ -267,7 +267,7 @@
    		$rowsFound = @ mysql_num_rows($result);
    		if ($rowsFound > 0) { // If there were rows (= user IDs) found ...
         while ($row = @ mysql_fetch_array($result)) {
-          $values = "NULL, " . $row['user_id'] . ", 'yes', 'yes', 'no', 'yes', '<:authors[2|+|++]:><:year:>', 'yes', 'transliterate', 'no', '<:authors[2| & | et al.]:>< :year:>< {:recordIdentifier:}>')";
+          $values = "(NULL, " . $row['user_id'] . ", 'yes', 'yes', 'no', 'yes', '<:authors[2|+|++]:><:year:>', 'yes', 'transliterate', 'no', '<:authors[2| & | et al.]:>< :year:>< {:recordIdentifier:}>')";
           insertIfNotExists("user_id", $row['user_id'], $tableUserOptions, $values);
         }
       }
@@ -418,6 +418,7 @@
   // Check for the presence of a value in a table.
   // If it doesn't exist, add the given row to that same table.
   function insertIfNotExists($keyColumn, $keyValue, $table, $values) {
+    global $connection;
     $query = "SELECT " . $keyColumn . " FROM " . $table . " WHERE " . $keyColumn . "=" . quote_smart($keyValue);
     if (!($result = @ mysql_query ($query, $connection)))
       if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
@@ -435,6 +436,7 @@
   // Check for presence of a column in a table.
   // If it doesn't exist, adde it to that same table.
   function addColumnIfNotExists($column, $table, $properties) {
+    global $connection;
     $present = false;
     $queryFields = "SHOW FIELDS FROM " . $table;
   	// Run the query on the mysql database through the connection:
