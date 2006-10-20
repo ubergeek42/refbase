@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./update.php
 	// Created:    01-Mar-05, 20:47
-	// Modified:   19-Oct-06, 18:30
+	// Modified:   20-Oct-06, 9:00
 
 	// This file will update any refbase MySQL database installation from v0.8.0 (and, to a certain extent, intermediate cvs versions) to v0.9.0.
 	// (Note that this script currently doesn't offer any conversion from 'latin1' to 'utf8')
@@ -295,6 +295,11 @@
     // (2.7) Add the french language option to table languages
     $values = "(NULL, 'fr', 'true', '3')";
     insertIfNotExists("language_name", "fr", $tableLanguages, $values);
+    // (2.7b) Enable German localization
+    $query = "UPDATE " . $tableLanguages . " SET language_enabled = 'true' WHERE language_name = 'de'";
+  	if (!($result = @ mysql_query ($query, $connection)))
+  	  if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+        showErrorMsg("The following error occurred while trying to update the language table:", "");
 
     // (2.8) Alter table specification for table formats
     $query = "ALTER table " . $tableFormats . " MODIFY format_type enum('export','import','cite') NOT NULL default 'export'";
