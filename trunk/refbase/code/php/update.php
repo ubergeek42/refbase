@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./update.php
 	// Created:    01-Mar-05, 20:47
-	// Modified:   20-Oct-06, 9:00
+	// Modified:   20-Oct-06, 9:15
 
 	// This file will update any refbase MySQL database installation from v0.8.0 (and, to a certain extent, intermediate cvs versions) to v0.9.0.
 	// (Note that this script currently doesn't offer any conversion from 'latin1' to 'utf8')
@@ -314,7 +314,56 @@
         showErrorMsg("The following error occurred while trying to update the formats table:", "");
 
     // (2.10) Replace existing import formats with updated/new ones in table formats
+    // NOTE: Simple, brain-dead test of UPDATEing (wes hould probably have a sql function and/or make this an array and process that)
+    $query = "UPDATE " . $tableFormats . " SET format_spec = 'bibutils/import_modsxml2refbase.php', depends_id = 2 WHERE format_name = 'MODS XML' AND format_type = 'import'";
+  	if (!($result = @ mysql_query ($query, $connection)))
+  	  if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+        showErrorMsg("The following error occurred while trying to update the formats table:", "");
+    $query = "UPDATE " . $tableFormats . " SET format_spec = 'bibutils/import_bib2refbase.php' WHERE format_name = 'BibTeX' AND format_type = 'import'";
+  	if (!($result = @ mysql_query ($query, $connection)))
+  	  if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+        showErrorMsg("The following error occurred while trying to update the formats table:", "");
+    $query = "UPDATE " . $tableFormats . " SET format_spec = 'bibutils/import_end2refbase.php' WHERE format_name = 'Endnote' AND format_type = 'import'";
+  	if (!($result = @ mysql_query ($query, $connection)))
+  	  if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+        showErrorMsg("The following error occurred while trying to update the formats table:", "");
+
+    $values = "(NULL, 'Pubmed Medline', 'import', 'true', 'import_medline2refbase.php', '08', 1)";
+    insertIfNotExists("format_name", "Pubmed Medline", $tableFormats, $values);
+
+    $query = "UPDATE " . $tableFormats . " SET format_spec = 'bibutils/import_med2refbase.php', order_by = 9 WHERE format_name = 'Pubmed XML' AND format_type = 'import'";
+  	if (!($result = @ mysql_query ($query, $connection)))
+  	  if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+        showErrorMsg("The following error occurred while trying to update the formats table:", "");
+    $query = "UPDATE " . $tableFormats . " SET format_spec = 'import_ris2refbase.php' WHERE format_name = 'RIS' AND format_type = 'import'";
+  	if (!($result = @ mysql_query ($query, $connection)))
+  	  if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+        showErrorMsg("The following error occurred while trying to update the formats table:", "");
+    $query = "UPDATE " . $tableFormats . " SET format_name = 'ISI', format_spec = 'import_isi2refbase.php' WHERE format_name = 'RIS (ISI)' AND format_type = 'import'";
+  	if (!($result = @ mysql_query ($query, $connection)))
+  	  if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+        showErrorMsg("The following error occurred while trying to update the formats table:", "");
+
+    $values = "(NULL, 'CSA', 'import', 'true', 'import_csa2refbase.php', '05', 1)";
+    insertIfNotExists("format_name", "CSA", $tableFormats, $values);
+
+    $values = "(NULL, 'Copac', 'import', 'true', 'bibutils/import_copac2refbase.php', '10', 2)";
+    insertIfNotExists("format_name", "Copac", $tableFormats, $values);
+
+    $values = "(NULL, 'RefWorks', 'import', 'true', 'import_refworks2refbase.php', '20', 1)";
+    insertIfNotExists("format_name", "RefWorks", $tableFormats, $values);
+
     // (2.11) Add new export & cite formats in table formats
+/*
+INSERT INTO formats VALUES (NULL, 'ODF XML', 'export', 'true', 'export_odfxml.php', '12', 1), 
+   (NULL, 'OpenSearch RSS', 'export', 'true', 'export_osrss.php', '13', 1), 
+   (NULL, 'html', 'cite', 'true', 'formats/cite_html.php', '14', 1), 
+   (NULL, 'RTF', 'cite', 'true', 'formats/cite_rtf.php', '15', 1), 
+   (NULL, 'PDF', 'cite', 'true', 'formats/cite_pdf.php', '16', 1), 
+   (NULL, 'LaTeX', 'cite', 'true', 'formats/cite_latex.php', '17', 1), 
+   (NULL, 'Markdown', 'cite', 'true', 'formats/cite_markdown.php', '18', 1), 
+   (NULL, 'ASCII', 'cite', 'true', 'formats/cite_ascii.php', '19', 1);
+ */
 
     // (3) Errors
 		// If any of the new tables/fields exist already, we stop script execution and issue an error message:
