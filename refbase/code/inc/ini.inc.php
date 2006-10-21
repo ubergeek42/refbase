@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./initialize/ini.inc.php
 	// Created:    12-Jan-03, 17:58
-	// Modified:   08-Oct-06, 16:42
+	// Modified:   22-Oct-06, 01:54
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -441,6 +441,7 @@
 	$openURLResolver = "http://www.crossref.org/openurl?pid=rfbs:rfbs228";
 	// Examples for OpenURL resolvers:
 	// - Generic OpenURL resolver provided by CrossRef: "http://www.crossref.org/openurl?pid=rfbs:rfbs228" ('pid=rfbs:rfbs228' identifies refbase as a registered CrossRef member)
+	// - 1Cate, the OpenURL link-server from ISI/Openly: "http://isi.1cate.com/?sid=ISI:WoS"
 	// - WorldCat OpenURL resolver which redirects to "the best" resolver for the client IP address: "http://worldcatlibraries.org/registry/gateway"
 
 
