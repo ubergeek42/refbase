@@ -4,7 +4,7 @@
 	/*             Please see the GNU General Public License for more details. */
 	/* File:       ./style.css */
 	/* Created:    20-Oct-02, 15:08 */
-	/* Modified:   09-Sep-06, 19:03 */
+	/* Modified:   21-Oct-06, 19:39 */
 
 	/* refbase CSS definitions - default style */
 
@@ -36,6 +36,8 @@ pre,code       { font-family:monaco,courier,monospace; font-size:7pt; }
 .unapi         { font-size:smaller; }
 
 .Z3988         { font-size:smaller; }
+
+.ok            { color:#009900; }
 
 .warning       { color:red; }
 
