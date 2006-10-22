@@ -1,3 +1,234 @@
+2006-10-22 12:59  Richard Karnesky <karnesky@gmail.com>
+
+	* AUTHORS, BUGS, INSTALL, NEWS, UPDATE: * Reformat documentation to
+	  80 columns * Replaced french spacing with single spacing for
+	  consistency * Added Joachim Almergren and the phpmyadmin team to
+	  AUTHORS * Added a (preliminary) release date of 10-27, which will
+	  give a work week's worth of additional testing * Added mention of
+	  referrer-related bugs * Added link to CVS update instructions
+
+2006-10-22 12:01  Matthias Steffens <refbase@extracts.de>
+
+	* TODO: * added some planned features from the "Planned feature
+	  additions" wiki page * modified existing feature suggestions and
+	  re-arranged the features list
+
+2006-10-22 08:08  Matthias Steffens <refbase@extracts.de>
+
+	* README: added ODF XML to features list and changed wiki URLs to
+	  subdomain URLs
+
+2006-10-22 07:40  Matthias Steffens <refbase@extracts.de>
+
+	* UPDATE: Modified text & backup commands
+
+2006-10-21 19:58  Matthias Steffens <refbase@extracts.de>
+
+	* UPDATE: updated text to suit refbase-0.9.0
+
+2006-10-21 19:54  Matthias Steffens <refbase@extracts.de>
+
+	* AUTHORS: added 'update.php' for Rick
+
+2006-10-21 19:52  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/update.php: * we now include file 'install.inc.php' *
+	  changed 'start_session()' function call so that it doesn't update
+	  'user_*' tables * changed '$_POST' to '$_REQUEST' * made some
+	  changes to the displayed text and added a backup reminder * we
+	  now explicitly discard the existing connection and establish a
+	  new	connection with admin permissions using function
+	  'connectToMySQLDatabaseAsAdmin()' * function
+	  'addTableIfNotExists()' is now used to create new MySQL tables *
+	  function 'queryMySQLDatabase()' is now used to perform any SQL
+	  queries * made some fixes to existing SQL queries and added a few
+	  new ones * all successfully performed queries that affected any
+	  tables or rows will now   be reported as log messages in the
+	  feedback page * we now enable some of the newly created
+	  export/citation formats & citation   styles for all users * if
+	  nothing was changed by the update process, we now inform the user
+	  appropriately * function 'disconnectFromMySQLDatabase()' is now
+	  used to quit the connection * upon successful update, the header
+	  message is now printed in green text * removed more unnecessary
+	  code * moved functions 'insertIfNotExists()',
+	  'addColumnIfNotExists()' and	 'fieldError()' to
+	  'install.inc.php' * made some changes to whitespace
+
+2006-10-21 19:22  Matthias Steffens <refbase@extracts.de>
+
+	* code/css/: style.css, style_print.css: added new class which
+	  prints the given text in green color
+
+2006-10-21 19:18  Matthias Steffens <refbase@extracts.de>
+
+	* lit/update.sql: * set format 'OpenSearch RSS' in table 'formats'
+	  to 'false' since its not   done yet * enable the german language
+	  option in table 'languages'
+
+2006-10-21 19:14  Matthias Steffens <refbase@extracts.de>
+
+	* lit/: install.sql, install_utf8.sql: set format 'OpenSearch RSS'
+	  in table 'formats' to 'false' since its not done yet
+
+2006-10-21 19:07  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/install.php: * upon successful installation, the header
+	  message is now printed in green text * moved function
+	  'fieldError()' to 'install.inc.php'
+
+2006-10-21 19:02  Matthias Steffens <refbase@extracts.de>
+
+	* code/inc/install.inc.php: * added new function
+	  'connectToMySQLDatabaseAsAdmin()' which connects to the   MySQL
+	  database with admin permissions * moved functions
+	  'insertIfNotExists()', 'addColumnIfNotExists()' and
+	  'fieldError()' from 'update.php' to 'install.inc.php' * added new
+	  function 'addTableIfNotExists()' which adds the given MySQL table
+	  if   not already present
+
+2006-10-21 18:55  Matthias Steffens <refbase@extracts.de>
+
+	* code/inc/ini.inc.php: added example for 1Cate OpenURL link-server
+	  in comments
+
+2006-10-20 09:28  Richard Karnesky <karnesky@gmail.com>
+
+	* code/php/update.php: Add new export & cite formats in table
+	  formats
+
+2006-10-20 09:22  Richard Karnesky <karnesky@gmail.com>
+
+	* code/php/update.php: Replace existing import formats with
+	  updated/new ones in table formats
+
+2006-10-20 08:56  Richard Karnesky <karnesky@gmail.com>
+
+	* code/php/update.php: Enable de localization
+
+2006-10-19 18:53  Richard Karnesky <karnesky@gmail.com>
+
+	* code/php/update.php: update styles, languages, formats tables.
+
+2006-10-19 17:21  Richard Karnesky <karnesky@gmail.com>
+
+	* code/php/update.php: Fixes from Matthias: Added missing '(' and
+	  used global connection.
+
+2006-10-19 13:57  Richard Karnesky <karnesky@gmail.com>
+
+	* code/php/update.php: Add addColumnIfNotExists; create
+	  allowbrowseview column NOTE: the new add column and inserts seem
+	  not to work yet--no errors, but nothing is created.  (Committing
+	  to allow others to play & because the old version didn't work
+	  anyway.)
+
+2006-10-19 13:25  Richard Karnesky <karnesky@gmail.com>
+
+	* code/php/update.php: Added insertIfNotExists fucntion; populate
+	  user_options table
+
+2006-10-19 12:56  Richard Karnesky <karnesky@gmail.com>
+
+	* code/php/update.php: Removed unused code; Added CREATE of
+	  user_options
+
+2006-10-10 14:51  Richard Karnesky <karnesky@gmail.com>
+
+	* code/inc/openurl.inc.php: Added 'au', allowing multiple authors
+	  to be appended to the Context Object.
+
+2006-10-08 09:48  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/: import.php, install.php, sru.php, unapi.php: changed
+	  URLs that point to refbase wiki pages into corresponding
+	  subdomain URLs
+
+2006-10-08 09:46  Matthias Steffens <refbase@extracts.de>
+
+	* code/xsl/srwExplainResponse2html.xsl: * added URL to SRU home
+	  page in Help text * changed URLs that point to refbase wiki pages
+	  into corresponding subdomain URLs
+
+2006-10-08 09:43  Matthias Steffens <refbase@extracts.de>
+
+	* code/inc/ini.inc.php: changed URLs that point to refbase wiki
+	  pages into corresponding subdomain URLs
+
+2006-10-07 17:04  Matthias Steffens <refbase@extracts.de>
+
+	* NEWS: added items to 'refbase-0.9.0' section and edited existing
+	  ones
+
+2006-10-07 16:16  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/: receipt.php, search.php, show.php: more code fixes so
+	  that the 'location' field is only added to the SQL query in
+	  Details view if the user is logged in
+
+2006-10-07 15:29  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/advanced_search.php: we now only include the fields
+	  'file', 'location', 'created_by' and 'modified_by' in sort-by
+	  dropdowns if a user is logged in
+
+2006-10-07 15:24  Matthias Steffens <refbase@extracts.de>
+
+	* code/inc/include.inc.php: function 'buildSelectMenuOptions()':
+	  empty dropdown items did not have empty values which caused
+	  incorrect SQL queries when selected in '*_search.php' forms;
+	  fixed
+
+2006-10-07 15:17  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: function 'displayColumns()': we now only add
+	  the 'location' field to the dropdown menus if the user is logged
+	  in
+
+2006-10-06 17:11  Richard Karnesky <karnesky@gmail.com>
+
+	* NEWS: Additional new features from
+	  http://wiki.refbase.net/index.php/Main_features
+
+2006-10-06 16:40  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/advanced_search.php: we'll now only show a text entry
+	  form for the 'location', 'created_by' and 'modified_by' fields if
+	  a user is logged in; this is done to shield user email addresses
+	  from exposure to search engines and/or email harvesting robots
+
+2006-10-06 16:05  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/record.php: we now only show the contents of the
+	  'location' field if the user is logged in; this is done to shield
+	  user email addresses from exposure to search engines and/or email
+	  harvesting robots
+
+2006-10-06 16:01  Matthias Steffens <refbase@extracts.de>
+
+	* code/php/search.php: improved verification of SQL query against
+	  malicious attempts
+
+2006-10-06 15:57  Matthias Steffens <refbase@extracts.de>
+
+	* code/inc/include.inc.php: * function 'start_session()': if
+	  'session.use_cookies' is OFF for the current	 directory, we'll
+	  attempt to enable cookies for storage of session data * function
+	  'generateCalculationFieldContent()': we now standardize contents
+	  of   the author field before extracting the first author name;
+	  this will help to   ensure correct sorting upon Citation output *
+	  function 'verifySQLQuery()': moved code that strips the 'file'
+	  field from the   SQL query into its own function
+	  ('stripFieldFromSQLQuery()') and generalized	 it so that it
+	  works with any given field * function 'verifySQLQuery()' now
+	  strips the 'location' field from the SQL   query if the user
+	  isn't logged in; this is done to shield user email   addresses
+	  from exposure to search engines and/or email harvesting robots
+
+2006-10-06 15:39  Richard Karnesky <karnesky@gmail.com>
+
+	* AUTHORS, ChangeLog, NEWS: Documentation updates (particularly the
+	  list of features in NEWS).
+
 2006-10-04 09:18  Matthias Steffens <refbase@extracts.de>
 
 	* code/php/user_options_modify.php: fixed incorrect INSERT queries
@@ -601,12 +832,12 @@
 
 	* code/: php/export/export_modsxml.php, inc/modsxml.inc.php,
 	  inc/srwxml.inc.php: changed Rick's email address in file header
-	  to karnesky at gmail dot com
+	  to Richard Karnesky <karnesky@gmail.com> at gmail dot com
 
 2006-08-18 09:10  Matthias Steffens <refbase@extracts.de>
 
 	* code/inc/execute.inc.php: * changed Rick's email address in file
-	  header to karnesky at gmail dot com * moved code that sets the
+	  header to Richard Karnesky <karnesky@gmail.com> at gmail dot com * moved code that sets the
 	  input & output encoding from function   'convertBibutils()' to
 	  functions 'importBibutils()' and 'exportBibutils()'	so that it
 	  can be dealt with differently for import and export; this fixes
@@ -706,8 +937,8 @@
 	  logged in * when "importing" a single record into the add record
 	  form, the contents of   the call number field were not assigned
 	  to the current user. This resulted in   a broken call number
-	  string (such as "recordID; IPOE @ msteffens @ ") while   it
-	  should have been "IPOE @ msteffens @ recordID"; fixed
+	  string (such as "recordID; IPOE @ Matthias Steffens <refbase@extracts.de> @ ") while   it
+	  should have been "IPOE @ Matthias Steffens <refbase@extracts.de> @ recordID"; fixed
 
 2006-08-09 17:31  Matthias Steffens <refbase@extracts.de>
 
