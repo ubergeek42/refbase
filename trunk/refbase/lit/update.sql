@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./update.sql
 # Created:    01-Mar-05, 16:54
-# Modified:   04-Sep-06, 15:49
+# Modified:   21-Oct-06, 22:18
 
 # This MySQL database structure file will update any refbase v0.8.0 database to v0.9.0
 
@@ -47,7 +47,7 @@ INSERT INTO `formats` VALUES (1, 'MODS XML', 'import', 'true', 'bibutils/import_
 (14, 'Copac', 'import', 'true', 'bibutils/import_copac2refbase.php', '10', 2),
 (15, 'SRW XML', 'export', 'true', 'export_srwxml.php', '11', 1),
 (16, 'ODF XML', 'export', 'true', 'export_odfxml.php', '12', 1),
-(17, 'OpenSearch RSS', 'export', 'true', 'export_osrss.php', '13', 1),
+(17, 'OpenSearch RSS', 'export', 'false', 'export_osrss.php', '13', 1),
 (18, 'html', 'cite', 'true', 'formats/cite_html.php', '14', 1),
 (19, 'RTF', 'cite', 'true', 'formats/cite_rtf.php', '15', 1),
 (20, 'PDF', 'cite', 'true', 'formats/cite_pdf.php', '16', 1),
@@ -63,6 +63,8 @@ INSERT INTO `formats` VALUES (1, 'MODS XML', 'import', 'true', 'bibutils/import_
 #
 
 INSERT INTO `languages` VALUES (NULL, 'fr', 'true', '3');
+
+UPDATE `languages` SET `language_enabled` = 'true' WHERE `language_name` = 'de';
 
 # --------------------------------------------------------
 
