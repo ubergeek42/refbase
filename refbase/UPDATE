@@ -1,6 +1,8 @@
-Please follow the steps below to update an existing refbase-0.8.0 installation to
-refbase-0.9.0. The update script should also be able to update any refbase version
-that was installed from CVS prior to the release of refbase-0.9.0.
+Please follow the steps below to update an existing refbase-0.8.0 installation
+to refbase-0.9.0. The update script should also be able to update any refbase
+version that was installed from CVS prior to the release of refbase-0.9.0. To
+update versions of refbase prior to refbase-0.8.0, please update to
+refbase-0.8.0 first.
 
 - First of all, please make sure that you have a recent backup of your refbase
   MySQL database! This can be accomplished by issuing the following command from
@@ -10,11 +12,11 @@ that was installed from CVS prior to the release of refbase-0.9.0.
               --opt > refbase-backup.sql
 
   In the above line, replace DATABASE_NAME with the database name that you've
-  specified for the variable '$databaseName' (in file 'initialize/db.inc.php') for
-  refbase-0.8.0. Similarly, replace ADMINUSER with the name of the administrative
-  user that has full access to the MySQL admin database. As an example, if the
-  variable '$databaseName' is set to "literature" and your administrative user is
-  "root", the above line would read:
+  specified for the variable '$databaseName' (in file 'initialize/db.inc.php')
+  for refbase-0.8.0. Similarly, replace ADMINUSER with the name of the
+  administrative user that has full access to the MySQL admin database. As an
+  example, if the variable '$databaseName' is set to "literature" and your
+  administrative user is "root", the above line would read:
 
     mysqldump literature -uroot -p --complete-insert \
               --opt > refbase-backup.sql
@@ -58,7 +60,9 @@ that was installed from CVS prior to the release of refbase-0.9.0.
   your web directory.
 
 - Note: The update process modifies some existing formats in table 'formats' and
-  adds additional ones. Please login as admin and make sure that suitable import,
-  export and citation formats are enabled for all of your users within the
-  "Display Options" section of the admin interface.
+  adds additional ones. Please login as admin and make sure that suitable
+  import, export and citation formats are enabled for all of your users within
+  the "Display Options" section of the admin interface.
 
+Alternative update procedures are listed at:
+  <http://cvs.refbase.net/>

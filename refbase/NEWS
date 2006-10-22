@@ -4,7 +4,7 @@ See the 'ChangeLog' or the cvs entries on SourceForge for a detailed history:
 
 refbase-0.9.0
 -------------
-[xx-xxx-2006]
+[10-27-2006]
 
   Feature additions
 -------------------
@@ -125,19 +125,19 @@ Export/citation:
     <http://www.scripps.edu/~cdputnam/software/bibutils/>
 
 - User-specific cite keys: The new user-specific field "Cite Key" allows users
-  to specify a custom identifier for each record.  Cite keys will be supported
+  to specify a custom identifier for each record. Cite keys will be supported
   in export formats (MODS XML & Bibtex) and text citations as well as when
   generating reference lists.
 
 Adding/editing/deleting of records:
 
 - Unicode support: You can now set the default character set to 'utf8' (Unicode)
-  when installing refbase on MySQL 4.1.x or greater.  This provides support for
+  when installing refbase on MySQL 4.1.x or greater. This provides support for
   double-byte languages.
 
 - RSS support: Users can now track queries using RSS, i.e. users are able to
   convert any query into a dynamic RSS feed and subscribe to it using their
-  favorite news aggregator.  The feed will display all newly added records
+  favorite news aggregator. The feed will display all newly added records
   matching the users query.
   
 - Print view: Added a print-friendly view which eases printing or copying of
@@ -147,30 +147,30 @@ Adding/editing/deleting of records:
   of bibliographic records.
   
 - Started localization: Provided core structure to support web interfaces in
-  different languages.  Note that the localization feature isn't finished nor
+  different languages. Note that the localization feature isn't finished nor
   enabled yet and will be available in a future release.
 
 Admin features:
 
 - User-specific permissions: The admin can now assign access rights individually
-  for each user.  Permission settings are provided for basic actions like
+  for each user. Permission settings are provided for basic actions like
   add/edit/delete records or file upload/download as well as other features like
   import, export or cite.
 
 - Reference types, citation styles and export formats can be enabled/disabled by
-  the admin for each user individually.  The user, in turn, can choose which of
+  the admin for each user individually. The user, in turn, can choose which of
   the enabled types/styles/formats shall be visible.
 
 - User- and criteria-specific file downloads: Download links can be made
   available to either everyone, logged-in users only or on a user-specific
-  basis.  In addition, you can optionally specify a condition where files will
+  basis. In addition, you can optionally specify a condition where files will
   be always made visible.
 
 - The admin interface now allows to group particular database users.
 
 User customization:
 
-- User-specific groups: Users can now add records to user-specific groups.  A
+- User-specific groups: Users can now add records to user-specific groups. A
   drop-down menu on the main page (or any search results list) provides quick
   access to all records belonging to a particular group.
 
@@ -179,7 +179,7 @@ User customization:
   recalled or edited from the main page.
 
 - Link records: A new user-specific field ("Related") enables users to link
-  records to other records in the database.  Links can be either static (by
+  records to other records in the database. Links can be either static (by
   explicitly linking to particular record serials) or dynamic (by entering
   queries like "author:lee; title:ecosystem").
 
@@ -207,7 +207,7 @@ User customization:
 
 - Citation style and export format definitions now reside in individual files
   (within the 'cite/' and 'export/' sub-directories, respectively) and are
-  managed via MySQL tables.  This enables users to develop custom styles and/or
+  managed via MySQL tables. This enables users to develop custom styles and/or
   formats.
 
 - Added support for fields 'keywords', 'notes', 'marked' and 'language' within
@@ -252,20 +252,20 @@ refbase-0.7
 Installation:
 
 - Provided a web interface ('install.php') as well as a MySQL dump file for
-  installation.  This should make it a lot easier to setup the database.
-  Besides the database structure, the MySQL dump file includes a temporary
-  admin user and twelve sample records.
+  installation. This should make it a lot easier to setup the database. Besides
+  the database structure, the MySQL dump file includes a temporary admin user
+  and twelve sample records.
 
 User customization:
 
-- The database now offers six user-specific fields.  These fields are stored
-  individually for each user within a separate table.  You can use these fields
+- The database now offers six user-specific fields. These fields are stored
+  individually for each user within a separate table. You can use these fields
   to store personal information for a particular record (for example your
-  personal keywords or notes).  These fields are only provided to logged-in
-  users and can't be viewed by other users.
+  personal keywords or notes). These fields are only provided to logged-in users
+  and can't be viewed by other users.
 
 - After login, a 'Show My Refs' form will allow you to easily display all of
-  your own literature.  This form also offers a quick way of searching your own
+  your own literature. This form also offers a quick way of searching your own
   literature by your personal fields (such as your personal keywords or notes).
 
 Display features:
@@ -284,7 +284,7 @@ Display features:
 
 - Provided support for custom header messages within database queries: by
   including the 'headerMsg' parameter within query URLs it is now possible to
-  include any information string within a link.  As an example, a query URL
+  include any information string within a link. As an example, a query URL
   pointing to articles written by a particular author can now include the
   appropriate author information (e.g. "Articles by Matthias Steffens:") which
   will show up as a header message on every results page.
@@ -302,7 +302,7 @@ User management:
 Admin features:
 
 - The admin user is allowed to execute custom SQL statements other than SELECT
-  queries (according to his GRANT privileges).  This will enable him to make
+  queries (according to his GRANT privileges). This will enable him to make
   batch changes to the database.
 
 Adding/editing/deleting of records: 
@@ -321,50 +321,50 @@ Adding/editing/deleting of records:
   publication.
 
 - Provided support for online publications by the introduction of two new
-  database fields: 'online_publication' & 'online_citation'.  If the field
+  database fields: 'online_publication' & 'online_citation'. If the field
   'online_publication' is set to 'yes' by marking the appropriate checkbox, the
   export view will display the doi number as well as any string that was entered
   into the 'online_citation' field.
 
-- Introduced a new field 'contribution_id'.  By marking the appropriate checkbox
+- Introduced a new field 'contribution_id'. By marking the appropriate checkbox
   within the 'record' form your institutional abbreviation will be added to the
-  contents of the 'contribution_id' field.  This serves as an easy method to tag
+  contents of the 'contribution_id' field. This serves as an easy method to tag
   all those records that were published by your own institution.
 
 - 'record.php' now enables you to upload a file that's associated with a
-  particular record entry.  If the root directory where your files will be
-  stored (specified in 'ini.inc.php') contains a sub-directory whose name
-  matches the string provided within the 'abbrev_journal' field (after
-  converting the string to lowercase and stripping all characters but ascii
-  letters) the uploaded file will be placed inside that sub-directory.  As an
-  example, if you've created a sub-directory named 'polarbiol' within your files
-  root directory, any uploaded file will be copied to that sub-directory if its
-  accompanying record contains the string 'Polar Biol.' within its
-  'abbrev_journal' field.
+  particular record entry. If the root directory where your files will be stored
+  (specified in 'ini.inc.php') contains a sub-directory whose name matches the
+  string provided within the 'abbrev_journal' field (after converting the string
+  to lowercase and stripping all characters but ascii letters) the uploaded file
+  will be placed inside that sub-directory. As an example, if you've created a
+  sub-directory named 'polarbiol' within your files root directory, any uploaded
+  file will be copied to that sub-directory if its accompanying record contains
+  the string 'Polar Biol.' within its 'abbrev_journal' field.
 
-- Depending on the value of the 'locationSelector' drop-down, the user's name and
-  email address will be added/removed from the 'location' field automatically.
+- Depending on the value of the 'locationSelector' drop-down, the user's name
+  and email address will be added/removed from the 'location' field
+  automatically.
 
 
   Changes
 ---------
 
 - The format of the MySQL tables has changed (added & renamed some fields and
-  changed some field types).  You'll need to update your table definitions in
-  order to use this version!  See the online documentation for further help:
+  changed some field types). You'll need to update your table definitions in
+  order to use this version! See the online documentation for further help:
     <http://sourceforge.net/docman/?group_id=64647>
 
 - File 'db.inc': Removed 'root' as default value for '$username' (the use of a
   separate mysql user with more restrictive permissions is highly recommended).
 
-- Non-admin users will be only shown their own call number information.  This is
+- Non-admin users will be only shown their own call number information. This is
   done to ease data entry and to prevent non-admin users from messing with other
-  user's call number information.  The data entered by the user will be
+  user's call number information. The data entered by the user will be
   automatically completed with the user's correct call number prefix.
 
 - Instead of deleting data, deleted records will now be moved to the 'deleted'
-  table.  Data will be stored within the 'deleted' table until they are removed
-  manually.  This is to provide the admin with a simple recovery method in case
+  table. Data will be stored within the 'deleted' table until they are removed
+  manually. This is to provide the admin with a simple recovery method in case
   a user did delete some data by accident.
 
 
