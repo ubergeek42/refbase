@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./install.php
 	// Created:    07-Jan-04, 22:00
-	// Modified:   08-Oct-06, 16:28
+	// Modified:   21-Oct-06, 21:27
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -470,7 +470,7 @@
 			if (!empty($resultArray)) // if there were any execution errors
 				$HeaderString = "The following error occurred while trying to import the SQL data into the database:";
 			else // assume that the installation was successful
-				$HeaderString = "Installation of the Web Reference Database was successful!";
+				$HeaderString = "<b><span class=\"ok\">Installation of the Web Reference Database was successful!</span></b>";
 		}
 		else
 		{
@@ -571,14 +571,5 @@
 
 		// --------------------------------------------------------------------
 
-	}
-
-	// --------------------------------------------------------------------
-
-	// SHOW ERROR IN RED:
-	function fieldError($fieldName, $errors)
-	{
-		if (isset($errors[$fieldName]))
-			echo "\n\t\t\t<b><span class=\"warning\">" . $errors[$fieldName] . "</span></b>\n\t\t\t<br>";
 	}
 ?>
