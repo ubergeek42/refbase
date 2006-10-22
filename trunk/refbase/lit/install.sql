@@ -4,7 +4,7 @@
 #             Please see the GNU General Public License for more details.
 # File:       ./install.sql
 # Created:    02-Oct-04, 20:11
-# Modified:   04-Sep-06, 15:39
+# Modified:   21-Oct-06, 22:18
 
 # MySQL database structure & initial data (for use with 'latin1' character set)
 
@@ -164,7 +164,7 @@ INSERT INTO `formats` VALUES (1, 'MODS XML', 'import', 'true', 'bibutils/import_
 (14, 'Copac', 'import', 'true', 'bibutils/import_copac2refbase.php', '10', 2),
 (15, 'SRW XML', 'export', 'true', 'export_srwxml.php', '11', 1), 
 (16, 'ODF XML', 'export', 'true', 'export_odfxml.php', '12', 1), 
-(17, 'OpenSearch RSS', 'export', 'true', 'export_osrss.php', '13', 1),
+(17, 'OpenSearch RSS', 'export', 'false', 'export_osrss.php', '13', 1),
 (18, 'html', 'cite', 'true', 'formats/cite_html.php', '14', 1),
 (19, 'RTF', 'cite', 'true', 'formats/cite_rtf.php', '15', 1),
 (20, 'PDF', 'cite', 'true', 'formats/cite_pdf.php', '16', 1),
