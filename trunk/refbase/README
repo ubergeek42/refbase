@@ -23,8 +23,8 @@ About refbase
   LOGGED IN USERS
     - user-specific fields which are stored individually for each user
     - display or search within only the user's own literature
-    - export selected records to MODS XML and (via the GPLed bibutils programs)
-      to BibTex, EndNote, and RIS
+    - export selected records to MODS XML, ODF XML and (via the GPLed bibutils
+      programs) to BibTeX, EndNote, and RIS
     - import of records from common bibliographic formats and online databases
     - automatic email announcements for newly added records
     - save and recall search queries
@@ -35,7 +35,7 @@ About refbase
     - set access permissions on a per-user basis
 
   More information is given at:
-    <http://wiki.refbase.net/index.php/Main_features>
+    <http://features.refbase.net>
 
 Credits
 -------
@@ -55,7 +55,7 @@ Requirements
     (version 3.21 or greater)
 
   More detailed information is available at:
-    <http://wiki.refbase.net/index.php/Requirements>
+    <http://requirements.refbase.net>
 
 Installation & Import
 ---------------------
