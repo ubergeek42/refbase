@@ -5,7 +5,7 @@
 	//             Please see the GNU General Public License for more details.
 	// File:       ./search.php
 	// Created:    30-Jul-02, 17:40
-	// Modified:   07-Oct-06, 23:08
+	// Modified:   24-Oct-06, 01:11
 
 	// This is the main script that handles the search query and displays the query results.
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
@@ -4106,46 +4106,49 @@
 
 
 		// ... if the user has specified a location, add the value of '$locationName' as an AND clause:
-		$locationRadio = $_REQUEST['locationRadio'];
-		if ($locationRadio == "1")
+		if (isset($_REQUEST['locationRadio'])) // the location text entry form is not available if the user is not logged in
 		{
-			$locationName = $_REQUEST['locationName'];
-			if ($locationName != "All" && $locationName != "")
-				{
-					$locationSelector = $_REQUEST['locationSelector'];
-					if ($locationSelector == "contains")
-						$query .= " AND location RLIKE " . quote_smart($locationName);
-					elseif ($locationSelector == "does not contain")
-						$query .= " AND location NOT RLIKE " . quote_smart($locationName);
-					elseif ($locationSelector == "is equal to")
-						$query .= " AND location = " . quote_smart($locationName);
-					elseif ($locationSelector == "is not equal to")
-						$query .= " AND location != " . quote_smart($locationName);
-					elseif ($locationSelector == "starts with")
-						$query .= " AND location RLIKE " . quote_smart("^" . $locationName);
-					elseif ($locationSelector == "ends with")
-						$query .= " AND location RLIKE " . quote_smart($locationName . "$");
-				}
-		}
-		elseif ($locationRadio == "0")
-		{
-			$locationName2 = $_REQUEST['locationName2'];
-			if ($locationName2 != "")
-				{
-					$locationSelector2 = $_REQUEST['locationSelector2'];
-					if ($locationSelector2 == "contains")
-						$query .= " AND location RLIKE " . quote_smart($locationName2);
-					elseif ($locationSelector2 == "does not contain")
-						$query .= " AND location NOT RLIKE " . quote_smart($locationName2);
-					elseif ($locationSelector2 == "is equal to")
-						$query .= " AND location = " . quote_smart($locationName2);
-					elseif ($locationSelector2 == "is not equal to")
-						$query .= " AND location != " . quote_smart($locationName2);
-					elseif ($locationSelector2 == "starts with")
-						$query .= " AND location RLIKE " . quote_smart("^" . $locationName2);
-					elseif ($locationSelector2 == "ends with")
-						$query .= " AND location RLIKE " . quote_smart($locationName2 . "$");
-				}
+			$locationRadio = $_REQUEST['locationRadio'];
+			if ($locationRadio == "1")
+			{
+				$locationName = $_REQUEST['locationName'];
+				if ($locationName != "All" && $locationName != "")
+					{
+						$locationSelector = $_REQUEST['locationSelector'];
+						if ($locationSelector == "contains")
+							$query .= " AND location RLIKE " . quote_smart($locationName);
+						elseif ($locationSelector == "does not contain")
+							$query .= " AND location NOT RLIKE " . quote_smart($locationName);
+						elseif ($locationSelector == "is equal to")
+							$query .= " AND location = " . quote_smart($locationName);
+						elseif ($locationSelector == "is not equal to")
+							$query .= " AND location != " . quote_smart($locationName);
+						elseif ($locationSelector == "starts with")
+							$query .= " AND location RLIKE " . quote_smart("^" . $locationName);
+						elseif ($locationSelector == "ends with")
+							$query .= " AND location RLIKE " . quote_smart($locationName . "$");
+					}
+			}
+			elseif ($locationRadio == "0")
+			{
+				$locationName2 = $_REQUEST['locationName2'];
+				if ($locationName2 != "")
+					{
+						$locationSelector2 = $_REQUEST['locationSelector2'];
+						if ($locationSelector2 == "contains")
+							$query .= " AND location RLIKE " . quote_smart($locationName2);
+						elseif ($locationSelector2 == "does not contain")
+							$query .= " AND location NOT RLIKE " . quote_smart($locationName2);
+						elseif ($locationSelector2 == "is equal to")
+							$query .= " AND location = " . quote_smart($locationName2);
+						elseif ($locationSelector2 == "is not equal to")
+							$query .= " AND location != " . quote_smart($locationName2);
+						elseif ($locationSelector2 == "starts with")
+							$query .= " AND location RLIKE " . quote_smart("^" . $locationName2);
+						elseif ($locationSelector2 == "ends with")
+							$query .= " AND location RLIKE " . quote_smart($locationName2 . "$");
+					}
+			}
 		}
 
 		// ... if the user has specified a call number, add the value of '$callNumberName' as an AND clause:
@@ -4593,46 +4596,49 @@
 			}
 
 		// ... if the user has specified a created by, add the value of '$createdByName' as an AND clause:
-		$createdByRadio = $_REQUEST['createdByRadio'];
-		if ($createdByRadio == "1")
+		if (isset($_REQUEST['createdByRadio'])) // the "created by" text entry form is not available if the user is not logged in
 		{
-			$createdByName = $_REQUEST['createdByName'];
-			if ($createdByName != "All" && $createdByName != "")
-				{
-					$createdBySelector = $_REQUEST['createdBySelector'];
-					if ($createdBySelector == "contains")
-						$query .= " AND created_by RLIKE " . quote_smart($createdByName);
-					elseif ($createdBySelector == "does not contain")
-						$query .= " AND created_by NOT RLIKE " . quote_smart($createdByName);
-					elseif ($createdBySelector == "is equal to")
-						$query .= " AND created_by = " . quote_smart($createdByName);
-					elseif ($createdBySelector == "is not equal to")
-						$query .= " AND created_by != " . quote_smart($createdByName);
-					elseif ($createdBySelector == "starts with")
-						$query .= " AND created_by RLIKE " . quote_smart("^" . $createdByName);
-					elseif ($createdBySelector == "ends with")
-						$query .= " AND created_by RLIKE " . quote_smart($createdByName . "$");
-				}
-		}
-		elseif ($createdByRadio == "0")
-		{
-			$createdByName2 = $_REQUEST['createdByName2'];
-			if ($createdByName2 != "")
-				{
-					$createdBySelector2 = $_REQUEST['createdBySelector2'];
-					if ($createdBySelector2 == "contains")
-						$query .= " AND created_by RLIKE " . quote_smart($createdByName2);
-					elseif ($createdBySelector2 == "does not contain")
-						$query .= " AND created_by NOT RLIKE " . quote_smart($createdByName2);
-					elseif ($createdBySelector2 == "is equal to")
-						$query .= " AND created_by = " . quote_smart($createdByName2);
-					elseif ($createdBySelector2 == "is not equal to")
-						$query .= " AND created_by != " . quote_smart($createdByName2);
-					elseif ($createdBySelector2 == "starts with")
-						$query .= " AND created_by RLIKE " . quote_smart("^" . $createdByName2);
-					elseif ($createdBySelector2 == "ends with")
-						$query .= " AND created_by RLIKE " . quote_smart($createdByName2 . "$");
-				}
+			$createdByRadio = $_REQUEST['createdByRadio'];
+			if ($createdByRadio == "1")
+			{
+				$createdByName = $_REQUEST['createdByName'];
+				if ($createdByName != "All" && $createdByName != "")
+					{
+						$createdBySelector = $_REQUEST['createdBySelector'];
+						if ($createdBySelector == "contains")
+							$query .= " AND created_by RLIKE " . quote_smart($createdByName);
+						elseif ($createdBySelector == "does not contain")
+							$query .= " AND created_by NOT RLIKE " . quote_smart($createdByName);
+						elseif ($createdBySelector == "is equal to")
+							$query .= " AND created_by = " . quote_smart($createdByName);
+						elseif ($createdBySelector == "is not equal to")
+							$query .= " AND created_by != " . quote_smart($createdByName);
+						elseif ($createdBySelector == "starts with")
+							$query .= " AND created_by RLIKE " . quote_smart("^" . $createdByName);
+						elseif ($createdBySelector == "ends with")
+							$query .= " AND created_by RLIKE " . quote_smart($createdByName . "$");
+					}
+			}
+			elseif ($createdByRadio == "0")
+			{
+				$createdByName2 = $_REQUEST['createdByName2'];
+				if ($createdByName2 != "")
+					{
+						$createdBySelector2 = $_REQUEST['createdBySelector2'];
+						if ($createdBySelector2 == "contains")
+							$query .= " AND created_by RLIKE " . quote_smart($createdByName2);
+						elseif ($createdBySelector2 == "does not contain")
+							$query .= " AND created_by NOT RLIKE " . quote_smart($createdByName2);
+						elseif ($createdBySelector2 == "is equal to")
+							$query .= " AND created_by = " . quote_smart($createdByName2);
+						elseif ($createdBySelector2 == "is not equal to")
+							$query .= " AND created_by != " . quote_smart($createdByName2);
+						elseif ($createdBySelector2 == "starts with")
+							$query .= " AND created_by RLIKE " . quote_smart("^" . $createdByName2);
+						elseif ($createdBySelector2 == "ends with")
+							$query .= " AND created_by RLIKE " . quote_smart($createdByName2 . "$");
+					}
+			}
 		}
 
 		// ... if the user has specified a modified date, add the value of '$modifiedDateNo' as an AND clause:
@@ -4734,46 +4740,49 @@
 			}
 
 		// ... if the user has specified a modified by, add the value of '$modifiedByName' as an AND clause:
-		$modifiedByRadio = $_REQUEST['modifiedByRadio'];
-		if ($modifiedByRadio == "1")
+		if (isset($_REQUEST['modifiedByRadio'])) // the "modified by" text entry form is not available if the user is not logged in
 		{
-			$modifiedByName = $_REQUEST['modifiedByName'];
-			if ($modifiedByName != "All" && $modifiedByName != "")
-				{
-					$modifiedBySelector = $_REQUEST['modifiedBySelector'];
-					if ($modifiedBySelector == "contains")
-						$query .= " AND modified_by RLIKE " . quote_smart($modifiedByName);
-					elseif ($modifiedBySelector == "does not contain")
-						$query .= " AND modified_by NOT RLIKE " . quote_smart($modifiedByName);
-					elseif ($modifiedBySelector == "is equal to")
-						$query .= " AND modified_by = " . quote_smart($modifiedByName);
-					elseif ($modifiedBySelector == "is not equal to")
-						$query .= " AND modified_by != " . quote_smart($modifiedByName);
-					elseif ($modifiedBySelector == "starts with")
-						$query .= " AND modified_by RLIKE " . quote_smart("^" . $modifiedByName);
-					elseif ($modifiedBySelector == "ends with")
-						$query .= " AND modified_by RLIKE " . quote_smart($modifiedByName . "$");
-				}
-		}
-		elseif ($modifiedByRadio == "0")
-		{
-			$modifiedByName2 = $_REQUEST['modifiedByName2'];
-			if ($modifiedByName2 != "")
-				{
-					$modifiedBySelector2 = $_REQUEST['modifiedBySelector2'];
-					if ($modifiedBySelector2 == "contains")
-						$query .= " AND modified_by RLIKE " . quote_smart($modifiedByName2);
-					elseif ($modifiedBySelector2 == "does not contain")
-						$query .= " AND modified_by NOT RLIKE " . quote_smart($modifiedByName2);
-					elseif ($modifiedBySelector2 == "is equal to")
-						$query .= " AND modified_by = " . quote_smart($modifiedByName2);
-					elseif ($modifiedBySelector2 == "is not equal to")
-						$query .= " AND modified_by != " . quote_smart($modifiedByName2);
-					elseif ($modifiedBySelector2 == "starts with")
-						$query .= " AND modified_by RLIKE " . quote_smart("^" . $modifiedByName2);
-					elseif ($modifiedBySelector2 == "ends with")
-						$query .= " AND modified_by RLIKE " . quote_smart($modifiedByName2 . "$");
-				}
+			$modifiedByRadio = $_REQUEST['modifiedByRadio'];
+			if ($modifiedByRadio == "1")
+			{
+				$modifiedByName = $_REQUEST['modifiedByName'];
+				if ($modifiedByName != "All" && $modifiedByName != "")
+					{
+						$modifiedBySelector = $_REQUEST['modifiedBySelector'];
+						if ($modifiedBySelector == "contains")
+							$query .= " AND modified_by RLIKE " . quote_smart($modifiedByName);
+						elseif ($modifiedBySelector == "does not contain")
+							$query .= " AND modified_by NOT RLIKE " . quote_smart($modifiedByName);
+						elseif ($modifiedBySelector == "is equal to")
+							$query .= " AND modified_by = " . quote_smart($modifiedByName);
+						elseif ($modifiedBySelector == "is not equal to")
+							$query .= " AND modified_by != " . quote_smart($modifiedByName);
+						elseif ($modifiedBySelector == "starts with")
+							$query .= " AND modified_by RLIKE " . quote_smart("^" . $modifiedByName);
+						elseif ($modifiedBySelector == "ends with")
+							$query .= " AND modified_by RLIKE " . quote_smart($modifiedByName . "$");
+					}
+			}
+			elseif ($modifiedByRadio == "0")
+			{
+				$modifiedByName2 = $_REQUEST['modifiedByName2'];
+				if ($modifiedByName2 != "")
+					{
+						$modifiedBySelector2 = $_REQUEST['modifiedBySelector2'];
+						if ($modifiedBySelector2 == "contains")
+							$query .= " AND modified_by RLIKE " . quote_smart($modifiedByName2);
+						elseif ($modifiedBySelector2 == "does not contain")
+							$query .= " AND modified_by NOT RLIKE " . quote_smart($modifiedByName2);
+						elseif ($modifiedBySelector2 == "is equal to")
+							$query .= " AND modified_by = " . quote_smart($modifiedByName2);
+						elseif ($modifiedBySelector2 == "is not equal to")
+							$query .= " AND modified_by != " . quote_smart($modifiedByName2);
+						elseif ($modifiedBySelector2 == "starts with")
+							$query .= " AND modified_by RLIKE " . quote_smart("^" . $modifiedByName2);
+						elseif ($modifiedBySelector2 == "ends with")
+							$query .= " AND modified_by RLIKE " . quote_smart($modifiedByName2 . "$");
+					}
+			}
 		}
 
 
