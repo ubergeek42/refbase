@@ -4,7 +4,7 @@ See the 'ChangeLog' or the cvs entries on SourceForge for a detailed history:
 
 refbase-0.9.0
 -------------
-[10-27-2006]
+[27-Oct-2006]
 
   Feature additions
 -------------------
@@ -80,6 +80,9 @@ Export/Citation:
 - Better quoting of MySQL queries (user-inputted data can contain slashes and
   quotation marks)
 
+- refbase will now work independent of the 'magic_quotes_gpc' setting in your
+  PHP configuration file 'php.ini'.
+
 - Improvements in session management
 
 - Search queries may be submitted via GET rather than POST
@@ -95,9 +98,15 @@ Export/Citation:
 
 - Fixes to MODS XML export
 
-- Opening tags have been replaced with '<?php' for compatibility
+- Short opening tags have been replaced with '<?php' for compatibility
 
 - The user-specific language setting is now honoured correctly
+
+- The contents of the 'file' field will now only be revealed if the user has
+  permission to view/download files
+
+- refbase now issues a correct error message if the size of the uploaded file
+  exceeds 'post_max_size'
 
 
 
