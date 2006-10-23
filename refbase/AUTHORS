@@ -24,25 +24,25 @@ the mailing lists or forums on sourceforge:
 
 Thanks to:
 
-- Joachim Almergren:
+- Joachim Almergren <jlacan@users.sourceforge.net>:
   Various patches
 
 - Chris Putnam <cdputnam@scripps.edu>:
   Developer of Bibutils, a set of command line programs that interconvert
-  between various bibliography formats using a common XML intermediate
-  (<http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html>)
+  between various bibliography formats using a common XML intermediate.
+  <http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html>
 
 - Mark Grimshaw <sirfragalot@users.sourceforge.net>:
   Developer of MINIMALRTF, a minimal set of RTF coding methods to produce
-  Rich Text Format documents on the fly (<http://bibliophile.sourceforge.net>)
+  Rich Text Format documents on the fly. <http://bibliophile.sourceforge.net>
 
 - Wayne Munro at R&OS New Zealand:
   Developer of the module-free pdf-PHP class that allows to dynamically create
-  PDF documents with PHP (<http://www.ros.co.nz/pdf>)
+  PDF documents with PHP. <http://www.ros.co.nz/pdf>
 
 - nijel and garvinhicking of the phpMyAdmin project:
-  developers of zip.inc.php, which is used to zip OpenDocument files.
-  <http://www.phpmyadmin.net/>
+  Developers of zip.inc.php, which is used to zip OpenDocument files.
+  <http://www.phpmyadmin.net>
 
 Many other people have contributed to this project with feature requests, bug
 reports, testing, and helpful suggestions.
