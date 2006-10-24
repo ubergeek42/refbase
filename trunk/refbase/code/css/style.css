@@ -4,7 +4,7 @@
 	/*             Please see the GNU General Public License for more details. */
 	/* File:       ./style.css */
 	/* Created:    20-Oct-02, 15:08 */
-	/* Modified:   21-Oct-06, 19:39 */
+	/* Modified:   24-Oct-06, 18:44 */
 
 	/* refbase CSS definitions - default style */
 
@@ -55,9 +55,9 @@ pre,code       { font-family:monaco,courier,monospace; font-size:7pt; }
 
 th             { font-family:helvetica,arial,sans-serif; }
 
-td,div         { font-family:garamond,times,serif; }
+td,div         { font-family:"times new roman",garamond,times,serif; }
 
-p              { font-family:garamond,times,serif; }
+p              { font-family:"times new roman",garamond,times,serif; }
 
 A:link         { color:#0033CC; text-decoration:none; }
 

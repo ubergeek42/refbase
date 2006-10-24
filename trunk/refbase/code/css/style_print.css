@@ -4,7 +4,7 @@
 	/*             Please see the GNU General Public License for more details. */
 	/* File:       ./style_print.css */
 	/* Created:    20-Oct-02, 15:08 */
-	/* Modified:   21-Oct-06, 19:39 */
+	/* Modified:   24-Oct-06, 18:44 */
 
 	/* refbase CSS definitions - print view style */
 
@@ -55,9 +55,9 @@ pre,code       { font-family:monaco,courier,monospace; font-size:7pt; }
 
 th             { font-family:helvetica,arial,sans-serif; font-size:small; }
 
-td,div         { font-family:garamond,times,serif; font-size:small; }
+td,div         { font-family:"times new roman",garamond,times,serif; font-size:small; }
 
-p              { font-family:garamond,times,serif; font-size:small; }
+p              { font-family:"times new roman",garamond,times,serif; font-size:small; }
 
 A:link         { color:#000000; text-decoration:underline; }
 
