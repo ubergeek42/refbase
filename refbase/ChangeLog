@@ -1,3 +1,31 @@
+2006-10-24 16:50  Matthias Steffens <refbase@extracts.de>
+	* code/css/: style.css, style_print.css:
+	  changed default font for td, div and p tags to Times New Roman which works
+	  around a font-display issue on certain platforms
+
+2006-10-23 18:20  Matthias Steffens <refbase@extracts.de>
+	* search.php:
+	  function 'extractFormElementsAdvanced()': for the fields 'location',
+	  'created_by' and 'modified_by', we'll now verify that the appropriate
+	  parameter exists before attempting to extract its value; this avoids
+	  'undefined index' warnings if a user isn't logged in
+
+2006-10-23 11:20  Matthias Steffens <refbase@extracts.de>
+	* NEWS:
+	  * changed format of release date into a more internationally friendly format
+	  * added a few more changes & fixes
+
+2006-10-23 10:53  Matthias Steffens <refbase@extracts.de>
+	* INSTALL:
+	  * added some URLs and changed existing ones to subdomain URLs where
+	    appropriate
+	  * mentioned 'refbase_import' command line client
+	  * added RefWorks to list of supported import formats
+
+2006-10-23 10:02  Matthias Steffens <refbase@extracts.de>
+	* AUTHORS:
+	  added Joachim's email address and standardized punctuation
+
 2006-10-22 12:59  Richard Karnesky <karnesky@gmail.com>
 
 	* AUTHORS, BUGS, INSTALL, NEWS, UPDATE:
