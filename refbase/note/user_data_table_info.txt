@@ -1,0 +1,65 @@
+MySQL database "literature", table "user_data"
+==============================================
+
+field names
+-----------
+
+fields available in table "user_data"	description
+-------------------------------------	-----------
+
+data_id	the unique ID number of this user data entry
+user_id	the user's unique ID number (which corresponds to the user_id number of the user's record entry within the "users" table)
+record_id	the unique ID number of the record this data entry is referring to (which corresponds to the 'serial' number of the record's entry within the "refs" table)
+marked	has the user marked this record?
+copy	has the user a printed copy of this record?
+user_file	if the user owns a digital copy of this record, he can specify its file name/path here
+user_keys	the user's personal keywords for this record
+user_notes	the user's personal notes for this record
+selected	has the user selected this publication? (by that he can label publications that are important to him/her OR, if he/she's among the authors, indicate that this is one of the "better" publications)
+
+
+
+column types
+------------
+
+data_id	MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY
+user_id	MEDIUMINT UNSIGNED NOT NULL
+record_id	MEDIUMINT UNSIGNED NOT NULL
+marked	ENUM("no","yes") NOT NULL
+copy	ENUM("false","true","ordered","fetch") NOT NULL
+user_file	VARCHAR(255)
+user_keys	TEXT
+user_notes	TEXT
+selected	ENUM("no","yes") NOT NULL
+
+INDEX	(user_id,record_id)
+
+
+
+table creation code
+-------------------
+
+CREATE TABLE user_data (data_id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id MEDIUMINT UNSIGNED NOT NULL, record_id MEDIUMINT UNSIGNED NOT NULL, marked ENUM("no","yes") NOT NULL, copy ENUM("false","true","ordered","fetch") NOT NULL, user_file VARCHAR(255), user_keys TEXT, user_notes TEXT, selected ENUM("no","yes") NOT NULL, INDEX (user_id,record_id));
+
+
+rules for data import
+---------------------
+- fields are separated by tabs, records are separated by returns (if not specified otherwise within the LOAD DATA statement)
+- order of fields must resemble the above field order!
+- DATE format must be YYYY-MM-DD
+- TIME format must be HH:MM:SS
+- carriage returns *within* fields (ASCII character 11) must be replaced with a "UNIX return" (ASCII character 10) -> Search for:  (\x0B)  Replace with: \\n
+- empty fields are indicated by \N -> Search for: (?<=\t|^)(?=\t|$)   Replace with: \\N
+- character encoding: higher ASCII chars must be encoded as ISO-8859-1
+- file encoding must be UNIX
+
+
+load data code
+--------------
+
+LOAD DATA LOCAL INFILE "/Users/matthias/Doktor/05-Intern/IPOE_Literature_Database/user_data.txt" INTO TABLE user_data;
+
+oder alternativ im Terminal-Kommando-Prompt:
+
+mysqlimport --local -u root -p literature "/Users/matthias/Doktor/05-Intern/IPOE_Literature_Database/user_data.txt"
+

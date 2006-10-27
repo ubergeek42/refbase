@@ -1,0 +1,455 @@
+<?php
+	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
+	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+	//             Please see the GNU General Public License for more details.
+	// File:       ./install.php
+	// Created:    07-Jan-04, 22:00
+	// Modified:   11-Jan-04, 17:00
+
+	// This file will install the literature database for you. Note that you must have
+	// an existing PHP and MySQL installation. Please see the readme for further information.
+	// CAUTION: YOU MUST REMOVE THIS SCRIPT FROM YOUR WEB DIRECTORY AFTER INSTALLATION!!
+
+	/*
+	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
+	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
+	*/
+
+	// Incorporate some include files:
+	include 'db.inc'; // 'db.inc' is included to hide username and password
+	include 'header.inc'; // include header
+	include 'footer.inc'; // include footer
+	include 'include.inc'; // include common functions
+	include "ini.inc.php"; // include common variables
+
+	// --------------------------------------------------------------------
+
+	// Extract any parameters passed to the script:
+	if (isset($_POST['adminDatabaseName']))
+		$adminDatabaseName = $_POST['adminDatabaseName'];
+	else
+		$adminDatabaseName = "";
+
+	if (isset($_POST['adminUserName']))
+		$adminUserName = $_POST['adminUserName'];
+	else
+		$adminUserName = "";
+
+	if (isset($_POST['adminPassword']))
+		$adminPassword = $_POST['adminPassword'];
+	else
+		$adminPassword = "";
+
+	if (isset($_POST['pathToMYSQL']))
+		$pathToMYSQL = $_POST['pathToMYSQL'];
+	else
+		$pathToMYSQL = "";
+
+	if (isset($_POST['databaseStructureFile']))
+		$databaseStructureFile = $_POST['databaseStructureFile'];
+	else
+		$databaseStructureFile = "";
+
+	// --------------------------------------------------------------------
+
+	// Initialize the session
+	session_start();
+
+	// CAUTION: Doesn't work with 'register_globals = OFF' yet!!
+
+	// --------------------------------------------------------------------
+
+	// Check the correct parameters have been passed:
+	if (empty($adminDatabaseName) AND empty($adminUserName) AND empty($adminPassword) AND empty($pathToMYSQL) AND empty($databaseStructureFile))
+	{
+		// if 'installation.php' was called without any valid parameters:
+		//Display an installation form:
+
+		if (session_is_registered("errors"))
+			session_unregister("errors"); // Note: though we clear the session variable, the current error message is still available to this script via '$errors'
+		else
+			$errors = array(); // initialize the '$errors' variable in order to prevent 'Undefined variable...' messages
+
+		if (session_is_registered("formVars"))
+			session_unregister("formVars"); // Note: though we clear the session variable, the current form variables are still available to this script via '$formVars'
+		else
+		{
+			// Reset the '$formVars' variable (since we're providing the default values):
+			$formVars = array();
+
+			// provide the default values:
+			$formVars["adminDatabaseName"] = "mysql";
+			$formVars["adminUserName"] = "root";
+			$formVars["adminPassword"] = "";
+			$formVars["pathToMYSQL"] = "/usr/local/mysql/bin/mysql";
+			$formVars["databaseStructureFile"] = "./install.sql";
+		}
+
+		// If there's no stored message available:
+		if (!session_is_registered("HeaderString"))
+		{
+			if (empty($errors)) // provide the default message:
+				$HeaderString = "To install the refbase package please fill out the form below and click the <em>Install</em> button:";
+			else // -> there were errors when validating the fields
+				$HeaderString = "<b><span class=\"warning\">There were validation errors regarding the details you entered. Please check the comments above the respective fields:</span></b>";
+		}
+		else
+			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
+
+		// Show the login status:
+		showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+
+		// DISPLAY header:
+		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Installation", "index,follow", "Installation form for the " . htmlentities($officialDatabaseName), "", false, "");
+		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
+
+		// Start <form> and <table> holding the form elements:
+?>
+
+<form action="install.php" method="POST">
+<input type="hidden" name="formType" value="install">
+<input type="hidden" name="submit" value="Install"><?php // provide a default value for the 'submit' form tag. Otherwise, some browsers may not recognize the correct output format when a user hits <enter> within a form field (instead of clicking the "Show" button) ?>
+
+<table align="center" border="0" cellpadding="0" cellspacing="12" width="95%" summary="This table holds the installation form">
+	<tr>
+		<td colspan="3"><h3>refbase Installation</h3></td>
+	</tr>
+	<tr>
+		<td width="190" valign="top"><b>Important Note:</b></td>
+		<td valign="top" colspan="2">
+			Before executing this script, it is highly recommended to <span class="warning">open the include file <em>db.inc</em></span> in a text editor and edit the values of the variables <em>$databaseName</em>, <em>$username</em> and <em>$password</em> to suit your setup! Then, proceed with this form:
+		</td>
+	</tr>
+	<tr>
+		<td valign="top"><b>MySQL Admin Database:</b></td>
+		<td valign="top"><?php echo fieldError("adminDatabaseName", $errors); ?>
+
+			<input type="text" name="adminDatabaseName" value="<?php echo $formVars["adminDatabaseName"]; ?>" size="30">
+		</td>
+		<td valign="top">Specify the name of the database that handles the MySQL user access privileges. Normally, you shouldn't change the default value: 'mysql'.</td>
+	</tr>
+	<tr>
+		<td valign="top"><b>MySQL Admin User:</b></td>
+		<td valign="top"><?php echo fieldError("adminUserName", $errors); ?>
+
+			<input type="text" name="adminUserName" value="<?php echo $formVars["adminUserName"]; ?>" size="30">
+		</td>
+		<td valign="top">Give the name of an administrative user that has full access to the MySQL admin database. Often, this is the 'root' user.</td>
+	</tr>
+	<tr>
+		<td valign="top"><b>MySQL Admin Password:</b></td>
+		<td valign="top"><?php
+	// the form won't remember the password, so we'll ask the user to re-type it...
+	if (!empty($errors) AND !isset($errors["adminPassword"])) // ...if there were some validation errors but not with the password field
+		echo "\n\t\t\t<b>Please type your password again:</b>\n\t\t\t<br>";
+	else
+		echo fieldError("adminPassword", $errors);
+?>
+
+			<input type="password" name="adminPassword" size="30">
+		</td>
+		<td valign="top">Please enter the password for the administrative user you've specified above.</td>
+	</tr>
+	<tr>
+		<td valign="top"><b>Path to the MySQL application:</b></td>
+		<td valign="top"><?php echo fieldError("pathToMYSQL", $errors); ?>
+
+			<input type="text" name="pathToMYSQL" value="<?php echo $formVars["pathToMYSQL"]; ?>" size="30">
+		</td>
+		<td valign="top">Specify the full path to the 'mysql' command line interpreter. The given path represents a common location on unix systems, but yours may vary.</td>
+	</tr>
+	<tr>
+		<td valign="top"><b>Path to the database structure file:</b></td>
+		<td valign="top"><?php echo fieldError("databaseStructureFile", $errors); ?>
+
+			<input type="text" name="databaseStructureFile" value="<?php echo $formVars["databaseStructureFile"]; ?>" size="30">
+		</td>
+		<td valign="top">Enter the full path to the SQL dump file containing the database structure &amp; data. Keep the default value, if you're installing refbase for the first time.</td>
+	</tr>
+	<tr>
+		<td valign="top">&nbsp;</td>
+		<td valign="top" align="right">
+			<input type="submit" name="submit" value="Install">
+		</td>
+		<td valign="top"><span class="warning">CAUTION:</span> Note that, if there's already an existing database with the name specified in <em>$databaseName</em>, clicking the <em>Install</em> button will overwrite ALL data in that database!</td>
+	</tr>
+</table>
+</form><?php
+
+		// --------------------------------------------------------------------
+
+		// DISPLAY THE HTML FOOTER:
+		// call the 'displayfooter()' function from 'footer.inc')
+		displayfooter("");
+
+		// --------------------------------------------------------------------
+
+?>
+</body>
+</html>
+<?php
+	}
+	else // some parameters have been passed, so let's validate the fields:
+	{
+
+		// --------------------------------------------------------------------
+
+		// Register an error array - just in case!
+		if (!session_is_registered("errors"))
+			session_register("errors");
+
+		// Clear any errors that might have been found previously:
+		$errors = array();
+
+		// Set up a $formVars array with the POST variables and register with the session:
+		if (!session_is_registered("formVars"))
+			session_register("formVars");
+
+		// Write the form variables into an array:
+		foreach($HTTP_POST_VARS as $varname => $value)
+			$formVars[$varname] = $value;
+
+
+		// Validate the 'adminDatabaseName' field:
+		if (empty($formVars["adminDatabaseName"]))
+			// The 'adminDatabaseName' field cannot be a null string
+			$errors["adminDatabaseName"] = "This field cannot be blank:";
+
+
+		// Validate the 'adminUserName' field:
+		if (empty($formVars["adminUserName"]))
+			// The 'adminUserName' field cannot be a null string
+			$errors["adminUserName"] = "This field cannot be blank:";
+
+
+		// Validate the 'adminPassword' field:
+		if (empty($formVars["adminPassword"]))
+			// The 'adminPassword' field cannot be a null string
+			$errors["adminPassword"] = "This field cannot be blank:";
+
+
+		// Validate the 'pathToMYSQL' field:
+		if (empty($formVars["pathToMYSQL"]))
+			// The 'pathToMYSQL' field cannot be a null string
+			$errors["pathToMYSQL"] = "This field cannot be blank:";
+
+		elseif (ereg("[;|]", $formVars["pathToMYSQL"]))
+			// For security reasons, the 'pathToMYSQL' field cannot contain the characters ';' or '|' (which would tie multiple shell commands together)
+			$errors["pathToMYSQL"] = "Due to security reasons this field cannot contain the characters ';' or '|':";
+
+		elseif (is_dir($formVars["pathToMYSQL"]))
+			// Check if the specified path resolves to a directory
+			$errors["pathToMYSQL"] = "You cannot specify a directory! Please give the path to the mysql command:";
+
+		elseif (!is_readable($formVars["pathToMYSQL"]))
+			// Check if the specified path resolves to the mysql application
+			$errors["pathToMYSQL"] = "Your path specification is invalid (command not found):";
+
+		elseif (!is_executable($formVars["pathToMYSQL"]))
+			// Check if the given file is executable
+			$errors["pathToMYSQL"] = "This file does not appear to be an executable command:";
+
+		elseif (!ereg("(^|.*/)mysql$", $formVars["pathToMYSQL"]))
+			// Make sure that the given file is 'mysql'
+			$errors["pathToMYSQL"] = "This does not appear to be the 'mysql' command line interpreter:";
+
+
+		// Validate the 'databaseStructureFile' field:
+		if (empty($formVars["databaseStructureFile"]))
+			// The 'databaseStructureFile' field cannot be a null string
+			$errors["databaseStructureFile"] = "This field cannot be blank:";
+
+		elseif (ereg("[;|]", $formVars["databaseStructureFile"]))
+			// For security reasons, the 'databaseStructureFile' field cannot contain the characters ';' or '|' (which would tie multiple shell commands together)
+			$errors["databaseStructureFile"] = "Due to security reasons this field cannot contain the characters ';' or '|':";
+
+		elseif (is_dir($formVars["databaseStructureFile"]))
+			// Check if the specified path resolves to a directory
+			$errors["databaseStructureFile"] = "You cannot specify a directory! Please give the path to the database structure file:";
+
+		elseif (!is_readable($formVars["databaseStructureFile"]))
+			// Check if the specified path resolves to the database structure file
+			$errors["databaseStructureFile"] = "Your path specification is invalid (file not found):";
+
+		// --------------------------------------------------------------------
+
+		// Now the script has finished the validation, check if there were any errors:
+		if (count($errors) > 0)
+		{
+			// There are errors. Relocate back to the installation form:
+			header("Location: install.php");
+
+			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		}
+
+		// --------------------------------------------------------------------
+
+		// If we made it here, then the data is considered valid, which means that we can proceed with the actual installation procedure:
+
+		// Build the database queries required for installation:
+		$queryGrantStatement = "GRANT SELECT,INSERT,UPDATE,DELETE ON " . $databaseName . ".* TO " . $username . "@" . $hostName . " IDENTIFIED BY '" . $password . "'";
+
+		$queryCreateDB = "CREATE DATABASE IF NOT EXISTS " . $databaseName;
+
+		// --------------------------------------------------------------------
+
+		// (1) Open the database connection and use the mysql database:
+		if (!($connection = @ mysql_connect($hostName,$adminUserName,$adminPassword)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to connect to the host:", "");
+
+		if (!(mysql_select_db($adminDatabaseName, $connection)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to connect to the database:", "");
+
+		// (2) Run the install queries on the mysql database through the connection:
+		if (!($result = @ mysql_query ($queryGrantStatement, $connection)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to query the database:", "");
+
+		if (!($result = @ mysql_query ($queryCreateDB, $connection)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to query the database:", "");
+
+		// (5) Close the database connection:
+		if (!(mysql_close($connection)))
+			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+				showErrorMsg("The following error occurred while trying to disconnect from the database:", "");
+
+
+		// Import the literature database structure from file:
+		exec($pathToMYSQL . " -h " . $hostName . " -u " . $adminUserName . " -p" . $adminPassword . " --database=" . $databaseName . " < " . $databaseStructureFile . " 2>&1", $resultArray);
+
+		// User note from <http://de2.php.net/manual/en/ref.exec.php> regarding the use of PHP's 'exec()' command:
+		// From 'eremy at ntb dot co dot nz' (28-Sep-2003 03:18):
+		// If an error occurs in the code you're trying to exec(), it can be challenging to figure out what's going
+		// wrong, since php echoes back the stdout stream rather than the stderr stream where all the useful error
+		// reporting's done. The solution is to add the code "2>&1" to the end of your shell command, which redirects
+		// stderr to stdout, which you can then easily print using something like print `shellcommand 2>&1`.
+
+		$resultLines = ""; // initialize variable
+
+		// Read out the execution result array:
+		if (!empty($resultArray)) // if there were any execution errors
+		{
+			reset($resultArray); // reset the internal array pointer to the first element
+			while (list ($key, $val) = each ($resultArray))
+				$resultLines .= "\n" . trim($val); // append each of the array elements to a string
+		}
+
+		// --------------------------------------------------------------------
+
+		//Provide a feedback page:
+
+		// If there's no stored message available:
+		if (!session_is_registered("HeaderString")) // provide one of the default messages:
+		{
+			if (!empty($resultArray)) // if there were any execution errors
+				$HeaderString = "The following error occurred while trying to import the SQL data into the database:";
+			else // assume that the installation was successful
+				$HeaderString = "Installation of the Web Reference Database was successful!";
+		}
+		else
+			session_unregister("HeaderString"); // Note: though we clear the session variable, the current message is still available to this script via '$HeaderString'
+
+		// Show the login status:
+		showLogin(); // (function 'showLogin()' is defined in 'include.inc')
+
+		// DISPLAY header:
+		// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc'):
+		displayHTMLhead(htmlentities($officialDatabaseName) . " -- Installation Feedback", "index,follow", "Installation feedback for the " . htmlentities($officialDatabaseName), "", false, "");
+		showPageHeader($HeaderString, $loginWelcomeMsg, $loginStatus, $loginLinks, "");
+
+		// Start a <table>:
+?>
+
+<table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds the installation feedback info"><?php
+
+		if (!empty($resultArray)) // if there were any execution errors:
+		{
+?>
+
+	<tr>
+		<td valign="top"><b>Error:</b></td>
+		<td><?php echo htmlentities($resultLines); ?></td>
+	</tr>
+	<tr>
+		<td valign="top">&nbsp;</td>
+		<td>
+			<b>Please make sure that you've specified the correct path to the MySQL database structure file!</b>
+		</td>
+	</tr>
+	<tr>
+		<td valign="top">&nbsp;</td>
+		<td>
+			<a href="install.php">Go Back</a>
+		</td>
+	</tr><?php
+
+		}
+		else // no execution errors -> inform the user about successful database installation:
+		{
+?>
+
+	<tr>
+		<td colspan="2"><h3>Welcome to refbase!</h3></td>
+	</tr>
+	<tr>
+		<td valign="top"><b>Important Note:</b></td>
+		<td>
+			The <em>install.php</em> script is only provided for installation purposes and is not needed anymore. Due to security considerations you should <span class="warning">remove this script</span> from your web directory NOW!!
+		</td>
+	</tr>
+	<tr>
+		<td valign="top"><b>Setup users:</b></td>
+		<td>
+			Here's how to setup the admin user account for your newly created literature database:
+			<ul type="circle">
+				<li>Goto <a href="index.php" target="_blank" title="Open the main page in a new window"><?php echo htmlentities($officialDatabaseName); ?></a></li>
+				<li>Login with email address = <em>user@refbase.net</em> &amp; password = <em>start</em></li>
+				<li>Click on <em>Add User</em> and enter the name, institutional abbreviation, email address and password of the admin user</li>
+				<li>Open the file <em>ini.inc.php</em> in a text editor and change the value of the <em>$adminLoginEmail</em> variable to the email address you've specified for the admin user</li>
+				<li>Log out, then login again using the email address and password of your newly created admin account</li>
+			</ul>
+			If you want to add additional users use the <em>Add User</em> link and enter the user's name, institutional abbreviation, email address and password.
+		</td>
+	</tr>
+	<tr>
+		<td valign="top"><b>Configure refbase:</b></td>
+		<td>
+			In order to customize your literature database, please open again <em>ini.inc.php</em> in a text editor. This include file contains variables that are common to all scripts and whose values can/must be adopted to your needs. Please see the comments within the file for further information.
+		</td>
+	</tr><?php
+
+		}
+?>
+
+</table><?php
+
+		// --------------------------------------------------------------------
+
+		// DISPLAY THE HTML FOOTER:
+		// call the 'displayfooter()' function from 'footer.inc')
+		displayfooter("");
+
+		// --------------------------------------------------------------------
+
+?>
+</body>
+</html>
+<?php
+	}
+
+	// --------------------------------------------------------------------
+
+	// SHOW ERROR IN RED:
+	function fieldError($fieldName, $errors)
+	{
+		if (isset($errors[$fieldName]))
+			echo "\n\t\t\t<b><span class=\"warning\">" . $errors[$fieldName] . "</span></b>\n\t\t\t<br>";
+	}
+
+	// --------------------------------------------------------------------
+?>
