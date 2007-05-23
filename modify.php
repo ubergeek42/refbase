@@ -1,20 +1,25 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-	//             Please see the GNU General Public License for more details.
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
 	// File:       ./modify.php
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    18-Dec-02, 23:08
-	// Modified:   17-Nov-06, 13:25
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This php script will perform adding, editing & deleting of records.
 	// It then calls 'receipt.php' which displays links to the modified/added record
 	// as well as to the previous search results page (if any).
 
-	/*
-	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
-	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
-	*/
 
 	// Incorporate some include files:
 	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
@@ -524,14 +529,14 @@
 
 	// provide some magic that figures out what do to depending on the state of the 'is Editor' check box
 	// and the content of the 'author', 'editor' and 'type' fields:
-	if ($isEditorCheckBox == "1" OR ereg("^(Book Whole|Journal|Manuscript|Map)$", $typeName)) // if the user did mark the 'is Editor' checkbox -OR- if the record type is either 'Book Whole', 'Journal', 'Map' or 'Manuscript'...
+	if ($isEditorCheckBox == "1" OR ereg("^(Book Whole|Conference Volume|Journal|Manuscript|Map)$", $typeName)) // if the user did mark the 'is Editor' checkbox -OR- if the record type is either 'Book Whole', 'Conference Volume', 'Journal', 'Map' or 'Manuscript'...
 		if (!empty($editorName) AND empty($authorName)) // ...and if the 'Editor' field has some content while the 'Author' field is blank...
 		{
 			$authorName = $editorName; // duplicate field contents from 'editor' to 'author' field
 			$isEditorCheckBox = "1"; // since the user entered something in the 'editor' field (but not the 'author' field), we need to make sure that the 'is Editor' is marked
 		}
 
-	if ($isEditorCheckBox == "1" AND ereg("^(Book Whole|Journal|Manuscript|Map)$", $typeName)) // if the user did mark the 'is Editor' checkbox -AND- the record type is either 'Book Whole', 'Journal', 'Map' or 'Manuscript'...
+	if ($isEditorCheckBox == "1" AND ereg("^(Book Whole|Conference Volume|Journal|Manuscript|Map)$", $typeName)) // if the user did mark the 'is Editor' checkbox -AND- the record type is either 'Book Whole', 'Conference Volume', 'Journal', 'Map' or 'Manuscript'...
 	{
 		$authorName = ereg_replace(" *\(eds?\)$","",$authorName); // ...remove any existing editor info from the 'author' string, i.e., kill any trailing " (ed)" or " (eds)"
 
@@ -546,7 +551,7 @@
 				$authorName .= " (eds)"; // append " (eds)" to the end of the 'author' string
 		}
 	}
-	else // the 'is Editor' checkbox is NOT checked -OR- the record type is NOT 'Book Whole', 'Journal', 'Map' or 'Manuscript'...
+	else // the 'is Editor' checkbox is NOT checked -OR- the record type is NOT 'Book Whole', 'Conference Volume', 'Journal', 'Map' or 'Manuscript'...
 	{
 		if (ereg(" *\(eds?\)$", $authorName)) // if 'author' field ends with either " (ed)" or " (eds)"
 			$authorName = ereg_replace(" *\(eds?\)$","",$authorName); // remove any existing editor info from the 'author' string, i.e., kill any trailing " (ed)" or " (eds)"
@@ -1097,9 +1102,9 @@
 		if ($moveFilesIntoSubDirectories != "never")
 		{
 			// remove any slashes (i.e., directory delimiter(s)) from the beginning or end of '$dirNamingScheme':
-			$dirNamingScheme = trimTextPattern($dirNamingScheme, "[\/\\\]+", true, true); // function 'trimTextPattern()' is defined in 'include.inc.php'
+			$dirNamingScheme = trimTextPattern($dirNamingScheme, "[\/\\\\]+", true, true); // function 'trimTextPattern()' is defined in 'include.inc.php'
 
-			$dirNamingSchemePartsArray = split("[\/\\\]+", $dirNamingScheme); // split on slashes to separate between multiple sub-directories
+			$dirNamingSchemePartsArray = split("[/\\]+", $dirNamingScheme); // split on slashes to separate between multiple sub-directories
 
 			$subDirNamesArray = array(); // initialize array variable which will hold the generated sub-directory names
 

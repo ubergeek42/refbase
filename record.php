@@ -1,20 +1,25 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-	//             Please see the GNU General Public License for more details.
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
 	// File:       ./record.php
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    29-Jul-02, 16:39
-	// Modified:   06-Oct-06, 21:46
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// Form that offers to add
 	// records or edit/delete
 	// existing ones.
 
-	/*
-	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
-	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
-	*/
 
 	// Incorporate some include files:
 	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
@@ -102,8 +107,8 @@
 			else // *add* record will be the default action if no parameter is given
 			{
 				$HeaderString = $loc["AddRecordHeaderText"];
-				if (isset($_REQUEST['source'])) // when importing data, we display the original source data if the 'source' parameters is present:
-					$HeaderString .= ". Original source data:\n<br>\n<br>\n<code>" . $_REQUEST['source'] . "</code>"; // the 'source' parameter gets passed by 'import_csa.php'
+				if (isset($_REQUEST['source'])) // when importing data, we display the original source data if the 'source' parameter is present:
+					$HeaderString .= ". Original source data:\n<br>\n<br>\n<code>" . encodeHTML($_REQUEST['source']) . "</code>"; // the 'source' parameter gets passed by 'import.php' or 'import_csa.php'
 				else
 					$HeaderString .= ":";
 			}
@@ -347,7 +352,7 @@
 				$origRecord = $row['orig_record'];
 			}
 			else
-				showErrorMsg($loc["The Query"].":\n<br>\n<br>\n<code>$query</code>\n<br>\n<br>\n ". $loc["caused an error"].":", "");
+				showErrorMsg($loc["The Query"].":\n<br>\n<br>\n<code>" . encodeHTML($query) . "</code>\n<br>\n<br>\n ". $loc["caused an error"].":", "");
 
 		}
 	else // if ($recordAction == "add") -OR- ($recordAction == "edit" but there were some errors on submit)

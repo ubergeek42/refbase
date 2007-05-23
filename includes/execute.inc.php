@@ -1,18 +1,21 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
 	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
-	//             original author.
+	//             original author(s).
 	//
 	//             This code is distributed in the hope that it will be useful,
-	//             but WITHOUT ANY WARRANTY.  Please see the GNU General Public
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
 	//             License for more details.
 	//
 	// File:       ./includes/execute.inc.php
-	// Author:     Richard Karnesky <mailto:karnesky@gmail.com> and
+	// Repository: $HeadURL$
+	// Author(s):  Richard Karnesky <mailto:karnesky@gmail.com> and
 	//             Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    16-Dec-05, 18:00
-	// Modified:   16-Aug-06, 18:18
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This file contains functions that deal with execution of shell commands and provides
 	// fixes for 'exec()' on certain win32 systems (based on rivera at spamjoy dot unr dot edu's
@@ -114,8 +117,8 @@
 	function convertBibutils($bibutilsPath, $tempDirPath, $tempFile, $program, $inputEncodingArg, $outputEncodingArg)
 	{
 		$outputFile = tempnam($tempDirPath, "refbase-");
-		$cmd = $bibutilsPath . $program . $inputEncodingArg . $outputEncodingArg . " " . $tempFile . " > " . $outputFile;
-		execute($cmd);
+    $cmd = $bibutilsPath . $program . $inputEncodingArg . $outputEncodingArg . " " . $tempFile;
+		execute($cmd, $outputFile);
 
 		return $outputFile;
 	}
@@ -123,12 +126,14 @@
 	// --------------------------------------------------------------------
 
 	// Execute shell command
-	function execute($cmd)
+	function execute($cmd, $outputFile)
 	{
 		if (getenv("OS") == "Windows_NT")
-			executeWin32($cmd);
-		else
-			exec($cmd);
+			executeWin32($cmd . " > " . $outputFile);
+		else {
+      exec($cmd, $output);
+      array2file($output, $outputFile);
+    }
 	}
 
 	// --------------------------------------------------------------------
@@ -180,4 +185,33 @@
 	}
 
 	// --------------------------------------------------------------------
+
+  // Write an array (as from $return argument in exec) to a file
+
+  function string2File($string, $outputFile) {
+    $rc = false;
+    do {
+      if (!($f = fopen($outputFile, "wa+"))){
+        $rc = 1;
+        break;
+      }
+      if (!fwrite($f, $string)) {
+        $rc = 2;
+        break;
+      }
+      $rc = true;
+    } while (0);
+    if ($f) {
+      fclose($f);
+    }
+    return ($rc);
+  }
+
+  function array2File($array, $outputFile)
+  {
+    return (string2File(implode("\n", $array), $outputFile));
+  }
+
+	// --------------------------------------------------------------------
+
 ?>

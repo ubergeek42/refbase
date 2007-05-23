@@ -1,20 +1,25 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-	//             Please see the GNU General Public License for more details.
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
 	// File:       ./update.php
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    01-Mar-05, 20:47
-	// Modified:   13-Nov-06, 17:30
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This file will update any refbase MySQL database installation from v0.8.0 (and, to a certain extent, intermediate cvs versions) to v0.9.0.
 	// (Note that this script currently doesn't offer any conversion from 'latin1' to 'utf8')
 	// CAUTION: YOU MUST REMOVE THIS SCRIPT FROM YOUR WEB DIRECTORY AFTER THE UPDATE!!
 
-	/*
-	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
-	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
-	*/
 
 	// Incorporate some include files:
 	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
@@ -256,7 +261,7 @@
 
 		// (2.2) Insert default user options for anyone who's not logged in
 		$values = "(NULL, 0, 'yes', 'yes', 'no', 'no', '<:authors:><:year:>', 'yes', NULL, 'no', '<:authors[2| & | et al.]:>< :year:>< {:recordIdentifier:}>')";
-		$resultArray["Table 'user_options': inserted default options for anyone who's not logged in"] = insertIfNotExists("user_id", 0, $tableUserOptions, $values); // function 'insertIfNotExists()' is defined in 'install.inc.php'
+		$resultArray["Table 'user_options': inserted default options for anyone who's not logged in"] = insertIfNotExists(array("user_id" => 0), $tableUserOptions, $values); // function 'insertIfNotExists()' is defined in 'install.inc.php'
 
 		// (2.3) Insert default user options for all users
 		// First, check how many users are contained in table 'users':
@@ -268,7 +273,7 @@
 			while ($row = @ mysql_fetch_array($result))
 			{
 				$values = "(NULL, " . $row['user_id'] . ", 'yes', 'yes', 'no', 'yes', '<:authors[2|+|++]:><:year:>', 'yes', 'transliterate', 'no', '<:authors[2| & | et al.]:>< :year:>< {:recordIdentifier:}>')";
-				$resultArray["Table 'user_options': inserted default options for user " . $row['user_id'] . " (" . $row['first_name'] . " " . $row['last_name'] . ")"] = insertIfNotExists("user_id", $row['user_id'], $tableUserOptions, $values);
+				$resultArray["Table 'user_options': inserted default options for user " . $row['user_id'] . " (" . $row['first_name'] . " " . $row['last_name'] . ")"] = insertIfNotExists(array("user_id" => $row['user_id']), $tableUserOptions, $values);
 			}
 		}
 
@@ -287,16 +292,16 @@
 		$resultArray["Table 'styles': updated 'style_spec' field. Affected rows"] = ($result ? mysql_affected_rows($connection) : 0);
 
 		$values = "(NULL, 'Ann Glaciol', 'true', 'styles/cite_AnnGlaciol_JGlaciol.php', 'B050', '1')";
-		$resultArray["Table 'styles': inserted style 'Ann Glaciol'"] = insertIfNotExists("style_name", "Ann Glaciol", $tableStyles, $values);
+		$resultArray["Table 'styles': inserted style 'Ann Glaciol'"] = insertIfNotExists(array("style_name" => "Ann Glaciol"), $tableStyles, $values);
 
 		$values = "(NULL, 'J Glaciol', 'true', 'styles/cite_AnnGlaciol_JGlaciol.php', 'B060', '1')";
-		$resultArray["Table 'styles': inserted style 'J Glaciol'"] = insertIfNotExists("style_name", "J Glaciol", $tableStyles, $values);
+		$resultArray["Table 'styles': inserted style 'J Glaciol'"] = insertIfNotExists(array("style_name" => "J Glaciol"), $tableStyles, $values);
 
 		$values = "(NULL, 'APA', 'true', 'styles/cite_APA.php', 'A010', '1')";
-		$resultArray["Table 'styles': inserted style 'APA'"] = insertIfNotExists("style_name", "APA", $tableStyles, $values);
+		$resultArray["Table 'styles': inserted style 'APA'"] = insertIfNotExists(array("style_name" => "APA"), $tableStyles, $values);
 		
 		$values = "(NULL, 'MLA', 'true', 'styles/cite_MLA.php', 'A030', '1')";
-		$resultArray["Table 'styles': inserted style 'MLA'"] = insertIfNotExists("style_name", "MLA", $tableStyles, $values);
+		$resultArray["Table 'styles': inserted style 'MLA'"] = insertIfNotExists(array("style_name" => "MLA"), $tableStyles, $values);
 
 		$query = "UPDATE " . $tableStyles . " SET order_by = 'C010' WHERE style_name = 'Text Citation'";
 		$result = queryMySQLDatabase($query, "");
@@ -318,21 +323,78 @@
 		$result = queryMySQLDatabase($query, "");
 		$resultArray["Table 'styles': updated 'Deep Sea Res' style. Affected rows"] = ($result ? mysql_affected_rows($connection) : 0);
 
-		// (2.7) Add the french language option to table 'languages'
-		$values = "(NULL, 'fr', 'true', '3')";
-		$resultArray["Table 'languages': inserted french language option"] = insertIfNotExists("language_name", "fr", $tableLanguages, $values);
+		$query = "UPDATE " . $tableStyles . " SET order_by = 'B050' WHERE style_name = 'Ann Glaciol'";
+		$result = queryMySQLDatabase($query, "");
+		$resultArray["Table 'styles': updated 'Ann Glaciol' style. Affected rows"] = ($result ? mysql_affected_rows($connection) : 0);
 
-		// (2.7b) Enable german localization
+		$query = "UPDATE " . $tableStyles . " SET order_by = 'B060' WHERE style_name = 'J Glaciol'";
+		$result = queryMySQLDatabase($query, "");
+		$resultArray["Table 'styles': updated 'J Glaciol' style. Affected rows"] = ($result ? mysql_affected_rows($connection) : 0);
+
+		// (2.7) Update table 'types'
+		$values = "(NULL, 'Conference Article', 'true', 2, '04')";
+		$resultArray["Table 'types': inserted type 'Conference Article'"] = insertIfNotExists(array("type_name" => "Conference Article"), $tableTypes, $values);
+
+		$values = "(NULL, 'Conference Volume', 'true', 3, '05')";
+		$resultArray["Table 'types': inserted type 'Conference Volume'"] = insertIfNotExists(array("type_name" => "Conference Volume"), $tableTypes, $values);
+
+		$values = "(NULL, 'Manual', 'true', 3, '07')";
+		$resultArray["Table 'types': inserted type 'Manual'"] = insertIfNotExists(array("type_name" => "Manual"), $tableTypes, $values);
+
+		$values = "(NULL, 'Miscellaneous', 'true', 3, '10')";
+		$resultArray["Table 'types': inserted type 'Miscellaneous'"] = insertIfNotExists(array("type_name" => "Miscellaneous"), $tableTypes, $values);
+
+		$values = "(NULL, 'Newspaper Article', 'true', 1, '11')";
+		$resultArray["Table 'types': inserted type 'Newspaper Article'"] = insertIfNotExists(array("type_name" => "Newspaper Article"), $tableTypes, $values);
+
+		$values = "(NULL, 'Patent', 'true', 3, '12')";
+		$resultArray["Table 'types': inserted type 'Patent'"] = insertIfNotExists(array("type_name" => "Patent"), $tableTypes, $values);
+
+		$values = "(NULL, 'Report', 'true', 3, '13')";
+		$resultArray["Table 'types': inserted type 'Report'"] = insertIfNotExists(array("type_name" => "Report"), $tableTypes, $values);
+
+		$values = "(NULL, 'Software', 'true', 3, '14')";
+		$resultArray["Table 'types': inserted type 'Software'"] = insertIfNotExists(array("type_name" => "Software"), $tableTypes, $values);
+
+		$query = "UPDATE " . $tableTypes . " SET order_by = '01' WHERE type_name = 'Journal Article'";
+		$result = queryMySQLDatabase($query, "");
+		$resultArray["Table 'types': updated 'Journal Article' type. Affected rows"] = ($result ? mysql_affected_rows($connection) : 0);
+
+		$query = "UPDATE " . $tableTypes . " SET order_by = '02' WHERE type_name = 'Book Chapter'";
+		$result = queryMySQLDatabase($query, "");
+		$resultArray["Table 'types': updated 'Book Chapter' type. Affected rows"] = ($result ? mysql_affected_rows($connection) : 0);
+
+		$query = "UPDATE " . $tableTypes . " SET order_by = '03' WHERE type_name = 'Book Whole'";
+		$result = queryMySQLDatabase($query, "");
+		$resultArray["Table 'types': updated 'Book Whole' type. Affected rows"] = ($result ? mysql_affected_rows($connection) : 0);
+
+		$query = "UPDATE " . $tableTypes . " SET order_by = '06' WHERE type_name = 'Journal'";
+		$result = queryMySQLDatabase($query, "");
+		$resultArray["Table 'types': updated 'Journal' type. Affected rows"] = ($result ? mysql_affected_rows($connection) : 0);
+
+		$query = "UPDATE " . $tableTypes . " SET order_by = '08' WHERE type_name = 'Manuscript'";
+		$result = queryMySQLDatabase($query, "");
+		$resultArray["Table 'types': updated 'Manuscript' type. Affected rows"] = ($result ? mysql_affected_rows($connection) : 0);
+
+		$query = "UPDATE " . $tableTypes . " SET order_by = '09' WHERE type_name = 'Map'";
+		$result = queryMySQLDatabase($query, "");
+		$resultArray["Table 'types': updated 'Map' type. Affected rows"] = ($result ? mysql_affected_rows($connection) : 0);
+
+		// (2.8) Add the french language option to table 'languages'
+		$values = "(NULL, 'fr', 'true', '3')";
+		$resultArray["Table 'languages': inserted french language option"] = insertIfNotExists(array("language_name" => "fr"), $tableLanguages, $values);
+
+		// (2.9) Enable german localization
 		$query = "UPDATE " . $tableLanguages . " SET language_enabled = 'true' WHERE language_name = 'de'";
 		$result = queryMySQLDatabase($query, "");
 		$resultArray["Table 'languages': enabled german language option. Affected rows"] = ($result ? mysql_affected_rows($connection) : 0);
 
-		// (2.8) Alter table specification for table 'formats'
+		// (2.10) Alter table specification for table 'formats'
 		$query = "ALTER table " . $tableFormats . " MODIFY format_type enum('export','import','cite') NOT NULL default 'export'";
 		$result = queryMySQLDatabase($query, "");
 		$resultArray["Table 'formats': altered table specification. Affected rows"] = ($result ? mysql_affected_rows($connection) : 0);
 
-		// (2.9) Update existing formats in table 'formats'
+		// (2.11) Update existing formats in table 'formats'
 		$query = "UPDATE " . $tableFormats . " SET format_name = 'BibTeX' WHERE format_name = 'Bibtex'";
 		$result = queryMySQLDatabase($query, "");
 		$resultArray["Table 'formats': renamed format name 'Bibtex' to 'BibTeX'. Affected rows"] = ($result ? mysql_affected_rows($connection) : 0);
@@ -341,7 +403,7 @@
 		$result = queryMySQLDatabase($query, "");
 		$resultArray["Table 'formats': reformatted numbers in 'order_by' field as two-digit numbers. Affected rows"] = ($result ? mysql_affected_rows($connection) : 0);
 
-		// (2.10) Replace existing import formats with updated/new ones in table 'formats'
+		// (2.12) Replace existing import formats with updated/new ones in table 'formats'
 		// NOTE: Simple, brain-dead test of UPDATEing (we should probably have a SQL function and/or make this an array and process that)
 		$query = "UPDATE " . $tableFormats . " SET format_spec = 'bibutils/import_modsxml2refbase.php', depends_id = 2 WHERE format_name = 'MODS XML' AND format_type = 'import'";
 		$result = queryMySQLDatabase($query, "");
@@ -368,49 +430,61 @@
 		$resultArray["Table 'formats': updated 'ISI' import format. Affected rows"] = ($result ? mysql_affected_rows($connection) : 0);
 
 		$values = "(NULL, 'Pubmed Medline', 'import', 'true', 'import_medline2refbase.php', '08', 1)";
-		$resultArray["Table 'formats': inserted 'Pubmed Medline' import format"] = insertIfNotExists("format_name", "Pubmed Medline", $tableFormats, $values);
+		$resultArray["Table 'formats': inserted 'Pubmed Medline' import format"] = insertIfNotExists(array("format_name" => "Pubmed Medline", "format_type" => "import"), $tableFormats, $values);
 
 		$values = "(NULL, 'CSA', 'import', 'true', 'import_csa2refbase.php', '05', 1)";
-		$resultArray["Table 'formats': inserted 'CSA' import format"] = insertIfNotExists("format_name", "CSA", $tableFormats, $values);
+		$resultArray["Table 'formats': inserted 'CSA' import format"] = insertIfNotExists(array("format_name" => "CSA", "format_type" => "import"), $tableFormats, $values);
 
 		$values = "(NULL, 'Copac', 'import', 'true', 'bibutils/import_copac2refbase.php', '10', 2)";
-		$resultArray["Table 'formats': inserted 'Copac' import format"] = insertIfNotExists("format_name", "Copac", $tableFormats, $values);
+		$resultArray["Table 'formats': inserted 'Copac' import format"] = insertIfNotExists(array("format_name" => "Copac", "format_type" => "import"), $tableFormats, $values);
 
 		$values = "(NULL, 'RefWorks', 'import', 'true', 'import_refworks2refbase.php', '20', 1)";
-		$resultArray["Table 'formats': inserted 'RefWorks' import format"] = insertIfNotExists("format_name", "RefWorks", $tableFormats, $values);
+		$resultArray["Table 'formats': inserted 'RefWorks' import format"] = insertIfNotExists(array("format_name" => "RefWorks", "format_type" => "import"), $tableFormats, $values);
 
-		// (2.11) Add new export & citation formats in table 'formats'
+		$values = "(NULL, 'SciFinder', 'import', 'true', 'import_scifinder2refbase.php', '21', 1)";
+		$resultArray["Table 'formats': inserted 'SciFinder' import format"] = insertIfNotExists(array("format_name" => "SciFinder", "format_type" => "import"), $tableFormats, $values);
+
+		$values = "(NULL, 'Endnote XML', 'import', 'true', 'bibutils/import_endx2refbase.php', '02', 2)";
+		$resultArray["Table 'formats': inserted 'Endnote XML' import format"] = insertIfNotExists(array("format_name" => "Endnote XML", "format_type" => "import"), $tableFormats, $values);
+
+		// (2.13) Add new export & citation formats in table 'formats'
+		$values = "(NULL, 'ISI', 'export', 'true', 'bibutils/export_xml2isi.php', '04', 2)";
+		$resultArray["Table 'formats': inserted 'ISI' export format"] = insertIfNotExists(array("format_name" => "ISI", "format_type" => "export"), $tableFormats, $values);
+
 		$values = "(NULL, 'SRW XML', 'export', 'true', 'export_srwxml.php', '11', 1)";
-		$resultArray["Table 'formats': inserted 'SRW XML' export format"] = insertIfNotExists("format_name", "SRW XML", $tableFormats, $values);
+		$resultArray["Table 'formats': inserted 'SRW XML' export format"] = insertIfNotExists(array("format_name" => "SRW XML", "format_type" => "export"), $tableFormats, $values);
 
 		$values = "(NULL, 'ODF XML', 'export', 'true', 'export_odfxml.php', '12', 1)";
-		$resultArray["Table 'formats': inserted 'ODF XML' export format"] = insertIfNotExists("format_name", "ODF XML", $tableFormats, $values);
+		$resultArray["Table 'formats': inserted 'ODF XML' export format"] = insertIfNotExists(array("format_name" => "ODF XML", "format_type" => "export"), $tableFormats, $values);
+
+		$values = "(NULL, 'Word XML', 'export', 'true', 'bibutils/export_xml2word.php', '22', 2)";
+		$resultArray["Table 'formats': inserted 'Word XML' export format"] = insertIfNotExists(array("format_name" => "Word XML", "format_type" => "export"), $tableFormats, $values);
 
 		$values = "(NULL, 'OpenSearch RSS', 'export', 'false', 'export_osrss.php', '13', 1)";
-		$resultArray["Table 'formats': inserted 'OpenSearch RSS' export format"] = insertIfNotExists("format_name", "OpenSearch RSS", $tableFormats, $values);
+		$resultArray["Table 'formats': inserted 'OpenSearch RSS' export format"] = insertIfNotExists(array("format_name" => "OpenSearch RSS", "format_type" => "export"), $tableFormats, $values);
 
 		$values = "(NULL, 'html', 'cite', 'true', 'formats/cite_html.php', '14', 1)";
-		$resultArray["Table 'formats': inserted 'html' citation format"] = insertIfNotExists("format_name", "html", $tableFormats, $values);
+		$resultArray["Table 'formats': inserted 'html' citation format"] = insertIfNotExists(array("format_name" => "html", "format_type" => "cite"), $tableFormats, $values);
 
 		$values = "(NULL, 'RTF', 'cite', 'true', 'formats/cite_rtf.php', '15', 1)";
-		$resultArray["Table 'formats': inserted 'RTF' citation format"] = insertIfNotExists("format_name", "RTF", $tableFormats, $values);
+		$resultArray["Table 'formats': inserted 'RTF' citation format"] = insertIfNotExists(array("format_name" => "RTF", "format_type" => "cite"), $tableFormats, $values);
 
 		$values = "(NULL, 'PDF', 'cite', 'true', 'formats/cite_pdf.php', '16', 1)";
-		$resultArray["Table 'formats': inserted 'PDF' citation format"] = insertIfNotExists("format_name", "PDF", $tableFormats, $values);
+		$resultArray["Table 'formats': inserted 'PDF' citation format"] = insertIfNotExists(array("format_name" => "PDF", "format_type" => "cite"), $tableFormats, $values);
 
 		$values = "(NULL, 'LaTeX', 'cite', 'true', 'formats/cite_latex.php', '17', 1)";
-		$resultArray["Table 'formats': inserted 'LaTeX' citation format"] = insertIfNotExists("format_name", "LaTeX", $tableFormats, $values);
+		$resultArray["Table 'formats': inserted 'LaTeX' citation format"] = insertIfNotExists(array("format_name" => "LaTeX", "format_type" => "cite"), $tableFormats, $values);
 
 		$values = "(NULL, 'Markdown', 'cite', 'true', 'formats/cite_markdown.php', '18', 1)";
-		$resultArray["Table 'formats': inserted 'Markdown' citation format"] = insertIfNotExists("format_name", "Markdown", $tableFormats, $values);
+		$resultArray["Table 'formats': inserted 'Markdown' citation format"] = insertIfNotExists(array("format_name" => "Markdown", "format_type" => "cite"), $tableFormats, $values);
 
 		$values = "(NULL, 'ASCII', 'cite', 'true', 'formats/cite_ascii.php', '19', 1)";
-		$resultArray["Table 'formats': inserted 'ASCII' citation format"] = insertIfNotExists("format_name", "ASCII", $tableFormats, $values);
+		$resultArray["Table 'formats': inserted 'ASCII' citation format"] = insertIfNotExists(array("format_name" => "ASCII", "format_type" => "cite"), $tableFormats, $values);
 
-		// (2.12) Enable some of the newly created export/citation formats & citation styles for all users:
+		// (2.14) Enable some of the newly created export/citation formats, citation styles & resource types for all users:
 		// Fetch IDs for all formats that shall be enabled:
 		$formatIDArray = array();
-		$query = "SELECT format_id, format_name FROM " . $tableFormats . " WHERE format_name RLIKE '^(ODF XML|html|RTF|PDF|LaTeX)$'";
+		$query = "SELECT format_id, format_name FROM " . $tableFormats . " WHERE (format_name RLIKE '^(ISI|Word XML|ODF XML)$' AND format_type = 'export') OR (format_name RLIKE '^(html|RTF|PDF|LaTeX)$' AND format_type = 'cite')";
 		$result = queryMySQLDatabase($query, "");
 		$rowsFound = @ mysql_num_rows($result);
 		if ($rowsFound > 0)
@@ -420,7 +494,7 @@
 		}
 
 		// Fetch IDs for all styles that shall be enabled:
-		$styleIDArray = array(); // with just one citation style to enable, this code block is currently overkill, but future needs may be different
+		$styleIDArray = array();
 		$query = "SELECT style_id, style_name FROM " . $tableStyles . " WHERE style_name RLIKE '^(J Glaciol|APA|MLA)$'";
 		$result = queryMySQLDatabase($query, "");
 		$rowsFound = @ mysql_num_rows($result);
@@ -430,20 +504,37 @@
 				$styleIDArray[$row['style_id']] = $row['style_name'];
 		}
 
-		// Enable formats & styles for anyone who's not logged in ('$userID = 0'):
+		// Fetch IDs for all types that shall be enabled:
+		$typeIDArray = array();
+		$query = "SELECT type_id, type_name FROM " . $tableTypes . " WHERE type_name RLIKE '^(Conference Article|Conference Volume|Manual|Miscellaneous|Newspaper Article|Patent|Report|Software)$'";
+		$result = queryMySQLDatabase($query, "");
+		$rowsFound = @ mysql_num_rows($result);
+		if ($rowsFound > 0)
+		{
+			while ($row = @ mysql_fetch_array($result))
+				$typeIDArray[$row['type_id']] = $row['type_name'];
+		}
+
+		// Enable formats, styles & types for anyone who's not logged in ('$userID = 0'):
 		foreach ($formatIDArray as $formatID => $formatName)
 		{
 			$values = "(NULL, " . $formatID . ", 0, 'true')";
-			$resultArray["Table 'user_formats': enabled format '" . $formatName . "' for anyone who's not logged in"] = insertIfNotExists("format_id", $formatID, $tableUserFormats, $values, 0);
+			$resultArray["Table 'user_formats': enabled format '" . $formatName . "' for anyone who's not logged in"] = insertIfNotExists(array("format_id" => $formatID), $tableUserFormats, $values, "0");
 		}
 
 		foreach ($styleIDArray as $styleID => $styleName)
 		{
 			$values = "(NULL, " . $styleID . ", 0, 'true')";
-			$resultArray["Table 'user_styles': enabled style '" . $styleName . "' for anyone who's not logged in"] = insertIfNotExists("style_id", $styleID, $tableUserStyles, $values, 0);
+			$resultArray["Table 'user_styles': enabled style '" . $styleName . "' for anyone who's not logged in"] = insertIfNotExists(array("style_id" => $styleID), $tableUserStyles, $values, "0");
 		}
 
-		// Enable formats & styles for all users:
+		foreach ($typeIDArray as $typeID => $typeName)
+		{
+			$values = "(NULL, " . $typeID . ", 0, 'true')";
+			$resultArray["Table 'user_types': enabled type '" . $typeName . "' for anyone who's not logged in"] = insertIfNotExists(array("type_id" => $typeID), $tableUserTypes, $values, "0");
+		}
+
+		// Enable formats, styles & types for all users:
 		// First, check how many users are contained in table 'users':
 		$query = "SELECT user_id, first_name, last_name FROM " . $tableUsers;
 		$result = queryMySQLDatabase($query, "");
@@ -455,13 +546,19 @@
 				foreach ($formatIDArray as $formatID => $formatName)
 				{
 					$values = "(NULL, " . $formatID . ", " . $row['user_id'] . ", 'true')";
-					$resultArray["Table 'user_formats': enabled format '" . $formatName . "' for user " . $row['user_id'] . " (" . $row['first_name'] . " " . $row['last_name'] . ")"] = insertIfNotExists("format_id", $formatID, $tableUserFormats, $values, $row['user_id']);
+					$resultArray["Table 'user_formats': enabled format '" . $formatName . "' for user " . $row['user_id'] . " (" . $row['first_name'] . " " . $row['last_name'] . ")"] = insertIfNotExists(array("format_id" => $formatID), $tableUserFormats, $values, $row['user_id']);
 				}
 
 				foreach ($styleIDArray as $styleID => $styleName)
 				{
 					$values = "(NULL, " . $styleID . ", " . $row['user_id'] . ", 'true')";
-					$resultArray["Table 'user_styles': enabled style '" . $styleName . "' for user " . $row['user_id'] . " (" . $row['first_name'] . " " . $row['last_name'] . ")"] = insertIfNotExists("style_id", $styleID, $tableUserStyles, $values, $row['user_id']);
+					$resultArray["Table 'user_styles': enabled style '" . $styleName . "' for user " . $row['user_id'] . " (" . $row['first_name'] . " " . $row['last_name'] . ")"] = insertIfNotExists(array("style_id" => $styleID), $tableUserStyles, $values, $row['user_id']);
+				}
+
+				foreach ($typeIDArray as $typeID => $typeName)
+				{
+					$values = "(NULL, " . $typeID . ", " . $row['user_id'] . ", 'true')";
+					$resultArray["Table 'user_types': enabled type '" . $typeName . "' for user " . $row['user_id'] . " (" . $row['first_name'] . " " . $row['last_name'] . ")"] = insertIfNotExists(array("type_id" => $typeID), $tableUserTypes, $values, $row['user_id']);
 				}
 			}
 		}

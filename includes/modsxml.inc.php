@@ -1,17 +1,20 @@
 <?php
   // Project:    Web Reference Database (refbase) <http://www.refbase.net>
   // Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
-  //             original author.
+  //             original author(s).
   //
   //             This code is distributed in the hope that it will be useful,
-  //             but WITHOUT ANY WARRANTY.  Please see the GNU General Public
+  //             but WITHOUT ANY WARRANTY. Please see the GNU General Public
   //             License for more details.
   //
   // File:       ./includes/modsxml.inc.php
-  // Author:     Richard Karnesky <mailto:karnesky@gmail.com>
+  // Repository: $HeadURL$
+  // Author(s):  Richard Karnesky <mailto:karnesky@gmail.com>
   //
   // Created:    02-Oct-04, 12:00
-	// Modified:   09-Sep-06, 16:49
+  // Modified:   $Date$
+  //             $Author$
+  //             $Revision$
 
   // This include file contains functions that'll export records to MODS XML.
   // Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -29,7 +32,7 @@
 
   // For more on MODS, see:
   //   <http://www.loc.gov/standards/mods/>
-  //   <http://www.scripps.edu/~cdputnam/software/bibutils/bibutils.html>
+  //   <http://www.scripps.edu/~cdputnam/software/bibutils/>
 
   // TODO:
   //   Stuff in '// NOTE' comments
@@ -42,11 +45,8 @@
   //     - address (?name->affiliation?)
   //     - medium  (?typeOfResource?)
   //   - Don't know how refbase users use these
-  //     - corporate_author (could be either an affiliation or a separate name)
   //     - area (could be either topic or geographic, so we do nothing)
   //     - expedition
-  //   - Can't find a place in MODS XML
-  //     - file
 
 
   // --------------------------------------------------------------------
@@ -100,6 +100,8 @@
     return $series;
   }
 
+  // --------------------------------------------------------------------
+
   // Separates people's names and then those names into their functional parts:
   //   {{Family1,{Given1-1,Given1-2}},{Family2,{Given2}}})
   // Adds these to an array of XMLBranches.
@@ -147,7 +149,7 @@
   // --------------------------------------------------------------------
 
   function modsCollection($result) {
- 
+
     global $contentTypeCharset; // these variables are defined in 'ini.inc.php'
     global $convertExportDataToUTF8;
 
@@ -178,7 +180,7 @@
 
     $modsCollection = new XML("modsCollection");
     $modsCollection->setTagAttribute("xmlns", "http://www.loc.gov/mods/v3");
-    foreach ($exportArray as $mods) 
+    foreach ($exportArray as $mods)
       $modsCollection->addXMLasBranch($mods);
 
     $modsCollectionDoc->setXML($modsCollection);
@@ -192,7 +194,11 @@
   // Returns an XML object (mods) of a single record
   function modsRecord($row) {
 
-    global $contentTypeCharset; // these variables are defined in 'ini.inc.php'
+    global $databaseBaseURL; // these variables are defined in 'ini.inc.php'
+    global $contentTypeCharset;
+    global $fileVisibility;
+    global $fileVisibilityException;
+    global $filesBaseURL;
     global $convertExportDataToUTF8;
 
     // The array '$transtab_refbase_unicode' contains search & replace patterns for conversion from refbase markup to Unicode entities.
@@ -202,7 +208,19 @@
                             // when modsRow is called and will determine if we
                             // export user-specific data
 
+    $exportRecordURL = True;  // Specifies whether an attribution string containing
+                              // the URL to the refbase database record (and the last
+                              // modification date) shall be written to the notes branch.
+                              // Note that this string is required by the "-A|--append"
+                              // feature of the 'refbase' command line client
+
+    // convert this record's modified date/time info to UNIX time stamp format:
+    // => "date('D, j M Y H:i:s O')", e.g. "Sat, 15 Jul 2006 22:24:16 +0200"
+    // function 'generateUNIXTimeStamp()' is defined in 'include.inc.php'
+    $currentDateTimeStamp = generateUNIXTimeStamp($row['modified_date'], $row['modified_time']);
+
     // --- BEGIN TYPE * ---
+    //   |
     //   | These apply to everything
 
     // this is a stupid hack that maps the names of the '$row' array keys to those used
@@ -248,6 +266,7 @@
 
     // Create an XML object for a single record.
     $record = new XML("mods");
+    $record->setTagAttribute("version", "3.2");
     if (!empty($citeKey))
       $record->setTagAttribute("ID", $citeKey);
 
@@ -285,13 +304,6 @@
         $record->addXMLBranch($singleName);
       }
     }
-    //   conference
-    if (!empty($row['conference'])) { 
-      $nameBranch = new XMLBranch("name");
-      $nameBranch->setTagAttribute("type", "conference");
-      $nameBranch->setTagContent($row['conference']);
-      $record->addXMLBranch($nameBranch);
-    }
 
     // originInfo
     if ((!empty($row['year'])) || (!empty($row['publisher'])) ||
@@ -303,7 +315,7 @@
         $origin->setTagContent($row['year'], "originInfo/dateIssued");
 
       // Book Chapters and Journal Articles only have a dateIssued
-      // (editions, places, and publisers are associated with the host)
+      // (editions, places, and publishers are associated with the host)
       if (!ereg("Book Chapter|Journal Article", $row['type'])) {
         // publisher
         if (!empty($row['publisher']))
@@ -395,19 +407,31 @@
         $record->addXMLBranch($subjectBranch);
       }
     }
- 
+
     // notes
     if (!empty($row['notes']))
       $record->setTagContent($row['notes'], "mods/note");
     // user_notes
-    if ((!empty($row['user_notes'])) && $exportPrivate)
+    if ((!empty($row['user_notes'])) && $exportPrivate) // replaces any generic notes
       $record->setTagContent($row['user_notes'], "mods/note");
+    // refbase attribution string
+    if ($exportRecordURL) {
+        $attributionBranch = new XMLBranch("note");
+        $attributionBranch->setTagContent("exported from refbase ("
+          . $databaseBaseURL . "show.php?record=" . $row['serial']
+          . "), last updated on " . $currentDateTimeStamp);
+        $record->addXMLBranch($attributionBranch);
+    }
 
     // typeOfResource
-    // maps are 'cartographic' and everything else is 'text'
+    // maps are 'cartographic', software is 'software, multimedia',
+    // and everything else is 'text'
     $type = new XMLBranch("typeOfResource");
     if ($row['type'] == "Map") {
       $type->setTagContent("cartographic");
+    }
+    else if ($row['type'] == "Software") {
+      $type->setTagContent("software, multimedia");
     }
     else {
       $type->setTagContent("text");
@@ -432,21 +456,54 @@
       }
       $record->addXMLBranch($location);
     }
-    //   URL (also an identifier)
+    //   URL (also an identifier, see below)
     //   NOTE: This field is excluded by the default cite SELECT method
     if (!empty($row['url'])) {
       $location = new XMLBranch("location");
       $location->setTagContent($row['url'], "location/url");
-
-      $identifier = new XMLBranch("identifier");
-      $identifier->setTagContent($row['url']);
-      $identifier->setTagAttribute("type", "uri");
-
       $record->addXMLBranch($location);
-      $record->addXMLBranch($identifier);
+    }
+    // Include a link to any corresponding FILE if one of the following conditions is met:
+    // - the variable '$fileVisibility' (defined in 'ini.inc.php') is set to 'everyone'
+    // - the variable '$fileVisibility' is set to 'login' AND the user is logged in
+    // - the variable '$fileVisibility' is set to 'user-specific' AND the 'user_permissions' session variable contains 'allow_download'
+    // - the array variable '$fileVisibilityException' (defined in 'ini.inc.php') contains a pattern (in array element 1) that matches the contents of the field given (in array element 0)
+    if ($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND ereg("allow_download", $_SESSION['user_permissions']))) OR (!empty($fileVisibilityException) AND preg_match($fileVisibilityException[1], $row[$fileVisibilityException[0]])))
+    {
+      //   file
+      //   Note that when converting MODS to Endnote or RIS, Bibutils will include the above
+      //   URL (if given), otherwise it'll take the URL from the 'file' field. I.e. for
+      //   Endnote or RIS, the URL to the PDF is only included if no regular URL is available.
+      if (!empty($row['file'])) {
+        $location = new XMLBranch("location");
+
+        if (ereg('^(https?|ftp|file)://', $row['file'])) { // if the 'file' field contains a full URL (starting with "http://", "https://",  "ftp://", or "file://")
+          $URLprefix = ""; // we don't alter the URL given in the 'file' field
+        }
+        else { // if the 'file' field contains only a partial path (like 'polarbiol/10240001.pdf') or just a file name (like '10240001.pdf')
+          // use the base URL of the standard files directory as prefix:
+          if (ereg('^/', $filesBaseURL)) // absolute path -> file dir is located outside of refbase root dir
+            $URLprefix = 'http://' . $_SERVER['HTTP_HOST'] . $filesBaseURL;
+          else // relative path -> file dir is located within refbase root dir
+            $URLprefix = $databaseBaseURL . $filesBaseURL;
+        }
+
+        $location->setTagContent($URLprefix . $row['file'], "location/url");
+        $location->setTagAttribute("displayLabel", "Electronic full text", "location/url");
+        // the 'access' attribute requires MODS v3.2 or greater:
+        $location->setTagAttribute("access", "raw object", "location/url");
+        $record->addXMLBranch($location);
+      }
     }
 
     // identifier
+    //   url
+    if (!empty($row['url'])) {
+      $identifier = new XMLBranch("identifier");
+      $identifier->setTagContent($row['url']);
+      $identifier->setTagAttribute("type", "uri");
+      $record->addXMLBranch($identifier);
+    }
     //   doi
     if (!empty($row['doi'])) {
       $identifier = new XMLBranch("identifier");
@@ -478,13 +535,15 @@
 
     // --- END TYPE * ---
 
+    // -----------------------------------------
 
-    // --- BEGIN TYPE != BOOK CHAPTER || JOURNAL ARTICLE ---
-    //   | BOOK WHOLE, JOURNAL, MANUSCRIPT, and MAP have some info as a branch
-    //   | off the root, where as BOOK CHAPTER and JOURNAL ARTICLE place it in
-    //   | the relatedItem branch.
+    // --- BEGIN TYPE != BOOK CHAPTER || JOURNAL ARTICLE || CONFERENCE ARTICLE || NEWSPAPER ARTICLE ---
+    //   |
+    //   | BOOK WHOLE, CONFERENCE VOLUME, JOURNAL, MANUAL, MANUSCRIPT, MAP, MISCELLANEOUS, PATENT,
+    //   | REPORT, and SOFTWARE have some info as a branch off the root, where as BOOK CHAPTER,
+    //   | JOURNAL ARTICLE, CONFERENCE ARTICLE and NEWSPAPER ARTICLE place it in the relatedItem branch.
 
-    if (!ereg("Book Chapter|Journal Article", $row['type'])) {
+    if (!ereg("Book Chapter|Journal Article|Conference Article|Newspaper Article", $row['type'])) {
       // name
       //   editor
       if (!empty($row['editor'])) {
@@ -501,6 +560,26 @@
             $record->addXMLBranch($singleName);
         }
       }
+      //   corporate
+      //   (we treat a 'corporate_author' similar to how Bibutils converts the BibTeX
+      //   'organization' field to MODS XML, i.e., we add a separate name element with
+      //    a 'type="corporate"' attribute and an 'author' role)
+      if (!empty($row['corporate_author'])) {
+        $nameBranch = new XMLBranch("name");
+        $nameBranch->setTagAttribute("type", "corporate");
+        $nameBranch->setTagContent($row['corporate_author'], "name/namePart");
+        $nameBranch->setTagContent("author", "name/role/roleTerm");
+        $nameBranch->setTagAttribute("authority", "marcrelator", "name/role/roleTerm");
+        $nameBranch->setTagAttribute("type", "text", "name/role/roleTerm");
+        $record->addXMLBranch($nameBranch);
+      }
+      //   conference
+      if (!empty($row['conference'])) {
+        $nameBranch = new XMLBranch("name");
+        $nameBranch->setTagAttribute("type", "conference");
+        $nameBranch->setTagContent($row['conference'], "name/namePart");
+        $record->addXMLBranch($nameBranch);
+      }
 
       // genre
       //   type
@@ -508,7 +587,10 @@
       //            [1]<http://www.loc.gov/marc/sourcecode/genre/genrelist.html>
       $genremarc = new XMLBranch("genre");
       $genre = new XMLBranch("genre");
-      $genremarc->setTagAttribute("authority", "marc");
+      //      NOTE: According to the MARC "Source Codes for Genre"[1]
+      //            the MARC authority should be 'marcgt', not 'marc'.
+      //            [1]<http://www.loc.gov/marc/sourcecode/genre/genresource.html>
+      $genremarc->setTagAttribute("authority", "marcgt");
 
       if (empty($row['thesis'])) { // theses will get their own genre (see below)
         if ($row['type'] == "Book Whole") {
@@ -516,9 +598,16 @@
                                  "mods/originInfo/issuance");
           $genremarc->setTagContent("book");
         }
+        else if ($row['type'] == "Conference Volume") {
+          $genremarc->setTagContent("conference publication");
+        }
         else if ($row['type'] == "Journal") {
           $genremarc->setTagContent("periodical");
           $genre->setTagContent("academic journal");
+        }
+        else if ($row['type'] == "Manual") { // should we set '<issuance>monographic' here (and for the ones below)?
+          $genremarc->setTagContent("instruction");
+          $genre->setTagContent("manual");
         }
         else if ($row['type'] == "Manuscript") {
           $genremarc->setTagContent("loose-leaf");
@@ -526,6 +615,20 @@
         }
         else if ($row['type'] == "Map") {
           $genremarc->setTagContent("map");
+        }
+        else if ($row['type'] == "Miscellaneous") {
+          $genre->setTagContent("miscellaneous");
+        }
+        else if ($row['type'] == "Patent") {
+          $genremarc->setTagContent("patent");
+        }
+        else if ($row['type'] == "Report") {
+          $genremarc->setTagContent("technical report");
+          $genre->setTagContent("report");
+        }
+        else if ($row['type'] == "Software") {
+//        $genremarc->setTagContent("programmed text"); // would this be correct?
+          $genre->setTagContent("software");
         }
         else if (!empty($row['type'])) { // catch-all: don't use a MARC genre
           $genre->setTagContent($row['type']);
@@ -543,7 +646,7 @@
         $thesis = new XMLBranch("genre");
 
         $thesismarc->setTagContent("theses");
-        $thesismarc->setTagAttribute("authority", "marc");
+        $thesismarc->setTagAttribute("authority", "marcgt");
 
         $thesis->setTagContent($row['thesis']);
 
@@ -556,7 +659,7 @@
       if (!empty($row['pages'])) {
         $description = new XMLBranch("physicalDescription");
         $pages = new XMLBranch("extent");
-        $pages->setTagAttribute("unit", "page");
+        $pages->setTagAttribute("unit", "pages");
         if (ereg("[0-9] *- *[0-9]", $row['pages'])) { // if a page range
           // split the page range into start and end pages
           list($pagestart, $pageend) = preg_split('/\s*[-]\s*/', $row['pages']);
@@ -571,7 +674,7 @@
         else if (preg_match("/^\d\d*\s*pp?.?$/", $row['pages'])) {
           list($pagetotal) = preg_split('/\s*pp?/', $row['pages']);
           $pages->setTagContent($pagetotal, "extent/total");
-        }          
+        }
         else {
           $pages->setTagContent($row['pages']);
         }
@@ -607,15 +710,17 @@
       }
     }
 
-    // --- END TYPE != BOOK CHAPTER || JOURNAL ARTICLE ---
+    // --- END TYPE != BOOK CHAPTER || JOURNAL ARTICLE || CONFERENCE ARTICLE || NEWSPAPER ARTICLE ---
 
+    // -----------------------------------------
 
-    // --- BEGIN TYPE == BOOK CHAPTER || JOURNAL ARTICLE ---
+    // --- BEGIN TYPE == BOOK CHAPTER || JOURNAL ARTICLE || CONFERENCE ARTICLE || NEWSPAPER ARTICLE ---
+    //   |
     //   | NOTE: These are currently the only types that have publication,
     //   |       abbrev_journal, volume, and issue added.
-    //   | A lot of info goes into the relatedItem branch
+    //   | A lot of info goes into the relatedItem branch.
 
-    else { //if (ereg("Book Chapter|Journal Article", $row['type']))
+    else { // if (ereg("Book Chapter|Journal Article|Conference Article|Newspaper Article", $row['type']))
       // relatedItem
       $related = new XMLBranch("relatedItem");
       $related->setTagAttribute("type", "host");
@@ -625,7 +730,7 @@
         $related->setTagContent($row['publication'],
                                 "relatedItem/titleInfo/title");
 
-      // title (Abbreviated Journa)
+      // title (Abbreviated Journal)
       if (!empty($row['abbrev_journal'])) {
         $titleabbrev = NEW XMLBranch("titleInfo");
         $titleabbrev->setTagAttribute("type", "abbreviated");
@@ -643,6 +748,27 @@
                                    "personal", "editor");
         foreach ($nameArray as $singleName)
           $related->addXMLBranch($singleName);
+      }
+      //   corporate
+      //   NOTE: a copy of the code for 'corporate_author' above.
+      //         Needs to be a separate function later.
+      if (!empty($row['corporate_author'])) {
+        $nameBranch = new XMLBranch("name");
+        $nameBranch->setTagAttribute("type", "corporate");
+        $nameBranch->setTagContent($row['corporate_author'], "name/namePart");
+        $nameBranch->setTagContent("author", "name/role/roleTerm");
+        $nameBranch->setTagAttribute("authority", "marcrelator", "name/role/roleTerm");
+        $nameBranch->setTagAttribute("type", "text", "name/role/roleTerm");
+        $related->addXMLBranch($nameBranch);
+      }
+      //   conference
+      //   NOTE: a copy of the code for 'conference' above.
+      //         Needs to be a separate function later.
+      if (!empty($row['conference'])) {
+        $nameBranch = new XMLBranch("name");
+        $nameBranch->setTagAttribute("type", "conference");
+        $nameBranch->setTagContent($row['conference'], "name/namePart");
+        $related->addXMLBranch($nameBranch);
       }
 
       // originInfo
@@ -674,18 +800,28 @@
           $genre = new XMLBranch("genre");
 
           $genremarc->setTagContent("periodical");
-          $genremarc->setTagAttribute("authority", "marc");
+          $genremarc->setTagAttribute("authority", "marcgt");
 
           $genre->setTagContent("academic journal");
 
           $related->addXMLBranch($genremarc);
           $related->addXMLBranch($genre);
         }
-        else { //if ($row['type'] == "Book Chapter")
+        else if ($row['type'] == "Conference Article") {
+          $related->setTagContent("conference publication", "relatedItem/genre");
+          $related->setTagAttribute("authority", "marcgt", "relatedItem/genre");
+        }
+        else if ($row['type'] == "Newspaper Article") {
+          $related->setTagContent("continuing",
+                                  "relatedItem/originInfo/issuance");
+          $related->setTagContent("newspaper", "relatedItem/genre");
+          $related->setTagAttribute("authority", "marcgt", "relatedItem/genre");
+        }
+        else { // if ($row['type'] == "Book Chapter")
           $related->setTagContent("monographic",
                                   "relatedItem/originInfo/issuance");
           $related->setTagContent("book", "relatedItem/genre");
-          $related->setTagAttribute("authority", "marc", "relatedItem/genre");
+          $related->setTagAttribute("authority", "marcgt", "relatedItem/genre");
         }
       }
       //   thesis
@@ -694,7 +830,7 @@
         $thesis = new XMLBranch("genre");
 
         $thesismarc->setTagContent("theses");
-        $thesismarc->setTagAttribute("authority", "marc");
+        $thesismarc->setTagAttribute("authority", "marcgt");
 
         $thesis->setTagContent($row['thesis']);
 
@@ -703,8 +839,9 @@
       }
 
       if ((!empty($row['year'])) || (!empty($row['volume'])) ||
-          (!empty($row['issue'])) || (!empty($row['pages']))) {
+        (!empty($row['issue'])) || (!empty($row['pages']))) {
         $part = new XMLBranch("part");
+
         if (!empty($row['year']))
           $part->setTagContent($row['year'], "date");
         if (!empty($row['volume'])) {
@@ -775,7 +912,7 @@
       $record->addXMLBranch($related);
     }
 
-    // --- END TYPE == BOOK CHAPTER || JOURNAL ARTICLE ---
+    // --- END TYPE == BOOK CHAPTER || JOURNAL ARTICLE || CONFERENCE ARTICLE || NEWSPAPER ARTICLE ---
 
 
     return $record;

@@ -1,18 +1,26 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-	//             Please see the GNU General Public License for more details.
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
 	// File:       ./cite/formats/cite_markdown.php
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    10-Jun-06, 02:58
-	// Modified:   09-Sep-06, 16:43
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This is a citation format file (which must reside within the 'cite/formats/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecords()' function that outputs a reference list from selected records in Markdown format. Markdown is a plain text
 	// formatting syntax as well as a software tool that converts the plain text formatting back to HTML (<http://daringfireball.net/projects/markdown/>)
 
 	// --------------------------------------------------------------------
-
 
 	// --- BEGIN CITATION FORMAT ---
 
@@ -26,6 +34,10 @@
 		global $transtab_refbase_markdown; // defined in 'transtab_refbase_markdown.inc.php'
 
 		$markdownData = ""; // make sure that our buffer variable is empty
+
+		// Header:
+		if (!empty($headerMsg))
+			$markdownData .= "# $headerMsg #\n\n";
 
 		// Initialize array variables:
 		$yearsArray = array();
@@ -80,7 +92,25 @@
 				// Print any section heading(s):
 				if (eregi("year|type", $citeOrder))
 				{
-					list($yearsArray, $typeTitlesArray, $sectionHeading) = generateSectionHeading($yearsArray, $typeTitlesArray, $row, $citeOrder, "", "", "# ", " #\n\n", "## ", " ##\n\n");
+					$headingPrefix = "";
+					$headingSuffix = "";
+
+					if (!empty($headerMsg)) // if there's a custom header message available, we decrease the heading level of sections & subsections by one (since the header message has level 1)
+					{
+						$sectionMarkupPrefix = "## ";
+						$sectionMarkupSuffix = " ##\n\n";
+						$subSectionMarkupPrefix = "### ";
+						$subSectionMarkupSuffix = " ###\n\n";
+					}
+					else // no custom header message given
+					{
+						$sectionMarkupPrefix = "# ";
+						$sectionMarkupSuffix = " #\n\n";
+						$subSectionMarkupPrefix = "## ";
+						$subSectionMarkupSuffix = " ##\n\n";
+					}
+
+					list($yearsArray, $typeTitlesArray, $sectionHeading) = generateSectionHeading($yearsArray, $typeTitlesArray, $row, $citeOrder, $headingPrefix, $headingSuffix, $sectionMarkupPrefix, $sectionMarkupSuffix, $subSectionMarkupPrefix, $subSectionMarkupSuffix); // function 'generateSectionHeading()' is defined in 'cite.inc.php'
 
 					$markdownData .= $sectionHeading;
 				}
@@ -95,4 +125,4 @@
 	}
 
 	// --- END CITATION FORMAT ---
-
+?>

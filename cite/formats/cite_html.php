@@ -1,18 +1,26 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-	//             Please see the GNU General Public License for more details.
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
 	// File:       ./cite/formats/cite_html.php
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    10-Jun-06, 02:30
-	// Modified:   31-Aug-06, 14:18
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This is a citation format file (which must reside within the 'cite/formats/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecords()' function that outputs a reference list from selected records in HTML format.
 	// 
 
 	// --------------------------------------------------------------------
-
 
 	// --- BEGIN CITATION FORMAT ---
 
@@ -82,7 +90,7 @@
 					$headingSuffix = "</td>"
 									. "\n</tr>";
 
-					list($yearsArray, $typeTitlesArray, $sectionHeading) = generateSectionHeading($yearsArray, $typeTitlesArray, $row, $citeOrder, $headingPrefix, $headingSuffix, "<h4>", "</h4>", "<h5>", "</h5>");
+					list($yearsArray, $typeTitlesArray, $sectionHeading) = generateSectionHeading($yearsArray, $typeTitlesArray, $row, $citeOrder, $headingPrefix, $headingSuffix, "<h4>", "</h4>", "<h5>", "</h5>"); // function 'generateSectionHeading()' is defined in 'cite.inc.php'
 
 					$recordTableData .= $sectionHeading;
 				}
@@ -135,4 +143,4 @@
 	}
 
 	// --- END CITATION FORMAT ---
-
+?>

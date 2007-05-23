@@ -1,11 +1,21 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's original author
-	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-	//             Please see the GNU General Public License for more details.
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
 	// File:       ./cite/styles/cite_MLA.php
+	// Repository: $HeadURL$
+	// Author(s):  Richard Karnesky <mailto:karnesky@gmail.com> and
+	//             Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    13-Nov-06, 15:00
-	// Modified:   13-Nov-06, 19:15
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This is a citation style file (which must reside within the 'cite/styles/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecord()' function that outputs a reference list from selected records according to the citation style used by
@@ -18,13 +28,7 @@
 	//       Citation of theses?
 	//       ", and" vs "and"?
 
-	/*
-	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
-	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
-	*/
-
 	// --------------------------------------------------------------------
-
 
 	// --- BEGIN CITATION STYLE ---
 
@@ -32,9 +36,9 @@
 	{
 		$record = ""; // make sure that our buffer variable is empty
 
-		// --- BEGIN TYPE = JOURNAL ARTICLE ----------------------------------------------------------------------------------------------------
+		// --- BEGIN TYPE = JOURNAL ARTICLE / NEWSPAPER ARTICLE ---------------------------------------------------------------------------------
 
-		if ($row['type'] == "Journal Article")
+		if (ereg("Journal Article|Newspaper Article", $row['type']))
 			{
 				if (!empty($row['author']))			// author
 					{
@@ -176,9 +180,9 @@
 					$record .= ".";
 			}
 
-		// --- BEGIN TYPE = BOOK CHAPTER -------------------------------------------------------------------------------------------------------
+		// --- BEGIN TYPE = BOOK CHAPTER / CONFERENCE ARTICLE -----------------------------------------------------------------------------------
 
-		elseif ($row['type'] == "Book Chapter")
+		elseif (ereg("Book Chapter|Conference Article", $row['type']))
 			{
 				if (!empty($row['author']))			// author
 					{
@@ -317,9 +321,10 @@
 					$record .= ".";
 			}
 
-		// --- BEGIN TYPE = BOOK WHOLE / MAP / MANUSCRIPT / JOURNAL ----------------------------------------------------------------------------
+		// --- BEGIN TYPE = BOOK WHOLE / CONFERENCE VOLUME / JOURNAL / MANUAL / MANUSCRIPT / MAP / MISCELLANEOUS / PATENT / REPORT / SOFTWARE ---
 
-		elseif (ereg("Book Whole|Map|Manuscript|Journal", $row['type']))
+		else // if (ereg("Book Whole|Conference Volume|Journal|Manual|Manuscript|Map|Miscellaneous|Patent|Report|Software", $row['type']))
+			// note that this also serves as a fallback: unrecognized resource types will be formatted similar to whole books
 			{
 				if (!empty($row['author']))			// author
 					{
@@ -436,4 +441,4 @@
 	}
 
 	// --- END CITATION STYLE ---
-
+?>

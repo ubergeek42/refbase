@@ -1,12 +1,27 @@
 # Project:    Web Reference Database (refbase) <http://www.refbase.net>
-# Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-#             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-#             Please see the GNU General Public License for more details.
+# Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+#             original author(s).
+#
+#             This code is distributed in the hope that it will be useful,
+#             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+#             License for more details.
+#
 # File:       ./update.sql
+# Repository: $HeadURL$
+# Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+#
 # Created:    01-Mar-05, 16:54
-# Modified:   13-Nov-06, 17:30
+# Modified:   $Date$
+#             $Author$
+#             $Revision$
 
-# This MySQL database structure file will update any refbase v0.8.0 database to v0.9.0
+# This MySQL database structure file will update any refbase v0.8.0 database to v0.9.1
+
+# IMPORTANT: - If possible, use 'update.php' instead of this file to update an
+#              existing refbase installation (v0.8.0 or above), please see the
+#              'UPDATE' file for further information.
+#            - Do NOT use this file in an attempt to update refbase v0.9.0 to v0.9.1,
+#              please use 'update.php' instead.
 
 # --------------------------------------------------------
 
@@ -37,24 +52,28 @@ INSERT INTO `formats` VALUES (1, 'MODS XML', 'import', 'true', 'bibutils/import_
 (4, 'BibTeX', 'import', 'true', 'bibutils/import_bib2refbase.php', '01', 2),
 (5, 'BibTeX', 'export', 'true', 'bibutils/export_xml2bib.php', '01', 2),
 (6, 'Endnote', 'import', 'true', 'bibutils/import_end2refbase.php', '02', 2),
-(7, 'Endnote', 'export', 'true', 'bibutils/export_xml2end.php', '02', 2),
-(8, 'Pubmed Medline', 'import', 'true', 'import_medline2refbase.php', '08', 1),
-(9, 'Pubmed XML', 'import', 'true', 'bibutils/import_med2refbase.php', '09', 2),
-(10, 'RIS', 'import', 'true', 'import_ris2refbase.php', '03', 1),
-(11, 'RIS', 'export', 'true', 'bibutils/export_xml2ris.php', '03', 2),
-(12, 'ISI', 'import', 'true', 'import_isi2refbase.php', '04', 1),
-(13, 'CSA', 'import', 'true', 'import_csa2refbase.php', '05', 1),
-(14, 'Copac', 'import', 'true', 'bibutils/import_copac2refbase.php', '10', 2),
-(15, 'SRW XML', 'export', 'true', 'export_srwxml.php', '11', 1),
-(16, 'ODF XML', 'export', 'true', 'export_odfxml.php', '12', 1),
-(17, 'OpenSearch RSS', 'export', 'false', 'export_osrss.php', '13', 1),
-(18, 'html', 'cite', 'true', 'formats/cite_html.php', '14', 1),
-(19, 'RTF', 'cite', 'true', 'formats/cite_rtf.php', '15', 1),
-(20, 'PDF', 'cite', 'true', 'formats/cite_pdf.php', '16', 1),
-(21, 'LaTeX', 'cite', 'true', 'formats/cite_latex.php', '17', 1),
-(22, 'Markdown', 'cite', 'true', 'formats/cite_markdown.php', '18', 1),
-(23, 'ASCII', 'cite', 'true', 'formats/cite_ascii.php', '19', 1),
-(24, 'RefWorks', 'import', 'true', 'import_refworks2refbase.php', '20', 1);
+(7, 'Endnote XML', 'import', 'true', 'bibutils/import_endx2refbase.php', '02', 2),
+(8, 'Endnote', 'export', 'true', 'bibutils/export_xml2end.php', '02', 2),
+(9, 'Pubmed Medline', 'import', 'true', 'import_medline2refbase.php', '08', 1),
+(10, 'Pubmed XML', 'import', 'true', 'bibutils/import_med2refbase.php', '09', 2),
+(11, 'RIS', 'import', 'true', 'import_ris2refbase.php', '03', 1),
+(12, 'RIS', 'export', 'true', 'bibutils/export_xml2ris.php', '03', 2),
+(13, 'ISI', 'import', 'true', 'import_isi2refbase.php', '04', 1),
+(14, 'ISI', 'export', 'true', 'bibutils/export_xml2isi.php', '04', 2),
+(15, 'CSA', 'import', 'true', 'import_csa2refbase.php', '05', 1),
+(16, 'Copac', 'import', 'true', 'bibutils/import_copac2refbase.php', '10', 2),
+(17, 'SRW XML', 'export', 'true', 'export_srwxml.php', '11', 1),
+(18, 'ODF XML', 'export', 'true', 'export_odfxml.php', '12', 1),
+(19, 'OpenSearch RSS', 'export', 'false', 'export_osrss.php', '13', 1),
+(20, 'html', 'cite', 'true', 'formats/cite_html.php', '14', 1),
+(21, 'RTF', 'cite', 'true', 'formats/cite_rtf.php', '15', 1),
+(22, 'PDF', 'cite', 'true', 'formats/cite_pdf.php', '16', 1),
+(23, 'LaTeX', 'cite', 'true', 'formats/cite_latex.php', '17', 1),
+(24, 'Markdown', 'cite', 'true', 'formats/cite_markdown.php', '18', 1),
+(25, 'ASCII', 'cite', 'true', 'formats/cite_ascii.php', '19', 1),
+(26, 'RefWorks', 'import', 'true', 'import_refworks2refbase.php', '20', 1),
+(27, 'SciFinder', 'import', 'true', 'import_scifinder2refbase.php', '21', 1),
+(28, 'Word XML', 'export', 'true', 'bibutils/export_xml2word.php', '22', 2);
 
 # --------------------------------------------------------
 
@@ -84,6 +103,28 @@ UPDATE `styles` SET `order_by` = 'B010' WHERE `style_name` = 'Polar Biol';
 UPDATE `styles` SET `order_by` = 'B020' WHERE `style_name` = 'Mar Biol';
 UPDATE `styles` SET `order_by` = 'B030' WHERE `style_name` = 'MEPS';
 UPDATE `styles` SET `order_by` = 'B040' WHERE `style_name` = 'Deep Sea Res';
+
+# --------------------------------------------------------
+
+#
+# update table `types`
+#
+
+INSERT INTO `types` VALUES (NULL, 'Conference Article', 'true', 2, '04'),
+(NULL, 'Conference Volume', 'true', 3, '05'),
+(NULL, 'Manual', 'true', 3, '07'),
+(NULL, 'Miscellaneous', 'true', 3, '10'),
+(NULL, 'Newspaper Article', 'true', 1, '11'),
+(NULL, 'Patent', 'true', 3, '12'),
+(NULL, 'Report', 'true', 3, '13'),
+(NULL, 'Software', 'true', 3, '14');
+
+UPDATE `types` SET `order_by` = '01' WHERE `type_name` = 'Journal Article';
+UPDATE `types` SET `order_by` = '02' WHERE `type_name` = 'Book Chapter';
+UPDATE `types` SET `order_by` = '03' WHERE `type_name` = 'Book Whole';
+UPDATE `types` SET `order_by` = '06' WHERE `type_name` = 'Journal';
+UPDATE `types` SET `order_by` = '08' WHERE `type_name` = 'Manuscript';
+UPDATE `types` SET `order_by` = '09' WHERE `type_name` = 'Map';
 
 # --------------------------------------------------------
 

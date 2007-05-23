@@ -1,18 +1,21 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
 	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
-	//             original author.
+	//             original author(s).
 	//
 	//             This code is distributed in the hope that it will be useful,
-	//             but WITHOUT ANY WARRANTY.  Please see the GNU General Public
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
 	//             License for more details.
 	//
 	// File:       ./includes/srwxml.inc.php
-	// Author:     Matthias Steffens <mailto:refbase@extracts.de> and
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de> and
 	//             Richard Karnesky <mailto:karnesky@gmail.com>
 	//
 	// Created:    17-May-05, 16:38
-	// Modified:   31-Aug-06, 14:26
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This include file contains functions that'll export records to SRW XML.
 	// Requires ActiveLink PHP XML Package, which is available under the GPL from:
@@ -89,7 +92,7 @@
 				// NOTE: converting the MODS object into a string to perform search & replace actions
 				//       may be very clumsy but I don't know any better... ?:-/
 				$modsString = $mods->getXMLString();
-				$modsString = preg_replace('/<mods/i','<mods xmlns="http://www.loc.gov/mods/v3" version="3.0"',$modsString);
+				$modsString = preg_replace('/<mods/i','<mods xmlns="http://www.loc.gov/mods/v3"',$modsString);
 				// alternatively to the above line we could add a 'mods:' identifier to all MODS XML tags:
 //				$modsString = preg_replace("#<(/)?#","<\\1mods:",$modsString);
 				$mods->removeAllBranches();
@@ -229,7 +232,7 @@
 		$srwDatabaseInfoBranch->setTagContent(encodeHTMLspecialchars($hostInstitutionName) . " (" . $feedbackEmail . ")", "databaseInfo/contact");
 
 		$srwDatabaseImplementationBranch = new XMLBranch("implementation");
-//		$srwDatabaseImplementationBranch->setTagAttribute("version", "0.8.0");
+//		$srwDatabaseImplementationBranch->setTagAttribute("version", "0.9.1");
 		$srwDatabaseImplementationBranch->setTagAttribute("identifier", "refbase");
 		$srwDatabaseImplementationBranch->setTagContent("Web Reference Database (http://refbase.sourceforge.net)", "implementation/title");
 		$srwDatabaseInfoBranch->addXMLBranch($srwDatabaseImplementationBranch);

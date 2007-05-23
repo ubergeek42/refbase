@@ -1,10 +1,19 @@
 # Project:    Web Reference Database (refbase) <http://www.refbase.net>
-# Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-#             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-#             Please see the GNU General Public License for more details.
+# Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+#             original author(s).
+#
+#             This code is distributed in the hope that it will be useful,
+#             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+#             License for more details.
+#
 # File:       ./install.sql
+# Repository: $HeadURL$
+# Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+#
 # Created:    02-Oct-04, 20:11
-# Modified:   13-Nov-06, 15:30
+# Modified:   $Date$
+#             $Author$
+#             $Revision$
 
 # MySQL database structure & initial data (for use with 'latin1' character set)
 
@@ -148,30 +157,34 @@ CREATE TABLE `formats` (
 # data for table `formats`
 #
 
-INSERT INTO `formats` VALUES (1, 'MODS XML', 'import', 'true', 'bibutils/import_modsxml2refbase.php', '06', 2), 
-(2, 'MODS XML', 'export', 'true', 'export_modsxml.php', '06', 1), 
-(3, 'Text (CSV)', 'export', 'false', 'export_textcsv.php', '07', 1), 
-(4, 'BibTeX', 'import', 'true', 'bibutils/import_bib2refbase.php', '01', 2), 
-(5, 'BibTeX', 'export', 'true', 'bibutils/export_xml2bib.php', '01', 2), 
-(6, 'Endnote', 'import', 'true', 'bibutils/import_end2refbase.php', '02', 2), 
-(7, 'Endnote', 'export', 'true', 'bibutils/export_xml2end.php', '02', 2), 
-(8, 'Pubmed Medline', 'import', 'true', 'import_medline2refbase.php', '08', 1),
-(9, 'Pubmed XML', 'import', 'true', 'bibutils/import_med2refbase.php', '09', 2), 
-(10, 'RIS', 'import', 'true', 'import_ris2refbase.php', '03', 1), 
-(11, 'RIS', 'export', 'true', 'bibutils/export_xml2ris.php', '03', 2), 
-(12, 'ISI', 'import', 'true', 'import_isi2refbase.php', '04', 1), 
-(13, 'CSA', 'import', 'true', 'import_csa2refbase.php', '05', 1),
-(14, 'Copac', 'import', 'true', 'bibutils/import_copac2refbase.php', '10', 2),
-(15, 'SRW XML', 'export', 'true', 'export_srwxml.php', '11', 1), 
-(16, 'ODF XML', 'export', 'true', 'export_odfxml.php', '12', 1), 
-(17, 'OpenSearch RSS', 'export', 'false', 'export_osrss.php', '13', 1),
-(18, 'html', 'cite', 'true', 'formats/cite_html.php', '14', 1),
-(19, 'RTF', 'cite', 'true', 'formats/cite_rtf.php', '15', 1),
-(20, 'PDF', 'cite', 'true', 'formats/cite_pdf.php', '16', 1),
-(21, 'LaTeX', 'cite', 'true', 'formats/cite_latex.php', '17', 1),
-(22, 'Markdown', 'cite', 'true', 'formats/cite_markdown.php', '18', 1),
-(23, 'ASCII', 'cite', 'true', 'formats/cite_ascii.php', '19', 1),
-(24, 'RefWorks', 'import', 'true', 'import_refworks2refbase.php', '20', 1);
+INSERT INTO `formats` VALUES (1, 'MODS XML', 'import', 'true', 'bibutils/import_modsxml2refbase.php', '06', 2),
+(2, 'MODS XML', 'export', 'true', 'export_modsxml.php', '06', 1),
+(3, 'Text (CSV)', 'export', 'false', 'export_textcsv.php', '07', 1),
+(4, 'BibTeX', 'import', 'true', 'bibutils/import_bib2refbase.php', '01', 2),
+(5, 'BibTeX', 'export', 'true', 'bibutils/export_xml2bib.php', '01', 2),
+(6, 'Endnote', 'import', 'true', 'bibutils/import_end2refbase.php', '02', 2),
+(7, 'Endnote XML', 'import', 'true', 'bibutils/import_endx2refbase.php', '02', 2),
+(8, 'Endnote', 'export', 'true', 'bibutils/export_xml2end.php', '02', 2),
+(9, 'Pubmed Medline', 'import', 'true', 'import_medline2refbase.php', '08', 1),
+(10, 'Pubmed XML', 'import', 'true', 'bibutils/import_med2refbase.php', '09', 2),
+(11, 'RIS', 'import', 'true', 'import_ris2refbase.php', '03', 1),
+(12, 'RIS', 'export', 'true', 'bibutils/export_xml2ris.php', '03', 2),
+(13, 'ISI', 'import', 'true', 'import_isi2refbase.php', '04', 1),
+(14, 'ISI', 'export', 'true', 'bibutils/export_xml2isi.php', '04', 2),
+(15, 'CSA', 'import', 'true', 'import_csa2refbase.php', '05', 1),
+(16, 'Copac', 'import', 'true', 'bibutils/import_copac2refbase.php', '10', 2),
+(17, 'SRW XML', 'export', 'true', 'export_srwxml.php', '11', 1),
+(18, 'ODF XML', 'export', 'true', 'export_odfxml.php', '12', 1),
+(19, 'OpenSearch RSS', 'export', 'false', 'export_osrss.php', '13', 1),
+(20, 'html', 'cite', 'true', 'formats/cite_html.php', '14', 1),
+(21, 'RTF', 'cite', 'true', 'formats/cite_rtf.php', '15', 1),
+(22, 'PDF', 'cite', 'true', 'formats/cite_pdf.php', '16', 1),
+(23, 'LaTeX', 'cite', 'true', 'formats/cite_latex.php', '17', 1),
+(24, 'Markdown', 'cite', 'true', 'formats/cite_markdown.php', '18', 1),
+(25, 'ASCII', 'cite', 'true', 'formats/cite_ascii.php', '19', 1),
+(26, 'RefWorks', 'import', 'true', 'import_refworks2refbase.php', '20', 1),
+(27, 'SciFinder', 'import', 'true', 'import_scifinder2refbase.php', '21', 1),
+(28, 'Word XML', 'export', 'true', 'bibutils/export_xml2word.php', '22', 2);
 
 # --------------------------------------------------------
 
@@ -367,12 +380,20 @@ CREATE TABLE `types` (
 # data for table `types`
 #
 
-INSERT INTO `types` VALUES (1, 'Journal Article', 'true', 1, '1'),
-(2, 'Book Chapter', 'true', 2, '2'),
-(3, 'Book Whole', 'true', 3, '3'),
-(4, 'Journal', 'true', 3, '4'),
-(5, 'Manuscript', 'true', 3, '5'),
-(6, 'Map', 'true', 3, '6');
+INSERT INTO `types` VALUES (1, 'Journal Article', 'true', 1, '01'),
+(2, 'Book Chapter', 'true', 2, '02'),
+(3, 'Book Whole', 'true', 3, '03'),
+(4, 'Conference Article', 'true', 2, '04'),
+(5, 'Conference Volume', 'true', 3, '05'),
+(6, 'Journal', 'true', 3, '06'),
+(7, 'Manual', 'true', 3, '07'),
+(8, 'Manuscript', 'true', 3, '08'),
+(9, 'Map', 'true', 3, '09'),
+(10, 'Miscellaneous', 'true', 3, '10'),
+(11, 'Newspaper Article', 'true', 1, '11'),
+(12, 'Patent', 'true', 3, '12'),
+(13, 'Report', 'true', 3, '13'),
+(14, 'Software', 'true', 3, '14');
 
 # --------------------------------------------------------
 
@@ -449,32 +470,42 @@ INSERT INTO `user_formats` VALUES (1, 1, 0, 'false'),
 (12, 12, 0, 'false'),
 (13, 13, 0, 'false'),
 (14, 14, 0, 'false'),
-(15, 16, 0, 'false'),
-(16, 18, 0, 'true'),
-(17, 19, 0, 'true'),
+(15, 15, 0, 'false'),
+(16, 16, 0, 'false'),
+(17, 18, 0, 'false'),
 (18, 20, 0, 'true'),
 (19, 21, 0, 'true'),
-(20, 1, 1, 'true'),
-(21, 2, 1, 'true'),
-(22, 3, 1, 'false'),
-(23, 4, 1, 'true'),
-(24, 5, 1, 'true'),
-(25, 6, 1, 'true'),
-(26, 7, 1, 'true'),
-(27, 8, 1, 'true'),
-(28, 9, 1, 'true'),
-(29, 10, 1, 'true'),
-(30, 11, 1, 'true'),
-(31, 12, 1, 'true'),
-(32, 13, 1, 'true'),
-(33, 14, 1, 'true'),
-(34, 16, 1, 'true'),
-(35, 18, 1, 'true'),
-(36, 19, 1, 'true'),
-(37, 20, 1, 'true'),
-(38, 21, 1, 'true'),
-(39, 22, 1, 'true'),
-(40, 23, 1, 'true');
+(20, 22, 0, 'true'),
+(21, 23, 0, 'true'),
+(22, 26, 0, 'false'),
+(23, 27, 0, 'false'),
+(24, 28, 0, 'false'),
+(25, 1, 1, 'true'),
+(26, 2, 1, 'true'),
+(27, 3, 1, 'false'),
+(28, 4, 1, 'true'),
+(29, 5, 1, 'true'),
+(30, 6, 1, 'true'),
+(31, 7, 1, 'true'),
+(32, 8, 1, 'true'),
+(33, 9, 1, 'true'),
+(34, 10, 1, 'true'),
+(35, 11, 1, 'true'),
+(36, 12, 1, 'true'),
+(37, 13, 1, 'true'),
+(38, 14, 1, 'true'),
+(39, 15, 1, 'true'),
+(40, 16, 1, 'true'),
+(41, 18, 1, 'true'),
+(42, 20, 1, 'true'),
+(43, 21, 1, 'true'),
+(44, 22, 1, 'true'),
+(45, 23, 1, 'true'),
+(46, 24, 1, 'true'),
+(47, 25, 1, 'true'),
+(48, 26, 1, 'true'),
+(49, 27, 1, 'true'),
+(50, 28, 1, 'true');
 
 # --------------------------------------------------------
 
@@ -605,12 +636,28 @@ INSERT INTO `user_types` VALUES (1, 1, 1, 'true'),
 (4, 4, 1, 'true'),
 (5, 5, 1, 'true'),
 (6, 6, 1, 'true'),
-(7, 1, 0, 'true'),
-(8, 2, 0, 'true'),
-(9, 3, 0, 'true'),
-(10, 4, 0, 'true'),
-(11, 5, 0, 'true'),
-(12, 6, 0, 'true');
+(7, 7, 1, 'true'),
+(8, 8, 1, 'true'),
+(9, 9, 1, 'true'),
+(10, 10, 1, 'true'),
+(11, 11, 1, 'true'),
+(12, 12, 1, 'true'),
+(13, 13, 1, 'true'),
+(14, 14, 1, 'true'),
+(15, 1, 0, 'true'),
+(16, 2, 0, 'true'),
+(17, 3, 0, 'true'),
+(18, 4, 0, 'true'),
+(19, 5, 0, 'true'),
+(20, 6, 0, 'true'),
+(21, 7, 0, 'true'),
+(22, 8, 0, 'true'),
+(23, 9, 0, 'true'),
+(24, 10, 0, 'true'),
+(25, 11, 0, 'true'),
+(26, 12, 0, 'true'),
+(27, 13, 0, 'true'),
+(28, 14, 0, 'true');
 
 # --------------------------------------------------------
 
