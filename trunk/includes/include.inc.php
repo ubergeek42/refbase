@@ -1,20 +1,25 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-	//             Please see the GNU General Public License for more details.
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
 	// File:       ./includes/include.inc.php
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    16-Apr-02, 10:54
-	// Modified:   10-Dec-06, 18:55
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This file contains important
 	// functions that are shared
 	// between all scripts.
 
-	/*
-	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
-	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
-	*/
 
 	// Incorporate some include files:
 	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
@@ -63,6 +68,9 @@
 			if (!empty($sessionID))
 				saveSessionVariable("sessionID", $sessionID);
 		}
+
+		// Set the system's locale information:
+		setSystemLocale();
 
 		// Get the MySQL version and save it to a session variable:
 		// Note: we only check for the MySQL version if a connection has been established already. Otherwise, a non-existing MySQL user
@@ -188,9 +196,10 @@
 			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 			{
 				if (eregi("^cli", $client)) // if the query originated from a command line client such as the "refbase" CLI client ("cli-refbase-1.0")
-					showErrorMsg("Your query:\n\n" . $query . "\n\ncaused the following error:", $oldQuery);
+					// note that we also HTML encode the query for CLI clients since a malicious user could use the client parameter to perform a cross-site scripting (XSS) attack
+					showErrorMsg("Your query:\n\n" . encodeHTML($query) . "\n\ncaused the following error:", $oldQuery);
 				else
-					showErrorMsg("Your query:\n<br>\n<br>\n<code>" . $query . "</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
+					showErrorMsg("Your query:\n<br>\n<br>\n<code>" . encodeHTML($query) . "</code>\n<br>\n<br>\n caused the following error:", $oldQuery);
 			}
 
 		return $result;
@@ -313,8 +322,10 @@
 		$errorMsg = mysql_error();
 
 		if (eregi("^cli", $client)) // if the query originated from a command line client such as the "refbase" CLI client ("cli-refbase-1.0")
-			echo $headerMsg . "\n\nError " . $errorNo . ": " . $errorMsg . "\n\n";
+			// note that we also HTML encode the '$errorMsg' for CLI clients since a malicious user could use the client parameter to perform a cross-site scripting (XSS) attack
+			echo $headerMsg . "\n\nError " . $errorNo . ": " . encodeHTML($errorMsg) . "\n\n";
 		else
+			// in case of regular HTML output, '$errorMsg' gets HTML encoded in 'error.php'
 			header("Location: error.php?errorNo=" . $errorNo . "&errorMsg=" . rawurlencode($errorMsg) . "&headerMsg=" . rawurlencode($headerMsg) . "&oldQuery=" . rawurlencode($oldQuery));
 
 		exit;
@@ -364,8 +375,8 @@
 
 		global $errorNo;
 		global $errorMsg;
-		// Get the path to the currently executing script,
-		// relative to the document root:
+
+		// Get the path to the currently executing script, relative to the document root:
 		$scriptURL = scriptURL();
 
 		// Extract checkbox variable values from the request:
@@ -380,9 +391,9 @@
 		$recordSerialsString = "&marked[]=" . $recordSerialsString; // prefix also the very first record serial with "&marked[]="
 
 		// based on the refering script we adjust the parameters that get included in the link:
-		if (ereg(".*(index|install|update|simple_search|advanced_search|sql_search|library_search|extract|users|user_details|user_receipt)\.php", $scriptURL))
+		if (ereg(".*(index|install|update|simple_search|advanced_search|sql_search|library_search|duplicate_search|extract|users|user_details|user_receipt)\.php", $scriptURL))
 			$referer = $scriptURL; // we don't need to provide any parameters if the user clicked login/logout on the main page, the install/update page or any of the search pages (we just need
-												// to re-locate back to these pages after successful login/logout). Logout on 'install.php', 'users.php', 'user_details.php' or 'user_receipt.php' will redirect to 'index.php'.
+									// to re-locate back to these pages after successful login/logout). Logout on 'install.php', 'users.php', 'user_details.php' or 'user_receipt.php' will redirect to 'index.php'.
 
 		elseif (ereg(".*(record|receipt)\.php", $scriptURL))
 			$referer = $scriptURL . "?" . "recordAction=" . $recordAction . "&serialNo=" . $serialNo . "&headerMsg=" . rawurlencode($headerMsg) . "&oldQuery=" . rawurlencode($oldQuery);
@@ -1752,12 +1763,11 @@ EOF;
 	//			- within one author object, there's only *one* delimiter separating author name & initials!
 	function reArrangeAuthorContents($authorContents, $familyNameFirst, $oldBetweenAuthorsDelim, $newBetweenAuthorsDelimStandard, $newBetweenAuthorsDelimLastAuthor, $oldAuthorsInitialsDelim, $newAuthorsInitialsDelimFirstAuthor, $newAuthorsInitialsDelimStandard, $betweenInitialsDelim, $initialsBeforeAuthorFirstAuthor, $initialsBeforeAuthorStandard, $shortenGivenNames, $includeNumberOfAuthors, $customStringAfterFirstAuthor, $encodeHTML)
 	{
-		// Note: I haven't figured out how to *successfully* enable locale support, so that e.g. '[[:upper:]]' would also match 'ÿ' etc.
-		//       Therefore, as a workaround, high ascii chars are specified literally below
+		// Note: The 'start_session()' function should establish an appropriate locale via function 'setSystemLocale()' so that e.g. '[[:upper:]]' would also match 'ÿ' etc.
+		//       However, since locale support depends on the individual server & system, we keep the workaround which literally specifies higher ASCII chars of the latin1 character set below.
 		//       (in order to have this work, the character encoding of 'search.php' must be set to 'Western (Iso Latin 1)' aka 'ISO-8859-1'!)
-		//       high ascii chars upper case = "ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆"
-		//       high ascii chars lower case = "‰Â·‡‚„ÁÈËÍÎÒˆ¯ÛÚÙı¸˙˘˚ÌÏÓÔÊˇﬂ"
-		// setlocale(LC_COLLATE, 'la_LN.ISO-8859-1'); // use the ISO 8859-1 Latin-1 character set for pattern matching
+		//       higher ASCII chars upper case = "ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆"
+		//       higher ASCII chars lower case = "‰Â·‡‚„ÁÈËÍÎÒˆ¯ÛÚÙı¸˙˘˚ÌÏÓÔÊˇﬂ"
 
 		$authorsArray = split($oldBetweenAuthorsDelim, $authorContents); // get a list of all authors for this record
 
@@ -1776,22 +1786,25 @@ EOF;
 
 			if ($shortenGivenNames) // if we're supposed to abbreviate given names
 			{
-				// within initials, reduce all full first names (-> defined by a starting uppercase character, followed by one ore more lowercase characters)
-				// to initials, i.e., only retain their first character
-				$singleAuthorArray[1] = preg_replace("/([[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])[[:lower:]‰Â·‡‚„ÁÈËÍÎÒˆ¯ÛÚÙı¸˙˘˚ÌÏÓÔÊˇﬂ]+/", "\\1", $singleAuthorArray[1]);
+				if (isset($singleAuthorArray[1]))
+				{
+					// within initials, reduce all full first names (-> defined by a starting uppercase character, followed by one ore more lowercase characters)
+					// to initials, i.e., only retain their first character
+					$singleAuthorArray[1] = preg_replace("/([[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])[[:lower:]‰Â·‡‚„ÁÈËÍÎÒˆ¯ÛÚÙı¸˙˘˚ÌÏÓÔÊˇﬂ]+/", "\\1", $singleAuthorArray[1]);
 
-				// within initials, remove any dots:
-				$singleAuthorArray[1] = preg_replace("/([[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])\.+/", "\\1", $singleAuthorArray[1]);
+					// within initials, remove any dots:
+					$singleAuthorArray[1] = preg_replace("/([[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])\.+/", "\\1", $singleAuthorArray[1]);
 
-				// within initials, remove any spaces *between* initials:
-				$singleAuthorArray[1] = preg_replace("/(?<=[-[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆]) +(?=[-[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])/", "", $singleAuthorArray[1]);
+					// within initials, remove any spaces *between* initials:
+					$singleAuthorArray[1] = preg_replace("/(?<=[-[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆]) +(?=[-[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])/", "", $singleAuthorArray[1]);
 
-				// within initials, add a space after a hyphen, but only if ...
-				if (ereg(" $", $betweenInitialsDelim)) // ... the delimiter that separates initials ends with a space
-					$singleAuthorArray[1] = preg_replace("/-(?=[[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])/", "- ", $singleAuthorArray[1]);
+					// within initials, add a space after a hyphen, but only if ...
+					if (ereg(" $", $betweenInitialsDelim)) // ... the delimiter that separates initials ends with a space
+						$singleAuthorArray[1] = preg_replace("/-(?=[[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])/", "- ", $singleAuthorArray[1]);
 
-				// then, separate initials with the specified delimiter:
-				$singleAuthorArray[1] = preg_replace("/([[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])/", "\\1$betweenInitialsDelim", $singleAuthorArray[1]);
+					// then, separate initials with the specified delimiter:
+					$singleAuthorArray[1] = preg_replace("/([[:upper:]ƒ≈¡¿¬√«…» À—÷ÿ”“‘’‹⁄Ÿ€ÕÃŒœ∆])/", "\\1$betweenInitialsDelim", $singleAuthorArray[1]);
+				}
 			}
 
 
@@ -1833,14 +1846,14 @@ EOF;
 		}
 
 		// do some final clean up:
-		$newAuthorContents = preg_replace("/  +/", " ", $newAuthorContents); // remove double spaces (which occur e.g., when both, $betweenInitialsDelim & $newAuthorsInitialsDelim..., end with a space)
-		$newAuthorContents = preg_replace("/ +([,.;:?!])/", "\\1", $newAuthorContents); // remove spaces before [,.;:?!]
-
 		if ($encodeHTML)
 			$newAuthorContents = encodeHTML($newAuthorContents); // HTML encode higher ASCII characters within the newly arranged author contents
 
 		if ($includeStringAfterFirstAuthor)
 			$newAuthorContents .= $customStringAfterFirstAuthor; // the custom string won't get HTML encoded so that it's possible to include HTML tags (such as '<i>') within the string
+
+		$newAuthorContents = preg_replace("/  +/", " ", $newAuthorContents); // remove double spaces (which occur e.g., when both, $betweenInitialsDelim & $newAuthorsInitialsDelim..., end with a space)
+		$newAuthorContents = preg_replace("/ +([,.;:?!()]|$)/", "\\1", $newAuthorContents); // remove excess spaces before [,.;:?!()] and from the end of the author string
 
 		return $newAuthorContents;
 	}
@@ -3002,11 +3015,21 @@ EOF;
 	// and (optionally) save all allowed user actions as semicolon-delimited string to the session variable 'user_permissions':
 	function getPermissions($user_OR_groupID, $permissionType, $savePermissionsToSessionVariable) // '$permissionType' must be either 'user' or 'group'; '$savePermissionsToSessionVariable' must be either 'true' or 'false'
 	{
+		global $tableUserPermissions; // defined in 'db.inc.php'
+
+		// NOTE: the group permissions feature (table 'group_permissions') has not been implemented yet, i.e., currently, only '$permissionType=user' is recognized!
+//		global $tableGroupPermissions;
+
+//		if ($permissionType == "group")
+//			$tablePermissions = $tableGroupPermissions;
+//		else
+			$tablePermissions = $tableUserPermissions;
+
 		connectToMySQLDatabase("");
 
 		// CONSTRUCT SQL QUERY:
 		// Fetch all permission settings from the 'user_permissions' (or 'group_permissions') table for the current user:
-		$query = "SELECT allow_add, allow_edit, allow_delete, allow_download, allow_upload, allow_details_view, allow_print_view, allow_browse_view, allow_sql_search, allow_user_groups, allow_user_queries, allow_rss_feeds, allow_import, allow_export, allow_cite, allow_batch_import, allow_batch_export, allow_modify_options FROM " . $permissionType . "_permissions WHERE " . $permissionType . "_id = " . quote_smart($user_OR_groupID);
+		$query = "SELECT allow_add, allow_edit, allow_delete, allow_download, allow_upload, allow_details_view, allow_print_view, allow_browse_view, allow_sql_search, allow_user_groups, allow_user_queries, allow_rss_feeds, allow_import, allow_export, allow_cite, allow_batch_import, allow_batch_export, allow_modify_options FROM " . $tablePermissions . " WHERE " . $permissionType . "_id = " . quote_smart($user_OR_groupID);
 
 		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 
@@ -3191,6 +3214,8 @@ EOF;
 	// Update the specified user permissions for the selected user(s):
 	function updateUserPermissions($recordSerialsString, $userPermissionsArray) // '$userPermissionsArray' must contain one or more key/value elements of the form array('allow_add' => 'yes', 'allow_delete' => 'no') where key is a particular 'allow_*' field name from table 'user_permissions' and value is either 'yes' or 'no'
 	{
+		global $tableUserPermissions; // defined in 'db.inc.php'
+
 		connectToMySQLDatabase("");
 
 		$permissionQueryArray = array();
@@ -3205,7 +3230,7 @@ EOF;
 			$permissionQueryString = implode(", ", $permissionQueryArray);
 
 			// Update all specified permission settings in the 'user_permissions' table for the selected user(s):
-			$query = "UPDATE user_permissions SET " . $permissionQueryString . " WHERE user_id RLIKE " . quote_smart("^(" . $recordSerialsString . ")$");
+			$query = "UPDATE $tableUserPermissions SET " . $permissionQueryString . " WHERE user_id RLIKE " . quote_smart("^(" . $recordSerialsString . ")$");
 
 			$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection
 
@@ -3253,7 +3278,7 @@ EOF;
 				}
 			}
 			else
-				$citeKey = ""; // by omitting a cite key bibutils will take care of generation of cite keys for its export formats (BibTeX, Endnote, RIS)
+				$citeKey = ""; // by omitting a cite key Bibutils will take care of generation of cite keys for its export formats (BibTeX, Endnote, RIS)
 		}
 
 
@@ -3675,21 +3700,25 @@ EOF;
 
 	// --------------------------------------------------------------------
 
-	// Get the path to the currently executing script, relative to the document
-	// root:
+	// Get the path to the currently executing script, relative to the document root:
 	function scriptURL()
 	{
 		if (isset($_SERVER['SCRIPT_NAME']))
+		{
 			$pathToScript = $_SERVER['SCRIPT_NAME'];
+		}
 		else
 		{
 			$pathToScript = $_SERVER['PHP_SELF'];
 
-			//Sanitize PHP_SELF:
+			// Sanitize PHP_SELF:
 			if (preg_match('#\.php.+#', $pathToScript))
+			{
 				// Remove anything after the PHP file extension:
 				$pathToScript = preg_replace('#(?<=\.php).+#', '', $pathToScript);
+			}
 		}
+
 		return $pathToScript;
 	}
 
@@ -3780,6 +3809,28 @@ EOF;
 			$sourceString = strtoupper($sourceString);
 
 		return $sourceString;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Sets the system's locale information:
+	// On *NIX systems, use "locale -a" on the command line to display all locales
+	// supported on your system. See <http://www.php.net/setlocale> for more information.
+	function setSystemLocale($systemLocales = "NONE")
+	{
+		global $contentTypeCharset; // defined in 'ini.inc.php'
+
+		if ($systemLocales == "NONE") {
+			if ($contentTypeCharset == "UTF-8")
+				$systemLocales = array('en_US.UTF-8', 'en_GB.UTF-8', 'en_CA.UTF-8', 'en_AU.UTF-8', 'en_NZ.UTF-8', 'de_DE.UTF-8', 'fr_FR.UTF-8', 'es_ES.UTF-8');
+			else // we assume "ISO-8859-1" by default
+				$systemLocales = array('en_US.ISO8859-1', 'en_GB.ISO8859-1', 'en_CA.ISO8859-1', 'en_AU.ISO8859-1', 'en_NZ.ISO8859-1', 'de_DE.ISO8859-1', 'fr_FR.ISO8859-1', 'es_ES.ISO8859-1');
+		}
+
+		$systemLocale = setlocale(LC_COLLATE, $systemLocales); // set locale for string comparison (including pattern matching)
+		$systemLocale = setlocale(LC_CTYPE, $systemLocales); // set locale for character classification and conversion, for example 'strtoupper()'
+
+		return $systemLocale;
 	}
 
 	// --------------------------------------------------------------------
@@ -3950,6 +4001,17 @@ EOF;
 		//       was added in PHP 4.1.0. Presently, the ISO-8859-1 character set is used as the default.
 
 		return $encodedString;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Strip HTML and PHP tags from input string:
+	// See <http://www.php.net/strip_tags>
+	function stripTags($sourceString, $allowedTags = "")
+	{
+		$cleanedString = strip_tags($sourceString, $allowedTags);
+
+		return $cleanedString;
 	}
 
 	// --------------------------------------------------------------------
@@ -4168,7 +4230,7 @@ EOF;
 	// to the RFC-2822 specifications (<http://www.faqs.org/rfcs/rfc2822.html>):
 	function generateRFC2822EmailAddress($createdBy)
 	{
-		// Note that the following patterns don't attempt to do fancy parsing of email addresses but simply assumes the string format
+		// Note that the following patterns don't attempt to do fancy parsing of email addresses but simply assume the string format
 		// of the 'created_by' field (table 'refs'). If you change the string format, you must modify these patterns as well!
 		$authorName = preg_replace("/(.+?)\([^)]+\)/", "\\1", $createdBy);
 		$authorEmail = preg_replace("/.+?\(([^)]+)\)/", "\\1", $createdBy);
@@ -4306,6 +4368,13 @@ EOF;
 			// Generate a proper citation for this record, ordering attributes according to the chosen output style & record type:
 			$record = citeRecord($row, $defaultCiteStyle, "", $markupPatternsArray, true); // function 'citeRecord()' is defined in the citation style file given in '$citeStyleFile' (which, in turn, must reside in the 'styles' directory of the refbase root directory)
 
+			// To avoid advertising email adresses in public RSS output, we remove the email address from contents of the 'modified_by' field which
+			// get displayed in item descriptions. However, note that email adresses are NOT stripped from contents of the 'created_by' field
+			// since a valid RSS feed must include an email address in the '<author>' element.
+			// The following pattern does not attempt to do fancy parsing of email addresses but simply assumes the string format
+			// of the 'modified_by' field (table 'refs'). If you change the string format, you must modify this pattern as well!
+			$editorName = preg_replace("/(.+?) \([^)]+\)/", "\\1", $row['modified_by']);
+
 			// append a RSS item for the current record:
 			$rssData .= "\n\n\t\t<item>"
 
@@ -4315,7 +4384,7 @@ EOF;
 
 						. "\n\t\t\t<description><![CDATA[" . $record
 
-						. "\n\t\t\t<br><br>Edited by " . encodeHTMLspecialchars($row['modified_by']) . " on " . generateUNIXTimeStamp($row['modified_date'], $row['modified_time']) . ".]]></description>"
+						. "\n\t\t\t<br><br>Edited by " . encodeHTMLspecialchars($editorName) . " on " . generateUNIXTimeStamp($row['modified_date'], $row['modified_time']) . ".]]></description>"
 
 						. "\n\t\t\t<guid isPermaLink=\"true\">" . $databaseBaseURL . "show.php?record=" . $row['serial'] . "</guid>"
 

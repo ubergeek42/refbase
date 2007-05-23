@@ -1,11 +1,20 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-	//             Please see the GNU General Public License for more details.
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
 	// File:       ./cite/formats/cite_rtf.php
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    10-Jun-06, 02:04
-	// Modified:   09-Sep-06, 16:45
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This is a citation format file (which must reside within the 'cite/formats/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecords()' function that outputs a reference list from selected records in RTF format.
@@ -71,6 +80,10 @@
 		$rtf->createFontBlock(1, "Times New Roman");
 		$rtfData .= $rtf->setFontBlock();
 
+		// Header:
+		if (!empty($headerMsg))
+			$rtfData .= "{\header\pard\qc $headerMsg\par}\n";
+
 		$rtfData .= $rtf->justify("full", 0.5, 0, -0.5); // by default, we'll justify text and set a hanging indent (left indent: 0.5, right indent: 0, first-line indent: -0.5)
 
 
@@ -104,7 +117,7 @@
 					if ($citeOrder == "type") // for 'citeOrder=type' we'll always print an empty paragraph after the heading
 						$headingSuffix .= $rtf->paragraph(0, 12); // create empty paragraph using "Arial" (font block 0) and a font size of 12pt
 
-					list($yearsArray, $typeTitlesArray, $sectionHeading) = generateSectionHeading($yearsArray, $typeTitlesArray, $row, $citeOrder, $headingPrefix, $headingSuffix, "{\f0\fs28 {\b ", "}\par}\n", "{\f0\fs24 {\b ", "}\par}\n");
+					list($yearsArray, $typeTitlesArray, $sectionHeading) = generateSectionHeading($yearsArray, $typeTitlesArray, $row, $citeOrder, $headingPrefix, $headingSuffix, "{\f0\fs28 {\b ", "}\par}\n", "{\f0\fs24 {\b ", "}\par}\n"); // function 'generateSectionHeading()' is defined in 'cite.inc.php'
 
 					// Note that we pass raw RTF commands to the above function instead of using the 'textBlock()' function from 'MINIMALRTF.php'. This is due to a current limitation of the 'generateSectionHeading()' function.
 					// For 'citeOrder=year', the appropriate call to the 'textBlock()' function would look like this:
@@ -131,4 +144,4 @@
 	}
 
 	// --- END CITATION FORMAT ---
-
+?>

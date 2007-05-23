@@ -1,11 +1,20 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-	//             Please see the GNU General Public License for more details.
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
 	// File:       ./includes/transtab_latex_unicode.inc.php
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    10-Aug-06, 23:55
-	// Modified:   13-Aug-06, 16:16
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This is a translation table for best-effort conversion from LaTeX to Unicode entities. It contains a comprehensive list of substitution strings for LaTeX characters,
 	// which are used with the 'T1' font encoding. Uses commands from the 'textcomp' package. Unicode characters that can't be matched uniquely are commented out.
@@ -1339,11 +1348,11 @@
 		// "<U005E><U003D>";<U003D> <U207C>
 
 		// SUPERSCRIPT LEFT PARENTHESIS
-		'\\$\\^\\{(\\}\\$' => "⁽", // "[super:(]" // "("
+		'\\$\\^\\{\\(\\}\\$' => "⁽", // "[super:(]" // "("
 		// "<U005E><U0028>";<U0028> <U207D>
 
 		// SUPERSCRIPT RIGHT PARENTHESIS
-		'\\$\\^\\{)\\}\\$' => "⁾", // "[super:)]" // ")"
+		'\\$\\^\\{\\)\\}\\$' => "⁾", // "[super:)]" // ")"
 		// "<U005E><U0029>";<U0029> <U207E>
 
 		// SUPERSCRIPT LATIN SMALL LETTER N
@@ -1403,11 +1412,11 @@
 		// "<U005F><U003D>";<U003D> <U208C>
 
 		// SUBSCRIPT LEFT PARENTHESIS
-		'\\$_\\{(\\}\\$' => "₍", // "[sub:(]" // "("
+		'\\$_\\{\\(\\}\\$' => "₍", // "[sub:(]" // "("
 		// "<U005F><U0028>";<U0028> <U208D>
 
 		// SUBSCRIPT RIGHT PARENTHESIS
-		'\\$_\\{)\\}\\$' => "₎", // "[sub:)]" // ")"
+		'\\$_\\{\\)\\}\\$' => "₎", // "[sub:)]" // ")"
 		// "<U005F><U0029>";<U0029> <U208E>
 
 		// EURO SIGN

@@ -1,15 +1,25 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-	//             Please see the GNU General Public License for more details.
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
 	// File:       ./includes/cite.inc.php
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    25-May-06, 15:19
-	// Modified:   11-Aug-06, 17:11
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This file contains functions
 	// that are used when outputting
 	// references as citations.
+
 
 	// Include common transliteration/translation tables and search & replace patterns
 	include 'includes/transtab_refbase_rtf.inc.php'; // include refbase markup -> RTF search & replace patterns
@@ -90,12 +100,20 @@
 			if (!isset($availableTypeTitlesArray))
 				// Map record types with items of the global localization array ('$loc'):
 				$availableTypeTitlesArray = array(
-													"Journal Article" => "JournalArticles",
-													"Book Chapter"    => "BookContributions",
-													"Book Whole"      => "Monographs",
-													"Journal"         => "Journals",
-													"Manuscript"      => "Manuscripts",
-													"Map"             => "Maps"
+													"Journal Article"    => "JournalArticles",
+													"Book Chapter"       => "BookContributions",
+													"Book Whole"         => "Monographs",
+													"Conference Article" => "ConferenceArticles",
+													"Conference Volume"  => "ConferenceVolumes",
+													"Journal"            => "Journals",
+													"Manual"             => "Manuals",
+													"Manuscript"         => "Manuscripts",
+													"Map"                => "Maps",
+													"Miscellaneous"      => "Miscellaneous",
+													"Newspaper Article"  => "NewspaperArticles",
+													"Patent"             => "Patents",
+													"Report"             => "Reports",
+													"Software"           => "Software"
 												);
 
 			if (isset($recordType, $availableTypeTitlesArray))

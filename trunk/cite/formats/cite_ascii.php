@@ -1,18 +1,26 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-	//             Please see the GNU General Public License for more details.
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
 	// File:       ./cite/formats/cite_ascii.php
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    10-Jun-06, 02:54
-	// Modified:   01-Oct-06, 20:41
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This is a citation format file (which must reside within the 'cite/formats/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecords()' function that outputs a reference list from selected records in plain text format. Plain text output is
 	// mainly meant for command line interfaces such as the refbase command line client (<http://cli.refbase.net/>).
 
 	// --------------------------------------------------------------------
-
 
 	// --- BEGIN CITATION FORMAT ---
 
@@ -28,6 +36,10 @@
 		global $transtab_refbase_ascii; // defined in 'transtab_refbase_ascii.inc.php'
 
 		$plainTextData = ""; // make sure that our buffer variable is empty
+
+		// Header:
+		if (!empty($headerMsg))
+			$plainTextData .= "$headerMsg\n\n"; // prefix any passed header message
 
 		// Initialize array variables:
 		$yearsArray = array();
@@ -82,7 +94,7 @@
 				// Print any section heading(s):
 				if (eregi("year|type", $citeOrder))
 				{
-					list($yearsArray, $typeTitlesArray, $sectionHeading) = generateSectionHeading($yearsArray, $typeTitlesArray, $row, $citeOrder, "", "", "", "\n\n", "", "\n\n");
+					list($yearsArray, $typeTitlesArray, $sectionHeading) = generateSectionHeading($yearsArray, $typeTitlesArray, $row, $citeOrder, "", "", "", "\n\n", "", "\n\n"); // function 'generateSectionHeading()' is defined in 'cite.inc.php'
 
 					$plainTextData .= $sectionHeading;
 				}
@@ -112,11 +124,8 @@
 			}
 		}
 
-		if (eregi("^cli", $client)) // when outputting results to a command line client, we'll prefix any header message and append some info about the number of rows displayed/found, the database name/URL and optionally display the SQL query
+		if (eregi("^cli", $client)) // when outputting results to a command line client, we'll append some info about the number of rows displayed/found, the database name/URL and optionally display the SQL query
 		{
-			if (!empty($headerMsg))
-				$plainTextData = $headerMsg . "\n\n" . $plainTextData; // prefix any passed header message
-
 			// Calculate the maximum result number on each page:
 			if (($rowOffset + $showRows) < $rowsFound)
 				$showMaxRow = ($rowOffset + $showRows); // maximum result number on each page
@@ -145,4 +154,4 @@
 	}
 
 	// --- END CITATION FORMAT ---
-
+?>

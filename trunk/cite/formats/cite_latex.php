@@ -1,18 +1,26 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-	//             Please see the GNU General Public License for more details.
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
 	// File:       ./cite/formats/cite_latex.php
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    10-Jun-06, 02:32
-	// Modified:   09-Sep-06, 16:43
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This is a citation format file (which must reside within the 'cite/formats/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecords()' function that outputs a reference list from selected records in LaTeX format.
 	// 
 
 	// --------------------------------------------------------------------
-
 
 	// --- BEGIN CITATION FORMAT ---
 
@@ -43,8 +51,8 @@
 									"italic-suffix"    => "}",
 		//							"underline-prefix" => "\\ul{", // the '\ul' command requires '\usepackage{soul}'
 		//							"underline-suffix" => "}",
-									"endash"           => "--", // or use '\\textendash{\\1}'
-									"emdash"           => "---"); // or use '\\textemdash{\\1}'
+									"endash"           => "--", // or use '{\\textendash}'
+									"emdash"           => "---"); // or use '{\\textemdash}'
 
 		// Defines search & replace 'actions' that will be applied upon LaTeX output to all those refbase fields that are listed
 		// in the corresponding 'fields' element:
@@ -75,10 +83,15 @@
 		$latexData .= "\\usepackage[T1]{fontenc}\n"
 					. "\\usepackage{textcomp}\n\n";
 
-		$latexData .= "\begin{document}\n\n";
+		$latexData .= "\\begin{document}\n\n";
+
+		// Header:
+		if (!empty($headerMsg))
+			$latexData .= "\\title{" . $headerMsg . "}\n\n"
+						. "\\maketitle\n\n";
 
 		if (!eregi("type|year", $citeOrder))
-			$latexData .= "\begin{thebibliography}{" . $showMaxRows . "}\n\n";
+			$latexData .= "\\begin{thebibliography}{" . $showMaxRows . "}\n\n";
 
 
 		// LOOP OVER EACH RECORD:
@@ -103,7 +116,7 @@
 				// Print any section heading(s):
 				if (eregi("year|type", $citeOrder))
 				{
-					list($yearsArray, $typeTitlesArray, $sectionHeading) = generateSectionHeading($yearsArray, $typeTitlesArray, $row, $citeOrder, "", "", "\\section*{", "}\n\n", "\\subsection*{", "}\n\n");
+					list($yearsArray, $typeTitlesArray, $sectionHeading) = generateSectionHeading($yearsArray, $typeTitlesArray, $row, $citeOrder, "", "", "\\section*{", "}\n\n", "\\subsection*{", "}\n\n"); // function 'generateSectionHeading()' is defined in 'cite.inc.php'
 
 					$latexData .= $sectionHeading;
 				}
@@ -142,12 +155,12 @@
 		}
 
 		if (!eregi("type|year", $citeOrder))
-			$latexData .= "\end{thebibliography}\n\n";
+			$latexData .= "\\end{thebibliography}\n\n";
 
-		$latexData .= "\end{document}\n\n";
+		$latexData .= "\\end{document}\n\n";
 
 		return $latexData;
 	}
 
 	// --- END CITATION FORMAT ---
-
+?>

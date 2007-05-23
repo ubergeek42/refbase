@@ -1,21 +1,29 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-	//             Please see the GNU General Public License for more details.
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
 	// File:       ./cite/formats/cite_pdf.php
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    10-Jun-06, 02:04
-	// Modified:   09-Sep-06, 16:44
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This is a citation format file (which must reside within the 'cite/formats/' sub-directory of your refbase root directory). It contains a
 	// version of the 'citeRecords()' function that outputs a reference list from selected records in PDF format.
 	// PDF format specification is available at <http://partners.adobe.com/public/developer/pdf/index_reference.html>, more info at <http://en.wikipedia.org/wiki/PDF>
 
-	// --------------------------------------------------------------------
-
-
 	// LIMITATIONS: - export of cited references to PDF does currently only work with a latin1 database but not with UTF-8 (since I don't know how to write Unicode characters to PDF)
 	//              - there's currently no conversion of en-/emdashes or markup for greek letters and super-/subscript (reasons are that I don't know how to print chars by code number)
+
+	// --------------------------------------------------------------------
 
 
 	// Include the pdf-php package
@@ -32,6 +40,7 @@
 		global $officialDatabaseName; // these variables are defined in 'ini.inc.php'
 		global $databaseBaseURL;
 		global $contentTypeCharset;
+		global $pdfPageSize;
 
 		global $client;
 
@@ -70,8 +79,14 @@
 
 
 		// Setup the basic PDF document structure (PDF functions defined in 'class.ezpdf.php'):
-		$pdf = new Cezpdf('a4', 'portrait'); // initialize PDF object (you may want to use 'letter' instead of 'a4')
-		$pdf -> ezSetMargins(50, 70, 50, 50);
+		$pdf = new Cezpdf($pdfPageSize, 'portrait'); // initialize PDF object
+
+		if (!empty($headerMsg)) // adjust upper page margin if a custom header message was given
+			$pageMarginTop = "70";
+		else
+			$pageMarginTop = "50";			
+
+		$pdf -> ezSetMargins($pageMarginTop, 70, 50, 50); // set document margins (top, bottom, left, right)
 
 		// Set fonts:
 		$headingFont = 'includes/classes/org/pdf-php/fonts/Helvetica.afm';
@@ -107,19 +122,53 @@
 
 		$pdf->openHere('Fit');
 
-		// Put a line on all the pages:
+		// Put a footer (and optionally a header) on all the pages:
 		$all = $pdf->openObject(); // start an independent object; all further writes to a page will actually go into this object, until a 'closeObject()' call is made
 		$pdf->saveState();
+
 		$pdf->setStrokeColor(0, 0, 0, 1); // set line color
 		$pdf->setLineStyle(0.5); // set line width
-		$pdf->line(20, 40, 575, 40); // print footer line
-//		$pdf->line(20, 822, 575, 822); // print header line (at this x/y position, it'll only get printed using 'a4' paper size)
-		$pdf->addText(50, 28, 10, $officialDatabaseName . ' – ' . $databaseBaseURL); // print footer text
+
+		// - print header line and header message at the specified x/y position:
+		if (!empty($headerMsg)) // if a custom header message was given
+		{
+			if ($pdfPageSize == 'a4') // page dimensions 'a4': 595.28 x 841.89 pt.
+			{
+				$pdf->line(20, 800, 575, 800);
+				$pdf->addText(50, 805, 10, $headerMsg);
+			}
+			elseif ($pdfPageSize == 'letter') // page dimensions 'letter': 612 x 792 pt.
+			{
+				$pdf->line(20, 750, 592, 750);
+				$pdf->addText(50, 755, 10, $headerMsg);
+			}
+		}
+
+		// - print footer line and footer text at the specified x/y position:
+		if ($pdfPageSize == 'a4')
+		{
+			$pdf->line(20, 40, 575, 40);
+			$pdf->addText(50, 28, 10, $officialDatabaseName . ' – ' . $databaseBaseURL);
+		}
+		elseif ($pdfPageSize == 'letter')
+		{
+			$pdf->line(20, 40, 592, 40);
+			$pdf->addText(50, 28, 10, $officialDatabaseName . ' – ' . $databaseBaseURL);
+		}
+
 		$pdf->restoreState();
 		$pdf->closeObject(); // close the currently open object; further writes will now go to the current page
 		$pdf->addObject($all, 'all'); // note that object can be told to appear on just odd or even pages by changing 'all' to 'odd' or 'even'
 
-		$pdf->ezStartPageNumbers(550, 28, 10, '', '', 1); // start printing page numbers
+		// Start printing page numbers:
+		if ($pdfPageSize == 'a4')
+		{
+			$pdf->ezStartPageNumbers(550, 28, 10, '', '', 1);
+		}
+		elseif ($pdfPageSize == 'letter')
+		{
+			$pdf->ezStartPageNumbers(567, 28, 10, '', '', 1);
+		}
 
 
 		// LOOP OVER EACH RECORD:
@@ -154,7 +203,7 @@
 					if ($citeOrder == "type-year")
 						$sectionMarkupSuffix .= "\n";
 
-					list($yearsArray, $typeTitlesArray, $sectionHeading) = generateSectionHeading($yearsArray, $typeTitlesArray, $row, $citeOrder, $headingPrefix, $headingSuffix, $sectionMarkupPrefix, $sectionMarkupSuffix, $subSectionMarkupPrefix, $subSectionMarkupSuffix);
+					list($yearsArray, $typeTitlesArray, $sectionHeading) = generateSectionHeading($yearsArray, $typeTitlesArray, $row, $citeOrder, $headingPrefix, $headingSuffix, $sectionMarkupPrefix, $sectionMarkupSuffix, $subSectionMarkupPrefix, $subSectionMarkupSuffix); // function 'generateSectionHeading()' is defined in 'cite.inc.php'
 
 					if (!empty($sectionHeading))
 					{
@@ -194,4 +243,4 @@
 	}
 
 	// --- END CITATION FORMAT ---
-
+?>

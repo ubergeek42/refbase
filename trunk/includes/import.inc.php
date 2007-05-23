@@ -1,19 +1,25 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the function's
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
 	//             original author(s).
 	//
 	//             This code is distributed in the hope that it will be useful,
-	//             but WITHOUT ANY WARRANTY.  Please see the GNU General Public
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
 	//             License for more details.
 	//
 	// File:       ./includes/import.inc.php
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    13-Jan-06, 21:00
-	// Modified:   03-Oct-06, 21:12
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This file contains functions
 	// that are used when importing
 	// records into the database.
+
 
 	include 'includes/transtab_bibtex_refbase.inc.php'; // include BibTeX markup -> refbase search & replace patterns
 
@@ -26,7 +32,7 @@
 
 	// ISI TO CSA
 	// This function converts records from "ISI Web of Science" format to "CSA" format
-	// in order to enable import of ISI WoS records via the import form provided by 'import_csa.php'.
+	// in order to enable import of ISI WoS records via the 'csaToRefbase()' function.
 	// ISI WoS records must contain at least the tags "PT" and "SO" and end with "\nER\n".
 	// 
 	// Authors: this function was originally written by Joachim Almergren <joachim.almergren@umb.no>
@@ -40,7 +46,7 @@
 		$extractEmail = true; // if set to 'true', the first email address will be extracted from the ISI "EM" field and appended to the first address in "AF: Affiliation";
 							 // set to 'false' if you don't want to extract the email address
 
-		// Generate an array which lists all the CSA tags that are recognized by 'import_csa.php'
+		// Generate an array which lists all the CSA tags that are recognized by the 'csaToRefbase()' function
 		// and match them with their corresponding ISI tags ("CSA tag" => "ISI tag"):
 		$isiToCsaTagsArray = array(
 									"PT: Publication Type"     => "PT",
@@ -48,7 +54,7 @@
 									"TI: Title"                => "TI",
 									"SO: Source"               => "SO",
 									"PY: Publication Year"     => "PY",
-		//							"JN: Journal Name"         => "", // the 'import_csa.php' script will generate the full journal name from "SO: Source"
+		//							"JN: Journal Name"         => "", // the 'csaToRefbase()' function will generate the full journal name from "SO: Source"
 									"JA: Abbrev Journal Name"  => "JI",
 		//							"MT: Monograph Title"      => "", // the ISI WoS database does only contain journal article (AFAIK)
 									"JV: Journal Volume"       => "VL",
@@ -69,7 +75,7 @@
 		//							"ER: Environmental Regime" => "",
 		//							"CF: Conference"           => "",
 									"NT: Notes"                => "UT" // we'll import the ISI record ID to the notes field
-		//							"DO: DOI"                  => ""
+		//							"DO: DOI"                  => "DI" // Bibutils apparently recognizes "DI" to extract the DOI from ISI records, however, my tests returned only ISI records where the "DI" field contained some other identifier ?:-/
 								);
 
 		// ----------------------------------------------------------------
@@ -100,16 +106,16 @@
 				$pages = array();
 
 				if (preg_match("/^BP [^ \r\n]+/m", $isiRecordsArray[$i]))
-					$pages[] = preg_replace("/.*[\r\n]BP (\d+).*/s", "\\1", $isiRecordsArray[$i]);
+					$pages[] = preg_replace("/.*[\r\n]BP ([^\r\n]+).*/s", "\\1", $isiRecordsArray[$i]);
 
 				if (preg_match("/^EP [^ \r\n]+/m", $isiRecordsArray[$i]))
-					$pages[] = preg_replace("/.*[\r\n]EP (\d+).*/s", "\\1", $isiRecordsArray[$i]);
+					$pages[] = preg_replace("/.*[\r\n]EP ([^\r\n]+).*/s", "\\1", $isiRecordsArray[$i]);
 
 				if (!empty($pages))
 					$pageRange = implode("-", $pages);
 				// if no start or end page is given, we'll try the ISI "PG" field that indicates the total number of pages:
 				elseif (preg_match("/^PG [^ \r\n]+/m", $isiRecordsArray[$i]))
-					$pageRange = preg_replace("/.*[\r\n]PG (\d+).*/s", "\\1 pp", $isiRecordsArray[$i]);
+					$pageRange = preg_replace("/.*[\r\n]PG ([^\r\n]+).*/s", "\\1 pp", $isiRecordsArray[$i]);
 				else
 					$pageRange = "";
 
@@ -180,7 +186,7 @@
 									// convert upper case to title case (converts e.g. "ELSEVIER SCIENCE BV" into "Elsevier Science Bv"):
 									// (note that this case transformation won't do the right thing for author initials and abbreviations,
 									//  but the result is better than the whole string being upper case, IMHO)
-									$recordFieldData = preg_replace("/\b(\w)(\w+)/e", "strtoupper('\\1').strtolower('\\2')", $recordFieldData); // the 'e' modifier allows to execute perl code within the replacement pattern
+									$recordFieldData = preg_replace("/\b(\w)(\w+)/e", "strtoupper('\\1').strtolower('\\2')", $recordFieldData); // the 'e' modifier allows to execute PHP code within the replacement pattern
 
 								// merge again field tag and data:
 								$recordField = $recordFieldTag . "\n    " . $recordFieldData;
@@ -253,11 +259,19 @@
 		// Specifies whether fields whose contents are entirely in upper case shall be transformed to title case ('true') or not ('false'):
 		$transformCase = true;
 
-		// Defines search & replace 'actions' that will be applied to all those refbase fields that are listed in the corresponding 'fields' element:
-		// (If you don't want to perform any search and replace actions, specify an empty array, like: '$searchReplaceActionsArray = array();'.
+		// Preprocessor actions:
+		// Defines search & replace 'actions' that will be applied to each record's raw source data if the pattern in the corresponding 'match' element is matched:
+		// (If you don't want to perform any preprocessor actions, specify an empty array, like: '$preprocessorActionsArray = array();'.
 		//  Note that, in this case, the search patterns MUST include the leading & trailing slashes -- which is done to allow for mode modifiers such as 'imsxU'.)
-		// 															"/Search Pattern/"  =>  "Replace Pattern"
-		$searchReplaceActionsArray = array(
+		// 								  "/Search Pattern/"  =>  "Replace Pattern"
+		$preprocessorActionsArray = array();
+
+		// Postprocessor actions:
+		// Defines search & replace 'actions' that will be applied to all those refbase fields that are listed in the corresponding 'fields' element:
+		// (If you don't want to perform any search and replace actions, specify an empty array, like: '$postprocessorActionsArray = array();'.
+		//  Note that, in this case, the search patterns MUST include the leading & trailing slashes -- which is done to allow for mode modifiers such as 'imsxU'.)
+		// 								  "/Search Pattern/"  =>  "Replace Pattern"
+		$postprocessorActionsArray = array(
 											array(
 													'fields'  => array("year"),
 													'actions' => array(
@@ -309,11 +323,11 @@
 
 											"AU"  =>  "author", // Author Primary
 											"A1"  =>  "author", // Author Primary
-											"A2"  =>  "editor", // Author Secondary
+											"A2"  =>  "editor", // Author Secondary (see note for 'corporate_author' below)
 											"ED"  =>  "editor", // Author Secondary
 											"A3"  =>  "series_editor", // Author Series
 											"AD"  =>  "address", // Address
-		//									""    =>  "corporate_author",
+		//									""    =>  "corporate_author", // note that bibutils uses the RIS 'A2' tag to indicate corporate authors ('<name type="corporate">'), e.g., when importing contents of the BibTeX 'organization' field
 
 											"TI"  =>  "title", // Title Primary
 											"T1"  =>  "title", // Title Primary
@@ -337,6 +351,7 @@
 											"IS"  =>  "issue", // Issue
 											"SP"  =>  "startPage", // Start page number (contents of the special fields 'startPage' and 'endPage' will be merged into a range and copied to the refbase 'pages' field)
 											"EP"  =>  "endPage", // Ending page number
+											"LP"  =>  "endPage", // Ending page number ('LP' is actually not part of the RIS specification but gets used in the wild such as in RIS exports of the American Physical Society, <http://aps.org/>)
 
 		//									""    =>  "series_volume", // (for 'series_volume' and 'series_issue', some magic will be applied within the 'parseRecords()' function)
 		//									""    =>  "series_issue",
@@ -347,7 +362,7 @@
 
 		//									""    =>  "edition",
 		//									""    =>  "medium",
-											"SN"  =>  array("BOOK" => "isbn", "CHAP" => "isbn", "Other" => "issn"), // Book Whole & Book Chapter: ISBN; Other reference types: ISSN
+											"SN"  =>  array("BOOK" => "isbn", "CHAP" => "isbn", "STD" => "isbn", "Other" => "issn"), // Book Whole & Book Chapter: ISBN; Other reference types: ISSN
 
 		//									""    =>  "language",
 		//									""    =>  "summary_language",
@@ -416,12 +431,12 @@
 													"BOOK"  =>  "Book Whole", // Book, Whole
 													"CASE"  =>  "Unsupported: Case", // Case
 													"CHAP"  =>  "Book Chapter", // Book chapter
-													"COMP"  =>  "Unsupported: Computer Program", // Computer program
-													"CONF"  =>  "Unsupported: Conference Proceeding", // Conference proceeding
+													"COMP"  =>  "Software", // Computer program
+													"CONF"  =>  "Conference Article", // Conference proceeding
 													"CTLG"  =>  "Book Whole", // Catalog (#fallback#)
 													"DATA"  =>  "Unsupported: Data File", // Data file
 													"ELEC"  =>  "Unsupported: Electronic Citation", // Electronic Citation
-													"GEN"   =>  "Book Whole", // Generic (#fallback#)
+													"GEN"   =>  "Miscellaneous", // Generic
 													"HEAR"  =>  "Unsupported: Hearing", // Hearing
 													"ICOMM" =>  "Unsupported: Internet Communication", // Internet Communication
 													"INPR"  =>  "Unsupported: In Press", // In Press
@@ -431,16 +446,16 @@
 													"MGZN"  =>  "Journal Article", // Magazine article (#fallback#)
 													"MPCT"  =>  "Unsupported: Motion Picture", // Motion picture
 													"MUSIC" =>  "Unsupported: Music Score", // Music score
-													"NEWS"  =>  "Unsupported: Newspaper", // Newspaper
+													"NEWS"  =>  "Newspaper Article", // Newspaper
 													"PAMP"  =>  "Unsupported: Pamphlet", // Pamphlet
-													"PAT"   =>  "Unsupported: Patent", // Patent
+													"PAT"   =>  "Patent", // Patent
 													"PCOMM" =>  "Unsupported: Personal Communication", // Personal communication
-													"RPRT"  =>  "Book Whole", // Report (#fallback#)
+													"RPRT"  =>  "Report", // Report
 													"SER"   =>  "Unsupported: Serial (Book, Monograph)", // Serial (Book, Monograph)
 													"SLIDE" =>  "Unsupported: Slide", // Slide
 													"SOUND" =>  "Unsupported: Sound Recording", // Sound recording
 													"STAT"  =>  "Unsupported: Statute", // Statute
-													"STD"   =>  "Book Whole", // Generic (#fallback#; note that 'STD' is used by bibutils although it is NOT listed as a recognized reference type at <http://www.refman.com/support/risformat_reftypes.asp>)
+													"STD"   =>  "Miscellaneous", // Generic (note that 'STD' is used by bibutils although it is NOT listed as a recognized reference type at <http://www.refman.com/support/risformat_reftypes.asp>)
 													"THES"  =>  "Thesis", // Thesis/Dissertation (function 'parseRecords()' will set the special type 'Thesis' back to 'Book Whole' and adopt the refbase 'thesis' field)
 													"UNBILL"=>  "Unsupported: Unenacted Bill/Resolution", // Unenacted bill/resolution
 													"UNPB"  =>  "Manuscript", // Unpublished work (#fallback#)
@@ -456,7 +471,7 @@
 		list($errors, $importRecordNumbersRecognizedFormatArray, $importRecordNumbersNotRecognizedFormatArray) = validateRecords($recordArray, $requiredTagsArray, $importRecordsRadio, $importRecordNumbersArray, $errors);
 
 		// Parse all records that shall be imported:
-		list($parsedRecordsArray, $recordsCount) = parseRecords($recordArray, "RIS", $importRecordNumbersRecognizedFormatArray, $tagsToRefbaseFieldsArray, $tagsMultipleArray, $referenceTypesToRefbaseTypesArray, $fieldDelimiter, $dataDelimiter, $personDelimiter, $familyNameGivenNameDelimiter, $familyNameFirst, $shortenGivenNames, $transformCase, $searchReplaceActionsArray);
+		list($parsedRecordsArray, $recordsCount) = parseRecords($recordArray, "RIS", $importRecordNumbersRecognizedFormatArray, $tagsToRefbaseFieldsArray, $tagsMultipleArray, $referenceTypesToRefbaseTypesArray, $fieldDelimiter, $dataDelimiter, $personDelimiter, $familyNameGivenNameDelimiter, $familyNameFirst, $shortenGivenNames, $transformCase, $postprocessorActionsArray, $preprocessorActionsArray);
 
 		// Build refbase import array:
 		$importDataArray = buildImportArray("refbase", // 'type' - the array format of the 'records' element
@@ -513,11 +528,32 @@
 		// Specifies whether fields whose contents are entirely in upper case shall be transformed to title case ('true') or not ('false'):
 		$transformCase = true;
 
-		// Defines search & replace 'actions' that will be applied to all those refbase fields that are listed in the corresponding 'fields' element:
-		// (If you don't want to perform any search and replace actions, specify an empty array, like: '$searchReplaceActionsArray = array();'.
+		// Preprocessor actions:
+		// Defines search & replace 'actions' that will be applied to each record's raw source data if the pattern in the corresponding 'match' element is matched:
+		// (If you don't want to perform any preprocessor actions, specify an empty array, like: '$preprocessorActionsArray = array();'.
 		//  Note that, in this case, the search patterns MUST include the leading & trailing slashes -- which is done to allow for mode modifiers such as 'imsxU'.)
-		// 															"/Search Pattern/"  =>  "Replace Pattern"
-		$searchReplaceActionsArray = array(
+		// 								  "/Search Pattern/"  =>  "Replace Pattern"
+		$preprocessorActionsArray = array(
+											array(
+													'match'   => "/^FAU - .+?[\r\n]AU  - /m", // if author info is available via both 'FAU' *AND* 'AU' field(s)
+													'actions' => array(
+																		"/^AU  - .+?[\r\n]+/m"  =>  "" // discard any 'AU' field(s) (which otherwise would confuse the 'parseRecords()' function)
+																	)
+												),
+											array(
+													'match'   => "/^AU  - /m",
+													'actions' => array(
+																		"/(?<=^AU  - )([[:alpha:] -]+) +([[:upper:]]+)/m"  =>  "\\1, \\2" // change the string formatting in 'AU' field(s) to the one used by refbase (i.e. insert a comma between family name & initials)
+																	)
+												)
+										);
+
+		// Postprocessor actions:
+		// Defines search & replace 'actions' that will be applied to all those refbase fields that are listed in the corresponding 'fields' element:
+		// (If you don't want to perform any search and replace actions, specify an empty array, like: '$postprocessorActionsArray = array();'.
+		//  Note that, in this case, the search patterns MUST include the leading & trailing slashes -- which is done to allow for mode modifiers such as 'imsxU'.)
+		// 								  "/Search Pattern/"  =>  "Replace Pattern"
+		$postprocessorActionsArray = array(
 											array(
 													'fields'  => array("year"),
 													'actions' => array(
@@ -528,6 +564,12 @@
 													'fields'  => array("title", "orig_title", "publication", "address"),
 													'actions' => array(
 																		"/[,.;:!] *$/"  =>  "" // remove any punctuation (except for question marks) from end of field contents
+																	)
+												),
+											array(
+													'fields'  => array("publication", "abbrev_journal"), // NOTE: this replacement action will probably be only beneficial for records of type "Journal Article" (if possible, this should rather be a preprocessor action to distinguish articles from books or other resource types)
+													'actions' => array(
+																		"/\b([[:lower:]])([[:alpha:]]{3,})/e"  =>  "strtoupper('\\1').'\\2'" // make sure that all journal title words (with >3 characters) start with an upper case letter (the 'e' modifier allows to execute PHP code within the replacement pattern)
 																	)
 												),
 											array(
@@ -634,8 +676,8 @@
 		$tagsToRefbaseFieldsArray = array(
 											"PT"    =>  "type", // Publication Type [The type of material the article represents] (IMPORTANT: the array element that maps to 'type' must be listed as the first element!)
 
-											"FAU"   =>  "author", // Full Author Name [Full Author Names] (we use this author format since family name and initials are uniquely separated by a comma)
-		//									"AU"    =>  "author", // Author [Authors]
+											"AU"    =>  "author", // Author [Authors] (the contents of the 'AU' field will be used if the 'FAU' field is not available; note that for records that contain both 'AU' *AND* 'FAU' fields, this only works if a suitable preprocessor action is defined, see above)
+											"FAU"   =>  "author", // Full Author Name [Full Author Names] (by default, we use this author format since family name and initials are uniquely separated by a comma)
 		//									""      =>  "editor",
 		//									""      =>  "series_editor",
 											"AD"    =>  "address", // Affiliation [Institutional affiliation and address of the first author]
@@ -740,8 +782,8 @@
 
 		// This array lists all MEDLINE tags that may occur multiple times:
 		$tagsMultipleArray = array(
+									"AU", // see above note for 'AU' at '$tagsToRefbaseFieldsArray'
 									"FAU",
-		//							"AU",
 									"MH",
 									"OT",
 									"AID",
@@ -754,12 +796,23 @@
 		// (MEDLINE types that are currently not supported in refbase will be taken as is but will get
 		//  prefixed with an "Unsupported: " label; '#fallback#' in comments indicates a type mapping that
 		//  is not a perfect match but as close as currently possible)
-		// 												"MEDLINE type" =>  "refbase type" // name of MEDLINE reference type (comment)
+		// 												                                              "MEDLINE type" =>  "refbase type"
 		$referenceTypesToRefbaseTypesArray = array(
-		//											"Journal Article"  =>  "Journal Article", // NOTE: PubMed has *many* more types which should be dealt with (see e.g. <http://www.nlm.nih.gov/mesh/pubtypes2006.html> and <http://www.nlm.nih.gov/mesh/pubtypesg2003.html>) 
-													"JOURNAL ARTICLE"  =>  "Journal Article",
-													"REVIEW"           =>  "Journal Article", // in some records, "PT" may occur multiple times (e.g. as in "PT  - Journal Article\nPT  - Review")
-													"Review"           =>  "Journal Article"
+		//											"Journal Article"                                                =>  "Journal Article", // NOTE: PubMed has *many* more types which should be dealt with (see e.g. <http://www.nlm.nih.gov/mesh/pubtypes2006.html> and <http://www.nlm.nih.gov/mesh/pubtypesg2003.html>) 
+													"JOURNAL ARTICLE"                                                =>  "Journal Article",
+													"REVIEW|Review"                                                  =>  "Journal Article", // in some records, "PT" may occur multiple times (e.g. as in "PT  - Journal Article\nPT  - Review"), and refbase currently uses the contents of the last "PT" as type
+													"Monograph|Account Books|Guidebooks|Handbooks|Textbooks"         =>  "Book Whole",
+													"Congresses|Meeting Abstracts"                                   =>  "Conference Article",
+													"Consensus Development Conference(, NIH)?"                       =>  "Conference Article",
+													"Newspaper Article"                                              =>  "Newspaper Article",
+													"(Annual|Case|Technical) Reports?"                               =>  "Report",
+													"Manuscripts|Unpublished Works"                                  =>  "Manuscript",
+													"Patents"                                                        =>  "Patent",
+													"Maps"                                                           =>  "Map",
+													"Letter"                                                         =>  "Journal Article", // #fallback#
+													"Validation Studies"                                             =>  "Journal Article",
+													"Research Support, N\.I\.H\., (Ex|In)tramural *"                 =>  "Journal Article",
+													"Research Support, (Non-)?U\.S\. Gov\'t(, (Non-)?P\.H\.S\.)? *"  =>  "Journal Article"
 												);
 
 		// -----------------------------------------
@@ -771,7 +824,7 @@
 		list($errors, $importRecordNumbersRecognizedFormatArray, $importRecordNumbersNotRecognizedFormatArray) = validateRecords($recordArray, $requiredTagsArray, $importRecordsRadio, $importRecordNumbersArray, $errors);
 
 		// Parse all records that shall be imported:
-		list($parsedRecordsArray, $recordsCount) = parseRecords($recordArray, "MEDLINE", $importRecordNumbersRecognizedFormatArray, $tagsToRefbaseFieldsArray, $tagsMultipleArray, $referenceTypesToRefbaseTypesArray, $fieldDelimiter, $dataDelimiter, $personDelimiter, $familyNameGivenNameDelimiter, $familyNameFirst, $shortenGivenNames, $transformCase, $searchReplaceActionsArray);
+		list($parsedRecordsArray, $recordsCount) = parseRecords($recordArray, "MEDLINE", $importRecordNumbersRecognizedFormatArray, $tagsToRefbaseFieldsArray, $tagsMultipleArray, $referenceTypesToRefbaseTypesArray, $fieldDelimiter, $dataDelimiter, $personDelimiter, $familyNameGivenNameDelimiter, $familyNameFirst, $shortenGivenNames, $transformCase, $postprocessorActionsArray, $preprocessorActionsArray);
 
 		// Build refbase import array:
 		$importDataArray = buildImportArray("refbase", // 'type' - the array format of the 'records' element
@@ -829,11 +882,19 @@
 		// Specifies whether fields whose contents are entirely in upper case shall be transformed to title case ('true') or not ('false'):
 		$transformCase = true;
 
-		// Defines search & replace 'actions' that will be applied to all those refbase fields that are listed in the corresponding 'fields' element:
-		// (If you don't want to perform any search and replace actions, specify an empty array, like: '$searchReplaceActionsArray = array();'.
+		// Preprocessor actions:
+		// Defines search & replace 'actions' that will be applied to each record's raw source data if the pattern in the corresponding 'match' element is matched:
+		// (If you don't want to perform any preprocessor actions, specify an empty array, like: '$preprocessorActionsArray = array();'.
 		//  Note that, in this case, the search patterns MUST include the leading & trailing slashes -- which is done to allow for mode modifiers such as 'imsxU'.)
-		// 															"/Search Pattern/"  =>  "Replace Pattern"
-		$searchReplaceActionsArray = array(
+		// 								  "/Search Pattern/"  =>  "Replace Pattern"
+		$preprocessorActionsArray = array();
+
+		// Postprocessor actions:
+		// Defines search & replace 'actions' that will be applied to all those refbase fields that are listed in the corresponding 'fields' element:
+		// (If you don't want to perform any search and replace actions, specify an empty array, like: '$postprocessorActionsArray = array();'.
+		//  Note that, in this case, the search patterns MUST include the leading & trailing slashes -- which is done to allow for mode modifiers such as 'imsxU'.)
+		// 								  "/Search Pattern/"  =>  "Replace Pattern"
+		$postprocessorActionsArray = array(
 											array(
 													'fields'  => array("year"),
 													'actions' => array(
@@ -869,7 +930,7 @@
 
 		// This array matches RefWorks tags with their corresponding refbase fields:
 		// (fields that are unsupported in either RefWorks or refbase are commented out)
-		// 								"RefWorks tag" => "refbase field" // RefWorks tag name (comment)
+		// 						   "RefWorks tag" => "refbase field" // RefWorks tag name (comment)
 		$tagsToRefbaseFieldsArray = array(
 											"RT"  =>  "type", // Reference Type (IMPORTANT: the array element that maps to 'type' must be listed as the first element!)
 		//									""    =>  "thesis",
@@ -983,7 +1044,7 @@
 		// (RefWorks types that are currently not supported in refbase will be taken as is but will get
 		//  prefixed with an "Unsupported: " label; '#fallback#' in comments indicates a type mapping that
 		//  is not a perfect match but as close as currently possible)
-		// 															   "RefWorks type"  =>  "refbase type" // name of RefWorks reference type (comment)
+		// 																  "RefWorks type"  =>  "refbase type" // name of RefWorks reference type (comment)
 		$referenceTypesToRefbaseTypesArray = array(
 													"Abstract"                             =>  "Journal Article", // Abstract (#fallback#)
 													"Artwork"                              =>  "Unsupported: Artwork", // Artwork
@@ -992,11 +1053,11 @@
 													"Book, Edited"                         =>  "Book Whole", // Book, Edited (#fallback#)
 													"Book, Whole"                          =>  "Book Whole", // Book, Whole
 													"Case\/Court Decisions"                =>  "Unsupported: Case/Court Decisions", // Case/Court Decisions
-													"Computer Program"                     =>  "Unsupported: Computer Program", // Computer Program
-													"Conference Proceeding"                =>  "Unsupported: Conference Proceeding", // Conference Proceeding
+													"Computer Program"                     =>  "Software", // Computer Program
+													"Conference Proceeding"                =>  "Conference Article", // Conference Proceeding
 													"Dissertation(\/Thesis)?"              =>  "Thesis", // Dissertation/Thesis (function 'parseRecords()' will set the special type 'Thesis' back to 'Book Whole' and adopt the refbase 'thesis' field)
 													"Dissertation(\/Thesis)?, Unpublished" =>  "Thesis", // Dissertation/Thesis, Unpublished (#fallback#) (function 'parseRecords()' will set the special type 'Thesis' back to 'Book Whole' and adopt the refbase 'thesis' field)
-													"Generic"                              =>  "Book Whole", // Generic (#fallback#)
+													"Generic"                              =>  "Miscellaneous", // Generic
 													"Grant"                                =>  "Unsupported: Grant", // Grant
 													"Hearing"                              =>  "Unsupported: Hearing", // Hearing
 													"Journal"                              =>  "Journal Article", // Journal
@@ -1007,11 +1068,11 @@
 													"Monograph"                            =>  "Book Whole", // Monograph (#fallback#)
 													"Motion Picture"                       =>  "Unsupported: Motion Picture", // Motion Picture
 													"Music Score"                          =>  "Unsupported: Music Score", // Music Score
-													"Newspaper Article"                    =>  "Journal Article", // Newspaper Article (#fallback#)
+													"Newspaper Article"                    =>  "Newspaper Article", // Newspaper Article
 													"Online Discussion Forum"              =>  "Unsupported: Online Discussion Forum", // Online Discussion Forum
-													"Patent"                               =>  "Unsupported: Patent", // Patent
+													"Patent"                               =>  "Patent", // Patent
 													"Personal Communication"               =>  "Unsupported: Personal Communication", // Personal Communication
-													"Report"                               =>  "Book Whole", // Report (#fallback#)
+													"Report"                               =>  "Report", // Report
 													"Sound Recording"                      =>  "Unsupported: Sound Recording", // Sound Recording
 													"Thesis(\/Dissertation)?"              =>  "Thesis", // Dissertation/Thesis (function 'parseRecords()' will set the special type 'Thesis' back to 'Book Whole' and adopt the refbase 'thesis' field)
 													"Unpublished Material"                 =>  "Manuscript", // Unpublished Material (#fallback#)
@@ -1028,12 +1089,306 @@
 		list($errors, $importRecordNumbersRecognizedFormatArray, $importRecordNumbersNotRecognizedFormatArray) = validateRecords($recordArray, $requiredTagsArray, $importRecordsRadio, $importRecordNumbersArray, $errors);
 
 		// Parse all records that shall be imported:
-		list($parsedRecordsArray, $recordsCount) = parseRecords($recordArray, "RefWorks", $importRecordNumbersRecognizedFormatArray, $tagsToRefbaseFieldsArray, $tagsMultipleArray, $referenceTypesToRefbaseTypesArray, $fieldDelimiter, $dataDelimiter, $personDelimiter, $familyNameGivenNameDelimiter, $familyNameFirst, $shortenGivenNames, $transformCase, $searchReplaceActionsArray);
+		list($parsedRecordsArray, $recordsCount) = parseRecords($recordArray, "RefWorks", $importRecordNumbersRecognizedFormatArray, $tagsToRefbaseFieldsArray, $tagsMultipleArray, $referenceTypesToRefbaseTypesArray, $fieldDelimiter, $dataDelimiter, $personDelimiter, $familyNameGivenNameDelimiter, $familyNameFirst, $shortenGivenNames, $transformCase, $postprocessorActionsArray, $preprocessorActionsArray);
 
 		// Build refbase import array:
 		$importDataArray = buildImportArray("refbase", // 'type' - the array format of the 'records' element
 											"1.0", // 'version' - the version of the given array structure
 											"http://refbase.net/import/refworks/", // 'creator' - the name of the script/importer (preferably given as unique URI)
+											"Matthias Steffens", // 'author' - author/contact name of the person who's responsible for this script/importer
+											"refbase@extracts.de", // 'contact' - author's email/contact address
+											array('prefix_call_number' => "true"), // 'options' - array with settings that control the behaviour of the 'addRecords()' function
+											$parsedRecordsArray); // 'records' - array of record(s) (with each record being a sub-array of fields)
+
+
+		return array($importDataArray, $recordsCount, $importRecordNumbersRecognizedFormatArray, $importRecordNumbersNotRecognizedFormatArray, $errors);
+	}
+
+	// --------------------------------------------------------------------
+
+	// SCIFINDER TO REFBASE
+	// This function converts records from SciFinder (<http://www.cas.org/SCIFINDER/>) Tagged Format
+	// into the standard "refbase" array format which can be then imported by the 'addRecords()' function
+	// in 'include.inc.php'.
+	function scifinderToRefbase($sourceText, $importRecordsRadio, $importRecordNumbersArray)
+	{
+		global $errors;
+		global $showSource;
+
+		// The SciFinder format uses variable-length field label names, which makes it
+		// impossible to match field labels using regular expressions with perl-style
+		// look-behinds (such as '(?<=...)'). This poses a problem when specifying an
+		// appropriate regex pattern for variable '$dataDelimiter'. Therefore, we'll
+		// preprocess the '$sourceText' so that delimiters between field labels and
+		// field data can be easily matched.
+		$sourceText = preg_replace("/^(FIELD [^:\r\n]+):/m", "\\1__dataDelimiter__", $sourceText); // replace the first colon (":"), which separates a field label from its data, with a custom string ("__dataDelimiter__")
+
+		// Define regular expression patterns that will facilitate parsing of SciFinder data:
+		// (patterns must be specified as perl-style regular expression, without the leading & trailing slashes, if not stated otherwise)
+
+		// Pattern by which the input text will be split into individual records:
+		$recordDelimiter = "\s*(START_RECORD[\r\n]+|[\r\n]+END_RECORD)\s*";
+
+		// Pattern by which records will be split into individual fields:
+		$fieldDelimiter = "[\r\n]+FIELD *";
+
+		// Pattern by which fields will be split into their field label (tag) and field data:
+		$dataDelimiter = " *__dataDelimiter__ *";
+
+		// Pattern by which multiple persons are separated within the author, editor or series editor fields of the source data:
+		// (Note: name standardization occurs after multiple author fields have been merged by '; ')
+		$personDelimiter = " *; *";
+
+		// Pattern by which a persons's family name is separated from the given name (or initials):
+		$familyNameGivenNameDelimiter = " *, *";
+
+		// Specifies whether the person's family name comes first within a person's name
+		// ('true' means that the family name is followed by the given name (or initials), 'false' means that the person's family name comes *after* the given name (or initials))
+		$familyNameFirst = true;
+
+		// Specifies whether a person's full given name(s) shall be shortened to initial(s):
+		// (Notes: - if set to 'true', given names will be abbreviated and initials will get normalized (meaning removal of extra whitespace, adding of dots between initials, etc)
+		//         - if set to 'false', given names (and any initials) are taken as is
+		//         - in your database, you should stick to either fully written given names OR initials; if you mix these, records won't get sorted correctly on citation output)
+		$shortenGivenNames = true;
+
+		// Specifies whether fields whose contents are entirely in upper case shall be transformed to title case ('true') or not ('false'):
+		$transformCase = true;
+
+		// Preprocessor actions:
+		// Defines search & replace 'actions' that will be applied to each record's raw source data if the pattern in the corresponding 'match' element is matched:
+		// (If you don't want to perform any preprocessor actions, specify an empty array, like: '$preprocessorActionsArray = array();'.
+		//  Note that, in this case, the search patterns MUST include the leading & trailing slashes -- which is done to allow for mode modifiers such as 'imsxU'.)
+		// 								  "/Search Pattern/"  =>  "Replace Pattern"
+		$preprocessorActionsArray = array();
+
+		// Postprocessor actions:
+		// Defines search & replace 'actions' that will be applied to all those refbase fields that are listed in the corresponding 'fields' element:
+		// (If you don't want to perform any search and replace actions, specify an empty array, like: '$postprocessorActionsArray = array();'.
+		//  Note that, in this case, the search patterns MUST include the leading & trailing slashes -- which is done to allow for mode modifiers such as 'imsxU'.)
+		// 								  "/Search Pattern/"  =>  "Replace Pattern"
+		$postprocessorActionsArray = array(
+											array(
+													'fields'  => array("year"),
+													'actions' => array(
+																		"/^.*?(\d{4}).*/" =>  "\\1", // for the 'year' field, extract any four-digit number (and discard everything else)
+																		"/^\D+$/" =>  "" // clear the 'year' field if it doesn't contain any number
+																	)
+												),
+											array(
+													'fields'  => array("pages"),
+													'actions' => array(
+																		"/(\d+ *pp?)\./" =>  "\\1" // strip any trailing dots from "xx pp." or "xx p." in the 'pages' field
+																	)
+												),
+											array(
+													'fields'  => array("title", "address"),
+													'actions' => array(
+																		"/[,.;:!] *$/" =>  "", // remove any punctuation (except for question marks) from end of field contents
+																		"/,(?! )/" =>  ", " // add a space after a comma if missing (this mainly regards the 'Corporate Source' -> 'address' field)
+																	)
+												),
+											array(
+													'fields'  => array("abstract"),
+													'actions' => array(
+																		'/\\\\"/' =>  '"', // convert escaped quotes (\") into unescaped quotes (")
+																		"/ *\[on SciFinder \(R\)\]$/" =>  "" // remove attribution string " [on SciFinder (R)]" from end of field contents
+																	)
+												),
+											array(
+													'fields'  => array("language"),
+													'actions' => array(
+																		"/^[[:lower:][:punct:] ]+(?=[[:upper:]][[:lower:]]+)/" =>  "", // remove any all-lowercase prefix string (so that field contents such as "written in English." get reduced to "English.")
+																		"/language unavailable/" =>  "", // remove "language unavailable" string
+																		"/[[:punct:]] *$/" =>  "" // remove any punctuation from end of field contents
+																	)
+												),
+											array(
+													'fields'  => array("notes"),
+													'actions' => array(
+																		"/^Can (\d+)/"  =>  "CAN:\\1", // convert any existing "CAN " prefix in front of any number that's at the beginning of the 'notes' field (which originated from the SciFinder 'Chemical Abstracts Number(CAN)' field)
+																		"/^(\d+)/"  =>  "CAN:\\1" // insert a "CAN:" prefix in front of any number that's at the beginning of the 'notes' field (we map the SciFinder 'Chemical Abstracts Number(CAN)' field to the 'notes' field)
+																	)
+												)
+										);
+
+
+		// This array lists patterns which match all SciFinder tags that must occur within a record to be recognized as valid SciFinder record:
+		// (Array keys must contain the tag name as it should be displayed to the user; as is the case with search & replace actions,
+		//  the search patterns MUST include the leading & trailing slashes.)
+		// 				"tag display name"  =>  "tag search pattern"
+		$requiredTagsArray = array(
+									"Document Type"  =>  "/^FIELD Document Type/m"
+								);
+
+		// This array matches SciFinder tags with their corresponding refbase fields:
+		// (fields that are unsupported in either SciFinder or refbase are commented out)
+		// 													  "SciFinder tag" => "refbase field" // SciFinder tag name (comment)
+		$tagsToRefbaseFieldsArray = array(
+											"Document Type"                   =>  "type", // Document Type (IMPORTANT: the array element that maps to 'type' must be listed as the first element!)
+		//									""                                =>  "thesis",
+
+											"Author"                          =>  "author", // Primary Authors
+		//									""                                =>  "editor", // Secondary Authors (Editors)
+		//									""                                =>  "series_editor", // Tertiary Authors (Series Editors)
+											"Corporate Source"                =>  "address", // Corporate Source
+		//									""                                =>  "corporate_author", // Corporate Author
+
+											"Title"                           =>  "title", // Primary Title
+		//									""                                =>  "orig_title", // Original Foreign Title
+
+											"Publication Year"                =>  "year", // Publication Year
+											"Publication Date"                =>  "year", // Publication Date
+
+											"Journal Title"                   =>  "publication", // Periodical name: full format
+		//									""                                =>  "abbrev_journal", // Periodical name: standard abbreviation
+		//									""                                =>  array("Book, Section" => "publication", "Other" => "series_title"), // Secondary Title
+		//									""                                =>  "abbrev_series_title", // Tertiary Title
+
+											"Volume"                          =>  "volume", // Volume
+											"Issue"                           =>  "issue", // Issue
+											"Page"                            =>  "pages", // Page
+
+		//									""                                =>  "series_volume", // (for 'series_volume' and 'series_issue', some magic will be applied within the 'parseRecords()' function)
+		//									""                                =>  "series_issue",
+
+		//									""                                =>  "publisher", // Publisher
+		//									""                                =>  "place", // Place of Publication
+
+		//									""                                =>  "edition", // Edition
+		//									""                                =>  "medium", // Medium
+											"Internat.Standard Doc. Number"   =>  array("Book, Section" => "isbn", "Book, Edited" => "isbn", "Book" => "isbn", "Dissertation" => "isbn", "Dissertation/Thesis" => "isbn", "Other" => "issn"), // Book Whole & Book Chapter: ISBN; Other reference types: ISSN
+
+											"Language"                        =>  "language", // Language
+		//									""                                =>  "summary_language", // Summary Language
+
+											"Index Terms"                     =>  "keywords", // Index Terms
+		//									"Index Terms(2)"                  =>  "keywords", // Index Terms(2)
+											"Abstract"                        =>  "abstract", // Abstract
+
+		//									""                                =>  "area",
+		//									""                                =>  "expedition",
+		//									""                                =>  "conference",
+
+		//									""                                =>  "doi", // Digital Object Identifier
+											"URL"                             =>  "url", // URL
+		//									""                                =>  "file", // Link to PDF
+		//									""                                =>  "related", // Related Records (NOTE: import into user-specific fields is NOT supported yet!)
+
+		//									""                                =>  "call_number", // Call Number
+											"Chemical Abstracts Number(CAN)"  =>  "notes", // Chemical Abstracts Number(CAN)
+
+		//									""                                =>  "contribution_id",
+		//									""                                =>  "online_publication",
+		//									""                                =>  "online_citation",
+		//									""                                =>  "approved",
+		//									""                                =>  "orig_record",
+
+		//									""                                =>  "copy", // Reprint status (NOTE: import into user-specific fields is NOT supported yet!)
+
+		//									"Copyright"                       =>  "", // Copyright
+		//									"Database"                        =>  "", // Database
+		//									"Accession Number"                =>  "", // Accession Number
+		//									"Section Code"                    =>  "", // Section Code
+		//									"Section Title"                   =>  "", // Section Title
+		//									"CA Section Cross-references"     =>  "", // CA Section Cross-references
+		//									"CODEN"                           =>  "", // CODEN
+		//									"CAS Registry Numbers"            =>  "", // CAS Registry Numbers
+		//									"Supplementary Terms"             =>  "", // Supplementary Terms
+		//									"PCT Designated States"           =>  "", // PCT Designated States
+		//									"PCT Reg. Des. States"            =>  "", // PCT Reg. Des. States
+		//									"Reg.Pat.Tr.Des.States"           =>  "", // Reg.Pat.Tr.Des.States
+		//									"Main IPC"                        =>  "", // Main IPC
+		//									"IPC"                             =>  "", // IPC
+		//									"Secondary IPC"                   =>  "", // Secondary IPC
+		//									"Additional IPC"                  =>  "", // Additional IPC
+		//									"Index IPC"                       =>  "", // Index IPC
+		//									"Inventor Name"                   =>  "", // Inventor Name
+		//									"National Patent Classification"  =>  "", // National Patent Classification
+		//									"Patent Application Country"      =>  "", // Patent Application Country
+		//									"Patent Application Date"         =>  "", // Patent Application Date
+		//									"Patent Application Number"       =>  "", // Patent Application Number
+		//									"Patent Assignee"                 =>  "", // Patent Assignee
+		//									"Patent Country"                  =>  "", // Patent Country
+		//									"Patent Kind Code"                =>  "", // Patent Kind Code
+		//									"Patent Number"                   =>  "", // Patent Number
+		//									"Priority Application Country"    =>  "", // Priority Application Country
+		//									"Priority Application Number"     =>  "", // Priority Application Number
+		//									"Priority Application Date"       =>  "", // Priority Application Date
+		//									"Citations"                       =>  "", // Citations
+										);
+
+		// This array lists all SciFinder tags that may occur multiple times:
+		$tagsMultipleArray = array(
+		//							"Chemical Abstracts Number(CAN)",
+		//							"Index Terms", // by allowing "Index Terms" and "Index Terms(2)" to occur multiple times we can merge contents of both of these fields into the 'keywords' field
+		//							"Index Terms(2)",
+									"Publication Year", // by allowing "Publication Year" and "Publication Date" to occur multiple times we can merge contents of both of these fields into the 'year' field (then, we'll extract the first four-digit number from it)
+									"Publication Date"
+								);
+
+
+		// This array matches SciFinder reference types with their corresponding refbase types:
+		// (SciFinder types that are currently not supported in refbase will be taken as is but will get
+		//  prefixed with an "Unsupported: " label; '#fallback#' in comments indicates a type mapping that
+		//  is not a perfect match but as close as currently possible)
+		// (NOTE: the commented reference types are NOT from SciFinder but are remains from the 'refworksToRefbase()' function!)
+		// 																 "SciFinder type"  =>  "refbase type" // name of SciFinder reference type (comment)
+		$referenceTypesToRefbaseTypesArray = array(
+		//											"Abstract"                             =>  "Journal Article", // Abstract (#fallback#)
+		//											"Artwork"                              =>  "Unsupported: Artwork", // Artwork
+		//											"Bills\/Resolutions"                   =>  "Unsupported: Bills/Resolutions", // Bills/Resolutions
+		//											"Book,? (Section|Chapter)"             =>  "Book Chapter", // Book, Section
+		//											"Book, Edited"                         =>  "Book Whole", // Book, Edited (#fallback#)
+													"Book(;.*)?"                           =>  "Book Whole", // Book
+		//											"Case\/Court Decisions"                =>  "Unsupported: Case/Court Decisions", // Case/Court Decisions
+		//											"Computer Program"                     =>  "Software", // Computer Program
+		//											"Conference Proceeding"                =>  "Conference Article", // Conference Proceeding
+		//											"Dissertation(\/Thesis)?"              =>  "Thesis", // Dissertation/Thesis (function 'parseRecords()' will set the special type 'Thesis' back to 'Book Whole' and adopt the refbase 'thesis' field)
+		//											"Dissertation(\/Thesis)?, Unpublished" =>  "Thesis", // Dissertation/Thesis, Unpublished (#fallback#) (function 'parseRecords()' will set the special type 'Thesis' back to 'Book Whole' and adopt the refbase 'thesis' field)
+		//											"Generic"                              =>  "Miscellaneous", // Generic
+		//											"Grant"                                =>  "Unsupported: Grant", // Grant
+		//											"Hearing"                              =>  "Unsupported: Hearing", // Hearing
+													"Journal(;.*)?"                        =>  "Journal Article", // Journal
+		//											"Journal, Electronic"                  =>  "Journal Article", // Journal, Electronic (#fallback#) (function 'parseRecords()' should set the 'online_publication' field accordingly)
+		//											"Laws\/Statutes"                       =>  "Unsupported: Laws/Statutes", // Laws/Statutes
+		//											"Magazine Article"                     =>  "Journal Article", // Magazine Article (#fallback#)
+		//											"Map"                                  =>  "Map", // Map
+		//											"Monograph"                            =>  "Book Whole", // Monograph (#fallback#)
+		//											"Motion Picture"                       =>  "Unsupported: Motion Picture", // Motion Picture
+		//											"Music Score"                          =>  "Unsupported: Music Score", // Music Score
+		//											"Newspaper Article"                    =>  "Newspaper Article", // Newspaper Article
+		//											"Online Discussion Forum"              =>  "Unsupported: Online Discussion Forum", // Online Discussion Forum
+		//											"Patent"                               =>  "Patent", // Patent
+		//											"Personal Communication"               =>  "Unsupported: Personal Communication", // Personal Communication
+													"Report(;.*)?"                         =>  "Report", // Report
+		//											"Sound Recording"                      =>  "Unsupported: Sound Recording", // Sound Recording
+		//											"Thesis(\/Dissertation)?"              =>  "Thesis", // Dissertation/Thesis (function 'parseRecords()' will set the special type 'Thesis' back to 'Book Whole' and adopt the refbase 'thesis' field)
+													"Preprint"                             =>  "Manuscript", // Preprint (#fallback#)
+		//											"Video\/DVD"                           =>  "Unsupported: Video/DVD", // Video/DVD
+		//											"Web Page"                             =>  "Unsupported: Web Page" // Web Page
+												);
+
+		// Other SciFinder Document Types which I've encountered so far:
+
+		//											"General Review"                       =>  "" // General Review
+		//											"Online Computer File"                 =>  "" // Online Computer File
+
+		// -----------------------------------------
+
+		// Split input text into individual records:
+		$recordArray = splitSourceText($sourceText, $recordDelimiter, false); // split on the "START_RECORD"/"END_RECORD" tags that delimit every SciFinder record
+
+		// Validate all records that shall be imported:
+		list($errors, $importRecordNumbersRecognizedFormatArray, $importRecordNumbersNotRecognizedFormatArray) = validateRecords($recordArray, $requiredTagsArray, $importRecordsRadio, $importRecordNumbersArray, $errors);
+
+		// Parse all records that shall be imported:
+		list($parsedRecordsArray, $recordsCount) = parseRecords($recordArray, "SciFinder", $importRecordNumbersRecognizedFormatArray, $tagsToRefbaseFieldsArray, $tagsMultipleArray, $referenceTypesToRefbaseTypesArray, $fieldDelimiter, $dataDelimiter, $personDelimiter, $familyNameGivenNameDelimiter, $familyNameFirst, $shortenGivenNames, $transformCase, $postprocessorActionsArray, $preprocessorActionsArray);
+
+		// Build refbase import array:
+		$importDataArray = buildImportArray("refbase", // 'type' - the array format of the 'records' element
+											"1.0", // 'version' - the version of the given array structure
+											"http://refbase.net/import/scifinder/", // 'creator' - the name of the script/importer (preferably given as unique URI)
 											"Matthias Steffens", // 'author' - author/contact name of the person who's responsible for this script/importer
 											"refbase@extracts.de", // 'contact' - author's email/contact address
 											array('prefix_call_number' => "true"), // 'options' - array with settings that control the behaviour of the 'addRecords()' function
@@ -1074,6 +1429,10 @@
 		// RefWorks format:
 		elseif (preg_match("/^RT /m", $sourceText)) // RefWorks records must at least start with the "RT" tag (we'll only check for its presence, though)
 			$sourceFormat = "RefWorks";
+
+		// SciFinder format:
+		elseif (preg_match("/^START_RECORD/m", $sourceText) AND preg_match("/^END_RECORD/m", $sourceText)) // SciFinder records must at least start with the "START_RECORD" tag and end with an "END_RECORD" tag (we'll only check for their presence, though)
+			$sourceFormat = "SciFinder";
 
 		// Copac format:
 		elseif (preg_match("/^TI- /m", $sourceText) AND preg_match("/^HL- /m", $sourceText)) // Copac records must at least contain the "TI" and "HL" tags
@@ -1174,7 +1533,7 @@
 	// PARSE RECORDS
 	// This function processes an array of records containing the source data (as tagged text) and
 	// returns an array of records where each record contains an array of extracted field data:
-	function parseRecords($recordArray, $recordFormat, $importRecordNumbersRecognizedFormatArray, $tagsToRefbaseFieldsArray, $tagsMultipleArray, $referenceTypesToRefbaseTypesArray, $fieldDelimiter, $dataDelimiter, $personDelimiter, $familyNameGivenNameDelimiter, $familyNameFirst, $shortenGivenNames, $transformCase, $searchReplaceActionsArray)
+	function parseRecords($recordArray, $recordFormat, $importRecordNumbersRecognizedFormatArray, $tagsToRefbaseFieldsArray, $tagsMultipleArray, $referenceTypesToRefbaseTypesArray, $fieldDelimiter, $dataDelimiter, $personDelimiter, $familyNameGivenNameDelimiter, $familyNameFirst, $shortenGivenNames, $transformCase, $postprocessorActionsArray, $preprocessorActionsArray)
 	{
 		global $showSource;
 
@@ -1192,6 +1551,12 @@
 			}
 			else // ...import the current record:
 			{
+				// PRE-PROCESS FIELD DATA:
+				// apply search & replace 'actions' to each record's raw source data:
+				foreach ($preprocessorActionsArray as $thisMatchActionsArray)
+					if (preg_match($thisMatchActionsArray['match'], $recordArray[$i]))
+						$recordArray[$i] = searchReplaceText($thisMatchActionsArray['actions'], $recordArray[$i], true); // function 'searchReplaceText()' is defined in 'include.inc.php'
+
 				// split each record into its fields:
 				$fieldArray = preg_split("/" . $fieldDelimiter . "/", $recordArray[$i]);
 
@@ -1217,12 +1582,12 @@
 								// convert upper case to title case (converts e.g. "ELSEVIER SCIENCE BV" into "Elsevier Science Bv"):
 								// (note that this case transformation won't do the right thing for author initials and abbreviations,
 								//  but the result is better than the whole string being upper case, IMHO)
-								$fieldData = preg_replace("/\b(\w)(\w+)/e", "strtoupper('\\1').strtolower('\\2')", $fieldData); // the 'e' modifier allows to execute perl code within the replacement pattern
+								$fieldData = preg_replace("/\b(\w)(\w+)/e", "strtoupper('\\1').strtolower('\\2')", $fieldData); // the 'e' modifier allows to execute PHP code within the replacement pattern
 
 						// extract individual items of tags that can occur multiple times:
 						foreach ($tagsMultipleArray as $tagMultiple)
 						{
-							if (ereg($tagMultiple, $fieldLabel))
+							if (eregi("^" . $tagMultiple . "$", $fieldLabel))
 								$tagContentsMultipleArray[$tagsToRefbaseFieldsArray[$fieldLabel]][] = $fieldData;
 						}
 
@@ -1364,8 +1729,8 @@
 					}
 				}
 
-				// apply search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$searchReplaceActionsArray':
-				foreach ($searchReplaceActionsArray as $fieldActionsArray)
+				// apply search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$postprocessorActionsArray':
+				foreach ($postprocessorActionsArray as $fieldActionsArray)
 					foreach ($fieldParametersArray as $fieldName => $fieldValue)
 						if (in_array($fieldName, $fieldActionsArray['fields']))
 							$fieldParametersArray[$fieldName] = searchReplaceText($fieldActionsArray['actions'], $fieldValue, true); // function 'searchReplaceText()' is defined in 'include.inc.php'
@@ -1604,7 +1969,7 @@
 
 					if (preg_match("/^[[:upper:]\W\d]+$/", $extractedSourceFieldData)) // if all of the words within the monograph title are uppercase, we attempt to convert the string to something more readable:
 						// perform case transformation (e.g. convert "BIOLOGY AND ECOLOGY OF GLACIAL RELICT CRUSTACEA" into "Biology And Ecology Of Glacial Relict Crustacea")
-						$extractedSourceFieldData = preg_replace("/\b(\w)(\w+)/e", "strtoupper('\\1').strtolower('\\2')", $extractedSourceFieldData); // the 'e' modifier allows to execute perl code within the replacement pattern
+						$extractedSourceFieldData = preg_replace("/\b(\w)(\w+)/e", "strtoupper('\\1').strtolower('\\2')", $extractedSourceFieldData); // the 'e' modifier allows to execute PHP code within the replacement pattern
 
 					$fieldArray[] = "MT: Monograph Title\r\n    " . $extractedSourceFieldData; // add field "MT: Monograph Title" to the array of fields
 				}
@@ -1618,7 +1983,7 @@
 
 					if (preg_match("/^[[:upper:]\W\d]+$/", $extractedSourceFieldData)) // if all of the words within the journal name are uppercase, we attempt to convert the string to something more readable:
 						// perform case transformation (e.g. convert "POLAR BIOLOGY" into "Polar Biology")
-						$extractedSourceFieldData = preg_replace("/\b(\w)(\w+)/e", "strtoupper('\\1').strtolower('\\2')", $extractedSourceFieldData); // the 'e' modifier allows to execute perl code within the replacement pattern
+						$extractedSourceFieldData = preg_replace("/\b(\w)(\w+)/e", "strtoupper('\\1').strtolower('\\2')", $extractedSourceFieldData); // the 'e' modifier allows to execute PHP code within the replacement pattern
 
 					$fieldArray[] = "JN: Journal Name\r\n    " . $extractedSourceFieldData; // add field "JN: Journal Name" to the array of fields
 				}
@@ -1661,7 +2026,7 @@
 
 					if (preg_match("/^[[:upper:]\W\d]+$/", $extractedSourceFieldData)) // if all of the words within the abbreviated journal name are uppercase, we attempt to convert the string to something more readable:
 						// perform case transformation (e.g. convert "BALT SEA ENVIRON PROC" into "Balt Sea Environ Proc")
-						$extractedSourceFieldData = preg_replace("/\b(\w)(\w+)/e", "strtoupper('\\1').strtolower('\\2')", $extractedSourceFieldData); // the 'e' modifier allows to execute perl code within the replacement pattern
+						$extractedSourceFieldData = preg_replace("/\b(\w)(\w+)/e", "strtoupper('\\1').strtolower('\\2')", $extractedSourceFieldData); // the 'e' modifier allows to execute PHP code within the replacement pattern
 
 					$fieldArray[] = "JA: Abbrev Journal Name\r\n    " . $extractedSourceFieldData; // add field "JA: Abbrev Journal Name" to the array of fields (note that this field normally does NOT occur within the CSA full record format!)
 				}
@@ -1826,7 +2191,7 @@
 					{
 						if (preg_match("/^[[:upper:]\W\d]+$/", $fieldData)) // if all of the words within the publisher name are uppercase, we attempt to convert the string to something more readable:
 							// perform case transformation (e.g. convert "ELSEVIER SCIENCE B.V." into "Elsevier Science B.V.")
-							$fieldData = preg_replace("/\b(\w)(\w+)/e", "strtoupper('\\1').strtolower('\\2')", $fieldData); // the 'e' modifier allows to execute perl code within the replacement pattern
+							$fieldData = preg_replace("/\b(\w)(\w+)/e", "strtoupper('\\1').strtolower('\\2')", $fieldData); // the 'e' modifier allows to execute PHP code within the replacement pattern
 
 						$fieldParametersArray['publisher'] = $fieldData;
 					}

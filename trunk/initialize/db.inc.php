@@ -1,20 +1,25 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-	//             Please see the GNU General Public License for more details.
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
 	// File:       ./initialize/db.inc.php
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    15-Oct-02, 19:11
-	// Modified:   29-Oct-05, 16:56
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This file holds crucial
 	// database access information.
 	// Please read the notes below!
 
-	/*
-	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
-	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
-	*/
 	
 	// NOTE: Edit the variables '$databaseName', '$username' and '$password' to suit your setup!
 	//       (Although you'll be able to use the refbase package without modifying these variables,
@@ -51,25 +56,30 @@
 
 	// NOTE: You shouldn't change anything below this line unless you know what you're doing!
 
-	// The names of the MySQL database tables used by refbase:
 	// If you need to put the refbase tables into an existing MySQL database, you may want to
 	// rename the refbase tables to avoid any name conflicts. If you do so, you need to adopt
-	// the table names here accordingly.
-	//                      ->  in code comments referred to as table:
-	$tableAuth = "auth"; // ->  'auth'
-	$tableDeleted = "deleted"; // -> 'deleted'
-	$tableDepends = "depends"; // -> 'depends'
-	$tableFormats = "formats"; // -> 'formats'
-	$tableLanguages = "languages"; // -> 'languages'
-	$tableQueries = "queries"; // -> 'queries'
-	$tableRefs = "refs"; // -> 'refs'
-	$tableStyles = "styles"; // -> 'styles'
-	$tableTypes = "types"; // -> 'types'
-	$tableUserData = "user_data"; // -> 'user_data'
-	$tableUserFormats = "user_formats"; // -> 'user_formats'
-	$tableUserOptions = "user_options"; // -> 'user_options'
-	$tableUserPermissions = "user_permissions"; // -> 'user_permissions'
-	$tableUserStyles = "user_styles"; // -> 'user_styles'
-	$tableUserTypes = "user_types"; // -> 'user_types'
-	$tableUsers = "users"; // -> 'users'
+	// the table prefix (and/or table names) accordingly. Note that you must then also change
+	// the table names in files 'install.sql' and 'update.sql'.
+
+	// The table name prefix used for refbase MySQL tables:
+	$tablePrefix = ""; // e.g.: "rb_"
+
+	// The names of the MySQL database tables used by refbase:
+	//                                                             -> in code comments referred to as table:
+	$tableAuth =             $tablePrefix . "auth";             // -> 'auth'
+	$tableDeleted =          $tablePrefix . "deleted";          // -> 'deleted'
+	$tableDepends =          $tablePrefix . "depends";          // -> 'depends'
+	$tableFormats =          $tablePrefix . "formats";          // -> 'formats'
+	$tableLanguages =        $tablePrefix . "languages";        // -> 'languages'
+	$tableQueries =          $tablePrefix . "queries";          // -> 'queries'
+	$tableRefs =             $tablePrefix . "refs";             // -> 'refs'
+	$tableStyles =           $tablePrefix . "styles";           // -> 'styles'
+	$tableTypes =            $tablePrefix . "types";            // -> 'types'
+	$tableUserData =         $tablePrefix . "user_data";        // -> 'user_data'
+	$tableUserFormats =      $tablePrefix . "user_formats";     // -> 'user_formats'
+	$tableUserOptions =      $tablePrefix . "user_options";     // -> 'user_options'
+	$tableUserPermissions =  $tablePrefix . "user_permissions"; // -> 'user_permissions'
+	$tableUserStyles =       $tablePrefix . "user_styles";      // -> 'user_styles'
+	$tableUserTypes =        $tablePrefix . "user_types";       // -> 'user_types'
+	$tableUsers =            $tablePrefix . "users";            // -> 'users'
 ?>

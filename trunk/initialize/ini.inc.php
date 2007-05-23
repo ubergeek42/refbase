@@ -1,11 +1,20 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-	//             Please see the GNU General Public License for more details.
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
 	// File:       ./initialize/ini.inc.php
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    12-Jan-03, 17:58
-	// Modified:   10-Dec-06, 19:00
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This is the customization include file.
 	// It contains variables that are common to all scripts and whose values can/should be customized.
@@ -20,7 +29,7 @@
 	// The base url for this literature database (i.e., the URL to the root directory):
 	// It will be used within RSS feeds and when sending notification emails to database users.
 	// (IMPORTANT: the base url MUST end with a slash!)
-$databaseBaseURL = preg_replace('#[^/]*$#e','','http://'.$_SERVER['HTTP_HOST'].scriptURL(),1); // e.g. "http://polaris.ipoe.uni-kiel.de/refs/"
+	$databaseBaseURL = preg_replace('#[^/]*$#e','','http://'.$_SERVER['HTTP_HOST'].scriptURL(),1); // e.g. "http://polaris.ipoe.uni-kiel.de/refs/"
 
 
 	// Specify who'll be allowed to add a new user to the users table:
@@ -132,11 +141,13 @@ $databaseBaseURL = preg_replace('#[^/]*$#e','','http://'.$_SERVER['HTTP_HOST'].s
 
 	// When adding a new user, the following export formats will be made available to the new user by default:
 	// The specified format names must have matching entries within the 'formats' MySQL table.
-	$defaultUserExportFormats = array("Endnote",
+	$defaultUserExportFormats = array("BibTeX",
+										"Endnote",
 										"RIS",
-										"BibTeX",
+										"ISI",
 										"MODS XML",
-										"ODF XML");
+										"ODF XML",
+										"Word XML");
 
 
 	// When adding a new user, the following citation formats will be made available to the new user by default:
@@ -162,9 +173,17 @@ $databaseBaseURL = preg_replace('#[^/]*$#e','','http://'.$_SERVER['HTTP_HOST'].s
 	$defaultUserTypes = array("Journal Article",
 								"Book Chapter",
 								"Book Whole",
+								"Conference Article",
+								"Conference Volume",
 								"Journal",
+								"Manual",
 								"Manuscript",
-								"Map");
+								"Map",
+								"Miscellaneous",
+								"Newspaper Article",
+								"Patent",
+								"Report",
+								"Software");
 
 
 	// Defines the default user options when adding new users:
@@ -222,6 +241,10 @@ $databaseBaseURL = preg_replace('#[^/]*$#e','','http://'.$_SERVER['HTTP_HOST'].s
 	// This name must correspond to an entry within the 'styles' MySQL table.
 	// It will be used for citation output within 'show.php' and the 'generateRSS()' function.
 	$defaultCiteStyle = "APA";
+
+
+	// The size of the PDF page (used when outputting citations as PDF):
+	$pdfPageSize = "a4"; // possible values: "a4", "letter"
 
 
 	// The default text citation format:

@@ -1,20 +1,25 @@
 <?php
 	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
-	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de>
-	//             This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
-	//             Please see the GNU General Public License for more details.
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
 	// File:       ./show.php
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
 	// Created:    02-Nov-03, 14:10
-	// Modified:   07-Oct-06, 22:44
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
 
 	// This script serves as a routing page which takes e.g. any record serial number, date, year, author, contribution ID or thesis that was passed
 	// as parameter to the script, builds an appropriate SQL query and passes that to 'search.php' which will then display the corresponding
 	// record(s). This allows to provide short URLs (like: '.../show.php?record=12345') for email announcements or to generate publication lists.
 
-	/*
-	Code adopted from example code by Hugh E. Williams and David Lane, authors of the book
-	"Web Database Application with PHP and MySQL", published by O'Reilly & Associates.
-	*/
 
 	// Incorporate some include files:
 	include 'initialize/db.inc.php'; // 'db.inc.php' is included to hide username and password
@@ -24,6 +29,14 @@
 	include 'initialize/ini.inc.php'; // include common variables
 
 	// --------------------------------------------------------------------
+
+	// Extract the ID of the client from which the query originated:
+	// this identifier is used to identify queries that originated from the refbase command line clients ("cli-refbase-1.1", "cli-refbase_import-1.0") or from a bookmarklet (e.g., "jsb-refbase-1.0")
+	// (note that 'client' parameter has to be extracted *before* the call to the 'start_session()' function, since it's value is required by this function)
+	if (isset($_REQUEST['client']))
+		$client = $_REQUEST['client'];
+	else
+		$client = "";
 
 	// START A SESSION:
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
@@ -39,13 +52,6 @@
 
 	// Extract any generic parameters passed to the script:
 	// (they control how found records are presented on screen)
-
-	// Extract the ID of the client from which the query originated:
-	// this identifier is used to identify queries that originated from the refbase command line clients ("cli-refbase-1.1", "cli-refbase_import-1.0") or from a bookmarklet (e.g., "jsb-refbase-1.0")
-	if (isset($_REQUEST['client']))
-		$client = $_REQUEST['client'];
-	else
-		$client = "";
 
 	// Extract the type of display requested by the user. Normally, this will be one of the following:
 	//  - '' => if the 'submit' parameter is empty, this will produce the default columnar output style ('displayColumns()' function)
@@ -129,7 +135,7 @@
 		$exportType = "html";
 
 	if (isset($_REQUEST['headerMsg']))
-		$headerMsg = $_REQUEST['headerMsg']; // we'll accept custom header messages as well
+		$headerMsg = stripTags($_REQUEST['headerMsg']); // we'll accept custom header messages but strip HTML tags from the custom header message to prevent cross-site scripting (XSS) attacks (function 'stripTags()' is defined in 'include.inc.php')
 						// Note: custom header messages are provided so that it's possible to include an information string within a link. This info string could
 						//       e.g. describe who's publications are being displayed (e.g.: "Publications of Matthias Steffens:"). I.e., a link pointing to a
 						//       persons own publications can include the appropriate owner information (it will show up as header message)
@@ -484,7 +490,7 @@
 		//           (the above string MUST end with ", call_number, serial" in order to have the described query completion feature work correctly!
 
 			if ($displayType == "Export") // for export, we inject some additional fields into the SELECT clause (again, we must add these additional fields *before* ", call_number, serial" in order to have the described query completion feature work correctly!)
-				$query = eregi_replace(', call_number, serial', ', online_publication, online_citation, call_number, serial', $query);
+				$query = eregi_replace(', call_number, serial', ', online_publication, online_citation, modified_date, modified_time, call_number, serial', $query);
 	
 		}
 
@@ -772,7 +778,7 @@
 			if ($thesis == "yes")
 				$query .= " thesis RLIKE \".+\"";				
 			elseif ($thesis == "no")
-				$query .= " thesis IS NULL";
+				$query .= " (thesis IS NULL OR thesis = \"\")";
 			else
 				$query .= " thesis RLIKE " . quote_smart($thesis);
 		}
