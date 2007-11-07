@@ -24,7 +24,7 @@
 
 	// --- BEGIN CITATION FORMAT ---
 
-	function citeRecords($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
+	function citeRecords($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
 	{
 		global $contentTypeCharset; // defined in 'ini.inc.php'
 
@@ -52,7 +52,8 @@
 		//							"underline-prefix" => "\\ul{", // the '\ul' command requires '\usepackage{soul}'
 		//							"underline-suffix" => "}",
 									"endash"           => "--", // or use '{\\textendash}'
-									"emdash"           => "---"); // or use '{\\textemdash}'
+									"emdash"           => "---", // or use '{\\textemdash}'
+									"newline"          => "\n\n");
 
 		// Defines search & replace 'actions' that will be applied upon LaTeX output to all those refbase fields that are listed
 		// in the corresponding 'fields' element:

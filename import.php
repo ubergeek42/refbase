@@ -16,7 +16,7 @@
 	//             $Author$
 	//             $Revision$
 
-	// Import form that offers to import records from Reference Manager (RIS), Cambridge Scientific Abstracts (CSA),
+	// Import form that offers to import records from Reference Manager (RIS), CSA Illumina,
 	// RefWorks Tagged Format, SciFinder Tagged Format, ISI Web of Science, PubMed MEDLINE, PubMed XML, MODS XML,
 	// Endnote Tagged Text, BibTeX or COPAC. Import of the latter five formats is provided via use of bibutils.
 
@@ -26,7 +26,7 @@
 	include 'includes/footer.inc.php'; // include footer
 	include 'includes/include.inc.php'; // include common functions
 	include 'initialize/ini.inc.php'; // include common variables
-	
+
 	// --------------------------------------------------------------------
 
 	// START A SESSION:
@@ -155,7 +155,7 @@
 
 		// (A) main import form:
 		$sourceText = "";
-		$importRecordsRadio = "only";
+		$importRecordsRadio = "all";
 		$importRecords = "1";
 		$skipBadRecords = "";
 
@@ -193,7 +193,7 @@
 				$skipBadRecordsCheckBoxIsChecked = " checked"; // mark the 'Skip records with unrecognized data format' checkbox
 			else
 				$skipBadRecordsCheckBoxIsChecked = "";
-	
+
 			// display the 'Skip records with unrecognized data format' checkbox:
 			$skipBadRecordsInput = "<br><input type=\"checkbox\" name=\"skipBadRecords\" value=\"1\"$skipBadRecordsCheckBoxIsChecked title=\"mark this checkbox to omit records with unrecognized data format during import\">&nbsp;&nbsp;" . fieldError("skipBadRecords", $errors);
 		}
@@ -322,7 +322,7 @@
 			. "<a href=\"http://www.loc.gov/standards/mods/\" target=\"top\">MODS XML</a>, "
 			. "<a href=\"http://isiknowledge.com/wos/\" target=\"top\">ISI Web of Science</a>, "
 			. "<a href=\"http://www.pubmed.gov/\" target=\"top\">PubMed</a> (MEDLINE or XML), "
-			. "<a href=\"" . $importCSArecordsURL . "\" target=\"top\">Cambridge Scientific Abstracts</a> (CSA), " // '$importCSArecordsURL' is defined in 'ini.inc.php'
+			. "<a href=\"" . $importCSArecordsURL . "\" target=\"top\">CSA Illumina</a>, " // '$importCSArecordsURL' is defined in 'ini.inc.php'
 			. "<a href=\"http://www.cas.org/SCIFINDER/\" target=\"top\">SciFinder</a> "
 			. "and <a href=\"http://www.copac.ac.uk/\" target=\"top\">COPAC</a>."
 			. " Please see the <a href=\"http://import.refbase.net/\" target=\"top\">refbase online documentation</a> for more information about the supported formats and any requirements in format structure.</td>"
@@ -332,7 +332,7 @@
 			. "\n</tr>"
 			. "\n</table>"
 			. "\n</form>";
-	
+
 	// --------------------------------------------------------------------
 
 	// SHOW ERROR IN RED:

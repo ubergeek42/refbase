@@ -24,7 +24,7 @@
 
 	// --- BEGIN CITATION FORMAT ---
 
-	function citeRecords($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
+	function citeRecords($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
 	{
 		global $officialDatabaseName; // these variables are defined in 'ini.inc.php'
 		global $databaseBaseURL;
@@ -53,7 +53,8 @@
 									"underline-prefix" => "",
 									"underline-suffix" => "",
 									"endash"           => "-",
-									"emdash"           => "-");
+									"emdash"           => "-",
+									"newline"          => "\n");
 
 		// Defines search & replace 'actions' that will be applied upon TEXT output to all those refbase fields that are listed
 		// in the corresponding 'fields' element:

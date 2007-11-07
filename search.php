@@ -20,7 +20,8 @@
 	// Supports three different output styles: 1) List view, with fully configurable columns -> displayColumns() function
 	// 2) Details view, shows all fields -> displayDetails() function; 3) Citation view -> generateCitations() function
 
-	// TODO: Refactor so that query builder will use a few common functions
+	// TODO: - Refactor so that query builder will use a few common functions
+	//       - I18n
 
 
 	// Incorporate some include files:
@@ -51,6 +52,20 @@
 	// START A SESSION:
 	// call the 'start_session()' function (from 'include.inc.php') which will also read out available session variables:
 	start_session(true);
+
+	// Read out POST data that were saved as a session variable:
+	// NOTE: this is done by 'show.php' if the original request was a POST (as is the case for the refbase command line client)
+	//       in order to retain large param/value strings (that would exceed the maximum string limit for GET requests)
+	if (isset($_SESSION['postData']))
+	{
+		foreach ($_SESSION['postData'] as $varname => $value)
+		{
+			$_POST[$varname] = $value;
+			$_REQUEST[$varname] = $value;
+		}
+
+		deleteSessionVariable("postData"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+	}
 
 	// --------------------------------------------------------------------
 
@@ -102,20 +117,11 @@
 	{
 		if (isset($_SESSION['user_permissions']) AND !ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain 'allow_details_view'...
 		{
-			if (eregi("^cli", $client)) 
-			{
-				echo $loc["NoPermission"] . $loc["NoPermission_ForDisplayDetails"] . "!\n\n";
-			}
-			else
-			{
-				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForDisplayDetails"] . "!</span></b>";
+			// return an appropriate error message:
+			$HeaderString = returnMsg($loc["NoPermission"] . $loc["NoPermission_ForDisplayDetails"] . "!", "warning", "strong", "HeaderString"); // function 'returnMsg()' is defined in 'include.inc.php'
 
-				// Write back session variables:
-				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-
+			if (!eregi("^cli", $client))
 				header("Location: index.php"); // redirect to main page ('index.php')
-			}
 
 			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		}
@@ -124,18 +130,11 @@
 	{
 		if (isset($_SESSION['user_permissions']) AND !ereg("allow_cite", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain 'allow_cite'...
 		{
-			if (eregi("^cli", $client)) 
-			{
-				echo $loc["NoPermission"] . $loc["NoPermission_ForCite"] . "!\n\n";
-			}
-			else
-			{
-				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForCite"] . "!</span></b>";
+			// return an appropriate error message:
+			$HeaderString = returnMsg($loc["NoPermission"] . $loc["NoPermission_ForCite"] . "!", "warning", "strong", "HeaderString"); // function 'returnMsg()' is defined in 'include.inc.php'
 
-				// Write back session variables:
-				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-
+			if (!eregi("^cli", $client))
+			{
 				if (ereg(".+extract.php", $referer)) // if the query was submitted by 'extract.php'
 					header("Location: " . $referer); // redirect to calling page
 				else
@@ -149,18 +148,11 @@
 	{
 		if (isset($_SESSION['user_permissions']) AND !ereg("(allow_export|allow_batch_export)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable does NOT contain either 'allow_export' or 'allow_batch_export'...
 		{
-			if (eregi("^cli", $client)) 
-			{
-				echo $loc["NoPermission"] . $loc["NoPermission_ForExport"] . "!\n\n";
-			}
-			else
-			{
-				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForExport"] . "!</span></b>";
+			// return an appropriate error message:
+			$HeaderString = returnMsg($loc["NoPermission"] . $loc["NoPermission_ForExport"] . "!", "warning", "strong", "HeaderString"); // function 'returnMsg()' is defined in 'include.inc.php'
 
-				// Write back session variables:
-				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-
+			if (!eregi("^cli", $client))
+			{
 				if (ereg(".+extract.php", $referer)) // if the query was submitted by 'extract.php'
 					header("Location: " . $referer); // redirect to calling page
 				else
@@ -179,16 +171,16 @@
 		{
 			if ($formType == "sqlSearch" AND !ereg(".+/search.php", $referer)) // if the calling URL contained 'formType=sqlSearch' but wasn't sent by 'search.php' (but, e.g., by 'sql_search.php')
 			{
-				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">". $loc["NoPermission"] . $loc["NoPermission_ForSQL"] . "!</span></b>";
+				// return an appropriate error message:
+				$HeaderString = returnMsg($loc["NoPermission"] . $loc["NoPermission_ForSQL"] . "!", "warning", "strong", "HeaderString"); // function 'returnMsg()' is defined in 'include.inc.php'
 
-				// Write back session variables:
-				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-
-				if (ereg(".+sql_search.php", $referer)) // if the sql query was entered in the form provided by 'sql_search.php'
-					header("Location: " . $referer); // redirect to calling page
-				else
-					header("Location: index.php"); // redirect to main page ('index.php')
+				if (!eregi("^cli", $client))
+				{
+					if (ereg(".+sql_search.php", $referer)) // if the sql query was entered in the form provided by 'sql_search.php'
+						header("Location: " . $referer); // redirect to calling page
+					else
+						header("Location: index.php"); // redirect to main page ('index.php')
+				}
 
 				exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			}
@@ -223,10 +215,10 @@
 	else
 		$showLinks = "";
 
-	if (isset($_REQUEST['showRows']))
+	if (isset($_REQUEST['showRows']) AND ereg("^[0-9]+$", $_REQUEST['showRows'])) // NOTE: we cannot use "^[1-9]+[0-9]*$" here since 'maximumRecords=0' is used in 'sru.php' queries to return just the number of found records (and not the full record data)
 		$showRows = $_REQUEST['showRows'];
 	else
-		$showRows = 0;
+		$showRows = $_SESSION['userRecordsPerPage']; // get the default number of records per page preferred by the current user
 
 	if (isset($_REQUEST['rowOffset']))
 	{
@@ -241,6 +233,11 @@
 	}
 	else
 		$rowOffset = 0;
+
+	if (isset($_REQUEST['wrapResults']) AND ($_REQUEST['wrapResults'] == "0"))
+		$wrapResults = $_REQUEST['wrapResults']; // for citation output, 'wrapResults=0' causes refbase to output only a partial document structure containing solely the search results (e.g. for HTML, everything is omitted except for the <table> block containing the search results)
+	else
+		$wrapResults = "1"; // we'll output a full document (HTML, RTF, LaTeX, etc) structure unless the 'wrapResults' parameter is set explicitly to "0"
 
 	// In order to generalize routines we have to query further variables here:
 	if (isset($_REQUEST['citeStyleSelector']) AND !empty($_REQUEST['citeStyleSelector']))
@@ -273,7 +270,8 @@
 	// - 'LaTeX' => return citations as LaTeX data with mime type 'application/x-latex'
 	// - 'Markdown' => return citations as Markdown TEXT data with mime type 'text/plain'
 	// - 'ASCII' => return citations as TEXT data with mime type 'text/plain'
-	if (isset($_REQUEST['citeType']) AND eregi("^(html|RTF|PDF|LaTeX|Markdown|ASCII)$", $_REQUEST['citeType']))
+	// - 'LaTeX .bbl' => return citations as LaTeX .bbl file (for use with LaTeX/BibTeX) with mime type 'application/x-latex'
+	if (isset($_REQUEST['citeType']) AND eregi("^(html|RTF|PDF|LaTeX|Markdown|ASCII|LaTeX \.bbl)$", $_REQUEST['citeType']))
 		$citeType = $_REQUEST['citeType'];
 	else
 		$citeType = "html";
@@ -357,8 +355,7 @@
 		$sqlQuery = preg_replace("/(<|&lt;?|&#0*60;?|&#x0*3C;?|%3C|\\\\x3c|\\\\u003c)\/*(" . join("|", $htmlTagsArray) . ").*?(>|&gt;?|&#0*62;?|&#x0*3E;?|%3E|\\\\x3e|\\\\u003e)*/i", "", $sqlQuery);
 
 		$notPermitted = true;
-		// save an appropriate error message:
-		$HeaderString = "<b><span class=\"warning\">You have no permission to perform this query!</span></b>";
+		$HeaderString = $loc["NoPermission"] . $loc["NoPermission_ForThisQuery"] . "!";
 	}
 
 	// For a normal user we only allow the use of SELECT queries (the admin is allowed to do everything that is allowed by his GRANT privileges):
@@ -379,15 +376,13 @@
 			if (!eregi("^SELECT", $sqlQuery) OR eregi(join("|", $forbiddenSQLCommandsArray), $sqlQuery))
 			{
 				$notPermitted = true;
-				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">You're only permitted to execute SELECT queries!</span></b>";
+				$HeaderString = $loc["NoPermission_ForSQLOtherThanSELECT"] . "!";
 			}
 			// ...or the user tries to hack the SQL query (by providing e.g. the string "FROM refs" within the SELECT statement) -OR- if the user attempts to query anything other than the 'refs' or 'user_data' table:
 			elseif ((preg_match("/FROM .*(" . join("|", $tablesArray) . ").+ FROM /i", $sqlQuery)) OR (!preg_match("/FROM $tableRefs( LEFT JOIN $tableUserData ON serial ?= ?record_id AND user_id ?= ?\d*)?(?= WHERE| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i", $sqlQuery)))
 			{
 				$notPermitted = true;
-				// save an appropriate error message:
-				$HeaderString = "<b><span class=\"warning\">You have no permission to perform this query!</span></b>";
+				$HeaderString = $loc["NoPermission"] . $loc["NoPermission_ForThisQuery"] . "!";
 			}
 		}
 		// note that besides the above validation, in case of 'duplicate_search.php' the SQL query will be further restricted so that generally only SELECT queries can be executed (this is handled by function 'findDuplicates()')
@@ -395,13 +390,17 @@
 
 	if ($notPermitted)
 	{
-		// Write back session variable:
-		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+		// return an appropriate error message:
+		$HeaderString = returnMsg($HeaderString, "warning", "strong", "HeaderString"); // function 'returnMsg()' is defined in 'include.inc.php'
 
-		if (eregi(".+(sql|duplicate)_search.php", $referer)) // if the sql query was entered in the form provided by 'sql_search.php' or 'duplicate_search.php'
-			header("Location: $referer"); // relocate back to the calling page
-		else // if the user didn't come from 'sql_search.php' or 'duplicate_search.php' (e.g., if he attempted to hack parameters of a GET query directly)
-			header("Location: index.php"); // relocate back to the main page
+		if (!eregi("^cli", $client))
+		{
+			if (eregi(".+(sql|duplicate)_search.php", $referer)) // if the sql query was entered in the form provided by 'sql_search.php' or 'duplicate_search.php'
+				header("Location: $referer"); // relocate back to the calling page
+			else // if the user didn't come from 'sql_search.php' or 'duplicate_search.php' (e.g., if he attempted to hack parameters of a GET query directly)
+				header("Location: index.php"); // relocate back to the main page
+		}
+
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
 
@@ -489,7 +488,7 @@
 	// --- Quick Search Form within 'index.php': ---------------------
 	elseif ($formType == "quickSearch") // the user used the 'Quick Search' form on the main page ('index.php') for searching...
 		{
-			$query = extractFormElementsQuick($showLinks);
+			$query = extractFormElementsQuick($showLinks, $userID);
 		}
 
 	// --- Browse My Refs Form within 'index.php': -------------------
@@ -600,8 +599,8 @@
 		// (alternatively we could always use: "records matching current query")
 		$rssTitle = "records where " . encodeHTML(explainSQLQuery($queryWhereClause)); // functions 'encodeHTML()' and 'explainSQLQuery()' are defined in 'include.inc.php'
 
-		$rssURLArray[] = array("href" => $rssURL,
-								"title" => $rssTitle);
+		$rssURLArray[] = array("href"  => $rssURL,
+		                       "title" => $rssTitle);
 	}
 
 	// Finally, build the appropriate header string (which is required as parameter to the 'showPageHeader()' function):
@@ -708,24 +707,24 @@
 	// Now, show the login status:
 	showLogin(); // function 'showLogin()' is defined in 'include.inc.php'
 
-	if (!eregi("^cli", $client) AND (!(($displayType == "Cite") AND (!eregi("^html$", $citeType))) OR ($rowsFound == 0))) // we exclude the HTML page header for citation formats other than HTML if something was found
+	if (!eregi("^cli", $client) AND ($wrapResults != "0") AND (!(($displayType == "Cite") AND (!eregi("^html$", $citeType))) OR ($rowsFound == 0))) // we exclude the HTML page header for citation formats other than HTML if something was found
 	{
 		// Then, call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Query Results", "index,follow", "Results from the " . encodeHTML($officialDatabaseName), "", true, "", $viewType, $rssURLArray);
-		if ($viewType != "Print") // Note: we omit the visible header in print view! ('viewType=Print')
+		if (($viewType != "Print") AND (!eregi("^inc", $client))) // Note: we omit the visible header in print view ('viewType=Print') and for include mechanisms!
 			showPageHeader($HeaderString, $oldQuery);
 	}
 
 
 	// (4b) DISPLAY results:
 	if ($displayType == "Display") // display details for each of the selected records
-		displayDetails($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $showMaxRow, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $formType);
+		displayDetails($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $showMaxRow, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $formType);
 
 	elseif ($displayType == "Cite") // build a proper citation for each of the selected records
-		generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType);
+		generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $nothingChecked, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType);
 
 	else // show all records in columnar style
-		displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $addCounterMax, $formType);
+		displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $nothingChecked, $citeStyle, $citeOrder, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $addCounterMax, $formType);
 
 	// --------------------------------------------------------------------
 
@@ -735,7 +734,7 @@
 	// --------------------------------------------------------------------
 
 	// SHOW THE RESULTS IN AN HTML <TABLE> (columnar layout)
-	function displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $addCounterMax, $formType)
+	function displayColumns($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $nothingChecked, $citeStyle, $citeOrder, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $addCounterMax, $formType)
 	{
 		global $oldQuery; // This is required since the 'add record' link gets constructed outside this function, otherwise it would still contain the older query URL!)
 		global $searchReplaceActionsArray; // these variables are defined in 'ini.inc.php'
@@ -968,7 +967,7 @@
 						// for List view, we'll use the '$showLinkTypesInListView' array that's defined in 'ini.inc.php'
 						// to specify which links shall be displayed (if available and if 'showLinks == 1')
 						// (for links of type DOI/URL/ISBN/XREF, only one link will be printed; order of preference: DOI, URL, ISBN, XREF)
-						echo printLinks($showLinkTypesInListView, $row, $showQuery, $showLinks, $userID, $viewType, $orderBy);
+						echo printLinks($showLinkTypesInListView, $row, $showQuery, $showLinks, $wrapResults, $userID, $viewType, $orderBy);
 
 						echo "\n\t</td>";
 					}
@@ -1061,7 +1060,7 @@
 	// --------------------------------------------------------------------
 
 	// SHOW THE RESULTS IN AN HTML <TABLE> (horizontal layout)
-	function displayDetails($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $showMaxRow, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $formType)
+	function displayDetails($result, $rowsFound, $query, $queryURL, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $nothingChecked, $citeStyle, $citeOrder, $orderBy, $showMaxRow, $headerMsg, $userID, $displayType, $viewType, $selectedRecordsArray, $formType)
 	{
 		global $filesBaseURL; // these variables are defined in 'ini.inc.php'
 		global $searchReplaceActionsArray;
@@ -1591,7 +1590,7 @@
 	// --------------------------------------------------------------------
 
 	// CITE RECORDS using the specified citation style and format
-	function generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $nothingChecked, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
+	function generateCitations($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $nothingChecked, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
 	{
 		global $contentTypeCharset; // these variables are defined in 'ini.inc.php'
 		global $defaultCiteStyle;
@@ -1637,7 +1636,7 @@
 			include_once "cite/" . $citeFormatFile;
 
 
-			$citationData = citeRecords($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType); // function 'citeRecordsHTML()' is defined in 'cite.inc.php'
+			$citationData = citeRecords($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType); // function 'citeRecordsHTML()' is defined in 'cite.inc.php'
 
 
 			if (eregi("^RTF$", $citeType)) // output references as RTF file
@@ -1654,6 +1653,11 @@
 			{
 				$citeContentType = "application/x-latex";
 				$citeFileName = "citations.tex";
+			}
+			elseif (eregi("^LaTeX \.bbl$", $citeType)) // output references as LaTeX .bbl file (for use with LaTeX/BibTeX)
+			{
+				$citeContentType = "application/x-latex";
+				$citeFileName = "citations.bbl";
 			}
 			elseif (eregi("^Markdown$", $citeType)) // output references as Markdown TEXT (a plain text formatting syntax)
 			{
@@ -1893,7 +1897,7 @@
 			// Note: currently, this only works when the correct 'citeStyle' name gets incorporated into an URL *manually*
 			//       it doesn't work with previous & next browsing since these links actually don't submit the form (i.e., the current state of form variables won't get send)
 			if (!empty($citeStyle))
-				$ResultsFooterRow = ereg_replace("<option>$citeStyle", "<option selected>$citeStyle", $ResultsFooterRow);
+				$ResultsFooterRow = ereg_replace("<option>$citeStyle</option>", "<option selected>$citeStyle</option>", $ResultsFooterRow);
 
 			// Finish the table:
 			$ResultsFooterRow .= "\n</table>";
@@ -1965,7 +1969,7 @@
 
 		elseif (!eregi("^SELECT", $sqlQuery))
 			$errors["sqlQuery"] = "You can only execute SELECT queries:";
-	
+
 		// Check if there were any errors:
 		if (count($errors) > 0)
 		{
@@ -5240,6 +5244,8 @@
 	{
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
+		global $loc; // '$loc' is made globally available in 'core.php'
+
 		// Extract form elements (that are unique to the 'extract.php' form):
 		$sourceText = $_REQUEST['sourceText']; // get the source text that contains the record serial numbers/cite keys
 		$startDelim = $_REQUEST['startDelim']; // get the start delimiter that precedes record serial numbers/cite keys
@@ -5256,10 +5262,13 @@
 		// Note: we do a quick'n dirty approach here, by inserting the string "_#_§_~_" as string delimiter between serial numbers/cite keys. Of course, this will only work as long the string "_#_§_~_" doesn't occur within '$sourceText'.
 		$recordSerialsKeysString = preg_replace("/(_#_§_~_)?\n?$/s", "", $recordSerialsKeysString); // remove any trailing chars (like \n or "_#_§_~_") at end of line
 
-		$recordSerialsKeysArray = split("_#_§_~_", $recordSerialsKeysString); // split string containing the serial numbers/cite keys on the string delimiter "_#_§_~_"
+		$recordSerialsKeysArray = preg_split("/_#_§_~_/", $recordSerialsKeysString, -1, PREG_SPLIT_NO_EMPTY); // split string containing the serial numbers/cite keys on the string delimiter "_#_§_~_" (the 'PREG_SPLIT_NO_EMPTY' flag causes only non-empty pieces to be returned)
+		$recordSerialsKeysArray = array_unique($recordSerialsKeysArray); // remove any duplicate serial numbers/cite keys from the list of extracted record identifiers
 
 		$recordSerialsArray = array();
 		$escapedRecordKeysArray = array();
+		$foundRecordSerialsKeysArray = array();
+		$missingRecordSerialsKeysArray = array();
 
 		foreach($recordSerialsKeysArray as $recordSerialKey)
 		{
@@ -5290,7 +5299,8 @@
 		if (isset($_SESSION['loginEmail'])) // if a user is logged in...
 			$query .= " LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . quote_smart($userID); // add LEFT JOIN part to FROM clause
 
-		$query .= " WHERE"; // add WHERE clause:
+		// add WHERE clause:
+		$query .= " WHERE";
 
 		if (!empty($recordSerialsArray) OR (empty($recordSerialsArray) AND empty($escapedRecordKeysArray)) OR (empty($recordSerialsArray) AND !isset($_SESSION['loginEmail']))) // the second condition ensures a valid SQL query if no serial numbers or cite keys were found, same for the third condition if a user isn't logged in and '$sourceText' did only contain cite keys
 			$query .= " serial RLIKE " . quote_smart("^(" . $recordSerialsString . ")$"); // add any serial numbers to WHERE clause
@@ -5315,14 +5325,36 @@
 			$query .= " ORDER BY first_author, author_count, author, year, title";
 
 
-		if (!empty($escapedRecordKeysArray) AND !isset($_SESSION['loginEmail'])) // a user can only use cite keys as record identifiers when he's logged in
-		{
-			// save an appropriate error message:
-			$HeaderString = "<b><span class=\"warning\">You must login to use cite keys as record identifiers!</span></b>"; // save an appropriate error message
+		// Check whether the extracted serial numbers and cite keys exist in the database:
+		$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection (function 'queryMySQLDatabase()' is defined in 'include.inc.php')
 
-			// Write back session variable:
-			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+		if (@ mysql_num_rows($result) > 0) // if there were rows found ...
+		{
+			// Loop over each row in the result set:
+			for ($rowCounter=0; $row = @ mysql_fetch_array($result); $rowCounter++)
+			{
+				if (!in_array($row["serial"], $foundRecordSerialsKeysArray) OR (!empty($row["cite_key"]) AND !in_array($row["cite_key"], $foundRecordSerialsKeysArray))) // if this record identifier hasn't been seen yet
+				{
+					// add this record's serial number and cite key to the array of found record serials and cite keys:
+					$foundRecordSerialsKeysArray[] = $row["serial"];
+					if (!empty($row["cite_key"]))
+						$foundRecordSerialsKeysArray[] = $row["cite_key"];
+				}
+			}
 		}
+
+		$missingRecordSerialsKeysArray = array_diff($recordSerialsKeysArray, $foundRecordSerialsKeysArray); // get all unique array elements of '$recordSerialsKeysArray' which are not in '$foundRecordSerialsKeysArray'
+		sort($missingRecordSerialsKeysArray);
+
+		if (!empty($escapedRecordKeysArray) AND !isset($_SESSION['loginEmail'])) // a user can only use cite keys as record identifiers when he's logged in
+			$messageSuffix = "<br>" . $loc["Warning_LoginToUseCiteKeysAsIdentifiers"] . "!";
+		else
+			$messageSuffix = "";
+
+		if (!empty($missingRecordSerialsKeysArray) OR (!empty($escapedRecordKeysArray) AND !isset($_SESSION['loginEmail']))) // if some record identifiers could not be found in the database -OR- if a user tries to use cite keys while not being logged in
+			// return an appropriate error message:
+			$HeaderString = returnMsg("Following record identifiers could not be found: " . implode(", ", $missingRecordSerialsKeysArray), "warning", "strong", "HeaderString", "", $messageSuffix); // function 'returnMsg()' is defined in 'include.inc.php'
+
 
 		return $query;
 	}
@@ -5330,21 +5362,33 @@
 	// --------------------------------------------------------------------
 
 	// Build the database query from user input provided by the "Quick Search" form on the main page ('index.php'):
-	function extractFormElementsQuick($showLinks)
+	function extractFormElementsQuick($showLinks, $userID)
 	{
-		global $tableRefs; // defined in 'db.inc.php'
+		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
 
+		global $query;
+
+		// Build SELECT clause:
 		$query = "SELECT author, title, year, publication";
 
 		$quickSearchSelector = $_REQUEST['quickSearchSelector']; // extract field name chosen by the user
 		$quickSearchName = $_REQUEST['quickSearchName']; // extract search text entered by the user
 
-		// if the SELECT string doesn't already contain the chosen field name...
-		// (which is only the case for 'keywords' & 'abstract')
-		if (!ereg("$quickSearchSelector", $query))
-			$query .= ", $quickSearchSelector"; // ...add chosen field to SELECT query
+		if ($quickSearchSelector == "main fields") // if we're supposed to query all of the "main fields" at once
+		{
+			$userMainFieldsArray = split(" *, *", $_SESSION['userMainFields']); // get the list of "main fields" preferred by the current user
+
+			$query .= ", volume, pages"; // note that for the "main fields" option, we simply display the default list of columns
+		}
 		else
-			$query .= ", volume, pages"; // ...otherwise, add further default columns
+		{
+			// if the SELECT string doesn't already contain the chosen field name...
+			// (which is e.g. the case for the 'keywords' & 'abstract' fields)
+			if (!ereg("$quickSearchSelector", $query))
+				$query .= ", $quickSearchSelector"; // ...add chosen field to SELECT query
+			else
+				$query .= ", volume, pages"; // ...otherwise, add further default columns
+		}
 
 		$query .= ", orig_record"; // add 'orig_record' column (although it won't be visible the 'orig_record' column gets included in every search query)
 								//  (which is required in order to present visual feedback on duplicate records)
@@ -5355,11 +5399,42 @@
 		if ($showLinks == "1")
 			$query .= ", file, url, doi, isbn, type"; // add 'file', 'url', 'doi', 'isbn' & 'type columns
 
-		// Note: since we won't query any user specific fields (like 'marked', 'copy', 'selected', 'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key' or 'related') we skip the 'LEFT JOIN...' part of the 'FROM' clause:
-		$query .= " FROM $tableRefs WHERE serial RLIKE \".+\""; // add FROM & (initial) WHERE clause
+
+		// Build FROM clause:
+		if (isset($_SESSION['loginEmail'])) // if a user is logged in...
+			$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id = " . $userID;
+		else // NO user logged in
+			$query .= " FROM $tableRefs";
+
+
+		// Build WHERE clause:
+		$query .= " WHERE";
+
+		// we construct a hierarchical '$searchArray' from the given search field name(s) & value;
+		// this array then gets merged into a full SQL WHERE clause by function 'appendToWhereClause()'
+		$searchArray = array();
+		$searchArray[] = array("_boolean" => "",
+		                       "_query"   => "serial RLIKE \".+\"");
 
 		if ($quickSearchName != "") // if the user typed a search string into the text entry field...
-			$query .= " AND $quickSearchSelector RLIKE " . quote_smart($quickSearchName); // ...add search field name & value to the sql query
+		{
+			if ($quickSearchSelector == "main fields")
+			{
+				$searchSubArray = array();
+
+				foreach($userMainFieldsArray as $userMainField)
+					$searchSubArray[] = array("_boolean" => "OR",
+					                          "_query"   => $userMainField . " RLIKE " . quote_smart($quickSearchName));
+
+				$searchArray[] = array("_boolean" => "AND",
+				                       "_query"   => $searchSubArray);
+			}
+			else
+				$searchArray[] = array("_boolean" => "AND",
+				                       "_query"   => $quickSearchSelector . " RLIKE " . quote_smart($quickSearchName));
+		}
+
+		appendToWhereClause($searchArray); // function 'appendToWhereClause()' is defined in 'include.inc.php'
 
 		$query .= " ORDER BY author, year DESC, publication"; // add the default ORDER BY clause
 
@@ -5642,8 +5717,13 @@
 				// Inform the user that no records were selected:
 				$nothingFoundFeedback .= "\n<tr>\n\t<td valign=\"top\">No records selected! Please select one or more records by clicking the appropriate checkboxes.&nbsp;&nbsp;<a href=\"javascript:history.back()\">Go Back</a></td>\n</tr>";
 			else // $nothingChecked == false (i.e., the user did check some checkboxes) -OR- the query resulted from another script like 'show.php' (which has no checkboxes to mark!)
+			{
 				// Report that nothing was found:
-				$nothingFoundFeedback .= "\n<tr>\n\t<td valign=\"top\">Sorry, but your query didn't produce any results!&nbsp;&nbsp;<a href=\"javascript:history.back()\">Go Back</a></td>\n</tr>";
+				$nothingFoundFeedback .= "\n<tr>\n\t<td valign=\"top\">Sorry, but your query didn't produce any results!";
+
+				if (!eregi("^inc", $client))
+					$nothingFoundFeedback .= "&nbsp;&nbsp;<a href=\"javascript:history.back()\">Go Back</a></td>\n</tr>";
+			}
 
 			$nothingFoundFeedback .= "\n</table>";
 		}
@@ -5657,15 +5737,18 @@
 	// PRINT LINKS
 	// this function prints out available links in List view and Citation view
 	// (for links of type DOI/URL/ISBN/XREF, only one link will be printed; order of preference: DOI, URL, ISBN, XREF)
-	function printLinks($showLinkTypes, $row, $showQuery, $showLinks, $userID, $viewType, $orderBy)
+	function printLinks($showLinkTypes, $row, $showQuery, $showLinks, $wrapResults, $userID, $viewType, $orderBy)
 	{
 		global $oldQuery;
-		global $filesBaseURL; // these variables are defined in 'ini.inc.php'
+		global $databaseBaseURL; // these variables are defined in 'ini.inc.php'
+		global $filesBaseURL;
 		global $fileVisibility;
 		global $fileVisibilityException;
 		global $openURLResolver;
 		global $isbnURLFormat;
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
+
+		global $client;
 
 		// Note: for proper placement of links within the Links column we don't use the 'mergeLinks()' function here (as is done for Details view),
 		//       since spacing before links is handled individually for each link type
@@ -5703,15 +5786,26 @@
 				$linkElementCounterLoggedIn = ($linkElementCounterLoggedIn + 1);
 
 
+		if (eregi("^inc", $client)) // we open links in a new browser window if refbase data are included somewhere else:
+			$target = " target=\"_blank\"";
+		else
+			$target = "";
+
+		if (eregi("^cli", $client) OR ($wrapResults == "0")) // we use absolute links for CLI clients or when returning only a partial document structure
+			$baseURL = $databaseBaseURL;
+		else
+			$baseURL = "";
+
+
 		if (in_array("details", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_details_view'...
 		{
 			// ... display a link that opens the Details view for this record:
 			// TODO: make lines below more readable, i.e., setup SQL query first, then rawurlencode
 			if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
-				$links .= "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20cite_key%2C%20related%20"
+				$links .= "\n\t\t<a href=\"" . $baseURL . "search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20location%2C%20call_number%2C%20serial%2C%20marked%2C%20copy%2C%20selected%2C%20user_keys%2C%20user_notes%2C%20user_file%2C%20user_groups%2C%20cite_key%2C%20related%20"
 						. "FROM%20" . $tableRefs . "%20LEFT%20JOIN%20" . $tableUserData . "%20ON%20serial%20%3D%20record_id%20AND%20user_id%20%3D%20" . $userID . "%20";
 			else // if NO user logged in, don't display any user specific fields and hide the 'location' field:
-				$links .= "\n\t\t<a href=\"search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20call_number%2C%20serial%20"
+				$links .= "\n\t\t<a href=\"" . $baseURL . "search.php?sqlQuery=SELECT%20author%2C%20title%2C%20type%2C%20year%2C%20publication%2C%20abbrev_journal%2C%20volume%2C%20issue%2C%20pages%2C%20corporate_author%2C%20thesis%2C%20address%2C%20keywords%2C%20abstract%2C%20publisher%2C%20place%2C%20editor%2C%20language%2C%20summary_language%2C%20orig_title%2C%20series_editor%2C%20series_title%2C%20abbrev_series_title%2C%20series_volume%2C%20series_issue%2C%20edition%2C%20issn%2C%20isbn%2C%20medium%2C%20area%2C%20expedition%2C%20conference%2C%20notes%2C%20approved%2C%20call_number%2C%20serial%20"
 						. "FROM%20" . $tableRefs . "%20";
 
 			$links .= "WHERE%20serial%20RLIKE%20%22%5E%28" . $row["serial"]
@@ -5722,7 +5816,8 @@
 					. "&amp;viewType=" . $viewType
 					. "&amp;submit=Display"
 					. "&amp;oldQuery=" . rawurlencode($oldQuery)
-					. "\"><img src=\"img/details.gif\" alt=\"details\" title=\"show details\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
+					. "\"" . $target . ">"
+					. "<img src=\"" . $baseURL . "img/details.gif\" alt=\"details\" title=\"show details\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
 		}
 
 		if ((($linkElementCounterLoggedOut > 0) OR (isset($_SESSION['loginEmail']) AND $linkElementCounterLoggedIn > 0)) AND (in_array("details", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_details_view", $_SESSION['user_permissions'])))
@@ -5730,9 +5825,10 @@
 
 		if (in_array("edit", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_edit", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_edit'...
 			// ... display a link that opens the edit form for this record:
-			$links .= "\n\t\t<a href=\"record.php?serialNo=" . $row["serial"] . "&amp;recordAction=edit"
+			$links .= "\n\t\t<a href=\"" . $baseURL . "record.php?serialNo=" . $row["serial"] . "&amp;recordAction=edit"
 					. "&amp;oldQuery=" . rawurlencode($oldQuery)
-					. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit record\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
+					. "\"" . $target . ">"
+					. "<img src=\"" . $baseURL . "img/edit.gif\" alt=\"edit\" title=\"edit record\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
 
 		if ((($linkElementCounterLoggedOut > 1) OR (isset($_SESSION['loginEmail']) AND $linkElementCounterLoggedIn > 1)) AND (in_array("edit", $showLinkTypes) AND isset($_SESSION['user_permissions']) AND ereg("allow_edit", $_SESSION['user_permissions'])))
 		{
@@ -5754,22 +5850,33 @@
 				if (ereg("^(https?|ftp|file)://", $row["file"])) // if the 'file' field contains a full URL (starting with "http://", "https://", "ftp://" or "file://")
 					$URLprefix = ""; // we don't alter the URL given in the 'file' field
 				else // if the 'file' field contains only a partial path (like 'polarbiol/10240001.pdf') or just a file name (like '10240001.pdf')
-					$URLprefix = $filesBaseURL; // use the base URL of the standard files directory as prefix ('$filesBaseURL' is defined in 'ini.inc.php')
+				{
+					// use the base URL of the standard files directory as prefix:
+					if (ereg('^/', $filesBaseURL)) // absolute path -> file dir is located outside of refbase root dir
+					{
+						if (eregi("^cli", $client) OR ($wrapResults == "0")) // we use absolute links for CLI clients or when returning only a partial document structure
+							$URLprefix = 'http://' . $_SERVER['HTTP_HOST'] . $filesBaseURL; // note that '$baseURL' cannot be used here since we need to prefix '$filesBaseURL' only with the host URL (and not the '$databaseBaseURL')
+						else
+							$URLprefix = $filesBaseURL;
+					}
+					else // relative path -> file dir is located within refbase root dir
+						$URLprefix = $baseURL . $filesBaseURL;
+				}
 
 				if (eregi("\.pdf$", $row["file"])) // if the 'file' field contains a link to a PDF file
-					$links .= "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file_PDF.gif\" alt=\"pdf\" title=\"download PDF file\" width=\"17\" height=\"17\" hspace=\"0\" border=\"0\"></a>"; // display a PDF file icon as download link
+					$links .= "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"" . $target . "><img src=\"" . $baseURL . "img/file_PDF.gif\" alt=\"pdf\" title=\"download PDF file\" width=\"17\" height=\"17\" hspace=\"0\" border=\"0\"></a>"; // display a PDF file icon as download link
 				else
-					$links .= "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"img/file.gif\" alt=\"file\" title=\"download file\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link
+					$links .= "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"" . $target . "><img src=\"" . $baseURL . "img/file.gif\" alt=\"file\" title=\"download file\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link
 			}
 		}
 
 		// if a DOI number exists for this record, we'll prefer it as link, otherwise we use the URL (if available):
 		// (note, that in List view, we'll use the same icon, no matter if the DOI or the URL is used for the link)
 		if (in_array("doi", $showLinkTypes) AND !empty($row["doi"]))
-			$links .= "\n\t\t<a href=\"http://dx.doi.org/" . $row["doi"] . "\"><img src=\"img/link.gif\" alt=\"doi\" title=\"goto web page (via DOI)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+			$links .= "\n\t\t<a href=\"http://dx.doi.org/" . $row["doi"] . "\"" . $target . "><img src=\"" . $baseURL . "img/link.gif\" alt=\"doi\" title=\"goto web page (via DOI)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
 
 		elseif (in_array("url", $showLinkTypes) AND !empty($row["url"])) // 'htmlentities()' is used to convert any '&' into '&amp;'
-			$links .= "\n\t\t<a href=\"" . encodeHTML($row["url"]) . "\"><img src=\"img/link.gif\" alt=\"url\" title=\"goto web page\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+			$links .= "\n\t\t<a href=\"" . encodeHTML($row["url"]) . "\"" . $target . "><img src=\"" . $baseURL . "img/link.gif\" alt=\"url\" title=\"goto web page\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
 
 		// if an ISBN number exists for the current record, provide a link to an ISBN resolver:
 		elseif (in_array("isbn", $showLinkTypes) AND !empty($isbnURLFormat) AND !empty($row["isbn"]))
@@ -5786,14 +5893,14 @@
 			$encodedURL = str_replace(" ", "%20", $encodedURL); // ensure that any spaces are also properly urlencoded
 
 			if (!empty($isbnURL))
-				$links .= "\n\t\t<a href=\"" . $encodedURL . "\"><img src=\"img/resolve.gif\" alt=\"isbn\" title=\"find book details (via ISBN)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+				$links .= "\n\t\t<a href=\"" . $encodedURL . "\"" . $target . "><img src=\"" . $baseURL . "img/resolve.gif\" alt=\"isbn\" title=\"find book details (via ISBN)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
 		}
 
 		// if still no link was generated, we'll provide a link to an OpenURL resolver:
 		elseif (in_array("xref", $showLinkTypes) AND !empty($openURLResolver))
 		{
 			$openURL = openURL($row); // function 'openURL()' is defined in 'openurl.inc.php'
-			$links .= "\n\t\t<a href=\"" . $openURL . "\"><img src=\"img/resolve.gif\" alt=\"openurl\" title=\"find record details (via OpenURL)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
+			$links .= "\n\t\t<a href=\"" . $openURL . "\"" . $target . "><img src=\"" . $baseURL . "img/resolve.gif\" alt=\"openurl\" title=\"find record details (via OpenURL)\" width=\"11\" height=\"8\" hspace=\"0\" border=\"0\"></a>";
 		}
 
 		// insert COinS (ContextObjects in Spans):
@@ -5841,9 +5948,9 @@
 
 	// DISPLAY THE HTML FOOTER:
 	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
-	if (!eregi("^cli", $client) AND (!(($displayType == "Cite") AND (!eregi("^html$", $citeType))) OR ($rowsFound == 0))) // we exclude the HTML page footer for citation formats other than HTML if something was found
+	if (!eregi("^cli", $client) AND ($wrapResults != "0") AND (!(($displayType == "Cite") AND (!eregi("^html$", $citeType))) OR ($rowsFound == 0))) // we exclude the HTML page footer for citation formats other than HTML if something was found
 	{
-		if ($viewType != "Print") // Note: we omit the visible footer in print view!
+		if (($viewType != "Print") AND (!eregi("^inc", $client))) // Note: we omit the visible footer in print view and for include mechanisms!
 			showPageFooter($HeaderString, $oldQuery);
 
 		displayHTMLfoot();

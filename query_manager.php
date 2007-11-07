@@ -19,6 +19,7 @@
 	// This script enables you to manage your custom queries.
 	// It offers a form to save the current query or update/delete any of your saved queries.
 	// Saved queries are user specific and can be accessed from a popup on the main page.
+	// TODO: I18n
 
 
 	// Incorporate some include files:
@@ -65,15 +66,14 @@
 	// A user must be logged in to save, modify or delete any queries:
 	if (!isset($_SESSION['loginEmail']))
 	{
-		// save an error message:
-		$HeaderString = "<b><span class=\"warning\">You must login to save, modify or delete any queries!</span></b>";
+		// return an appropriate error message:
+		$HeaderString = returnMsg($loc["Warning_LoginToUseSavedQueries"] . "!", "warning", "strong", "HeaderString"); // function 'returnMsg()' is defined in 'include.inc.php'
 
 		// save the URL of the currently displayed page:
 		$referer = $_SERVER['HTTP_REFERER'];
 
 		// Write back session variables:
-		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
-		saveSessionVariable("referer", $referer);
+		saveSessionVariable("referer", $referer); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 
 		header("Location: user_login.php");
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -128,7 +128,7 @@
 		$referer = $_SERVER['HTTP_REFERER'];
 	else
 		$referer = ""; // if there's no HTTP referer available we provide the empty string here
-	
+
 
 	// Setup some required variables:
 
@@ -149,7 +149,7 @@
 			}
 		}
 		else // -> there were errors validating the data entered by the user
-			$HeaderString = "<b><span class=\"warning\">There were validation errors regarding the data you entered:</span></b>";
+			$HeaderString = returnMsg($loc["Warning_InputDataError"] . ":", "warning", "strong"); // function 'returnMsg()' is defined in 'include.inc.php'
 
 	}
 	else
@@ -200,27 +200,25 @@
 		if (@ mysql_num_rows($result) == 1) // this condition is added here to avoid the case that editing a query item which got deleted in the meantime invokes a seemingly correct but empty 'edit query' form
 		{
 			// (3b) EXTRACT results:
-			$row = mysql_fetch_array($result); //fetch the current row into the array $row (it'll be always *one* row, but anyhow)
+			$row = mysql_fetch_array($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
 
 			// check whether the user tries to edit a query that does not belong to his own set of saved queries:
 			if ($row['user_id'] != getUserID($loginEmail)) // the function 'getUserID' and the '$loginEmail' variable are specified in 'include.inc.php'
 			{
-				// save an error message:
-				$HeaderString = "<b><span class=\"warning\">You can only edit your own queries!</span></b>";
+				$HeaderString = "You can only edit your own queries!";
 				$exit = true;
 			}
 		}
 		else // the query did NOT return any results (since we searched for a unique primary key of the queries table, the number of rows found can be only 1 or 0)
 		{
-			// save an error message:
-			$HeaderString = "<b><span class=\"warning\">The specified query does not exist!</span></b>";
+			$HeaderString = "The specified query does not exist!";
 			$exit = true;
 		}
 
 		if ($exit)
 		{
-			// Write back session variables:
-			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+			// return an appropriate error message:
+			$HeaderString = returnMsg($HeaderString, "warning", "strong", "HeaderString"); // function 'returnMsg()' is defined in 'include.inc.php'
 
 			header("Location: index.php"); // relocate back to the main page
 			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -262,7 +260,7 @@
 				$sqlQuery = stripSlashesIfMagicQuotes($sqlQuery); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
 //				$sqlQuery = str_replace('\"','"',$sqlQuery); // convert \" into "
 //				$sqlQuery = str_replace('\\\\','\\',$sqlQuery);
-		
+
 				$showQuery = $_REQUEST['showQuery']; // extract the $showQuery parameter
 				$showLinks = $_REQUEST['showLinks']; // extract the $showLinks parameter
 				$showRows = $_REQUEST['showRows']; // extract the $showRows parameter
@@ -275,7 +273,7 @@
 				$sqlQuery = "SELECT author, title, year, created_by, modified_date, modified_time, modified_by FROM $tableRefs WHERE modified_date = CURDATE() ORDER BY modified_date DESC, modified_time DESC";
 				$showQuery = "0";
 				$showLinks = "1";
-				$showRows = $defaultNumberOfRecords; // '$defaultNumberOfRecords' is defined in 'ini.inc.php'
+				$showRows = $_SESSION['userRecordsPerPage']; // get the default number of records per page preferred by the current user
 				$citeStyle = "";
 				$citeOrder = "";
 			}			
@@ -432,7 +430,7 @@
 	function fieldError($fieldName, $errors)
 	{
 		if (isset($errors[$fieldName]))
-			return "<b><span class=\"warning2\">" . $errors[$fieldName] . "</span></b><br>";
+			return returnMsg($errors[$fieldName], "warning2", "strong", "", "", "<br>"); // function 'returnMsg()' is defined in 'include.inc.php'
 	}
 
 	// --------------------------------------------------------------------

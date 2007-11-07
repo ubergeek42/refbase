@@ -35,7 +35,7 @@
 	// Requires the "PHP Pdf creation (pdf-php)" Package (by Wayne Munro, R&OS Ltd), which is available
 	// under a public domain licence: <http://www.ros.co.nz/pdf>
 
-	function citeRecords($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
+	function citeRecords($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
 	{
 		global $officialDatabaseName; // these variables are defined in 'ini.inc.php'
 		global $databaseBaseURL;
@@ -59,7 +59,8 @@
 									"underline-prefix" => "<u>",
 									"underline-suffix" => "</u>",
 									"endash"           => "–",
-									"emdash"           => "––"); // I don't know how to correctly print an emdash so we'll currently use two endashes instead
+									"emdash"           => "––", // I don't know how to correctly print an emdash so we'll currently use two endashes instead
+									"newline"          => "\n");
 
 		// Defines search & replace 'actions' that will be applied upon PDF output to all those refbase fields that are listed
 		// in the corresponding 'fields' element:

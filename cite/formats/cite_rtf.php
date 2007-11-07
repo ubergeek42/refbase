@@ -32,7 +32,7 @@
 	// Requires the MINIMALRTF Package (by Mark Grimshaw), which is available
 	// under the GPL from: <http://bibliophile.sourceforge.net>
 
-	function citeRecords($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
+	function citeRecords($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
 	{
 		global $contentTypeCharset; // defined in 'ini.inc.php'
 
@@ -53,7 +53,8 @@
 									"underline-prefix" => "{\\ul ",
 									"underline-suffix" => "}",
 									"endash"           => "\\endash ",
-									"emdash"           => "\\emdash ");
+									"emdash"           => "\\emdash ",
+									"newline"          => "\n{\f1\fs24 \par}\n");
 
 		// Defines search & replace 'actions' that will be applied upon RTF output to all those refbase fields that are listed
 		// in the corresponding 'fields' element:

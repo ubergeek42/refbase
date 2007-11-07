@@ -24,7 +24,7 @@
 
 	// --- BEGIN CITATION FORMAT ---
 
-	function citeRecords($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
+	function citeRecords($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
 	{
 		global $contentTypeCharset; // defined in 'ini.inc.php'
 
@@ -51,7 +51,8 @@
 		//							"underline-prefix" => "",
 		//							"underline-suffix" => "",
 									"endash"           => "&ndash;", // opposed to function 'citeRecordsHTML()' we use named entities here to increase plain text legibility
-									"emdash"           => "&mdash;");
+									"emdash"           => "&mdash;",
+									"newline"          => "  \n");
 
 		// Defines search & replace 'actions' that will be applied upon Markdown output to all those refbase fields that are listed
 		// in the corresponding 'fields' element:
