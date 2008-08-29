@@ -57,15 +57,12 @@
 	//       may expose yet another security hole...)
 
 	// First of all, check if this script was called by something else than 'duplicate_manager.php':
-	if (!ereg(".+/duplicate_manager.php", $_SERVER['HTTP_REFERER']))
+	if (!eregi(".+/duplicate_manager\.php", $referer)) // variable '$referer' is globally defined in function 'start_session()' in 'include.inc.php'
 	{
 		// return an appropriate error message:
 		$HeaderString = returnMsg($loc["Warning_InvalidCallToScript"] . " '" . scriptURL() . "'!", "warning", "strong", "HeaderString"); // functions 'returnMsg()' and 'scriptURL()' are defined in 'include.inc.php'
 		
-		if (!empty($_SERVER['HTTP_REFERER'])) // if the referer variable isn't empty
-			header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to calling page
-		else
-			header("Location: index.php"); // redirect to main page ('index.php')
+		header("Location: " . $referer); // redirect to calling page
 
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
@@ -73,7 +70,7 @@
 	// Extract the form used by the user:
 	$formType = $formVars['formType'];
 
-	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// Extract the view type requested by the user (either 'Mobile', 'Print', 'Web' or ''):
 	// ('' will produce the default 'Web' output style)
 	if (isset($formVars['viewType']))
 		$viewType = $formVars['viewType'];
@@ -98,7 +95,7 @@
 	// --------------------------------------------------------------------
 
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE
-	connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
+	connectToMySQLDatabase(); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 
@@ -131,7 +128,7 @@
 		saveSessionVariable("formVars", $formVars);
 
 		// There are errors. Relocate back to the 'Flag Duplicates' form (script 'duplicate_manager.php'):
-		header("Location: " . $_SERVER['HTTP_REFERER']);
+		header("Location: " . $referer);
 
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
@@ -159,7 +156,7 @@
 
 	// (3) RUN the queries on the database through the connection:
 	foreach($queryArray as $query)
-		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+		$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 	$affectedRows = ($result ? mysql_affected_rows ($connection) : 0); // get the number of rows that were modified (or return 0 if an error occurred)
 
@@ -176,7 +173,7 @@
 		saveSessionVariable("formVars", $formVars);
 		
 		// Relocate back to the 'Flag Duplicates' form (script 'duplicate_manager.php'):
-		header("Location: " . $_SERVER['HTTP_REFERER']);
+		header("Location: " . $referer);
 
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
@@ -195,7 +192,7 @@
 	// --------------------------------------------------------------------
 
 	// (5) CLOSE CONNECTION
-	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
+	disconnectFromMySQLDatabase(); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 ?>

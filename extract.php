@@ -52,7 +52,7 @@
 		deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
 	}
 
-	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// Extract the view type requested by the user (either 'Mobile', 'Print', 'Web' or ''):
 	// ('' will produce the default 'Web' output style)
 	if (isset($_REQUEST['viewType']))
 		$viewType = $_REQUEST['viewType'];
@@ -65,7 +65,7 @@
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- Extract Citations", "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
-	showPageHeader($HeaderString, "");
+	showPageHeader($HeaderString);
 
 	// (2b) Start <form> and <table> holding the form elements:
 	echo "\n<form action=\"search.php\" method=\"POST\">";
@@ -74,7 +74,7 @@
 		. "\n<input type=\"hidden\" name=\"submit\" value=\"Cite\">"; // provide a default value for the 'submit' form tag. Otherwise, some browsers may not recognize the correct output format when a user hits <enter> within a form field (instead of clicking the "Cite" button)
 
 	if (!isset($_SESSION['user_styles']))
-		$citeStyleDisabled = " disabled"; // disable the style popup (and other form elements) if the session variable holding the user's styles isn't available
+		$citeStyleDisabled = " disabled"; // disable the style popup if the session variable holding the user's styles isn't available
 	else
 		$citeStyleDisabled = "";
 
@@ -85,23 +85,24 @@
 
 	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the search form\">"
 			. "\n<tr>\n\t<td width=\"58\" valign=\"top\"><b>Extract Citations From:</b></td>\n\t<td width=\"10\">&nbsp;</td>"
-			. "\n\t<td><textarea name=\"sourceText\" rows=\"6\" cols=\"60\"$citeStyleDisabled>Paste your text here...</textarea></td>"
+			. "\n\t<td><textarea name=\"sourceText\" rows=\"6\" cols=\"60\">Paste your text here...</textarea></td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td valign=\"top\" rowspan=\"2\"><b>Serial Delimiters:</b></td>\n\t<td>&nbsp;</td>"
 			. "\n\t<td valign=\"top\">Specify the character(s) that enclose record serial numbers:</td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td>&nbsp;</td>"
-			. "\n\t<td valign=\"top\">Start Delimiter:&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"startDelim\" value=\"{\" size=\"4\"$citeStyleDisabled>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;End Delimiter:&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"endDelim\" value=\"}\" size=\"4\"$citeStyleDisabled></td>"
+			. "\n\t<td valign=\"top\">Start Delimiter:&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"startDelim\" value=\"{\" size=\"4\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;End Delimiter:&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"endDelim\" value=\"}\" size=\"4\"></td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td valign=\"top\" rowspan=\"2\"><b>Display Options:</b></td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td valign=\"top\"><input type=\"checkbox\" name=\"showLinks\" value=\"1\"$citeStyleDisabled checked>&nbsp;&nbsp;&nbsp;Display Links"
-			. "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Show&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"showRows\" value=\"100\" size=\"4\"$citeStyleDisabled>&nbsp;&nbsp;&nbsp;records per page</td>"
+			. "\n\t<td valign=\"top\"><input type=\"checkbox\" name=\"showLinks\" value=\"1\" checked>&nbsp;&nbsp;&nbsp;Display Links"
+			. "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Show&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"showRows\" value=\"100\" size=\"4\" title=\"" .  $loc["DescriptionShowRecordsPerPage"] . "\">&nbsp;&nbsp;&nbsp;records per page</td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td>&nbsp;</td>"
 			. "\n\t<td valign=\"top\">View type:&nbsp;&nbsp;"
-			. "\n\t\t<select name=\"viewType\"$citeStyleDisabled>"
+			. "\n\t\t<select name=\"viewType\">"
 			. "\n\t\t\t<option>Web</option>"
 			. "\n\t\t\t<option>Print</option>"
+			. "\n\t\t\t<option>Mobile</option>"
 			. "\n\t\t</select>"
 			. "\n\t</td>"
 			. "\n</tr>"
@@ -119,9 +120,9 @@
 		$citeTitle = "not available since you have no permission to use the cite feature";
 	}
 
-	echo "\n\t<td>\n\t\t<br><input type=\"submit\" name=\"submit\" value=\"Cite\"$citeButtonLock title=\"$citeTitle\"$citeStyleDisabled>&nbsp;&nbsp;&nbsp;"
+	echo "\n\t<td>\n\t\t<br><input type=\"submit\" name=\"submit\" value=\"Cite\"$citeButtonLock title=\"$citeTitle\">&nbsp;&nbsp;&nbsp;"
 			. "\n\t\tusing style:&nbsp;&nbsp;"
-			. "\n\t\t<select name=\"citeStyleSelector\" title=\"choose the output style for your reference list\"$citeStyleDisabled>";
+			. "\n\t\t<select name=\"citeStyle\" title=\"choose the output style for your reference list\"$citeStyleDisabled>";
 
 	if (isset($_SESSION['user_styles']))
 	{
@@ -129,18 +130,18 @@
 		echo $optionTags;
 	}
 	else
-		echo "\n\t\t\t<option>(no styles available)</option>";
+		echo "\n\t\t\t<option>" . $defaultCiteStyle . "</option>"; // defined in 'ini.inc.php'
 
 	echo "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
 			. "\n\t\tsort by:&nbsp;&nbsp;"
-			. "\n\t\t<select name=\"citeOrder\" title=\"choose the primary sort order for your reference list\"$citeStyleDisabled>"
+			. "\n\t\t<select name=\"citeOrder\" title=\"choose the primary sort order for your reference list\">"
 			. "\n\t\t\t<option value=\"author\">author</option>"
 			. "\n\t\t\t<option value=\"year\">year</option>"
 			. "\n\t\t\t<option value=\"type\">type</option>"
 			. "\n\t\t\t<option value=\"type-year\">type, year</option>"
 			. "\n\t\t</select>&nbsp;&nbsp;&nbsp;"
 			. "\n\t\treturn as:&nbsp;&nbsp;"
-			. "\n\t\t<select name=\"citeType\" title=\"choose how your reference list shall be returned\"$citeStyleDisabled$citeFormatDisabled>";
+			. "\n\t\t<select name=\"citeType\" title=\"choose how your reference list shall be returned\"$citeFormatDisabled>";
 
 	if (isset($_SESSION['user_cite_formats']))
 	{
@@ -167,7 +168,7 @@
 
 	// DISPLAY THE HTML FOOTER:
 	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
-	showPageFooter($HeaderString, "");
+	showPageFooter($HeaderString);
 
 	displayHTMLfoot();
 

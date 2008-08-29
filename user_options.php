@@ -18,7 +18,7 @@
 
 	// This script provides options which are individual for each user.
 	// 
-	// TODO: I18n, more encodeHTML fixes?
+	// TODO: - I18n, more encodeHTML fixes?
 
 
 	// Incorporate some include files:
@@ -63,7 +63,7 @@
 	// --------------------------------------------------------------------
 
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE
-	connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
+	connectToMySQLDatabase(); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 
@@ -87,7 +87,7 @@
 	// --------------------------------------------------------------------
 
 	// Set the '$userID' variable:
-	if (isset($_REQUEST['userID'])) // for normal users NOT being logged in -OR- for the admin:
+	if (isset($_REQUEST['userID']) AND ereg("^[0-9]+$", $_REQUEST['userID'])) // for normal users NOT being logged in -OR- for the admin:
 		$userID = $_REQUEST['userID'];
 	else
 		$userID = NULL; // '$userID = ""' wouldn't be correct here, since then any later 'isset($userID)' statement would resolve to true!
@@ -117,7 +117,23 @@
 		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 
 		// Redirect the browser back to the calling page
-		header("Location: index.php"); // Note: if 'header("Location: " . $_SERVER['HTTP_REFERER'])' is used, the error message won't get displayed! ?:-/
+		header("Location: " . $referer); // variable '$referer' is globally defined in function 'start_session()' in 'include.inc.php'
+		exit;
+	}
+
+	// --------------------------------------------------------------------
+
+	// Check if the logged-in user is allowed to modify his account options:
+	if (isset($_SESSION['loginEmail']) AND preg_match("/^\d+$/", $userID) AND isset($_SESSION['user_permissions']) AND !ereg("allow_modify_options", $_SESSION['user_permissions'])) // if a user is logged in but the 'user_permissions' session variable does NOT contain 'allow_modify_options'...
+	{
+		// save an error message:
+		$HeaderString = "<b><span class=\"warning\">You have no permission to modify your user account options!</span></b>";
+
+		// Write back session variables:
+		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+
+		// Redirect the browser back to the calling page
+		header("Location: " . $referer);
 		exit;
 	}
 
@@ -139,7 +155,7 @@
 		deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
 	}
 
-	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// Extract the view type requested by the user (either 'Mobile', 'Print', 'Web' or ''):
 	// ('' will produce the default 'Web' output style)
 	if (isset($_REQUEST['viewType']))
 		$viewType = $_REQUEST['viewType'];
@@ -151,7 +167,7 @@
 	$query = "SELECT first_name, last_name, email, language FROM $tableUsers WHERE user_id = " . quote_smart($userID);
 
 	// (3a) RUN the query on the database through the connection:
-	$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+	$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 	// (3b) EXTRACT results:
 	$row = mysql_fetch_array($result); // fetch the current row into the array $row
@@ -169,7 +185,7 @@
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Options", "noindex,nofollow", "User options offered by the " . encodeHTML($officialDatabaseName), "\n\t<meta http-equiv=\"expires\" content=\"0\">", true, "", $viewType, array());
-	showPageHeader($HeaderString, "");
+	showPageHeader($HeaderString);
 
 	// --------------------------------------------------------------------
 
@@ -198,12 +214,12 @@
 	{
 		// Get all languages that were setup and enabled by the admin:
 		$languagesArray = getLanguages(""); // function 'getLanguages()' is defined in 'include.inc.php'
-		$languagePopupDisabled = "";
+		$fieldDisabled = "";
 	}
 	else // if '$userID == 0' which indicates a user not being logged in
 	{
 		$languagesArray = array($defaultLanguage); // for a user who's not logged in, we fall back to the default language (defined in 'ini.inc.php')
-		$languagePopupDisabled = " disabled"; // disable the language popup if the user isn't logged in
+		$fieldDisabled = " disabled"; // disable some fields if the user isn't logged in (in which case the display language, no. of records per page & the "main fields" search option will be taken from global variables in 'ini.inc.php')
 	}
 
 	$languageOptionTags = buildSelectMenuOptions($languagesArray, " *; *", "\t\t\t", false); // build properly formatted <option> tag elements from language items returned by function 'getLanguages()'
@@ -389,7 +405,7 @@
 	<td align="left" width="169">Use language:</td>
 	<td><?php echo fieldError("languageName", $errors); ?>
 
-		<select name="languageName"<?php echo $languagePopupDisabled; ?>><?php echo $languageOptionTags; ?>
+		<select name="languageName"<?php echo $fieldDisabled; ?>><?php echo $languageOptionTags; ?>
 
 		</select>
 	</td>
@@ -399,7 +415,7 @@
 	<td align="left">Show records per page:</td>
 	<td><?php echo fieldError("recordsPerPageNo", $errors); ?>
 
-		<input type="text" name="recordsPerPageNo" value="<?php echo encodeHTML($recordsPerPage); ?>" size="5">
+		<input type="text" name="recordsPerPageNo" value="<?php echo encodeHTML($recordsPerPage); ?>" size="5"<?php echo $fieldDisabled; ?>>
 	</td>
 </tr>
 <tr>
@@ -447,7 +463,7 @@
 	<td align="left" valign="top">"Main fields" searches:</td>
 	<td valign="top"><?php echo fieldError("mainFieldsSelector", $errors); ?>
 
-		<select name="mainFieldsSelector[]" multiple><?php echo $mainFieldsOptionTags; ?>
+		<select name="mainFieldsSelector[]" multiple<?php echo $fieldDisabled; ?>><?php echo $mainFieldsOptionTags; ?>
 
 		</select>
 	</td>
@@ -586,6 +602,11 @@
 		else
 			$allowUploadChecked = "";
 
+		if ($userPermissionsArray['allow_list_view'] == 'yes')
+			$allowListViewChecked = " checked";
+		else
+			$allowListViewChecked = "";
+
 		if ($userPermissionsArray['allow_details_view'] == 'yes')
 			$allowDetailsViewChecked = " checked";
 		else
@@ -659,10 +680,12 @@
 <tr>
 	<td align="left"><b><a id="permissions">User Permissions:</a></b></td>
 	<td>
-		<input type="checkbox" name="allow_add" value="yes"<?php echo $allowAddChecked; ?>>&nbsp;&nbsp;Add records
+		<input type="checkbox" name="allow_add" value="yes"<?php echo $allowAddChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowAdd']; ?>
+
 	</td>
 	<td>
-		<input type="checkbox" name="allow_download" value="yes"<?php echo $allowDownloadChecked; ?>>&nbsp;&nbsp;File download
+		<input type="checkbox" name="allow_download" value="yes"<?php echo $allowDownloadChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowDownload']; ?>
+
 	</td>
 </tr>
 <tr>
@@ -671,16 +694,19 @@
 		<!--<a href="JavaScript:checkall(false,'allow*')" title="deselect all permission options">Deselect All</a>-->
 	</td>
 	<td>
-		<input type="checkbox" name="allow_edit" value="yes"<?php echo $allowEditChecked; ?>>&nbsp;&nbsp;Edit records
+		<input type="checkbox" name="allow_edit" value="yes"<?php echo $allowEditChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowEdit']; ?>
+
 	</td>
 	<td>
-		<input type="checkbox" name="allow_upload" value="yes"<?php echo $allowUploadChecked; ?>>&nbsp;&nbsp;File upload
+		<input type="checkbox" name="allow_upload" value="yes"<?php echo $allowUploadChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowUpload']; ?>
+
 	</td>
 </tr>
 <tr>
 	<td align="left"></td>
 	<td>
-		<input type="checkbox" name="allow_delete" value="yes"<?php echo $allowDeleteChecked; ?>>&nbsp;&nbsp;Delete records
+		<input type="checkbox" name="allow_delete" value="yes"<?php echo $allowDeleteChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowDelete']; ?>
+
 	</td>
 	<td></td>
 </tr>
@@ -691,16 +717,19 @@
 <tr>
 	<td align="left"></td>
 	<td>
-		<input type="checkbox" name="allow_details_view" value="yes"<?php echo $allowDetailsViewChecked; ?>>&nbsp;&nbsp;Details view
+		<input type="checkbox" name="allow_list_view" value="yes"<?php echo $allowListViewChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowListView']; ?>
+
 	</td>
 	<td>
-		<input type="checkbox" name="allow_sql_search" value="yes"<?php echo $allowSQLSearchChecked; ?>>&nbsp;&nbsp;SQL search
+		<input type="checkbox" name="allow_print_view" value="yes"<?php echo $allowPrintViewChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowPrintView']; ?>
+
 	</td>
 </tr>
 <tr>
 	<td align="left"></td>
 	<td>
-		<input type="checkbox" name="allow_print_view" value="yes"<?php echo $allowPrintViewChecked; ?>>&nbsp;&nbsp;Print view
+		<input type="checkbox" name="allow_details_view" value="yes"<?php echo $allowDetailsViewChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowDetailsView']; ?>
+
 	</td>
 	<td></td>
 </tr>
@@ -711,16 +740,8 @@
 <tr>
 	<td align="left"></td>
 	<td>
-		<input type="checkbox" name="allow_user_groups" value="yes"<?php echo $allowUserGroupsChecked; ?>>&nbsp;&nbsp;User groups
-	</td>
-	<td>
-		<input type="checkbox" name="allow_rss_feeds" value="yes"<?php echo $allowRSSFeedsChecked; ?>>&nbsp;&nbsp;RSS feeds
-	</td>
-</tr>
-<tr>
-	<td align="left"></td>
-	<td>
-		<input type="checkbox" name="allow_user_queries" value="yes"<?php echo $allowUserQueriesChecked; ?>>&nbsp;&nbsp;User queries
+		<input type="checkbox" name="allow_sql_search" value="yes"<?php echo $allowSQLSearchChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowSQLSearch']; ?>
+
 	</td>
 	<td></td>
 </tr>
@@ -731,25 +752,19 @@
 <tr>
 	<td align="left"></td>
 	<td>
-		<input type="checkbox" name="allow_import" value="yes"<?php echo $allowImportChecked; ?>>&nbsp;&nbsp;Import
+		<input type="checkbox" name="allow_user_groups" value="yes"<?php echo $allowUserGroupsChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowUserGroups']; ?>
+
 	</td>
 	<td>
-		<input type="checkbox" name="allow_batch_import" value="yes"<?php echo $allowBatchImportChecked; ?>>&nbsp;&nbsp;Batch import
-	</td>
-</tr>
-<tr>
-	<td align="left"></td>
-	<td>
-		<input type="checkbox" name="allow_export" value="yes"<?php echo $allowExportChecked; ?>>&nbsp;&nbsp;Export
-	</td>
-	<td>
-		<input type="checkbox" name="allow_batch_export" value="yes"<?php echo $allowBatchExportChecked; ?>>&nbsp;&nbsp;Batch export
+		<input type="checkbox" name="allow_rss_feeds" value="yes"<?php echo $allowRSSFeedsChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowRSSFeeds']; ?>
+
 	</td>
 </tr>
 <tr>
 	<td align="left"></td>
 	<td>
-		<input type="checkbox" name="allow_cite" value="yes"<?php echo $allowCiteChecked; ?>>&nbsp;&nbsp;Cite
+		<input type="checkbox" name="allow_user_queries" value="yes"<?php echo $allowUserQueriesChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowUserQueries']; ?>
+
 	</td>
 	<td></td>
 </tr>
@@ -760,7 +775,42 @@
 <tr>
 	<td align="left"></td>
 	<td>
-		<input type="checkbox" name="allow_modify_options" value="yes"<?php echo $allowChangePersonInfoChecked; ?>>&nbsp;&nbsp;Modify options
+		<input type="checkbox" name="allow_import" value="yes"<?php echo $allowImportChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowImport']; ?>
+
+	</td>
+	<td>
+		<input type="checkbox" name="allow_batch_import" value="yes"<?php echo $allowBatchImportChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowBatchImport']; ?>
+
+	</td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td>
+		<input type="checkbox" name="allow_export" value="yes"<?php echo $allowExportChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowExport']; ?>
+
+	</td>
+	<td>
+		<input type="checkbox" name="allow_batch_export" value="yes"<?php echo $allowBatchExportChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowBatchExport']; ?>
+
+	</td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td>
+		<input type="checkbox" name="allow_cite" value="yes"<?php echo $allowCiteChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowCite']; ?>
+
+	</td>
+	<td></td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td colspan="2"></td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td>
+		<input type="checkbox" name="allow_modify_options" value="yes"<?php echo $allowChangePersonInfoChecked; ?>>&nbsp;&nbsp;<?php echo $loc['UserPermission_AllowModifyOptions']; ?>
+
 	</td>
 	<td></td>
 </tr>
@@ -783,7 +833,7 @@
 	// --------------------------------------------------------------------
 
 	// (5) CLOSE the database connection:
-	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
+	disconnectFromMySQLDatabase(); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// SHOW ERROR IN RED:
 	function fieldError($fieldName, $errors)
@@ -796,7 +846,7 @@
 
 	// DISPLAY THE HTML FOOTER:
 	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
-	showPageFooter($HeaderString, "");
+	showPageFooter($HeaderString);
 
 	displayHTMLfoot();
 

@@ -52,15 +52,12 @@
 	// --------------------------------------------------------------------
 
 	// First of all, check if this script was called by something else than 'user_details.php':
-	if (!ereg(".+/user_details.php", $_SERVER['HTTP_REFERER']))
+	if (!eregi(".+/user_details\.php", $referer)) // variable '$referer' is globally defined in function 'start_session()' in 'include.inc.php'
 	{
 		// return an appropriate error message:
 		$HeaderString = returnMsg($loc["Warning_InvalidCallToScript"] . " '" . scriptURL() . "'!", "warning", "strong", "HeaderString"); // functions 'returnMsg()' and 'scriptURL()' are defined in 'include.inc.php'
 
-		if (!empty($_SERVER['HTTP_REFERER'])) // if the referer variable isn't empty
-			header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to calling page
-		else
-			header("Location: index.php"); // redirect to main page ('index.php')
+		header("Location: " . $referer); // redirect to calling page
 
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
@@ -68,7 +65,7 @@
 	// --------------------------------------------------------------------
 
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE
-	connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
+	connectToMySQLDatabase(); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 
@@ -204,7 +201,7 @@
 			$query = "SELECT * FROM $tableAuth WHERE email = " . quote_smart($formVars["email"]); // CONSTRUCT SQL QUERY
 
 			// (3) RUN the query on the database through the connection:
-			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+			$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 			if (mysql_num_rows($result) == 1) // (4) Interpret query result: Is it taken?
 				$errors["email"] = "A user already exists with this email address as login name.\n\t\t<br>\n\t\tPlease enter a different one:";
@@ -341,7 +338,7 @@
 		$query .= ", modified_date = " . quote_smart($currentDate)
 				. ", modified_time = " . quote_smart($currentTime);
 
-		$query .= ", language = \"en\"" // initially, english will be used as default language (the language setting can be changed by the user in 'user_options.php')
+		$query .= ", language = \"" . $defaultLanguage . "\"" // '$defaultLanguage' is defined in 'ini.inc.php' (the language setting can be changed by the user in 'user_options.php')
 				. ", last_login = NOW()" // set 'last_login' field to the current date & time in 'DATETIME' format (which is 'YYYY-MM-DD HH:MM:SS', e.g.: '2003-12-31 23:45:59')
 				. ", logins = 1 "; // set the number of logins to 1 (so that any subsequent login attempt can be counted correctly)
 	}
@@ -354,7 +351,7 @@
 		$query = "SELECT first_name, last_name FROM $tableUsers WHERE email = " . quote_smart($adminLoginEmail); // CONSTRUCT SQL QUERY ('$adminLoginEmail' is specified in 'ini.inc.php')
 
 		// (3a) RUN the query on the database through the connection:
-		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+		$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		$row = mysql_fetch_array($result); // (3b) EXTRACT results: fetch the current row into the array $row
 
@@ -407,7 +404,7 @@
 	// --------------------------------------------------------------------
 
 	// (3) RUN the query on the database through the connection:
-	$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+	$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 	// ----------------------------------------------
 
@@ -438,7 +435,7 @@
 					. "password = " . quote_smart($stored_password)
 					. " WHERE user_id = " . quote_smart($userID);
 
-			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+			$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 		}
 	}
 
@@ -479,7 +476,7 @@
 		{
 			// get the 'format_id' for the record entry in table 'formats' whose 'format_name' matches that in '$defaultUserExportFormats' (defined in 'ini.inc.php'):
 			$query = "SELECT format_id FROM $tableFormats WHERE format_name = " . quote_smart($defaultUserExportFormat) . " AND format_type = 'export'";
-			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+			$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 			$row = mysql_fetch_array($result);
 
 			// Insert a row with the found format ID for this new user into the 'user_formats' table:
@@ -490,7 +487,7 @@
 		{
 			// get the 'format_id' for the record entry in table 'formats' whose 'format_name' matches that in '$defaultUserCiteFormats' (defined in 'ini.inc.php'):
 			$query = "SELECT format_id FROM $tableFormats WHERE format_name = " . quote_smart($defaultUserCiteFormat) . " AND format_type = 'cite'";
-			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+			$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 			$row = mysql_fetch_array($result);
 
 			// Insert a row with the found format ID for this new user into the 'user_formats' table:
@@ -501,7 +498,7 @@
 		{
 			// get the 'style_id' for the record entry in table 'styles' whose 'style_name' matches that in '$defaultUserStyles' (defined in 'ini.inc.php'):
 			$query = "SELECT style_id FROM $tableStyles WHERE style_name = " . quote_smart($defaultUserStyle);
-			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+			$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 			$row = mysql_fetch_array($result);
 
 			// Insert a row with the found style ID for this new user into the 'user_styles' table:
@@ -512,7 +509,7 @@
 		{
 			// get the 'type_id' for the record entry in table 'types' whose 'type_name' matches that in '$defaultUserTypes' (defined in 'ini.inc.php'):
 			$query = "SELECT type_id FROM $tableTypes WHERE type_name = " . quote_smart($defaultUserType);
-			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+			$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 			$row = mysql_fetch_array($result);
 
 			// Insert a row with the found type ID for this new user into the 'user_types' table:
@@ -529,7 +526,7 @@
 
 		// RUN the queries on the database through the connection:
 		foreach($queryArray as $query)
-			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+			$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		// if EVERYONE who's not logged in is able to add a new user (which is the case if the variable '$addNewUsers' in 'ini.inc.php'
 		// is set to "everyone", see note above!), then we have to make sure that this visitor gets logged into his new
@@ -562,9 +559,9 @@
 	// If an authorized user uses 'user_details.php' to add a new user (-> 'userID' is empty!):
 	if ((!isset($_SESSION['loginEmail']) && ($addNewUsers == "everyone") && ($_REQUEST['userID'] == "")) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == "")))
 	{
-		saveSessionVariable("userLanguage", "en");
-		saveSessionVariable("userRecordsPerPage", $defaultNumberOfRecords); // '$defaultNumberOfRecords' is defined in 'ini.inc.php' (TODO: it would be more correct to use $defaultUserOptions['records_per_page'])
-		saveSessionVariable("userMainFields", $defaultMainFields); // '$defaultMainFields' is defined in 'ini.inc.php' (TODO: it would be more correct to use $defaultUserOptions['main_fields'])
+		saveSessionVariable("userLanguage", $defaultLanguage); // '$defaultLanguage' is defined in 'ini.inc.php'
+		saveSessionVariable("userRecordsPerPage", $defaultUserOptions['records_per_page']); // '$defaultUserOptions' is defined in 'ini.inc.php'
+		saveSessionVariable("userMainFields", $defaultUserOptions['main_fields']);
 	}
 
 	// Get all user groups specified by the current user
@@ -590,7 +587,7 @@
 	header("Location: user_receipt.php?userID=$userID");
 
 	// (5) CLOSE the database connection:
-	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
+	disconnectFromMySQLDatabase(); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 ?>

@@ -19,68 +19,546 @@
 
 	/* refbase CSS definitions - default style */
 
+body {
+	background: #FFFFFF;
+	color: #000000;
+}
 
-body           { background:#FFFFFF; color:#000000; }
+pre, code {
+	font-family: monaco,courier,monospace;
+	font-size: 7pt;
+}
 
-pre,code       { font-family:monaco,courier,monospace; font-size:7pt; }
+.smaller {
+	font-size: 0.7em;
+}
 
-.spacer        { padding-top:0.5em; }
+.small {
+	font-size: 0.7em;
+}
 
-.spacer2       { padding-bottom:0.3em; }
+.smallup {
+	font-size: 0.85em;
+	position: relative;
+	top: -10px;
+}
 
-.tiny          { font-size:x-small; }
+.moveup {
+	position: relative;
+	top: -8px;
+}
 
-.smaller       { font-size:smaller; }
+.unapi {
+	font-size: smaller;
+}
 
-.small         { font-size:small; }
+.Z3988 {
+	font-size: smaller;
+}
 
-.smallup       { font-size:small; position:relative; top:-10px; }
+.ok {
+	color: #009900;
+}
 
-.smallsans     { font-family:helvetica,arial,sans-serif; font-size:x-small; }
+.warning {
+	color: red;
+}
 
-.moveup        { position:relative; top:-8px; }
+.warning2 {
+	color: red;
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+	font-size: 0.75em;
+}
 
-.header        { font-family:helvetica,arial,sans-serif; }
+.mainfieldsbg {
+	background-color: #E6E6E6;
+}
 
-.footer        { font-family:helvetica,arial,sans-serif; font-size:x-small; color:#999999; }
+.otherfieldsbg {
+	background-color: #FFFFFF;
+}
 
-.unapi         { font-size:smaller; }
+.userfieldsbg {
+	background-color: #FFFFCC;
+}
 
-.Z3988         { font-size:smaller; }
+th {
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+	font-size: 0.9em;
+}
 
-.ok            { color:#009900; }
+td, div {
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+	font-size: 0.8em;
+}
 
-.warning       { color:red; }
+p {
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+	font-size: 0.8em;
+}
 
-.warning2      { color:red; font-family:helvetica,arial,sans-serif; font-size:small; }
+a:link {
+	color: #0033CC;
+	text-decoration: none;
+}
 
-.mainfieldsbg  { background-color:#DEDEDE; }
+a:visited {
+	color: #666666;
+	text-decoration: none;
+}
 
-.otherfieldsbg { background-color:#FFFFFF; }
+a:active {
+	color: #990000;
+	text-decoration: none;
+}
 
-.userfieldsbg  { background-color:#FFFFCC; }
+a:hover {
+	color: #3366FF;
+	text-decoration: none;
+}
 
-.outline       { list-style-type:none; font-size:small; position:relative; left:-15px; }
+h1, h2, h3, h4 {
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+	color: #990000;
+}
 
-.category      { font-family:helvetica,arial,sans-serif; font-weight: bold; }
+h5, h6 {
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+}
 
-th             { font-family:helvetica,arial,sans-serif; }
+h2, h3 {
+	margin-top: 1em;
+	margin-bottom: 0.5em;
+}
 
-td,div         { font-family:"times new roman",garamond,times,serif; }
+h2 {
+	font-size: 1.8em;
+}
 
-p              { font-family:"times new roman",garamond,times,serif; }
+h3 {
+	font-size: 1.35em;
+}
 
-A:link         { color:#0033CC; text-decoration:none; }
+h4, h5 {
+	margin-top: 0em;
+	margin-bottom: 0em;
+}
 
-A:visited      { color:#666666; text-decoration:none; }
+h4 {
+	font-size: 1.25em;
+}
 
-A:active       { color:#990000; text-decoration:none; }
+h5 {
+	font-size: 1.1em;
+}
 
-A:hover        { color:#3366FF; text-decoration:none; }
+.pageheader {
+	
+}
 
-h1,h2,h3,h4    { font-family:helvetica,arial,sans-serif; color:#990000; }
+.pagefooter {
+	
+}
 
-h5,h6          { font-family:helvetica,arial,sans-serif; }
+.results {
+	
+}
 
-h2,h3          { margin-top:1em; margin-bottom:0.5em; }
+hr.results {
+	width: 100%;
+	background-color: #DEDEDE;
+	height: 1px;
+	border: 0;
+}
 
+div.resultsheader {
+	margin: 1.2em 3.3em 0.9em 3.3em;
+}
+
+hr.resultsheader, hr.resultsfooter {
+	width: 93%;
+	background-color: #DEDEDE;
+	height: 1px;
+	border: 0;
+}
+
+div.resultsfooter {
+	margin: 1.2em 3.3em 0.9em 3.3em;
+}
+
+.showhide {
+	
+}
+
+#resultoptions {
+	margin-left: 20px;
+	text-align: center;
+	font-size: 1em;
+}
+
+#resultoptions legend {
+	color: #000000;
+	font-style: italic;
+	text-align: left;
+}
+
+#resultoptions label {
+	margin-left: 0.15em;
+}
+
+#resultoptions form {
+	display: inline;
+}
+
+#resultoptions fieldset {
+	display: inline;
+	border: none;
+	text-align: left;
+}
+
+#showgroup {
+	display: inline;
+	margin-right: 1.1em;
+	font-size: 1em;
+}
+
+#showgroup div#groupSelect {
+	font-size: 1em;
+}
+
+#showgroup div#groupSubmit {
+	margin-top: 0.25em;
+	font-size: 1em;
+}
+
+#showgroup div#groupSelect label, #refineresults div#refineField label, #displayopt div#optShowHideField label {
+	display: none;
+}
+
+#refineresults {
+	display: inline;
+	font-size: 1em;
+}
+
+#refineresults div#refineField {
+	display: block;
+	margin-bottom: 0.25em;
+	font-size: 1em;
+}
+
+#refineresults div#refineOpt, #refineresults div#refineSubmit {
+	display: inline;
+	font-size: 1em;
+}
+
+#displayopt {
+	display: inline;
+	margin-left: 1.1em;
+	font-size: 1em;
+}
+
+#displayopt div#optMain {
+	font-size: 1em;
+}
+
+#displayopt div#optShowHideField, #displayopt div#optCiteStyle, #displayopt div#optSubmit {
+	display: inline;
+	font-size: 1em;
+}
+
+#displayopt div#optOther {
+	margin-top: 0.25em;
+	font-size: 1em;
+}
+
+#displayopt div#optCiteOrder, #displayopt div#optRecsPerPage {
+	display: inline;
+	font-size: 1em;
+}
+
+#displayopt div#optCiteOrder {
+	margin-right: 0.4em;
+}
+
+.resultnav {
+	
+}
+
+.mainnav {
+	
+}
+
+.pagenav {
+	
+}
+
+.viewnav {
+	font-size: 0.75em;
+}
+
+#columns {
+	position: relative;
+	left: 4px;
+}
+
+#details {
+	position: relative;
+	left: 4px;
+}
+
+#citations {
+	position: relative;
+	left: 4px;
+}
+
+.citation {
+	
+}
+
+.citation .showhide {
+	margin-top: 0.4em;
+}
+
+.citation .moreinfo {
+	margin-left: 1.25em;
+	font-size: 1em;
+}
+
+.citation .moreinfo > * {
+	margin-bottom: 0.4em;
+	font-size: 0.85em;
+	color: #333333;
+	line-height: 1.3em;
+/*
+	max-width: 700px;
+*/
+}
+
+.citation .moreinfo .reflinks {
+	margin-top: 0.8em;
+/*
+	max-width: none;
+*/
+}
+
+.citation .moreinfo .reflinks > * {
+	display: inline;
+	font-size: 1em;
+}
+
+#error {
+	
+}
+
+#queryhistory {
+	margin-left: 2.6em;
+	margin-right: 2.6em;
+	margin-bottom: 1.75em;
+}
+
+#currentquery, #previousqueries {
+	margin-top: 1.2em;
+	font-size: 1em;
+}
+
+#queryhistory .even, #queryhistory .odd {
+	margin-top: 0.25em;
+	margin-left: 1.2em;
+	margin-right: 1.2em;
+	font-size: 1em;
+}
+
+.examples {
+	font-size: 1em;
+}
+
+.links {
+	
+}
+
+.sect {
+	padding-top: 2px;
+	font-size: 1em;
+}
+
+.even {
+	background-color: #FFFFFF;
+	padding: 5px;
+}
+
+.odd {
+	background-color: #F4F4F4;
+	padding: 5px;
+}
+
+#queryform {
+	
+}
+
+#resultactions {
+	margin-left: 20px;
+	text-align: center;
+	font-size: 1em;
+}
+
+#resultactions input, #resultactions select {
+	margin-left: 0.5em;
+}
+
+#resultactions legend {
+	color: #000000;
+	font-style: italic;
+	text-align: left;
+}
+
+#resultactions label {
+	margin-left: 0.15em;
+}
+
+#resultactions fieldset {
+	display: inline;
+	margin-left: 1.5em;
+	border: none;
+	vertical-align: top;
+	text-align: left;
+}
+
+#selectresults {
+	margin-bottom: 0.75em;
+	font-size: 1em;
+	text-align: left;
+}
+
+#selectresults input#selRecs {
+	margin-left: 1.5em;
+}
+
+#citerefs {
+	font-size: 1em;
+}
+
+#citerefs input[type=submit], #exportrefs input[type=submit] {
+	display: block;
+	margin-top: 0.6em;
+	margin-left: 0.25em;
+}
+
+#citerefs label, #exportrefs label {
+	display: none;
+}
+
+#citerefs select, #exportrefs select {
+	margin-left: 0.25em;
+}
+
+#grouprefs {
+	font-size: 1em;
+}
+
+#grouprefs div#myGroup {
+	display: block;
+	margin-bottom: 0.25em;
+	font-size: 1em;
+}
+
+#grouprefs div#newGroup, #grouprefs div#addRemoveGroup {
+	display: inline;
+	font-size: 1em;
+}
+
+#exportrefs {
+	font-size: 1em;
+}
+
+#searchopt {
+	display: none;
+}
+
+#helptxt {
+	display: none;
+}
+
+#helptxt .even {
+	margin-left: -5px;
+	margin-top: -3px;
+}
+
+#helptxt .odd {
+	margin-left: -5px;
+}
+
+.toggleimg {
+	
+}
+
+.toggletxt {
+	display: inline;
+	margin-left: 5px;
+	font-size: 1em;
+}
+
+a:link .toggletxt {
+	color: #000000;
+}
+
+a:visited .toggletxt {
+	color: #000000;
+}
+
+a:hover .toggletxt {
+	color: #3366FF;
+}
+
+.resultviews {
+	display: inline;
+	font-size: 0.85em;
+}
+
+.activeview {
+	display: inline;
+	font-size: 1em;
+}
+
+.leftview {
+	display: inline;
+	font-size: 1em;
+}
+
+.middleview {
+	display: inline;
+	font-size: 1em;
+}
+
+.rightview {
+	display: inline;
+	font-size: 1em;
+}
+
+.toggleprint {
+	position: relative;
+	top: 3px;
+}
+
+#accountinfo {
+	font-size: 1.25em;
+}
+
+#accountdetails {
+	font-size: 1em;
+}
+
+#accountopt {
+	font-size: 1em;
+}
+
+#accountperm {
+	font-size: 1em;
+}
+
+#accountdetails ul, #accountopt ul, #accountperm ul {
+	position: relative;
+	top: -0.8em;
+	list-style-type: none;
+	font-size: 0.85em;
+	line-height: 1.3em;
+}

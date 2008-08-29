@@ -43,22 +43,6 @@
 
 	// --------------------------------------------------------------------
 
-	if (isset($_REQUEST['referer']))
-	{
-		$referer = $_REQUEST['referer']; // get the referring URL from the superglobal '$_REQUEST' variable (if any)
-	}
-	elseif (isset($_SESSION['referer']))
-	{
-		$referer = $_SESSION['referer']; // get the referring URL from the superglobal '$_SESSION' variable (if any)
-	}
-	else // if '$referer' is still not set
-	{
-		if (isset($_SERVER['HTTP_REFERER']))
-			$referer = $_SERVER['HTTP_REFERER'];
-		else
-			$referer = "index.php"; // if all other attempts fail, we'll re-direct to the main page
-	}
-
 	if (isset($_REQUEST["loginEmail"]))
 		$loginEmail = $_REQUEST["loginEmail"];
 //		$loginEmail = clean($_REQUEST["loginEmail"], 30); // using the clean function would be secure!
@@ -70,8 +54,8 @@
 	// Check if the user is already logged in
 	if (isset($_SESSION['loginEmail']))
 	{
-		if (!ereg("error\.php\?.+|user_login\.php|install\.php", $referer))
-			header("Location: $referer"); // redirect the user to the calling page
+		if (!eregi("error\.php\?.+|user_login\.php|install\.php", $referer)) // variable '$referer' is globally defined in function 'start_session()' in 'include.inc.php'
+			header("Location: " . $referer); // redirect the user to the calling page
 		else
 			header("Location: index.php"); // back to main page
 	}
@@ -87,7 +71,7 @@
 		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 	}
 
-	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// Extract the view type requested by the user (either 'Mobile', 'Print', 'Web' or ''):
 	// ('' will produce the default 'Web' output style)
 	if (isset($_REQUEST['viewType']))
 		$viewType = $_REQUEST['viewType'];
@@ -130,10 +114,10 @@
 		// -------------------
 
 		// (1) OPEN CONNECTION, (2) SELECT DATABASE
-		connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
+		connectToMySQLDatabase(); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 		// (3) RUN the query on the database through the connection:
-		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+		$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		// (4) EXTRACT results:
 		if (mysql_num_rows($result) == 1) // Interpret query result: Do we have exactly one row?
@@ -160,7 +144,7 @@
 
 			// Now we need to get the user's first name and last name (e.g., in order to display them within the login welcome message)
 			$query = "SELECT user_id, first_name, last_name, abbrev_institution, language, last_login FROM $tableUsers WHERE user_id = " . quote_smart($userID); // CONSTRUCT SQL QUERY
-			$result = queryMySQLDatabase($query, ""); // RUN the query on the database through the connection (function 'queryMySQLDatabase()' is defined in 'include.inc.php')
+			$result = queryMySQLDatabase($query); // RUN the query on the database through the connection (function 'queryMySQLDatabase()' is defined in 'include.inc.php')
 			$row2 = mysql_fetch_array($result); // EXTRACT results: fetch the one row into the array '$row2'
 
 			// Save the fetched user details to the session file:
@@ -207,6 +191,10 @@
 			// and save all allowed user actions as semicolon-delimited string to the session variable 'user_permissions':
 			getPermissions($row2["user_id"], "user", true); // function 'getPermissions()' is defined in 'include.inc.php'
 
+			// Get the default view for the current user
+			// and save it to the session variable 'userDefaultView':
+			getDefaultView($row2["user_id"]); // function 'getDefaultView()' is defined in 'include.inc.php'
+
 			// Get the default number of records per page preferred by the current user
 			// and save it to the session variable 'userRecordsPerPage':
 			getDefaultNumberOfRecords($row2["user_id"]); // function 'getDefaultNumberOfRecords()' is defined in 'include.inc.php'
@@ -223,11 +211,11 @@
 					. "WHERE user_id = $userID";
 
 			// RUN the query on the database through the connection:
-			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+			$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 
-			if (!ereg("error\.php\?.+|user_login\.php|install\.php", $referer))
-				header("Location: $referer"); // redirect the user to the calling page
+			if (!eregi("error\.php\?.+|user_login\.php|install\.php", $referer))
+				header("Location: " . $referer); // redirect the user to the calling page
 			else
 				header("Location: index.php"); // back to main page
 		}
@@ -249,7 +237,7 @@
 		// -------------------
 
 		// (5) CLOSE the database connection:
-		disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
+		disconnectFromMySQLDatabase(); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 	}
 
 	// --------------------------------------------------------------------
@@ -280,7 +268,7 @@
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Login", "index,follow", "User login page. You must be logged in to the " . encodeHTML($officialDatabaseName) . " in order to add, edit or delete records", "", false, "", $viewType, array());
-		showPageHeader($HeaderString, "");
+		showPageHeader($HeaderString);
 
 		// Build the login form:
 		// Note: we use the fact here, that a page can have both, a GET and POST request.
@@ -320,7 +308,7 @@
 
 		// DISPLAY THE HTML FOOTER:
 		// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
-		showPageFooter($HeaderString, "");
+		showPageFooter($HeaderString);
 
 		displayHTMLfoot();
 

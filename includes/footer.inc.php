@@ -35,13 +35,14 @@
 	// --------------------------------------------------------------------
 
 	// Displays the visible footer:
-	function showPageFooter($HeaderString, $oldQuery)
+	function showPageFooter($HeaderString)
 	{
 		global $officialDatabaseName; // usage example: <a href="index.php">[? echo encodeHTML($officialDatabaseName); ?]</a>
 		global $hostInstitutionAbbrevName; // usage example: <a href="[? echo $hostInstitutionURL; ?]">[? echo encodeHTML($hostInstitutionAbbrevName); ?] Home</a>
 		global $hostInstitutionName; // (note: in the examples above, square brackets must be replaced by their respective angle brackets)
 		global $hostInstitutionURL;
 		global $helpResourcesURL;
+		global $librarySearchPattern;
 
 		global $loginWelcomeMsg; // these variables are globally defined in function 'showLogin()' in 'include.inc.php'
 		global $loginStatus;
@@ -50,17 +51,11 @@
 		global $loc; // '$loc' is made globally available in 'core.php'
 ?>
 
-<hr align="center" width="95%">
-<table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds the footer">
+<hr class="pagefooter" align="center" width="95%">
+<table class="pagefooter" align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds the footer">
 <tr>
-	<td class="small" width="105"><a href="index.php" title="<?php echo $loc["LinkTitle_Home"]; ?>"><?php echo $loc["Home"]; ?></a></td>
-	<td class="small" align="center">
-		<a href="show.php?records=all" title="<?php echo $loc["LinkTitle_ShowAll"]; ?>"><?php echo $loc["ShowAll"]; ?></a>
-		&nbsp;|&nbsp;
-		<a href="simple_search.php" title="<?php echo $loc["LinkTitle_SimpleSearch"]; ?>"><?php echo $loc["SimpleSearch"]; ?></a>
-		&nbsp;|&nbsp;
-		<a href="advanced_search.php" title="<?php echo $loc["LinkTitle_AdvancedSearch"]; ?>"><?php echo $loc["AdvancedSearch"]; ?></a>
-		&nbsp;|&nbsp;<?php
+	<td class="small" width="105"><a href="index.php"<?php echo addAccessKey("attribute", "home"); ?> title="<?php echo $loc["LinkTitle_Home"] . addAccessKey("title", "home"); ?>"><?php echo $loc["Home"]; ?></a></td>
+	<td class="small" align="center"><?php
 
 		// -------------------------------------------------------
 		if (isset($_SESSION['user_permissions']) AND ereg("allow_sql_search", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_sql_search'...
@@ -68,44 +63,17 @@
 		// ... include a link to 'sql_search.php':
 ?>
 
-		<a href="sql_search.php" title="<?php echo $loc["LinkTitle_SQLSearch"]; ?>"><?php echo $loc["SQLSearch"]; ?></a>
+		<a href="sql_search.php"<?php echo addAccessKey("attribute", "sql_search"); ?> title="<?php echo $loc["LinkTitle_SQLSearch"] . addAccessKey("title", "sql_search"); ?>"><?php echo $loc["SQLSearch"]; ?></a>
 		&nbsp;|&nbsp;<?php
 		}
 
 		// -------------------------------------------------------
+		if (!empty($librarySearchPattern))
+		{
+		// ... include a link to 'library_search.php':
 ?>
 
-		<a href="library_search.php" title="<?php echo $loc["LinkTitle_LibrarySearch_Prefix"] . encodeHTML($hostInstitutionName) . $loc["LinkTitle_LibrarySearch_Suffix"]; ?>"><?php echo $loc["LibrarySearch"]; ?></a>
-	</td>
-	<td class="small" align="right" width="105"><?php echo date('D, j M Y'); ?></td>
-</tr>
-<tr>
-	<td class="small" width="105"><?php
-
-		if (!empty($helpResourcesURL))
-		{
-?><a href="<?php echo $helpResourcesURL; ?>" title="<?php echo $loc["LinkTitle_Help"]; ?>"><?php echo $loc["Help"]; ?></a><?php
-		}
-?></td>
-	<td class="small" align="center"><?php
-
-		// -------------------------------------------------------
-		if (isset($_SESSION['user_permissions']) AND ereg("allow_add", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_add'...
-		{
-		// ... include a link to 'record.php?recordAction=add...':
-?>
-
-		<a href="record.php?recordAction=add&amp;oldQuery=<?php echo rawurlencode($oldQuery); ?>" title="<?php echo $loc["LinkTitle_AddRecord"]; ?>"><?php echo $loc["AddRecord"]; ?></a>
-		&nbsp;|&nbsp;<?php
-		}
-
-		// -------------------------------------------------------
-		if (isset($_SESSION['user_permissions']) AND ereg("(allow_import|allow_batch_import)", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains either 'allow_import' or 'allow_batch_import'...
-		{
-		// ... include a link to 'import.php':
-?>
-
-		<a href="import.php" title="<?php echo $loc["LinkTitle_Import"]; ?>"><?php echo $loc["Import"]; ?></a>
+		<a href="library_search.php"<?php echo addAccessKey("attribute", "lib_search"); ?> title="<?php echo $loc["LinkTitle_LibrarySearch_Prefix"] . encodeHTML($hostInstitutionName) . $loc["LinkTitle_LibrarySearch_Suffix"] . addAccessKey("title", "lib_search"); ?>"><?php echo $loc["LibrarySearch"]; ?></a>
 		&nbsp;|&nbsp;<?php
 		}
 
@@ -115,7 +83,7 @@
 		// ... include a link to 'show.php':
 ?>
 
-		<a href="show.php" title="<?php echo $loc["LinkTitle_ShowRecord"]; ?>"><?php echo $loc["ShowRecord"]; ?></a>
+		<a href="show.php"<?php echo addAccessKey("attribute", "show_rec"); ?> title="<?php echo $loc["LinkTitle_ShowRecord"] . addAccessKey("title", "show_rec"); ?>"><?php echo $loc["ShowRecord"]; ?></a>
 		&nbsp;|&nbsp;<?php
 		}
 
@@ -125,14 +93,20 @@
 		// ... include a link to 'extract.php':
 ?>
 
-		<a href="extract.php" title="<?php echo $loc["LinkTitle_ExtractCitations"]; ?>"><?php echo $loc["ExtractCitations"]; ?></a><?php
+		<a href="extract.php"<?php echo addAccessKey("attribute", "extract"); ?> title="<?php echo $loc["LinkTitle_ExtractCitations"] . addAccessKey("title", "extract"); ?>"><?php echo $loc["ExtractCitations"]; ?></a><?php
 		}
 
 		// -------------------------------------------------------
 ?>
 
 	</td>
-	<td class="small" align="right" width="105"><?php echo date('H:i:s O'); ?></td>
+	<td class="small" align="right" width="105"><?php
+
+		if (!empty($helpResourcesURL))
+		{
+?><a href="<?php echo $helpResourcesURL; ?>" title="<?php echo $loc["LinkTitle_Help"]; ?>"><?php echo $loc["Help"]; ?></a><?php
+		}
+?></td>
 </tr>
 </table><?php
 	}

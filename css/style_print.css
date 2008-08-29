@@ -19,68 +19,369 @@
 
 	/* refbase CSS definitions - print view style */
 
+body {
+	background: #FFFFFF;
+	color: #000000;
+}
 
-body           { background:#FFFFFF; color:#000000; }
+pre, code {
+	font-family: monaco,courier,monospace;
+	font-size: 7pt;
+}
 
-pre,code       { font-family:monaco,courier,monospace; font-size:7pt; }
+.smaller {
+	font-size: 0.7em;
+}
 
-.spacer        { padding-top:0.5em; }
+.small {
+	font-size: 0.7em;
+}
 
-.spacer2       { padding-bottom:0.3em; }
+.smallup {
+	font-size: 0.85em;
+	position: relative;
+	top: -10px;
+}
 
-.tiny          { font-size:x-small; }
+.moveup {
+	position: relative;
+	top: -8px;
+}
 
-.smaller       { font-size:smaller; }
+.unapi {
+	font-size: smaller;
+}
 
-.small         { font-size:small; }
+.Z3988 {
+	font-size: smaller;
+}
 
-.smallup       { font-size:small; position:relative; top:-10px; }
+.ok {
+	color: #009900;
+}
 
-.smallsans     { font-family:helvetica,arial,sans-serif; font-size:x-small; }
+.warning {
+	color: red;
+}
 
-.moveup        { position:relative; top:-8px; }
+.warning2 {
+	color: red;
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+	font-size: 0.75em;
+}
 
-.header        { font-family:helvetica,arial,sans-serif; }
+.mainfieldsbg {
+	background-color: #FFFFFF;
+}
 
-.footer        { font-family:helvetica,arial,sans-serif; font-size:x-small; color:#999999; }
+.otherfieldsbg {
+	background-color: #FFFFFF;
+}
 
-.unapi         { font-size:smaller; }
+.userfieldsbg {
+	background-color: #FFFFFF;
+}
 
-.Z3988         { font-size:smaller; }
+th {
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+	font-size: 0.8em;
+}
 
-.ok            { color:#009900; }
+td, div {
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+	font-size: 0.7em;
+}
 
-.warning       { color:red; }
+p {
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+	font-size: 0.7em;
+}
 
-.warning2      { color:red; font-family:helvetica,arial,sans-serif; font-size:small; }
+a:link {
+	color: #000000;
+	text-decoration: underline;
+}
 
-.mainfieldsbg  { background-color:#FFFFFF; }
+a:visited {
+	color: #000000;
+	text-decoration: underline;
+}
 
-.otherfieldsbg { background-color:#FFFFFF; }
+a:active {
+	color: #000000;
+	text-decoration: underline;
+}
 
-.userfieldsbg  { background-color:#FFFFFF; }
+a:hover {
+	color: #3366FF;
+	text-decoration: underline;
+}
 
-.outline       { list-style-type:none; font-size:small; position:relative; left:-15px; }
+h1, h2, h3, h4 {
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+}
 
-.category      { font-family:helvetica,arial,sans-serif; font-weight: bold; }
+h5, h6 {
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+}
 
-th             { font-family:helvetica,arial,sans-serif; font-size:small; }
+h2, h3 {
+	margin-top: 1em;
+	margin-bottom: 0.5em;
+}
 
-td,div         { font-family:"times new roman",garamond,times,serif; font-size:small; }
+h2 {
+	font-size: 1.8em;
+}
 
-p              { font-family:"times new roman",garamond,times,serif; font-size:small; }
+h3 {
+	font-size: 1.35em;
+}
 
-A:link         { color:#000000; text-decoration:underline; }
+h4, h5 {
+	margin-top: 0em;
+	margin-bottom: 0em;
+}
 
-A:visited      { color:#000000; text-decoration:underline; }
+h4 {
+	font-size: 1.25em;
+}
 
-A:active       { color:#000000; text-decoration:underline; }
+h5 {
+	font-size: 1.1em;
+}
 
-A:hover        { color:#3366FF; text-decoration:underline; }
+.pageheader {
+	
+}
 
-h1,h2,h3,h4    { font-family:helvetica,arial,sans-serif; }
+.pagefooter {
+	
+}
 
-h5,h6          { font-family:helvetica,arial,sans-serif; }
+.results {
+	
+}
 
-h2,h3          { margin-top:1em; margin-bottom:0.5em; }
+.resultsheader {
+	font-size: 1em;
+}
 
+.resultsfooter {
+	margin-left: 3.3em;
+	margin-right: 3.3em;
+}
+
+div.resultsfooter {
+	margin-top: 1.2em;
+	margin-bottom: 0.9em;
+}
+
+.showhide {
+	
+}
+
+#resultoptions {
+	display: none;
+}
+
+.resultnav {
+	
+}
+
+.mainnav {
+	
+}
+
+.pagenav {
+	
+}
+
+.viewnav {
+	font-size: 0.75em;
+}
+
+#columns {
+	
+}
+
+#details {
+	
+}
+
+#citations {
+	
+}
+
+.citation {
+	
+}
+
+.citation .showhide {
+	margin-top: 0.4em;
+}
+
+.citation .moreinfo {
+	margin-left: 1.25em;
+	font-size: 1em;
+}
+
+.citation .moreinfo > * {
+	margin-bottom: 0.4em;
+	font-size: 0.85em;
+}
+
+.citation .moreinfo .reflinks {
+	margin-top: 0.8em;
+}
+
+.citation .moreinfo .reflinks > * {
+	display: inline;
+	font-size: 1em;
+}
+
+#error {
+	
+}
+
+#queryhistory {
+	margin-left: 2.6em;
+	margin-right: 2.6em;
+	margin-bottom: 1.75em;
+}
+
+#currentquery, #previousqueries {
+	margin-top: 1.2em;
+	font-size: 1em;
+}
+
+#queryhistory .even, #queryhistory .odd {
+	margin-top: 0.25em;
+	margin-left: 1.2em;
+	margin-right: 1.2em;
+	font-size: 1em;
+}
+
+.examples {
+	font-size: 1em;
+}
+
+.links {
+	
+}
+
+.sect {
+	padding-top: 2px;
+	font-size: 1em;
+}
+
+.even {
+	background-color: #FFFFFF;
+	padding: 5px;
+}
+
+.odd {
+	background-color: #F4F4F4;
+	padding: 5px;
+}
+
+#queryform {
+	
+}
+
+#resultactions {
+	display: none;
+}
+
+#searchopt {
+	display: none;
+}
+
+#helptxt {
+	display: none;
+}
+
+#helptxt .even {
+	margin-left: -5px;
+	margin-top: -3px;
+}
+
+#helptxt .odd {
+	margin-left: -5px;
+}
+
+.toggleimg {
+	
+}
+
+.toggletxt {
+	display: inline;
+	margin-left: 5px;
+	font-size: 1em;
+}
+
+a:link .toggletxt {
+	color: #000000;
+}
+
+a:visited .toggletxt {
+	color: #000000;
+}
+
+a:hover .toggletxt {
+	color: #3366FF;
+}
+
+.resultviews {
+	display: inline;
+	font-size: 0.85em;
+}
+
+.activeview {
+	display: inline;
+	font-size: 1em;
+}
+
+.leftview {
+	display: inline;
+	font-size: 1em;
+}
+
+.middleview {
+	display: inline;
+	font-size: 1em;
+}
+
+.rightview {
+	display: inline;
+	font-size: 1em;
+}
+
+.toggleprint {
+	position: relative;
+	top: 3px;
+}
+
+#accountinfo {
+	font-size: 1.25em;
+}
+
+#accountdetails {
+	font-size: 1em;
+}
+
+#accountopt {
+	font-size: 1em;
+}
+
+#accountperm {
+	font-size: 1em;
+}
+
+#accountdetails ul, #accountopt ul, #accountperm ul {
+	position: relative;
+	top: -0.8em;
+	list-style-type: none;
+	font-size: 0.85em;
+	line-height: 1.3em;
+}

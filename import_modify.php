@@ -70,11 +70,22 @@
 		$formVars['showSource'] = "1";
 	}
 
-	// Get the referring page (or set a default one if no referrer is available or if the data were sent via a bookmarklet):
-	if (!empty($_SERVER['HTTP_REFERER']) AND !eregi("^jsb", $client)) // if the referrer variable isn't empty and doesn't originate from a bookmarklet
-		$referer = $_SERVER['HTTP_REFERER']; // on error, redirect to calling page
-	else
-		$referer = "import.php"; // on error, redirect to import form
+	// Save the URL of the referring page the 'referer' session variable:
+	// NOTE: For 'import_modify.php' we probably want to *always* set the referrer to 'import.php' since the preference of function 'start_session()'
+	//       for a referrer that was saved in a session variable may lead back to the wrong page if the user used the back button of his browser.
+	//       This happens e.g. if:
+	//        1. the user imports, say, ID 'arXiv:cond-mat/0703452' which gets loaded into the 'record.php' form
+	//        2. the user uses his browser's back button to switch back to the 'import.php' form
+	//        3. the user attempts to import 'arXiv:cond-mat/070345' (which is an incorrect arXiv ID)
+	//       In that case, if the referrer gets loaded from the session variable, it will redirect back to 'record.php' (instead of 'import.php').
+	//       This can be circumvented either by saving the '$_SERVER['HTTP_REFERER']' to the 'referer' session variable explicitly, or by simply
+	//       hardcoding '$referer' to "import.php" (which is what we do here)
+//	$referer = $_SERVER['HTTP_REFERER'];
+//	saveSessionVariable("referer", $referer); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+
+	// Set the default referrer if no referrer is available or if it just points to 'index.php' (or if the data were sent via a bookmarklet):
+//	if (empty($referer) OR ($referer == "index.php") OR eregi("^jsb", $client)) // variable '$referer' is globally defined in function 'start_session()' in 'include.inc.php'
+		$referer = "import.php"; // on error, we'll (by default) redirect to the import form
 
 	// First of all, check if the user is logged in:
 	if (!isset($_SESSION['loginEmail'])) // -> if the user isn't logged in
@@ -104,7 +115,10 @@
 	//       may expose yet another security hole...)
 
 	// Get the form used by the user:
-	$formType = $formVars['formType'];
+	if (isset($formVars['formType']))
+		$formType = $formVars['formType'];
+	else
+		$formType = "import";
 
 	// In case of the main import form, get the source text containing the bibliographic record(s):
 	// Note that data from any successfully uploaded file will override data pasted into the 'sourceText' text entry field
@@ -113,11 +127,11 @@
 	else
 		$sourceText = "";
 
-	// In case of the PubMed import form (import via PubMed ID), get the entered PubMed IDs:
-	if (isset($formVars['pubmedIDs']))
-		$pubmedIDs = $formVars['pubmedIDs'];
+	// In case of the "Import IDs" form (which imports records from PubMed ID, arXiv ID, DOI or OpenURL), get the entered IDs:
+	if (isset($formVars['sourceIDs']))
+		$sourceIDs = $formVars['sourceIDs'];
 	else
-		$pubmedIDs = "";
+		$sourceIDs = "";
 
 	// If data were sent via a bookmarklet, get the URL containing the posted data:
 	if (isset($formVars['sourceURL']))
@@ -197,7 +211,7 @@
 			{
 				$maxFileSize = ini_get("upload_max_filesize");
 				$fileError = "File size must not be greater than " . $maxFileSize . ":";
-		
+
 				$errors["uploadFile"] = $fileError; // inform the user that the maximum upload file size was exceeded
 			}
 			else // a tmp file exists...
@@ -214,25 +228,31 @@
 		}
 		else
 		{
-			// I'm not sure if this actually works --RAK
 			switch($uploadFile["error"])
 			{
 				case 0: // no error; possible file attack!
 					$errors["uploadFile"] = "There was a problem with your upload.";
+					break;
 				case 1: // uploaded file exceeds the 'upload_max_filesize' directive in 'php.ini'
 					$maxFileSize = ini_get("upload_max_filesize");
 					$fileError = "File size must not be greater than " . $maxFileSize . ":";
 					$errors["uploadFile"] = $fileError;
+					break;
 				case 2: // uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the html form (Note: refbase doesn't currently specify MAX_FILE_SIZE but anyhow...)
 					$errors["uploadFile"] = "The file you are trying to upload is too big.";
+					break;
 				case 3: // uploaded file was only partially uploaded
 					$errors["uploadFile"] = "The file you are trying to upload was only partially uploaded.";
+					break;
 				case 4: // no file was uploaded
 					$errors["uploadFile"] = "You must select a file for upload.";
+					break;
 				case 6:
 					$errors["uploadFile"] = "Missing a temporary folder.";
+					break;
 				default: // a default error, just in case!  :)
 					$errors["uploadFile"] = "There was a problem with your upload.";
+					break;
 			}
 		}
 	}
@@ -243,13 +263,29 @@
 		$fileData = readFromFile($tmpFilePath); // function 'readFromFile()' is defined in 'execute.inc.php'
 
 		if (!empty($fileData))
-			// data from any successfully uploaded file will override data pasted into the 'sourceText' text entry field
+			// Data from any successfully uploaded file will override data pasted into the 'sourceText' text entry field
 			$sourceText = $fileData;
 	}
 
 	// --------------------------------------------------------------------
 
 	// PRE-PROCESS DATA INPUT:
+
+	// In case of a latin1-based database, attempt to convert UTF-8 data to refbase markup & latin1:
+	// NOTE: For a latin1-based database, data pasted into the 'sourceText' text entry field will be always returned in ISO-8859-1 encoding (see notes above function
+	//       'decodeHTML()' below). However, data that were received via a file upload (or from a client such as Bookends) will have the encoding of the original file
+	//       (which may be UTF-8 encoded).
+	if (($contentTypeCharset == "ISO-8859-1") AND (detectCharacterEncoding($sourceText) == "UTF-8")) // function 'detectCharacterEncoding()' is defined in 'include.inc.php'
+		$sourceText = convertToCharacterEncoding("ISO-8859-1", "TRANSLIT", $sourceText, "UTF-8"); // function 'convertToCharacterEncoding()' is defined in 'include.inc.php'
+
+	// Decode any HTML entities remaining in the source text:
+	// NOTE: - Web browsers send back form data in the same encoding as the page containing the form. So if a user imports UTF-8 data (via the 'sourceText' text entry form) into
+	//         a latin1-based database, non-latin1 characters will be encoded by the browser as HTML entities (e.g., the greek delta character would be represented as '&#948;'
+	//         in the source text). Therefore, we'll use function 'decodeHTML()' to convert any remaining HTML entities first to UTF-8, then convert Unicode entities to refbase
+	//         markup (if possible), and finally transform all Unicode characters that can't be successfully converted to their ASCII equivalents.
+	//       - Alternatively, it might be easier to always use UTF-8 as page encoding for 'import.php' so that we'll always receive UTF-8 encoded data, then use function
+	//         'detectCharacterEncoding()' to detect the actual character encoding of the given source text, and convert to refbase markup/latin1 if needed.
+	$sourceText = decodeHTML($contentTypeCharset, $sourceText); // function 'decodeHTML()' is defined in 'include.inc.php', and '$contentTypeCharset' is defined in 'ini.inc.php'
 
 	// Process record number input:
 	$importRecordNumbersArray = array(); // initialize array variable which will hold all the record numbers that shall be imported
@@ -293,44 +329,61 @@
 		// attempt to identify the format of the input text:
 		$sourceFormat = identifySourceFormat($sourceText); // function 'identifySourceFormat()' is defined in 'import.inc.php'
 
-	// else if source text originated from the PubMed import form (import via PubMed ID):
-	elseif ($formType == "importPubMed")
-		$sourceFormat = "Pubmed Medline";
+	// else if source text originated from the "Import IDs" form (which imports records from PubMed ID, arXiv ID, DOI or OpenURL):
+	elseif ($formType == "importID")
+		$sourceFormat = identifySourceID($sourceIDs); // function 'identifySourceID()' is defined in 'import.inc.php'
 
 	// --------------------------------------------------------------------
 
 	// FETCH DATA FROM URL:
 
-	// in case of import via PubMed ID: fetch source data from PubMed.gov for all given PubMed IDs:
-	if (($formType == "importPubMed") AND ereg("[0-9]", $pubmedIDs) AND !empty($sourceFormat))
+	// In case of import via ID:
+	// TODO: Modify the code so that '$sourceIDs' can contain a mixture of any supported IDs.
+	if (($formType == "importID") AND !empty($sourceIDs) AND !empty($sourceFormat))
 	{
-		// remove any meaningless delimiter(s) from the beginning or end of the ID string:
-		$pubmedIDs = trimTextPattern($pubmedIDs, "\D+", true, true); // function 'trimTextPattern()' is defined in 'include.inc.php'
-		// split on any text between PubMed IDs and remove any duplicate IDs:
-		$pubmedIDArray = array_unique(split("[^0-9]+", $pubmedIDs));
-		// merge PubMed IDs again with commas:
-		$pubmedIDs = implode(",", $pubmedIDArray);
-
-		$eUtilsServer = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/";
-		$eFetchScript = "efetch.fcgi";
-		$eFetchTool = "refbase";
-		$eFetchEmail = rawurlencode("info@refbase.net");
-		$eFetchDatabase = "pubmed";
-		$eFetchFormat = "medline";
-
-		if ($sourceFormat == "Pubmed XML")
-			$eFetchType = "xml";
-		else // by default, we'll use the "Pubmed Medline" format
-			$eFetchType = "text";
-
-		$sourceURL = $eUtilsServer . $eFetchScript . "?db=" . $eFetchDatabase . "&retmode=" . $eFetchType . "&rettype=" . $eFetchFormat . "&tool=" . $eFetchTool . "&email=" . $eFetchEmail . "&id=" . $pubmedIDs;
-
-		$sourceText = fetchDataFromURL($sourceURL); // function 'fetchDataFromURL()' is defined in 'import.inc.php'
-
-		if (!preg_match("/^PMID- /m", $sourceText) AND ereg("Error occurred:", $sourceText)) // a PubMed error occurred, probably because only unrecognized PubMed IDs were given
+		// - PubMed IDs:
+		if (eregi("^Pubmed (Medline|XML)$", $sourceFormat) AND ereg("[0-9]", $sourceIDs))
 		{
-			$errors["pubmedIDs"] = preg_replace("/.*Error occurred: *([^<>]+).*/s", "PubMed error: \\1", $sourceText); // attempt to extract PubMed error message
-			$sourceText = "";
+			// Split on any whitespace between PubMed IDs:
+			$idArray = preg_split("/\s+/", $sourceIDs, -1, PREG_SPLIT_NO_EMPTY);
+
+			// Fetch source data from PubMed.gov for all given PubMed IDs:
+			list($errors, $sourceText) = fetchDataFromPubMed($idArray, $sourceFormat); // function 'fetchDataFromPubMed()' is defined in 'import.inc.php'
+		}
+
+		// - arXiv IDs:
+		elseif (eregi("^arXiv XML$", $sourceFormat) AND preg_match("#(arXiv:|http://arxiv\.org/abs/)?([\w.-]+/\d{7}|\d{4}\.\d{4,})(v\d+)?#i", $sourceIDs))
+		{
+			// Remove any "arXiv:" or "http://arxiv.org/abs/" prefixes from the ID string:
+			$sourceIDs = preg_replace("#(?<=^|\s)(arXiv:|http://arxiv\.org/abs/)#", "", $sourceIDs);
+			// Split on any whitespace between arXiv IDs:
+			$idArray = preg_split("/\s+/", $sourceIDs, -1, PREG_SPLIT_NO_EMPTY);
+
+			// Fetch source data from arXiv.org for all given arXiv IDs:
+			list($errors, $sourceText) = fetchDataFromArXiv($idArray, $sourceFormat); // function 'fetchDataFromArXiv()' is defined in 'import.inc.php'
+			// NOTE: In case of function 'fetchDataFromArXiv()', variable '$sourceText' contains the SimplePie object with the parsed Atom XML feed
+			// TODO: This is inconsistent with the behaviour of the other 'fetchData*()' functions and we should do something about it!
+
+			// NOTE: Since, for arXiv IDs, '$sourceText' contains the SimplePie object (and not just text), handling of any encoding issues is done
+			//       within function 'arxivToRefbase()'
+		}
+
+		// - DOIs/OpenURLs:
+		//   TODO: - to support OpenURL context objects from COinS or Atom XML, we need to decode ampersand characters ('&amp;' -> '&'), and allow for OpenURLs that don't start with '?' or '&'
+		elseif (eregi("^CrossRef XML$", $sourceFormat) AND (preg_match("#(?<=^|\s)(doi:|http://dx\.doi\.org/)?10\.\d{4}/\S+?(?=$|\s)#i", $sourceIDs) OR preg_match("#(?<=^|\s)(openurl:|http://.+?(?=\?))?.*?(?<=[?&])ctx_ver=Z39\.88-2004(?=&|$).*?(?=$|\s)#i", $sourceIDs)))
+		{
+			// Remove any prefixes (like "doi:", "openurl:", "http://dx.doi.org/" or "http://...?") from the ID string:
+			$sourceIDs = preg_replace("#(?<=^|\s)(doi:|http://dx\.doi\.org/)#", "", $sourceIDs);
+			$sourceIDs = preg_replace("#(?<=^|\s)(openurl:|http://.+?(?=\?))#", "", $sourceIDs);
+			// Split on any whitespace between DOIs/OpenURLs:
+			$idArray = preg_split("/\s+/", $sourceIDs, -1, PREG_SPLIT_NO_EMPTY);
+
+			// Fetch record metadata from CrossRef.org for all given DOIs/OpenURLs:
+			list($errors, $sourceText) = fetchDataFromCrossRef($idArray, $sourceFormat); // function 'fetchDataFromCrossRef()' is defined in 'import.inc.php'
+
+			// In case of a latin1-based database, attempt to convert UTF-8 data to refbase markup & latin1:
+			if (($contentTypeCharset == "ISO-8859-1") AND (detectCharacterEncoding($sourceText) == "UTF-8"))
+				$sourceText = convertToCharacterEncoding("ISO-8859-1", "TRANSLIT", $sourceText, "UTF-8");
 		}
 	}
 
@@ -350,6 +403,7 @@
 
 			// Parse records from the specified import format:
 			// function 'importRecords()' is defined in the import format file given in '$importFormatFile' (which, in turn, must reside in the 'import' directory of the refbase root directory)
+			// NOTE: see note above below the 'fetchDataFromArXiv()' function
 			list($importDataArray, $recordsCount, $importRecordNumbersRecognizedFormatArray, $importRecordNumbersNotRecognizedFormatArray, $errors) = importRecords($sourceText, $importRecordsRadio, $importRecordNumbersArray);
 		}
 		else
@@ -368,10 +422,10 @@
 	// VALIDATE DATA FIELDS:
 
 	// For each parsed record, function 'validateRecords()' (in 'import.inc.php') will assign errors to '$errors["sourceText"]'.
-	// In case of the PubMed import form, we'll redirect these error messages to '$errors["pubmedIDs"]':
-	if (($formType == "importPubMed") AND isset($errors["sourceText"])) // some errors occurred
+	// In case of the "Import IDs" form, we'll redirect these error messages to '$errors["sourceIDs"]':
+	if (($formType == "importID") AND isset($errors["sourceText"])) // some errors occurred
 	{
-		$errors["pubmedIDs"] = $errors["sourceText"];
+		$errors["sourceIDs"] = $errors["sourceText"];
 		unset($errors["sourceText"]);
 	}
 
@@ -379,8 +433,8 @@
 	if (($formType == "import") AND empty($sourceText)) // no source data given
 		$errors["sourceText"] = "Source data missing!";
 
-	elseif (($formType == "importPubMed") AND !ereg("[0-9]", $pubmedIDs)) // no PubMed IDs given
-		$errors["pubmedIDs"] = "You must specify at least one PubMed ID!";
+	elseif (($formType == "importID") AND !isset($errors["sourceIDs"]) AND (empty($sourceIDs) OR empty($sourceFormat))) // no recognized IDs given
+		$errors["sourceIDs"] = "You must specify at least one valid ID!";
 
 	// If some source data were given but the source text format wasn't among the recognized formats:
 	elseif (empty($sourceFormat))
@@ -479,7 +533,7 @@
 
 				foreach ($errors as $varname => $value)
 				{
-					$value = ereg_replace("<br>", "\n            ", $value);
+					$value = ereg_replace("<br>", "\n           ", $value);
 					echo $varname . ": " . $value . "\n\n";
 				}
 
@@ -490,7 +544,7 @@
 				// Write back session variables:
 				saveSessionVariable("errors", $errors); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 				saveSessionVariable("formVars", $formVars);
-	
+
 				// Redirect the browser back to the import form:
 				header("Location: " . $referer);
 			}
@@ -509,14 +563,16 @@
 
 	if ((count($importRecordNumbersRecognizedFormatArray) == 1) AND !eregi("^(cli|be)", $client)) // if this is the only record we'll need to import -AND- if the import didn't originate from a refbase command line client:
 	{
-		foreach ($importDataArray['records'][0] as $fieldParameterKey => $fieldParameterValue)
-			$importDataArray['records'][0][$fieldParameterKey] = $fieldParameterKey . "=" . rawurlencode($fieldParameterValue); // copy parameter name and equals sign in front of parameter value
-
-		$fieldParameters = implode("&", $importDataArray['records'][0]); // merge list of parameters
+		// save import data to session variable:
+		// NOTE: Saving import data to a session variable allows to retain large param/value strings (that would exceed
+		//       the maximum string limit for GET requests). This works around a limitation in Internet Explorer which
+		//       has a maximum URL length of 2,083 characters & a maximum path length of 2,048 characters.
+		//       More info: <http://support.microsoft.com/kb/208427/EN-US/>
+		saveSessionVariable("importData", $importDataArray['records'][0]);
 
 		// RELOCATE TO IMPORT PAGE:
 		// call 'record.php' and load the form fields with the data of the current record
-		header("Location: record.php?recordAction=add&mode=import&importSource=generic&" . $fieldParameters);
+		header("Location: record.php?recordAction=add&mode=import&importSource=generic");
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
 	else // import record(s) directly:
@@ -532,9 +588,29 @@
 
 	if (!empty($importedRecordsArray)) // if some records were successfully imported
 	{
-		$recordSerialsQueryString = implode(",", $importedRecordsArray);
-
 		$importedRecordsCount = count($importedRecordsArray);
+
+		// build string of record serial numbers (to be used with the 'records' query parameter):
+		$recordSerialsQueryString = $importedRecordsArray[0]; // add first serial number
+		for ($i=1; $i < $importedRecordsCount; $i++) // for the second to the last serial number...
+		{
+			// implode consecutive serial numbers into a range (e.g. transform "150,151,152" into "150-152"):
+			if ($importedRecordsArray[$i] == ($importedRecordsArray[$i - 1] + 1)) // if this number is consecutive to the previous one
+			{
+				if (!ereg("-$", $recordSerialsQueryString))
+					$recordSerialsQueryString .= "-"; // start range
+
+				if ($i == ($importedRecordsCount - 1)) // if this is the last item in the array
+					$recordSerialsQueryString .= $importedRecordsArray[$i]; // end range
+			}
+			else // this number is NOT consecutive to the previous one
+			{
+				if (ereg("-$", $recordSerialsQueryString))
+					$recordSerialsQueryString .= $importedRecordsArray[$i - 1]; // end any previous range
+
+				$recordSerialsQueryString .= "," . $importedRecordsArray[$i]; // append this number using a comma as a delimiter
+			}
+		}
 
 		// Send EMAIL announcement:
 		if ($sendEmailAnnouncements == "yes")
@@ -544,7 +620,7 @@
 
 			// send a notification email to the mailing list email address given in '$mailingListEmail':
 			$emailRecipient = "Literature Database Announcement List <" . $mailingListEmail . ">";
-	
+
 			if ($importedRecordsCount == 1)
 			{
 				$emailSubject = "New record added to the " . $officialDatabaseName;
@@ -589,7 +665,7 @@
 			$HeaderString = returnMsg($loc["NoRecordsImported"] . "!", "warning", "strong", "HeaderString"); // function 'returnMsg()' is defined in 'include.inc.php'
 
 			// Write back session variables:
-			saveSessionVariable("errors", $errors); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+			saveSessionVariable("errors", $errors);
 			saveSessionVariable("formVars", $formVars);
 
 			header("Location: " . $referer); // redirect to the calling page (normally, 'import.php')

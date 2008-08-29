@@ -63,6 +63,22 @@
 	else
 		$formVars = array();
 
+	// Read out import data that were saved as a session variable:
+	// NOTE: This is done by 'import_modify.php' (if a single record was imported via the web interface) in order to retain
+	//       large param/value strings (that would exceed the maximum string limit for GET requests). This works around a limitation
+	//       in Internet Explorer which has a maximum URL length of 2,083 characters & a maximum path length of 2,048 characters.
+	//       More info: <http://support.microsoft.com/kb/208427/EN-US/>
+	if (isset($_SESSION['importData']))
+	{
+		foreach ($_SESSION['importData'] as $varname => $value)
+		{
+			$_POST[$varname] = $value;
+			$_REQUEST[$varname] = $value;
+		}
+
+		deleteSessionVariable("importData"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
+	}
+
 	// --------------------------------------------------------------------
 
 	if (isset($_REQUEST['recordAction']))
@@ -85,15 +101,6 @@
 	else
 		$serialNo = ""; // this is actually unneccessary, but we do it for clarity reasons here
 
-	if (isset($_REQUEST['oldQuery']))
-		$oldQuery = $_REQUEST['oldQuery']; // fetch the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
-	else
-		$oldQuery = ""; // if the 'oldQuery' parameter wasn't set we set the '$oldQuery' variable to the empty string ("") to prevent 'Undefined index: oldQuery...' notification messages
-	
-	$oldQuery = stripSlashesIfMagicQuotes($oldQuery); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
-//	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
-//	$oldQuery = ereg_replace('(\\\\)+','\\\\',$oldQuery);
-
 	// Setup some required variables:
 
 	// If there's no stored message available:
@@ -114,7 +121,7 @@
 			}
 		}
 		else // -> there were errors validating the data entered by the user
-			$HeaderString = "<b><span class=\"warning\">". $loc["WarningInputDataError"]."</span></b>";
+			$HeaderString = "<b><span class=\"warning\">". $loc["Warning_InputDataError"]."</span></b>";
 	}
 	else // there is already a stored message available
 	{
@@ -124,7 +131,7 @@
 		deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
 	}
 
-	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// Extract the view type requested by the user (either 'Mobile', 'Print', 'Web' or ''):
 	// ('' will produce the default 'Web' output style)
 	if (isset($_REQUEST['viewType']))
 		$viewType = $_REQUEST['viewType'];
@@ -177,19 +184,18 @@
 	if ($recordAction == "edit")
 	{
 		// for the selected record, select *all* available fields:
-		// (note: we also add the 'serial' column at the end in order to provide standardized input [compare processing of form 'sql_search.php' in 'search.php'])
+		$query = buildSELECTclause("Edit", "1"); // function 'buildSELECTclause()' is defined in 'include.inc.php'
+
 		if (isset($_SESSION['loginEmail'])) // if a user is logged in, show user specific fields:
-			$query = "SELECT author, title, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, approved, notes, file, serial, location, type, call_number, created_date, created_time, created_by, modified_date, modified_time, modified_by, orig_record, contribution_id, online_publication, online_citation, marked, copy, selected, user_keys, user_notes, user_file, user_groups, cite_key, related, serial, url, doi"
-					. " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id =" . quote_smart($loginUserID) . " WHERE serial RLIKE " . quote_smart("^(" . $serialNo . ")$"); // since we'll only fetch one record, the ORDER BY clause is obsolete here
+			$query .= " FROM $tableRefs LEFT JOIN $tableUserData ON serial = record_id AND user_id =" . quote_smart($loginUserID) . " WHERE serial RLIKE " . quote_smart("^(" . $serialNo . ")$"); // since we'll only fetch one record, the ORDER BY clause is obsolete here
 		else // if NO user logged in, don't display any user specific fields:
-			$query = "SELECT author, title, year, publication, abbrev_journal, volume, issue, pages, corporate_author, thesis, address, keywords, abstract, publisher, place, editor, language, summary_language, orig_title, series_editor, series_title, abbrev_series_title, series_volume, series_issue, edition, issn, isbn, medium, area, expedition, conference, approved, notes, file, serial, location, type, call_number, created_date, created_time, created_by, modified_date, modified_time, modified_by, orig_record, contribution_id, online_publication, online_citation, serial, url, doi"
-					. " FROM $tableRefs WHERE serial RLIKE " . quote_smart("^(" . $serialNo . ")$"); // since we'll only fetch one record, the ORDER BY clause is obsolete here
+			$query .= " FROM $tableRefs WHERE serial RLIKE " . quote_smart("^(" . $serialNo . ")$"); // since we'll only fetch one record, the ORDER BY clause is obsolete here
 	}
 
 	// --------------------------------------------------------------------
 
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE
-	connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
+	connectToMySQLDatabase(); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 	// Initialize some variables (to prevent "Undefined variable..." messages):
 	$isEditorCheckBox = "";
@@ -199,7 +205,7 @@
 	if ($recordAction == "edit" AND empty($errors))
 		{
 			// (3a) RUN the query on the database through the connection:
-			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+			$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 			if (@ mysql_num_rows($result) == 1) // this condition is added here to avoid the case that clicking on a search result item which got deleted in the meantime invokes a seemingly correct but empty 'edit record' search form
 			{
@@ -361,12 +367,8 @@
 			{
 
 				foreach($_REQUEST as $varname => $value)
-				{
 					// remove slashes from parameter values if 'magic_quotes_gpc = On':
 					$_REQUEST[$varname] = stripSlashesIfMagicQuotes($value); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
-
-//					$_REQUEST[$varname] = preg_replace("/\\\\([\"'])/", "\\1", $value); // replace any \" with " and any \' with '
-				}
 
 				// read field data from a GET/POST request:
 				if (isset($_REQUEST['author']))
@@ -563,7 +565,17 @@
 				$userGroupsName = "";
 				$citeKeyName = "";
 				$relatedName = "";
-				$fileName = "";
+
+				// NOTE: currently, we only allow for file URLs with full URL paths
+				// 
+				// TODO: - ensure that there aren't any security issues
+				//       - should we accept local file paths/names from the import data? if so, how should we handle them?
+				//       - make sure that any recognized PDF files get renamed & filed according to the settings in 'initialize/ini.inc.php';
+				//         in case of remote file URLs, this may mean downloading the remote PDF, and filing/renaming it according to preference
+				if (isset($_REQUEST['file']) AND ereg("^(https?|ftp|file)://", $_REQUEST['file'])) // if the 'file' field contains a full URL (starting with "http://", "https://", "ftp://" or "file://")
+					$fileName = encodeHTML($_REQUEST['file']);
+				else
+					$fileName = "";
 
 				if (isset($_REQUEST['url']))
 					$urlName = encodeHTML($_REQUEST['url']);
@@ -591,54 +603,184 @@
 				if (!empty($errors)) // ...there were some errors on submit. -> Re-load the data that were submitted by the user:
 				{
 					foreach($formVars as $varname => $value)
-					{
 						// remove slashes from parameter values if 'magic_quotes_gpc = On':
 						$formVars[$varname] = stripSlashesIfMagicQuotes($value); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
 
-//						$formVars[$varname] = preg_replace("/\\\\([\"'])/", "\\1", $value); // replace any \" with " and any \' with '
-					}
-
-					$authorName = $formVars['authorName'];
+					if (isset($formVars['authorName']))
+						$authorName = $formVars['authorName'];
+					else
+						$authorName = "";
 
 					if (isset($formVars['isEditorCheckBox'])) // the user did mark the "is Editor" checkbox
 						$isEditorCheckBox = $formVars['isEditorCheckBox'];
 
-					$titleName = $formVars['titleName'];
-					$yearNo = $formVars['yearNo'];
-					$publicationName = $formVars['publicationName'];
-					$abbrevJournalName = $formVars['abbrevJournalName'];
-					$volumeNo = $formVars['volumeNo'];
-					$issueNo = $formVars['issueNo'];
-					$pagesNo = $formVars['pagesNo'];
-					$addressName = $formVars['addressName'];
-					$corporateAuthorName = $formVars['corporateAuthorName'];
-					$keywordsName = $formVars['keywordsName'];
-					$abstractName = $formVars['abstractName'];
-					$publisherName = $formVars['publisherName'];
-					$placeName = $formVars['placeName'];
-					$editorName = $formVars['editorName'];
-					$languageName = $formVars['languageName'];
-					$summaryLanguageName = $formVars['summaryLanguageName'];
-					$origTitleName = $formVars['origTitleName'];
-					$seriesEditorName = $formVars['seriesEditorName'];
-					$seriesTitleName = $formVars['seriesTitleName'];
-					$abbrevSeriesTitleName = $formVars['abbrevSeriesTitleName'];
-					$seriesVolumeNo = $formVars['seriesVolumeNo'];
-					$seriesIssueNo = $formVars['seriesIssueNo'];
-					$editionNo = $formVars['editionNo'];
-					$issnName = $formVars['issnName'];
-					$isbnName = $formVars['isbnName'];
-					$mediumName = $formVars['mediumName'];
-					$areaName = $formVars['areaName'];
-					$expeditionName = $formVars['expeditionName'];
-					$conferenceName = $formVars['conferenceName'];
-					$notesName = $formVars['notesName'];
-					$approvedRadio = $formVars['approvedRadio'];
+					if (isset($formVars['titleName']))
+						$titleName = $formVars['titleName'];
+					else
+						$titleName = "";
+
+					if (isset($formVars['yearNo']))
+						$yearNo = $formVars['yearNo'];
+					else
+						$yearNo = "";
+
+					if (isset($formVars['publicationName']))
+						$publicationName = $formVars['publicationName'];
+					else
+						$publicationName = "";
+
+					if (isset($formVars['abbrevJournalName']))
+						$abbrevJournalName = $formVars['abbrevJournalName'];
+					else
+						$abbrevJournalName = "";
+
+					if (isset($formVars['volumeNo']))
+						$volumeNo = $formVars['volumeNo'];
+					else
+						$volumeNo = "";
+
+					if (isset($formVars['issueNo']))
+						$issueNo = $formVars['issueNo'];
+					else
+						$issueNo = "";
+
+					if (isset($formVars['pagesNo']))
+						$pagesNo = $formVars['pagesNo'];
+					else
+						$pagesNo = "";
+
+					if (isset($formVars['addressName']))
+						$addressName = $formVars['addressName'];
+					else
+						$addressName = "";
+
+					if (isset($formVars['corporateAuthorName']))
+						$corporateAuthorName = $formVars['corporateAuthorName'];
+					else
+						$corporateAuthorName = "";
+
+					if (isset($formVars['keywordsName']))
+						$keywordsName = $formVars['keywordsName'];
+					else
+						$keywordsName = "";
+
+					if (isset($formVars['abstractName']))
+						$abstractName = $formVars['abstractName'];
+					else
+						$abstractName = "";
+
+					if (isset($formVars['publisherName']))
+						$publisherName = $formVars['publisherName'];
+					else
+						$publisherName = "";
+
+					if (isset($formVars['placeName']))
+						$placeName = $formVars['placeName'];
+					else
+						$placeName = "";
+
+					if (isset($formVars['editorName']))
+						$editorName = $formVars['editorName'];
+					else
+						$editorName = "";
+
+					if (isset($formVars['languageName']))
+						$languageName = $formVars['languageName'];
+					else
+						$languageName = "";
+
+					if (isset($formVars['summaryLanguageName']))
+						$summaryLanguageName = $formVars['summaryLanguageName'];
+					else
+						$summaryLanguageName = "";
+
+					if (isset($formVars['origTitleName']))
+						$origTitleName = $formVars['origTitleName'];
+					else
+						$origTitleName = "";
+
+					if (isset($formVars['seriesEditorName']))
+						$seriesEditorName = $formVars['seriesEditorName'];
+					else
+						$seriesEditorName = "";
+
+					if (isset($formVars['seriesTitleName']))
+						$seriesTitleName = $formVars['seriesTitleName'];
+					else
+						$seriesTitleName = "";
+
+					if (isset($formVars['abbrevSeriesTitleName']))
+						$abbrevSeriesTitleName = $formVars['abbrevSeriesTitleName'];
+					else
+						$abbrevSeriesTitleName = "";
+
+					if (isset($formVars['seriesVolumeNo']))
+						$seriesVolumeNo = $formVars['seriesVolumeNo'];
+					else
+						$seriesVolumeNo = "";
+
+					if (isset($formVars['seriesIssueNo']))
+						$seriesIssueNo = $formVars['seriesIssueNo'];
+					else
+						$seriesIssueNo = "";
+
+					if (isset($formVars['editionNo']))
+						$editionNo = $formVars['editionNo'];
+					else
+						$editionNo = "";
+
+					if (isset($formVars['issnName']))
+						$issnName = $formVars['issnName'];
+					else
+						$issnName = "";
+
+					if (isset($formVars['isbnName']))
+						$isbnName = $formVars['isbnName'];
+					else
+						$isbnName = "";
+
+					if (isset($formVars['mediumName']))
+						$mediumName = $formVars['mediumName'];
+					else
+						$mediumName = "";
+
+					if (isset($formVars['areaName']))
+						$areaName = $formVars['areaName'];
+					else
+						$areaName = "";
+
+					if (isset($formVars['expeditionName']))
+						$expeditionName = $formVars['expeditionName'];
+					else
+						$expeditionName = "";
+
+					if (isset($formVars['conferenceName']))
+						$conferenceName = $formVars['conferenceName'];
+					else
+						$conferenceName = "";
+
+					if (isset($formVars['notesName']))
+						$notesName = $formVars['notesName'];
+					else
+						$notesName = "";
+
+					if (isset($formVars['approvedRadio']))
+						$approvedRadio = $formVars['approvedRadio'];
+					else
+						$approvedRadio = "";
 
 					if ($recordAction == "edit")
 					{
-						$locationName = $formVars['locationName'];
-						$rawLocationName = $formVars['locationName'];
+						if (isset($formVars['locationName']))
+						{
+							$locationName = $formVars['locationName'];
+							$rawLocationName = $formVars['locationName'];
+						}
+						else
+						{
+							$locationName = "";
+							$rawLocationName = "";
+						}
 					}
 					else
 					{
@@ -646,35 +788,101 @@
 						$rawLocationName = "";
 					}
 
-					$callNumberName = $formVars['callNumberName'];
+					if (isset($formVars['callNumberName']))
+						$callNumberName = $formVars['callNumberName'];
+					else
+						$callNumberName = "";
+
 					if (ereg("%40", $callNumberName)) // if '$callNumberName' still contains URL encoded data... ('%40' is the URL encoded form of the character '@', see note below!)
 						$callNumberName = rawurldecode($callNumberName); // ...URL decode 'callNumberName' variable contents (it was URL encoded before incorporation into a hidden tag of the 'record' form to avoid any HTML syntax errors)
 																		// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_POST'!
 																		//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
 
-					$callNumberNameUserOnly = $formVars['callNumberNameUserOnly'];
+					if (isset($formVars['callNumberNameUserOnly']))
+						$callNumberNameUserOnly = $formVars['callNumberNameUserOnly'];
+					else
+						$callNumberNameUserOnly = "";
 
 					if ($recordAction == "edit")
 						$serialNo = $formVars['serialNo'];
 					else
 						$serialNo = $serialNo; // supply some generic info: "(not assigned yet)" [as defined at the top of this script]
 
-					$typeName = $formVars['typeName'];
-					$thesisName = $formVars['thesisName'];
-					$markedRadio = $formVars['markedRadio'];
-					$copyName = $formVars['copyName'];
-					$selectedRadio = $formVars['selectedRadio'];
-					$userKeysName = $formVars['userKeysName'];
-					$userNotesName = $formVars['userNotesName'];
-					$userFileName = $formVars['userFileName'];
-					$userGroupsName = $formVars['userGroupsName'];
-					$citeKeyName = $formVars['citeKeyName'];
-					$relatedName = $formVars['relatedName'];
-					$fileName = $formVars['fileName'];
-					$urlName = $formVars['urlName'];
-					$doiName = $formVars['doiName'];
+					if (isset($formVars['typeName']))
+						$typeName = $formVars['typeName'];
+					else
+						$typeName = "";
 
-					$contributionID = $formVars['contributionIDName'];
+					if (isset($formVars['thesisName']))
+						$thesisName = $formVars['thesisName'];
+					else
+						$thesisName = "";
+
+					if (isset($formVars['markedRadio']))
+						$markedRadio = $formVars['markedRadio'];
+					else
+						$markedRadio = "";
+
+					if (isset($formVars['copyName']))
+						$copyName = $formVars['copyName'];
+					else
+						$copyName = "";
+
+					if (isset($formVars['selectedRadio']))
+						$selectedRadio = $formVars['selectedRadio'];
+					else
+						$selectedRadio = "";
+
+					if (isset($formVars['userKeysName']))
+						$userKeysName = $formVars['userKeysName'];
+					else
+						$userKeysName = "";
+
+					if (isset($formVars['userNotesName']))
+						$userNotesName = $formVars['userNotesName'];
+					else
+						$userNotesName = "";
+
+					if (isset($formVars['userFileName']))
+						$userFileName = $formVars['userFileName'];
+					else
+						$userFileName = "";
+
+					if (isset($formVars['userGroupsName']))
+						$userGroupsName = $formVars['userGroupsName'];
+					else
+						$userGroupsName = "";
+
+					if (isset($formVars['citeKeyName']))
+						$citeKeyName = $formVars['citeKeyName'];
+					else
+						$citeKeyName = "";
+
+					if (isset($formVars['relatedName']))
+						$relatedName = $formVars['relatedName'];
+					else
+						$relatedName = "";
+
+					if (isset($formVars['fileName']))
+						$fileName = $formVars['fileName'];
+					else
+						$fileName = "";
+
+					if (isset($formVars['urlName']))
+						$urlName = $formVars['urlName'];
+					else
+						$urlName = "";
+
+					if (isset($formVars['doiName']))
+						$doiName = $formVars['doiName'];
+					else
+						$doiName = "";
+
+					if (isset($formVars['contributionIDName']))
+						$contributionID = $formVars['contributionIDName'];
+					else
+						$contributionID = "";
+
 					$contributionID = rawurldecode($contributionID); // URL decode 'contributionID' variable contents (it was URL encoded before incorporation into a hidden tag of the 'record' form to avoid any HTML syntax errors) [see above!]
 
 					// check if we need to set the checkbox in front of "This is a ... publication.":
@@ -692,14 +900,22 @@
 					else
 						$onlinePublication = "no";
 
-					$onlineCitationName = $formVars['onlineCitationName'];
+					if (isset($formVars['onlineCitationName']))
+						$onlineCitationName = $formVars['onlineCitationName'];
+					else
+						$onlineCitationName = "";
+
 					$createdDate = ""; // for INSERTs, 'created_...' and 'modified_...' variables will get fresh values in 'modify.php' anyhow 
 					$createdTime = "";
 					$createdBy = "";
 					$modifiedDate = "";
 					$modifiedTime = "";
 					$modifiedBy = "";
-					$origRecord = $formVars['origRecord'];
+
+					if (isset($formVars['origRecord']))
+						$origRecord = $formVars['origRecord'];
+					else
+						$origRecord = "";
 				}
 				else // add a new record -> display an empty form (i.e., set all variables to an empty string [""] or their default values, respectively):
 				{
@@ -774,7 +990,7 @@
 	// (4a) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $pageTitle, "index,follow", "Add, edit or delete a record in the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
-	showPageHeader($HeaderString, $oldQuery);
+	showPageHeader($HeaderString);
 
 	// (4b) DISPLAY results:
 	// Start <form> and <table> holding the form elements:
@@ -782,7 +998,6 @@
 	echo "\n<input type=\"hidden\" name=\"formType\" value=\"record\">";
 	echo "\n<input type=\"hidden\" name=\"submit\" value=\"" . $addEditButtonTitle . "\">"; // provide a default value for the 'submit' form tag (then, hitting <enter> within a text entry field will act as if the user clicked the 'Add/Edit Record' button)
 	echo "\n<input type=\"hidden\" name=\"recordAction\" value=\"" . $recordAction . "\">";
-	echo "\n<input type=\"hidden\" name=\"oldQuery\" value=\"" . rawurlencode($oldQuery) . "\">"; // we include a link to the formerly displayed results page as hidden form tag so that it's available on the subsequent receipt page that follows any add/edit/delete action!
 	echo "\n<input type=\"hidden\" name=\"contributionIDName\" value=\"" . rawurlencode($contributionID) . "\">";
 	echo "\n<input type=\"hidden\" name=\"origRecord\" value=\"" . $origRecord . "\">";
 
@@ -898,6 +1113,18 @@
 			. "\n\t<td align=\"right\" class=\"mainfieldsbg\">" . fieldError("pagesNo", $errors) . "<input type=\"text\" name=\"pagesNo\" value=\"$pagesNo\" size=\"14\" title=\"". $loc["DescriptionPages"]."\"></td>"
 			. "\n</tr>"
 			. "\n<tr>"
+			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Keywords"]."</b></td>"
+			. "\n\t<td colspan=\"5\" class=\"otherfieldsbg\"><input type=\"text\" name=\"keywordsName\" value=\"$keywordsName\" size=\"85\" title=\"". $loc["DescriptionKeywords"]."\"></td>"
+			. "\n</tr>"
+			. "\n<tr>"
+			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Abstract"]."</b></td>"
+			. "\n\t<td colspan=\"5\" class=\"otherfieldsbg\"><textarea name=\"abstractName\" rows=\"6\" cols=\"83\" title=\"". $loc["DescriptionAbstract"]."\">$abstractName</textarea></td>"
+			. "\n</tr>"
+			. "\n<tr>"
+			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Address"]."</b></td>"
+			. "\n\t<td colspan=\"5\" class=\"otherfieldsbg\"><input type=\"text\" name=\"addressName\" value=\"$addressName\" size=\"85\" title=\"". $loc["DescriptionAdress"]."\"></td>"
+			. "\n</tr>"
+			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["CorporateAuthor"]."</b></td>"
 			. "\n\t<td colspan=\"3\" class=\"otherfieldsbg\"><input type=\"text\" name=\"corporateAuthorName\" value=\"$corporateAuthorName\" size=\"48\" title=\"". $loc["DescriptionCorporate"]."\"></td>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Thesis"]."</b></td>";
@@ -907,18 +1134,6 @@
 		$thesisType = preg_replace("/<option (value=\"" . $thesisName . "\")>/", "<option \\1 selected>", $thesisType);
 
 	echo "$thesisType"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Address"]."</b></td>"
-			. "\n\t<td colspan=\"5\" class=\"otherfieldsbg\"><input type=\"text\" name=\"addressName\" value=\"$addressName\" size=\"85\" title=\"". $loc["DescriptionAdress"]."\"></td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Keywords"]."</b></td>"
-			. "\n\t<td colspan=\"5\" class=\"otherfieldsbg\"><input type=\"text\" name=\"keywordsName\" value=\"$keywordsName\" size=\"85\" title=\"". $loc["DescriptionKeywords"]."\"></td>"
-			. "\n</tr>"
-			. "\n<tr>"
-			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Abstract"]."</b></td>"
-			. "\n\t<td colspan=\"5\" class=\"otherfieldsbg\"><textarea name=\"abstractName\" rows=\"6\" cols=\"83\" title=\"". $loc["DescriptionAbstract"]."\">$abstractName</textarea></td>"
 			. "\n</tr>"
 			. "\n<tr>"
 			. "\n\t<td width=\"74\" class=\"otherfieldsbg\"><b>". $loc["Publisher"]."</b></td>"
@@ -1213,7 +1428,7 @@
 			. "\n</form>";
 	
 	// (5) CLOSE the database connection:
-	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
+	disconnectFromMySQLDatabase(); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 
@@ -1228,7 +1443,7 @@
 
 	// DISPLAY THE HTML FOOTER:
 	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
-	showPageFooter($HeaderString, $oldQuery);
+	showPageFooter($HeaderString);
 
 	displayHTMLfoot();
 

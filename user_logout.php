@@ -32,22 +32,6 @@
 
 	// --------------------------------------------------------------------
 
-	if (isset($_REQUEST['referer']))
-	{
-		$referer = $_REQUEST['referer']; // get the referring URL from the superglobal '$_REQUEST' variable (if any)
-	}
-	elseif (isset($_SESSION['referer']))
-	{
-		$referer = $_SESSION['referer']; // get the referring URL from the superglobal '$_SESSION' variable (if any)
-	}
-	else // if '$referer' is still not set
-	{
-		if (isset($_SERVER['HTTP_REFERER']))
-			$referer = $_SERVER['HTTP_REFERER'];
-		else
-			$referer = "index.php"; // if all other attempts fail, we'll re-direct to the main page
-	}
-
 	// Is the user logged in?
 	if (isset($_SESSION['loginEmail']))
 	{
@@ -59,12 +43,16 @@
 		deleteSessionVariable("loginLastName"); // clear the user's last name
 		deleteSessionVariable("abbrevInstitution"); // clear the user's abbreviated institution name
 		deleteSessionVariable("userLanguage"); // clear the user's preferred language
+		deleteSessionVariable("userDefaultView"); // clear the user's default view setting
 		deleteSessionVariable("userRecordsPerPage"); // clear the user's preferred number of records per page
 		deleteSessionVariable("userMainFields"); // clear the user's preferred list of "main fields"
 		deleteSessionVariable("lastLogin"); // clear the user's last login date & time
 
 		if (isset($_SESSION['userGroups']))
 			deleteSessionVariable("userGroups"); // clear the user's user groups (if any)
+
+		if (isset($_SESSION['adminUserGroups']))
+			deleteSessionVariable("adminUserGroups"); // clear the admin's user groups (if any)
 
 		if (isset($_SESSION['userQueries']))
 			deleteSessionVariable("userQueries"); // clear the user's saved queries (if any)
@@ -86,6 +74,27 @@
 
 		if (isset($_SESSION['HeaderString']))
 			deleteSessionVariable("HeaderString"); // clear any previous messages
+
+		if (isset($_SESSION['cqlQuery']))
+			deleteSessionVariable("cqlQuery"); // clear any stored OpenSearch/CQL query
+
+		if (isset($_SESSION['oldQuery']))
+			deleteSessionVariable("oldQuery"); // clear any query URL pointing to the formerly displayed results page
+
+		if (isset($_SESSION['oldMultiRecordQuery']))
+			deleteSessionVariable("oldMultiRecordQuery"); // clear any query URL pointing to the last multi-record query
+
+		if (isset($_SESSION['lastListViewQuery']))
+			deleteSessionVariable("lastListViewQuery"); // clear any SQL query generated for the last List view
+
+		if (isset($_SESSION['lastDetailsViewQuery']))
+			deleteSessionVariable("lastDetailsViewQuery"); // clear any SQL query generated for the last Details view
+
+//		if (isset($_SESSION['lastCitationViewQuery']))
+//			deleteSessionVariable("lastCitationViewQuery"); // clear any SQL query generated for the last Citation view
+
+		if (isset($_SESSION['queryHistory']))
+			deleteSessionVariable("queryHistory"); // clear any links to previous search results
 	}
 	else
 	{
@@ -96,8 +105,8 @@
 		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 	}
 
-	if (!preg_match("/.*user(_details|_options|_receipt|s)\.php.*|.*(error|install|query_manager)\.php.*/", $referer))
-		header("Location: $referer"); // redirect the user to the calling page
+	if (!preg_match("/.*user(_details|_options|_receipt|s)\.php.*|.*(error|install|query_manager|query_history)\.php.*/", $referer)) // variable '$referer' is globally defined in function 'start_session()' in 'include.inc.php'
+		header("Location: " . $referer); // redirect the user to the calling page
 	else
 		header("Location: index.php"); // back to main page
 ?>

@@ -27,16 +27,19 @@
   // Include refbase markup -> plain text search & replace patterns
   include 'includes/transtab_refbase_ascii.inc.php';
 
-  function openURL($row) {
+  function openURL($row, $resolver = "") {
     global $openURLResolver; // these variables are defined in 'ini.inc.php'
     global $hostInstitutionAbbrevName;
 
     $co = contextObject($row); 
     $co["sid"] = "refbase:" . $hostInstitutionAbbrevName;
 
-    $openURL = $openURLResolver;
+    if (empty($resolver))
+      $resolver = $openURLResolver;
 
-    if (!ereg("\?", $openURLResolver))
+    $openURL = $resolver;
+
+    if (!ereg("\?", $resolver))
       $openURL .= "?";
     else
       $openURL .= "&amp;";
@@ -60,6 +63,8 @@
       $fmt .= "dissertation";
     elseif (ereg("Journal", $row['type']))
       $fmt .= "journal";
+    elseif (ereg("Patent", $row['type']))
+      $fmt .= "patent";
     elseif (ereg("Book", $row['type']))
       $fmt .= "book";
     // 'dc' (dublin core) is compatible with the 1.0 spec, but not the 0.1 spec.
@@ -94,7 +99,7 @@
     // refbase fields that are listed in the corresponding 'fields' element:
     $plainTextSearchReplaceActionsArray = array(
       array(
-        'fields'  => array("title", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes", "publication"),
+        'fields'  => array("title", "publication", "abbrev_journal", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes"),
         'actions' => $transtab_refbase_ascii
       )
     );
@@ -118,10 +123,18 @@
         $co["rft.genre"] = "article";
       elseif ($row['type'] == "Book Chapter")
         $co["rft.genre"] = "bookitem";
-      elseif ($row['type'] == "Book")
+      elseif ($row['type'] == "Book Whole")
         $co["rft.genre"] = "book";
+      elseif ($row['type'] == "Conference Article")
+        $co["rft.genre"] = "proceeding";
+      elseif ($row['type'] == "Conference Volume")
+        $co["rft.genre"] = "conference";
       elseif ($row['type'] == "Journal")
         $co["rft.genre"] = "journal";
+      elseif ($row['type'] == "Manuscript")
+        $co["rft.genre"] = "preprint";
+      elseif ($row['type'] == "Report")
+        $co["rft.genre"] = "report"; // "report" is only supported by OpenURL v1.0 (but not v0.1)
     }
 
     // atitle, btitle, title (title, publication)
@@ -140,8 +153,15 @@
       $co["rft.btitle"] = $row['title'];
 
     // stitle (abbrev_journal)
-    if (!empty($row['abbrev_journal']))
+    if (!empty($row['abbrev_journal'])) {
       $co["rft.stitle"] = $row['abbrev_journal'];
+      if (empty($row['publication']) && (!isset($co["rft.title"]))) {
+        // we duplicate the abbreviated journal name to 'rft.title' since the
+        // CrossRef resolver seems to require 'rft.title' (otherwise it aborts
+        // with an error: "No journal identifier supplied")
+        $co["rft.title"] = $row['abbrev_journal'];
+      }
+    }
 
     // series (series_title)
     if (!empty($row['series_title']))
