@@ -75,15 +75,12 @@
 	// --------------------------------------------------------------------
 
 	// First of all, check if this script was called by something else than 'user_options.php':
-	if (!ereg(".+/user_options.php", $_SERVER['HTTP_REFERER']))
+	if (!eregi(".+/user_options\.php", $referer)) // variable '$referer' is globally defined in function 'start_session()' in 'include.inc.php'
 	{
 		// return an appropriate error message:
 		$HeaderString = returnMsg($loc["Warning_InvalidCallToScript"] . " '" . scriptURL() . "'!", "warning", "strong", "HeaderString"); // functions 'returnMsg()' and 'scriptURL()' are defined in 'include.inc.php'
 
-		if (!empty($_SERVER['HTTP_REFERER'])) // if the referer variable isn't empty
-			header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to calling page
-		else
-			header("Location: index.php"); // redirect to main page ('index.php')
+		header("Location: " . $referer); // redirect to calling page
 
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
@@ -91,7 +88,7 @@
 	// --------------------------------------------------------------------
 
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE
-	connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
+	connectToMySQLDatabase(); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 
@@ -104,7 +101,7 @@
 //		$errors["languageName"] = "The language field cannot be blank:";
 
 	// Validate the number of records per page
-	if (!ereg("^[1-9]+[0-9]*$", $formVars["recordsPerPageNo"]))
+	if (($_REQUEST['userID'] != 0) AND !ereg("^[1-9]+[0-9]*$", $formVars["recordsPerPageNo"])) // this form element is disabled for anonymous users ('userID=0')
 		$errors["recordsPerPageNo"] = "Please enter a number (positive integer greater than zero):";
 
 	// Note: currently, the user must select at least one item within the type/style/format lists. Alternatively, we could grey out the corresponding interface elements
@@ -127,7 +124,7 @@
 		$errors["exportFormatSelector"] = "You must choose at least one export format:";
 
 	// Validate the main fields selector
-	if (empty($formVars["mainFieldsSelector"]))
+	if (($_REQUEST['userID'] != 0) AND empty($formVars["mainFieldsSelector"])) // this form element is disabled for anonymous users ('userID=0')
 		$errors["mainFieldsSelector"] = "You must specify at least one field as \"main field\":";
 
 	// --------------------------------------------------------------------
@@ -324,7 +321,7 @@
 					$updatedUserPermissionsArray[$permissionKey] = 'no'; // disallow the particular feature
 
 			// update all user permissions for the current user:
-			updateUserPermissions($userID, $updatedUserPermissionsArray); // function 'updateUserPermissions()' is defined in 'include.inc.php'
+			$updateSucceeded = updateUserPermissions(array($userID), $updatedUserPermissionsArray); // function 'updateUserPermissions()' is defined in 'include.inc.php'
 		}
 
 		// ---------------------------------------------------------------
@@ -395,7 +392,7 @@
 		$query = "SELECT option_id FROM $tableUserOptions WHERE user_id = " . quote_smart($userID);
 
 		// RUN the query on the database through the connection:
-		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+		$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		if (mysql_num_rows($result) == 1) // if there's already an existing user_data entry, we perform an UPDATE action:
 			$queryArray[] = "UPDATE $tableUserOptions SET "
@@ -433,7 +430,7 @@
 
 	// (3) RUN the queries on the database through the connection:
 	foreach($queryArray as $query)
-		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+		$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 	// ----------------------------------------------
 
@@ -459,7 +456,7 @@
 	header("Location: user_receipt.php?userID=$userID");
 
 	// (5) CLOSE the database connection:
-	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
+	disconnectFromMySQLDatabase(); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 ?>

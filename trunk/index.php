@@ -53,7 +53,7 @@
 		deleteSessionVariable("HeaderString"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
 	}
 
-	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// Extract the view type requested by the user (either 'Mobile', 'Print', 'Web' or ''):
 	// ('' will produce the default 'Web' output style)
 	if (isset($_REQUEST['viewType']))
 		$viewType = $_REQUEST['viewType'];
@@ -68,13 +68,13 @@
 	{
 		$showRows = $_SESSION['userRecordsPerPage']; // get the default number of records per page preferred by the current user
 
-		$rssURLArray[] = array("href"  => "rss.php?where=serial%20RLIKE%20%22.%2B%22&amp;showRows=" . $showRows,
+		$rssURLArray[] = array("href"  => generateURL("show.php", $defaultFeedFormat, array("where" => 'serial RLIKE ".+"'), true, $showRows), // function 'generateURL()' is defined in 'include.inc.php', variable '$defaultFeedFormat' is defined in 'ini.inc.php'
 		                       "title" => "records added most recently");
 
-		$rssURLArray[] = array("href"  => "rss.php?where=created_date%20%3D%20CURDATE%28%29&amp;showRows=" . $showRows,
+		$rssURLArray[] = array("href"  => generateURL("show.php", $defaultFeedFormat, array("where" => 'created_date = CURDATE()'), true, $showRows),
 		                       "title" => "records added today");
 
-		$rssURLArray[] = array("href"  => "rss.php?where=modified_date%20%3D%20CURDATE%28%29&amp;showRows=" . $showRows,
+		$rssURLArray[] = array("href"  => generateURL("show.php", $defaultFeedFormat, array("where" => 'modified_date = CURDATE()'), true, $showRows),
 		                       "title" => "records edited today");
 	}
 
@@ -89,7 +89,7 @@
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- " . $loc["Home"], "index,follow", "Search the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, $rssURLArray);
-	showPageHeader($HeaderString, "");
+	showPageHeader($HeaderString);
 
 	// Define variables holding common drop-down elements, i.e. build properly formatted <option> tag elements:
 	// - "Quick Search" form:
@@ -126,11 +126,11 @@
 		<td width="182" valign="bottom"><?php
 if (!isset($_SESSION['loginEmail']))
 	{
-?><div class="header"><b><?php echo $loc["Login"]; ?>:</b></div><?php
+?><h5><?php echo $loc["Login"]; ?>:</h5><?php
 	}
 else
 	{
-?><div class="header"><b><?php echo $loc["ShowMyRefs"]; ?>:</b></div><?php
+?><h5><?php echo $loc["ShowMyRefs"]; ?>:</h5><?php
 	}
 ?></td>
 	</tr>
@@ -234,7 +234,7 @@ else
 	</tr>
 	<tr>
 		<td colspan="2"><h3><?php echo $loc["Search"]; ?></h3></td>
-		<td width="182" valign="bottom"><div class="header"><b><?php echo $loc["QuickSearch"]; ?>:</b></div></td>
+		<td width="182" valign="bottom"><h5><?php echo $loc["QuickSearch"]; ?>:</h5></td>
 	</tr>
 	<tr>
 		<td width="15">&nbsp;</td>
@@ -253,9 +253,15 @@ else
 		}
 
 		// -------------------------------------------------------
+		if (!empty($librarySearchPattern))
+		{
+		// ... include a link to 'library_search.php':
 ?>
 
-				<li><a href="library_search.php"><?php echo $loc["LibrarySearch"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["SearchExt"]; ?> <?php echo encodeHTML($hostInstitutionName); ?></li>
+				<li><a href="library_search.php"><?php echo $loc["LibrarySearch"]; ?></a>&nbsp;&nbsp;&nbsp;&#8211;&nbsp;&nbsp;&nbsp;<?php echo $loc["SearchExt"]; ?> <?php echo encodeHTML($hostInstitutionName); ?></li><?php
+		}
+?>
+
 			</ul>
 		</td>
 		<td width="182" valign="top">
@@ -291,7 +297,7 @@ if (isset($_SESSION['user_permissions']) AND ereg("allow_browse_view", $_SESSION
 if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_browse_view", $_SESSION['user_permissions'])))
 	{
 ?>
-			<div class="header"><b><?php echo $loc["BrowseMyRefs"]; ?>:</b></div><?php
+			<h5><?php echo $loc["BrowseMyRefs"]; ?>:</h5><?php
 	}
 else
 	{
@@ -354,7 +360,7 @@ else
 if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_groups", $_SESSION['user_permissions'])))
 	{
 ?>
-			<div class="header"><b><?php echo $loc["ShowMyGroup"]; ?>:</b></div><?php
+			<h5><?php echo $loc["ShowMyGroup"]; ?>:</h5><?php
 	}
 else
 	{
@@ -464,7 +470,7 @@ else
 if (isset($_SESSION['loginEmail']) AND (isset($_SESSION['user_permissions']) AND ereg("allow_user_queries", $_SESSION['user_permissions'])))
 	{
 ?>
-			<div class="header"><b><?php echo $loc["RecallMyQuery"]; ?>:</b></div><?php
+			<h5><?php echo $loc["RecallMyQuery"]; ?>:</h5><?php
 	}
 else
 	{
@@ -551,13 +557,13 @@ else
 	// --------------------------------------------------------------------
 
 	// (5) CLOSE the database connection:
-	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
+	disconnectFromMySQLDatabase(); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 
 	// DISPLAY THE HTML FOOTER:
 	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
-	showPageFooter($HeaderString, "");
+	showPageFooter($HeaderString);
 
 	displayHTMLfoot();
 

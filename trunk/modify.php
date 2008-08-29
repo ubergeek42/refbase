@@ -56,7 +56,7 @@
 		// inform the user that the maximum post data size was exceeded:
 		$HeaderString = returnMsg($loc["Warning_PostDataSizeMustNotExceed"] . " " . $maxPostDataSize . "!", "warning", "strong", "HeaderString"); // function 'returnMsg()' is defined in 'include.inc.php'
 
-		header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to 'record.php'
+		header("Location: " . $referer); // redirect to 'record.php' (variable '$referer' is globally defined in function 'start_session()' in 'include.inc.php')
 
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
@@ -77,15 +77,12 @@
 	$pageLoginStatus = $formVars['pageLoginStatus'];
 
 	// First of all, check if this script was called by something else than 'record.php':
-	if (!ereg(".+/record.php\?.+", $_SERVER['HTTP_REFERER']))
+	if (!ereg(".+/record.php\?.+", $referer))
 	{
 		// return an appropriate error message:
 		$HeaderString = returnMsg($loc["Warning_InvalidCallToScript"] . " '" . scriptURL() . "'!", "warning", "strong", "HeaderString"); // functions 'returnMsg()' and 'scriptURL()' are defined in 'include.inc.php'
 
-		if (!empty($_SERVER['HTTP_REFERER'])) // if the referer variable isn't empty
-			header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to calling page
-		else
-			header("Location: index.php"); // redirect to main page ('index.php')
+		header("Location: " . $referer); // redirect to calling page
 
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
@@ -98,7 +95,7 @@
 			// return an appropriate error message:
 			$HeaderString = returnMsg($loc["Warning_PageStatusOutDated"] . "!", "warning", "strong", "HeaderString", "", "<br>" . $loc["Warning_RecordDataReloaded"] . ":"); // function 'returnMsg()' is defined in 'include.inc.php'
 
-			header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to 'record.php'
+			header("Location: " . $referer); // redirect to 'record.php'
 
 			exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		}
@@ -111,7 +108,7 @@
 		}
 
 		// else if the user isn't logged in yet: ((!isset($_SESSION['loginEmail'])) AND ($pageLoginStatus != "logged in"))
-		header("Location: user_login.php?referer=" . rawurlencode($_SERVER['HTTP_REFERER'])); // ask the user to login first, then he'll get directed back to 'record.php'
+		header("Location: user_login.php?referer=" . rawurlencode($referer)); // ask the user to login first, then he'll get directed back to 'record.php'
 
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
@@ -171,7 +168,7 @@
 		// return an appropriate error message:
 		$HeaderString = returnMsg($HeaderString, "warning", "strong", "HeaderString"); // function 'returnMsg()' is defined in 'include.inc.php'
 
-		header("Location: " . $_SERVER['HTTP_REFERER']); // redirect to 'record.php'
+		header("Location: " . $referer); // redirect to 'record.php'
 
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
@@ -179,60 +176,193 @@
 
 	// if we made it here, we assume that the user is allowed to perform the current record action
 
-	// Extract generic variables from the request:
-	$oldQuery = $formVars['oldQuery']; // fetch the query URL of the formerly displayed results page so that its's available on the subsequent receipt page that follows any add/edit/delete action!
-	if (ereg('sqlQuery%3D', $oldQuery)) // if '$oldQuery' still contains URL encoded data... ('%3D' is the URL encoded form of '=', see note below!)
-		$oldQuery = rawurldecode($oldQuery); // ...URL decode old query URL (it was URL encoded before incorporation into a hidden tag of the 'record' form to avoid any HTML syntax errors)
-										// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_POST'!
-										//       But, opposed to that, URL encoded data that are included within a form by means of a *hidden form tag* will NOT get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
-	$oldQuery = stripSlashesIfMagicQuotes($oldQuery); // function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php'
-//	$oldQuery = str_replace('\"','"',$oldQuery); // replace any \" with "
+	// Get the query URL of the formerly displayed results page:
+	if (isset($_SESSION['oldQuery']))
+		$oldQuery = $_SESSION['oldQuery'];
+	else
+		$oldQuery = array();
+
+	// Get the query URL of the last multi-record query:
+	if (isset($_SESSION['oldMultiRecordQuery']))
+		$oldMultiRecordQuery = $_SESSION['oldMultiRecordQuery'];
+	else
+		$oldMultiRecordQuery = "";
 
 
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE
-	connectToMySQLDatabase($oldQuery); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
+	connectToMySQLDatabase(); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 
 	// Extract all form values provided by 'record.php':
-	$authorName = $formVars['authorName'];
+	if (isset($formVars['authorName']))
+		$authorName = $formVars['authorName'];
+	else
+		$authorName = "";
 
 	if (isset($formVars['isEditorCheckBox']))
 		$isEditorCheckBox = $formVars['isEditorCheckBox'];
 	else
 		$isEditorCheckBox = "";
 
-	$titleName = $formVars['titleName'];
-	$yearNo = $formVars['yearNo'];
-	$publicationName = $formVars['publicationName'];
-	$abbrevJournalName = $formVars['abbrevJournalName'];
-	$volumeNo = $formVars['volumeNo'];
-	$issueNo = $formVars['issueNo'];
-	$pagesNo = $formVars['pagesNo'];
-	$addressName = $formVars['addressName'];
-	$corporateAuthorName = $formVars['corporateAuthorName'];
-	$keywordsName = $formVars['keywordsName'];
-	$abstractName = $formVars['abstractName'];
-	$publisherName = $formVars['publisherName'];
-	$placeName = $formVars['placeName'];
-	$editorName = $formVars['editorName'];
-	$languageName = $formVars['languageName'];
-	$summaryLanguageName = $formVars['summaryLanguageName'];
-	$origTitleName = $formVars['origTitleName'];
-	$seriesEditorName = $formVars['seriesEditorName'];
-	$seriesTitleName = $formVars['seriesTitleName'];
-	$abbrevSeriesTitleName = $formVars['abbrevSeriesTitleName'];
-	$seriesVolumeNo = $formVars['seriesVolumeNo'];
-	$seriesIssueNo = $formVars['seriesIssueNo'];
-	$editionNo = $formVars['editionNo'];
-	$issnName = $formVars['issnName'];
-	$isbnName = $formVars['isbnName'];
-	$mediumName = $formVars['mediumName'];
-	$areaName = $formVars['areaName'];
-	$expeditionName = $formVars['expeditionName'];
-	$conferenceName = $formVars['conferenceName'];
-	$notesName = $formVars['notesName'];
-	$approvedRadio = $formVars['approvedRadio'];
-	$locationName = $formVars['locationName'];
+	if (isset($formVars['titleName']))
+		$titleName = $formVars['titleName'];
+	else
+		$titleName = "";
+
+	if (isset($formVars['yearNo']))
+		$yearNo = $formVars['yearNo'];
+	else
+		$yearNo = "";
+
+	if (isset($formVars['publicationName']))
+		$publicationName = $formVars['publicationName'];
+	else
+		$publicationName = "";
+
+	if (isset($formVars['abbrevJournalName']))
+		$abbrevJournalName = $formVars['abbrevJournalName'];
+	else
+		$abbrevJournalName = "";
+
+	if (isset($formVars['volumeNo']))
+		$volumeNo = $formVars['volumeNo'];
+	else
+		$volumeNo = "";
+
+	if (isset($formVars['issueNo']))
+		$issueNo = $formVars['issueNo'];
+	else
+		$issueNo = "";
+
+	if (isset($formVars['pagesNo']))
+		$pagesNo = $formVars['pagesNo'];
+	else
+		$pagesNo = "";
+
+	if (isset($formVars['addressName']))
+		$addressName = $formVars['addressName'];
+	else
+		$addressName = "";
+
+	if (isset($formVars['corporateAuthorName']))
+		$corporateAuthorName = $formVars['corporateAuthorName'];
+	else
+		$corporateAuthorName = "";
+
+	if (isset($formVars['keywordsName']))
+		$keywordsName = $formVars['keywordsName'];
+	else
+		$keywordsName = "";
+
+	if (isset($formVars['abstractName']))
+		$abstractName = $formVars['abstractName'];
+	else
+		$abstractName = "";
+
+	if (isset($formVars['publisherName']))
+		$publisherName = $formVars['publisherName'];
+	else
+		$publisherName = "";
+
+	if (isset($formVars['placeName']))
+		$placeName = $formVars['placeName'];
+	else
+		$placeName = "";
+
+	if (isset($formVars['editorName']))
+		$editorName = $formVars['editorName'];
+	else
+		$editorName = "";
+
+	if (isset($formVars['languageName']))
+		$languageName = $formVars['languageName'];
+	else
+		$languageName = "";
+
+	if (isset($formVars['summaryLanguageName']))
+		$summaryLanguageName = $formVars['summaryLanguageName'];
+	else
+		$summaryLanguageName = "";
+
+	if (isset($formVars['origTitleName']))
+		$origTitleName = $formVars['origTitleName'];
+	else
+		$origTitleName = "";
+
+	if (isset($formVars['seriesEditorName']))
+		$seriesEditorName = $formVars['seriesEditorName'];
+	else
+		$seriesEditorName = "";
+
+	if (isset($formVars['seriesTitleName']))
+		$seriesTitleName = $formVars['seriesTitleName'];
+	else
+		$seriesTitleName = "";
+
+	if (isset($formVars['abbrevSeriesTitleName']))
+		$abbrevSeriesTitleName = $formVars['abbrevSeriesTitleName'];
+	else
+		$abbrevSeriesTitleName = "";
+
+	if (isset($formVars['seriesVolumeNo']))
+		$seriesVolumeNo = $formVars['seriesVolumeNo'];
+	else
+		$seriesVolumeNo = "";
+
+	if (isset($formVars['seriesIssueNo']))
+		$seriesIssueNo = $formVars['seriesIssueNo'];
+	else
+		$seriesIssueNo = "";
+
+	if (isset($formVars['editionNo']))
+		$editionNo = $formVars['editionNo'];
+	else
+		$editionNo = "";
+
+	if (isset($formVars['issnName']))
+		$issnName = $formVars['issnName'];
+	else
+		$issnName = "";
+
+	if (isset($formVars['isbnName']))
+		$isbnName = $formVars['isbnName'];
+	else
+		$isbnName = "";
+
+	if (isset($formVars['mediumName']))
+		$mediumName = $formVars['mediumName'];
+	else
+		$mediumName = "";
+
+	if (isset($formVars['areaName']))
+		$areaName = $formVars['areaName'];
+	else
+		$areaName = "";
+
+	if (isset($formVars['expeditionName']))
+		$expeditionName = $formVars['expeditionName'];
+	else
+		$expeditionName = "";
+
+	if (isset($formVars['conferenceName']))
+		$conferenceName = $formVars['conferenceName'];
+	else
+		$conferenceName = "";
+
+	if (isset($formVars['notesName']))
+		$notesName = $formVars['notesName'];
+	else
+		$notesName = "";
+
+	if (isset($formVars['approvedRadio']))
+		$approvedRadio = $formVars['approvedRadio'];
+	else
+		$approvedRadio = "";
+
+	if (isset($formVars['locationName']))
+		$locationName = $formVars['locationName'];
+	else
+		$locationName = "";
 
 	$callNumberName = $formVars['callNumberName'];
 	if (ereg("%40|%20", $callNumberName)) // if '$callNumberName' still contains URL encoded data... ('%40' is the URL encoded form of the character '@', '%20' a space, see note below!)
@@ -245,18 +375,65 @@
 	else
 		$callNumberNameUserOnly = "";
 
-	$serialNo = $formVars['serialNo'];
-	$typeName = $formVars['typeName'];
-	$thesisName = $formVars['thesisName'];
-	$markedRadio = $formVars['markedRadio'];
-	$copyName = $formVars['copyName'];
-	$selectedRadio = $formVars['selectedRadio'];
-	$userKeysName = $formVars['userKeysName'];
-	$userNotesName = $formVars['userNotesName'];
-	$userFileName = $formVars['userFileName'];
-	$userGroupsName = $formVars['userGroupsName'];
-	$citeKeyName = $formVars['citeKeyName'];
-	$relatedName = $formVars['relatedName'];
+	if (isset($formVars['serialNo']))
+		$serialNo = $formVars['serialNo'];
+	else
+		$serialNo = "";
+
+	if (isset($formVars['typeName']))
+		$typeName = $formVars['typeName'];
+	else
+		$typeName = "";
+
+	if (isset($formVars['thesisName']))
+		$thesisName = $formVars['thesisName'];
+	else
+		$thesisName = "";
+
+	if (isset($formVars['markedRadio']))
+		$markedRadio = $formVars['markedRadio'];
+	else
+		$markedRadio = "";
+
+	if (isset($formVars['copyName']))
+		$copyName = $formVars['copyName'];
+	else
+		$copyName = "";
+
+	if (isset($formVars['selectedRadio']))
+		$selectedRadio = $formVars['selectedRadio'];
+	else
+		$selectedRadio = "";
+
+	if (isset($formVars['userKeysName']))
+		$userKeysName = $formVars['userKeysName'];
+	else
+		$userKeysName = "";
+
+	if (isset($formVars['userNotesName']))
+		$userNotesName = $formVars['userNotesName'];
+	else
+		$userNotesName = "";
+
+	if (isset($formVars['userFileName']))
+		$userFileName = $formVars['userFileName'];
+	else
+		$userFileName = "";
+
+	if (isset($formVars['userGroupsName']))
+		$userGroupsName = $formVars['userGroupsName'];
+	else
+		$userGroupsName = "";
+
+	if (isset($formVars['citeKeyName']))
+		$citeKeyName = $formVars['citeKeyName'];
+	else
+		$citeKeyName = "";
+
+	if (isset($formVars['relatedName']))
+		$relatedName = $formVars['relatedName'];
+	else
+		$relatedName = "";
 
 	// if the current user has no permission to download (and hence view) any files, 'record.php' does only show an empty string
 	// in the 'file' field (no matter if a file exists for the given record or not). Thus, we need to make sure that the empty
@@ -270,7 +447,7 @@
 	{
 		$queryFile = "SELECT file FROM $tableRefs WHERE serial = " . quote_smart($serialNo);
 
-		$result = queryMySQLDatabase($queryFile, ""); // RUN the query on the database through the connection
+		$result = queryMySQLDatabase($queryFile); // RUN the query on the database through the connection
 		$row = @ mysql_fetch_array($result);
 
 		$fileName = $row["file"];
@@ -278,9 +455,21 @@
 	else // user has permission to download (and view) any files
 		$fileName = $formVars['fileName'];
 
-	$urlName = $formVars['urlName'];
-	$doiName = $formVars['doiName'];
-	$contributionID = $formVars['contributionIDName'];
+	if (isset($formVars['urlName']))
+		$urlName = $formVars['urlName'];
+	else
+		$urlName = "";
+
+	if (isset($formVars['doiName']))
+		$doiName = $formVars['doiName'];
+	else
+		$doiName = "";
+
+	if (isset($formVars['contributionIDName']))
+		$contributionID = $formVars['contributionIDName'];
+	else
+		$contributionID = "";
+
 	$contributionID = rawurldecode($contributionID); // URL decode 'contributionID' variable contents (it was URL encoded before incorporation into a hidden tag of the 'record' form to avoid any HTML syntax errors) [see above!]
 
 	if (isset($formVars['contributionIDCheckBox']))
@@ -298,7 +487,10 @@
 	else
 		$onlinePublicationCheckBox = "";
 
-	$onlineCitationName = $formVars['onlineCitationName'];
+	if (isset($formVars['onlineCitationName']))
+		$onlineCitationName = $formVars['onlineCitationName'];
+	else
+		$onlineCitationName = "";
 
 	if (isset($formVars['createdDate']))
 		$createdDate = $formVars['createdDate'];
@@ -330,7 +522,10 @@
 	else
 		$modifiedBy = "";
 
-	$origRecord = $formVars['origRecord'];
+	if (isset($formVars['origRecord']))
+		$origRecord = $formVars['origRecord'];
+	else
+		$origRecord = "";
 
 	// check if a file was uploaded:
 	// (note that to have file uploads work, HTTP file uploads must be allowed within your 'php.ini' configuration file
@@ -409,20 +604,27 @@
 			{
 				case 0: // no error; possible file attack!
 					$errors["uploadFile"] = "There was a problem with your upload.";
+					break;
 				case 1: // uploaded file exceeds the 'upload_max_filesize' directive in 'php.ini'
 					$maxFileSize = ini_get("upload_max_filesize");
 					$fileError = "File size must not be greater than " . $maxFileSize . ":";
 					$errors["uploadFile"] = $fileError;
+					break;
 				case 2: // uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the html form (Note: refbase doesn't currently specify MAX_FILE_SIZE but anyhow...)
 					$errors["uploadFile"] = "The file you are trying to upload is too big.";
+					break;
 				case 3: // uploaded file was only partially uploaded
 					$errors["uploadFile"] = "The file you are trying to upload was only partially uploaded.";
+					break;
 				case 4: // no file was uploaded
 					$errors["uploadFile"] = "You must select a file for upload.";
+					break;
 				case 6:
 					$errors["uploadFile"] = "Missing a temporary folder.";
+					break;
 				default: // a default error, just in case!  :)
 					$errors["uploadFile"] = "There was a problem with your upload.";
+					break;
 			}
 		}
 	}
@@ -495,7 +697,7 @@
 		saveSessionVariable("formVars", $formVars);
 
 		// There are errors. Relocate back to the record entry form:
-		header("Location: " . $_SERVER['HTTP_REFERER']);
+		header("Location: " . $referer);
 
 		exit; // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !EXIT! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	}
@@ -743,7 +945,7 @@
 			$query = "SELECT data_id FROM $tableUserData WHERE record_id = " . quote_smart($serialNo) . " AND user_id = " . quote_smart($loginUserID); // '$loginUserID' is provided as session variable
 
 			// (3) RUN the query on the database through the connection:
-			$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+			$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 			if (mysql_num_rows($result) == 1) // if there's already an existing user_data entry, we perform an UPDATE action:
 				$queryUserData = "UPDATE $tableUserData SET "
@@ -921,15 +1123,15 @@
 	// (3) RUN the query on the database through the connection:
 	if ($recordAction == "edit")
 	{
-		$result = queryMySQLDatabase($queryRefs, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+		$result = queryMySQLDatabase($queryRefs); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
-		$result = queryMySQLDatabase($queryUserData, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+		$result = queryMySQLDatabase($queryUserData); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		getUserGroups($tableUserData, $loginUserID); // update the 'userGroups' session variable (function 'getUserGroups()' is defined in 'include.inc.php')
 	}
 	elseif ($recordAction == "add")
 	{
-		$result = queryMySQLDatabase($queryRefs, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+		$result = queryMySQLDatabase($queryRefs); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		// Get the record id that was created
 		$serialNo = @ mysql_insert_id($connection); // find out the unique ID number of the newly created record (Note: this function should be called immediately after the
@@ -946,7 +1148,7 @@
 
 			$queryRefsUpdateFileName = "UPDATE $tableRefs SET file = " . quote_smart($fileName) . " WHERE serial = " . quote_smart($serialNo);
 
-			$result = queryMySQLDatabase($queryRefsUpdateFileName, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+			$result = queryMySQLDatabase($queryRefsUpdateFileName); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 		}
 
 		$queryUserData = "INSERT INTO $tableUserData SET "
@@ -964,7 +1166,7 @@
 				. "data_id = NULL"; // inserting 'NULL' into an auto_increment PRIMARY KEY attribute allocates the next available key value
 
 
-		$result = queryMySQLDatabase($queryUserData, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+		$result = queryMySQLDatabase($queryUserData); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		getUserGroups($tableUserData, $loginUserID); // update the 'userGroups' session variable (function 'getUserGroups()' is defined in 'include.inc.php')
 
@@ -1025,25 +1227,81 @@
 	}
 	else // '$recordAction' is "delet" (Note that if you delete the mother record within the 'refs' table, the corresponding child entry within the 'user_data' table will remain!)
 	{
-		$result = queryMySQLDatabase($queryDeleted, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+		$result = queryMySQLDatabase($queryDeleted); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
-		$result = queryMySQLDatabase($queryRefs, $oldQuery); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+		$result = queryMySQLDatabase($queryRefs); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 	}
+
 
 	// Build correct header message:
 	$headerMsg = "The record no. " . $serialNo . " has been successfully " . $recordAction . "ed.";
 
+	// Append a "Display previous search results" link to the feedback header message if it will be displayed above a single record that was added/edited last:
+	if (!empty($oldMultiRecordQuery))
+	{
+		// Remove any previous 'headerMsg' parameter from the saved query URL:
+		unset($oldMultiRecordQuery["headerMsg"]);
 
-	// (4) Call 'receipt.php' which displays links to the modifyed/added record as well as to the previous search results page (if any)
-	//     (routing feedback output to a different script page will avoid any reload problems effectively!)
-	header("Location: receipt.php?recordAction=" . $recordAction . "&serialNo=" . $serialNo . "&headerMsg=" . rawurlencode($headerMsg) . "&oldQuery=" . rawurlencode($oldQuery));
+		// After a record has been successfully added/edited/deleted, we include a link to the last multi-record query in the feedback header message if:
+		// 1) the SQL query in 'oldQuery' is different from that one stored in 'oldMultiRecordQuery', i.e. if 'oldQuery' points to a single record -OR-
+		// 2) one or more new records have been added/imported
+		if ((!empty($oldQuery) AND ($oldQuery["sqlQuery"] != $oldMultiRecordQuery["sqlQuery"]) AND ($recordAction != "delet")) OR ($recordAction == "add"))
+		{
+			// Generate a 'search.php' URL that points to the last multi-record query:
+			$oldMultiRecordQueryURL = generateURL("search.php", "html", $oldMultiRecordQuery, true); // function 'generateURL()' is defined in 'include.inc.php'
+
+			// Append a link to the previous search results to the feedback header message:
+			$headerMsg .= " <a href=\"" . $oldMultiRecordQueryURL . "\">Display previous search results</a>.";
+		}
+	}
+
+	// Save the header message to a session variable:
+	// NOTE: Opposed to single-record feedback (or the 'receipt.php' feedback), we don't include the header message within the 'headerMsg' URL parameter when
+	//       displaying the message above the last multi-record query. If we save the header message to a session variable ("HeaderString") this causes the
+	//       receiving script ("search.php") to display it just once; if we'd instead include the header message within the 'headerMsg' parameter, it would
+	//       be displayed above results of the last multi-record query even when the user browses to another search results page or changes the sort order.
+	$HeaderString = returnMsg($headerMsg, "", "", "HeaderString"); // function 'returnMsg()' is defined in 'include.inc.php'
+
+
+	if ($recordAction == "add")
+	{
+		// Display the newly added record:
+		header("Location: show.php?record=" . $serialNo . "&headerMsg=" . rawurlencode($headerMsg));
+	}
+	elseif ($recordAction == "delet")
+	{
+		// Generate a 'search.php' URL that points to the last multi-record query:
+		$oldMultiRecordQueryURL = generateURL("search.php", "html", $oldMultiRecordQuery, false);
+
+		// Display the previous search results:
+		header("Location: $oldMultiRecordQueryURL");
+	}
+	elseif (!empty($oldQuery))
+	{
+		// Remove any previous 'headerMsg' parameter from the saved query URL:
+		unset($oldQuery["headerMsg"]);
+
+		// Generate a 'search.php' URL that points to the formerly displayed results page:
+		$queryURL = generateURL("search.php", "html", $oldQuery, false);
+
+		// Route back to the previous results display:
+		// (i.e., after submission of the edit mask, we now go straight back to the results list that was displayed previously,
+		//  no matter what display type it was (List view, Citation view, or Details view))
+		header("Location: $queryURL");
+	}
+	else // old method that uses 'receipt.php' for feedback:
+	{
+		// (4) Call 'receipt.php' which displays links to the modifyed/added record as well as to the previous search results page (if any)
+		//     (routing feedback output to a different script page will avoid any reload problems effectively!)
+		header("Location: receipt.php?recordAction=" . $recordAction . "&serialNo=" . $serialNo . "&headerMsg=" . rawurlencode($headerMsg));
+	}
 
 	// --------------------------------------------------------------------
 
 	// (5) CLOSE CONNECTION
 
 	// (5) CLOSE the database connection:
-	disconnectFromMySQLDatabase($oldQuery); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
+	disconnectFromMySQLDatabase(); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 
@@ -1179,6 +1437,10 @@
 			recursiveMkdir(dirname($path));
 
 			mkdir($path, 0770); // create directory
+			// alternatively, if the above line doesn't work for you, you might want to try:
+//			$oldumask = umask(0);
+//			mkdir($path, 0755); // create directory
+//			umask($oldumask);
 		}
 	}
 

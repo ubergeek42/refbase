@@ -75,6 +75,23 @@
         $series_editor = ereg_replace("[ \r\n]*\(eds?\)", "", $series_editor);
       $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $series_editor,
                                  "personal", "editor");
+      // NOTE: Ideally, the third parameter ('$betweenGivensDelim') of the
+      //       'separateNames()' function would be also a 'preg_split' pattern
+      //       (using the 'PREG_SPLIT_NO_EMPTY' flag) similar to this one:
+      // 
+      //       "/(?<=^|[$upper])\W+|(?<=^|[$upper])(?=$|[$upper])/$patternModifiers"
+      // 
+      //       This would allow to separate initials that aren't separated by
+      //       any whitespace or punctuation (such as in "Steffens, MT").
+      //       However, if the initials (full or given names) contain any higher
+      //       ASCII chars, this would garble the initials/given names IF a
+      //       latin1-based database is used AND variable '$convertExportDataToUTF8'
+      //       in 'ini.inc.php' is set to "yes". This is since the splitting is
+      //       currently done AFTER the person string has been converted to UTF-8.
+      //       If there's no other solution (such as temporarily changing the
+      //       system's locale to UTF-8?) splitting should be done *before*
+      //       conversion to UTF-8. But then, person names must be converted to
+      //       UTF-8 separately.
       foreach ($nameArray as $singleName)
         $series->addXMLBranch($singleName);
     }
@@ -128,6 +145,7 @@
 
       if (!empty($singleNameGivens)) {
         $singleNameGivenArray = split($betweenGivensDelim, $singleNameGivens);
+        // NOTE: see notes below first call to function 'separateNames()'
         foreach ($singleNameGivenArray as $singleNameGiven) {
           $nameGivenBranch = new XMLBranch("namePart");
           $nameGivenBranch->setTagAttribute("type", "given");
@@ -216,8 +234,8 @@
 
     // convert this record's modified date/time info to UNIX time stamp format:
     // => "date('D, j M Y H:i:s O')", e.g. "Sat, 15 Jul 2006 22:24:16 +0200"
-    // function 'generateUNIXTimeStamp()' is defined in 'include.inc.php'
-    $currentDateTimeStamp = generateUNIXTimeStamp($row['modified_date'], $row['modified_time']);
+    // function 'generateRFC2822TimeStamp()' is defined in 'include.inc.php'
+    $currentDateTimeStamp = generateRFC2822TimeStamp($row['modified_date'], $row['modified_time']);
 
     // --- BEGIN TYPE * ---
     //   |
@@ -254,7 +272,7 @@
 
     if ($convertExportDataToUTF8 == "yes")
       $fieldSpecificSearchReplaceActionsArray[] = array(
-                                                          'fields'  => array("title", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes", "publication"),
+                                                          'fields'  => array("title", "publication", "abbrev_journal", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes"),
                                                           'actions' => $transtab_refbase_unicode
                                                       );
 
@@ -291,6 +309,7 @@
         $author = ereg_replace("[ \r\n]*\(eds?\)", "", $row['author']);
         $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $author, "personal",
                                    "editor");
+        // NOTE: see notes below first call to function 'separateNames()'
       }
       else if ($row['type'] == "Map") {
         $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $row['author'], "personal",
@@ -511,6 +530,23 @@
       $identifier->setTagAttribute("type", "doi");
       $record->addXMLBranch($identifier);
     }
+    //   pubmed
+    //   NOTE: Until refbase stores PubMed & arXiv IDs in a better way,
+    //         we extract them from the 'notes' field
+    if (preg_match("/PMID *: *\d+/i", $row['notes'])) {
+      $identifier = new XMLBranch("identifier");
+      $identifier->setTagContent(preg_replace("/.*?PMID *: *(\d+).*/i", "\\1", $row['notes']));
+      $identifier->setTagAttribute("type", "pubmed");
+      $record->addXMLBranch($identifier);
+    }
+    //   arxiv
+    //   NOTE: see note for pubmed
+    if (preg_match("/arXiv *: *[^ ;]+/i", $row['notes'])) {
+      $identifier = new XMLBranch("identifier");
+      $identifier->setTagContent(preg_replace("/.*?arXiv *: *([^ ;]+).*/i", "\\1", $row['notes']));
+      $identifier->setTagAttribute("type", "arxiv");
+      $record->addXMLBranch($identifier);
+    }
     //   cite_key
     if (!empty($citeKey)) {
       $identifier = new XMLBranch("identifier");
@@ -556,6 +592,7 @@
         if ($editor != $author) {
           $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $editor,
                                      "personal", "editor");
+          // NOTE: see notes below first call to function 'separateNames()'
           foreach ($nameArray as $singleName)
             $record->addXMLBranch($singleName);
         }
@@ -750,6 +787,7 @@
           $editor = ereg_replace("[ \r\n]*\(eds?\)", "", $editor);
         $nameArray = separateNames("/\s*;\s*/", "/\s*,\s*/", " ", $editor,
                                    "personal", "editor");
+        // NOTE: see notes below first call to function 'separateNames()'
         foreach ($nameArray as $singleName)
           $related->addXMLBranch($singleName);
       }

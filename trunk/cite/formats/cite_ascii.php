@@ -24,7 +24,7 @@
 
 	// --- BEGIN CITATION FORMAT ---
 
-	function citeRecords($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
+	function citeRecords($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
 	{
 		global $officialDatabaseName; // these variables are defined in 'ini.inc.php'
 		global $databaseBaseURL;
@@ -39,31 +39,45 @@
 
 		// Header:
 		if (!empty($headerMsg))
+		{
+			// Convert refbase markup in the header message into plain text:
+			$headerMsg = searchReplaceText($transtab_refbase_ascii, $headerMsg, true); // function 'searchReplaceText()' is defined in 'include.inc.php'
+
 			$plainTextData .= "$headerMsg\n\n"; // prefix any passed header message
+		}
 
 		// Initialize array variables:
 		$yearsArray = array();
 		$typeTitlesArray = array();
 
 		// Define inline text markup to be used by the 'citeRecord()' function:
-		$markupPatternsArray = array("bold-prefix"     => "", // for plain text output, we'll omit any font-shape markup
-									"bold-suffix"      => "",
-									"italic-prefix"    => "",
-									"italic-suffix"    => "",
-									"underline-prefix" => "",
-									"underline-suffix" => "",
-									"endash"           => "-",
-									"emdash"           => "-",
-									"newline"          => "\n");
+		$markupPatternsArray = array("bold-prefix"        => "", // for plain text output, we'll omit any font-shape markup
+		                             "bold-suffix"        => "",
+		                             "italic-prefix"      => "",
+		                             "italic-suffix"      => "",
+		                             "underline-prefix"   => "",
+		                             "underline-suffix"   => "",
+		                             "endash"             => "-",
+		                             "emdash"             => "-",
+		                             "ampersand"          => "&",
+		                             "double-quote"       => '"',
+		                             "double-quote-left"  => '"',
+		                             "double-quote-right" => '"',
+		                             "single-quote"       => "'",
+		                             "single-quote-left"  => "'",
+		                             "single-quote-right" => "'",
+		                             "less-than"          => "<",
+		                             "greater-than"       => ">",
+		                             "newline"            => "\n"
+		                            );
 
 		// Defines search & replace 'actions' that will be applied upon TEXT output to all those refbase fields that are listed
 		// in the corresponding 'fields' element:
 		$plainTextSearchReplaceActionsArray = array(
-													array(
-															'fields'  => array("title", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes", "publication"),
-															'actions' => $transtab_refbase_ascii
-														)
-												);
+		                                            array('fields'  => array("title", "publication", "abbrev_journal", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes"),
+		                                                  'actions' => $transtab_refbase_ascii
+		                                                 )
+		                                           );
 
 		// For CLI queries, we'll allow paging thru the result set, i.e. we honour the values of the CLI options '-S|--start' ('$rowOffset')
 		// and '-R|--rows' ('$showRows') ('$rowOffset' and '$showRows' are re-assigned in function 'seekInMySQLResultsToOffset()' in 'include.inc.php')

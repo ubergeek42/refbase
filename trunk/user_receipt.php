@@ -44,7 +44,7 @@
 	// --------------------------------------------------------------------
 
 	// Extract the 'userID' parameter from the request:
-	if (isset($_REQUEST['userID']))
+	if (isset($_REQUEST['userID']) AND ereg("^-?[0-9]+$", $_REQUEST['userID']))
 		$userID = $_REQUEST['userID'];
 	else
 		$userID = ""; // we do it for clarity reasons here (and in order to prevent any 'Undefined variable...' messages)
@@ -77,14 +77,28 @@
 		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
 
 		// Redirect the browser back to the calling page
-		header("Location: index.php"); // Note: if 'header("Location: " . $_SERVER['HTTP_REFERER'])' is used, the error message won't get displayed! ?:-/
+		header("Location: " . $referer); // variable '$referer' is globally defined in function 'start_session()' in 'include.inc.php'
+		exit;
+	}
+
+	// Check if the logged-in user is allowed to modify his account details and options
+	if (isset($_SESSION['loginEmail']) AND preg_match("/^\d+$/", $userID) AND isset($_SESSION['user_permissions']) AND !ereg("allow_modify_options", $_SESSION['user_permissions'])) // if a user is logged in but the 'user_permissions' session variable does NOT contain 'allow_modify_options'...
+	{
+		// save an error message:
+		$HeaderString = "<b><span class=\"warning\">You have no permission to modify your user account details and options!</span></b>";
+
+		// Write back session variables:
+		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
+
+		// Redirect the browser back to the calling page
+		header("Location: " . $referer);
 		exit;
 	}
 
 	// --------------------------------------------------------------------
 
 	// (1) OPEN CONNECTION, (2) SELECT DATABASE
-	connectToMySQLDatabase(""); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
+	connectToMySQLDatabase(); // function 'connectToMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 
@@ -132,7 +146,7 @@
 	else // otherwise we simply assume an 'edit' action, no matter what was passed to the script (thus, no regular user will be able to delete a user)
 		$userAction = "Edit";
 
-	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// Extract the view type requested by the user (either 'Mobile', 'Print', 'Web' or ''):
 	// ('' will produce the default 'Web' output style)
 	if (isset($_REQUEST['viewType']))
 		$viewType = $_REQUEST['viewType'];
@@ -153,7 +167,7 @@
 	// ----------------------------------------------
 
 	// (5) CLOSE the database connection:
-	disconnectFromMySQLDatabase(""); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
+	disconnectFromMySQLDatabase(); // function 'disconnectFromMySQLDatabase()' is defined in 'include.inc.php'
 
 	// --------------------------------------------------------------------
 
@@ -182,7 +196,7 @@
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Receipt", "noindex,nofollow", "Receipt page confirming correct submission of new user details to the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
-		showPageHeader($HeaderString, "");
+		showPageHeader($HeaderString);
 
 		$confirmationText = "Thanks for your interest in the " . encodeHTML($officialDatabaseName) . "!"
 		                  . "<br><br>The data you provided have been sent to our database admin."
@@ -220,7 +234,7 @@
 		$query = "SELECT * FROM $tableUsers WHERE user_id = " . quote_smart($userID);
 
 		// (3) RUN the query on the database through the connection:
-		$result = queryMySQLDatabase($query, ""); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
+		$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		// (4) EXTRACT results (since 'user_id' is the unique primary key for the 'users' table, there will be only one matching row)
 		$row = @ mysql_fetch_array($result);
@@ -243,23 +257,23 @@
 
 		// Call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 		displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Receipt", "noindex,nofollow", "Receipt page confirming correct entry of user details and options for the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
-		showPageHeader($HeaderString, "");
+		showPageHeader($HeaderString);
 
 		// Start main table:
-		echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays user account details and options\">";
+		echo "\n<table id=\"accountinfo\" align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table displays user account details and options\">";
 
 			echo "\n<tr>"
 			   . "\n\t<td valign=\"top\" width=\"28%\">";
 
 			// Start left sub-table:
-			echo "\n\t\t<table border=\"0\" cellpadding=\"0\" cellspacing=\"10\" summary=\"User account details\">";
+			echo "\n\t\t<table id=\"accountdetails\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" summary=\"User account details\">";
 
-			echo "\n\t\t<tr>\n\t\t\t<th align=\"left\" class=\"smaller\">Account Details:</th>";
+			echo "\n\t\t<tr>\n\t\t\t<td align=\"left\"><b>Account Details:</b></td>";
 
 			if (mysql_num_rows($result) == 1) // If there's a user associated with this user ID
 			{
 				// Add edit/delete button:
-				echo "\n\t\t\t<th align=\"left\" class=\"smaller\">";
+				echo "\n\t\t\t<td align=\"left\">";
 
 				// If the admin is logged in, allow the display of a button that will delete the currently shown user:
 				if (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail)) // ('$adminLoginEmail' is specified in 'ini.inc.php')
@@ -271,7 +285,7 @@
 				if ($userAction != "Delete")
 					echo "<a href=\"user_details.php?userID=" . $userID . "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit details\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
 
-				echo "</th>\n\t\t</tr>";
+				echo "</td>\n\t\t</tr>";
 
 				// Display a password reminder:
 				// (but only if a normal user is logged in -OR- the admin is logged in AND the updated user data are his own!)
@@ -343,7 +357,7 @@
 			}
 			else // no user exists with this user ID
 			{
-				echo "\n\t\t\t<th align=\"right\" class=\"smaller\"></th>\n\t\t</tr>";
+				echo "\n\t\t\t<td align=\"right\"></td>\n\t\t</tr>";
 				echo "\n\t\t<tr>\n\t\t\t<td colspan=\"2\">(none)</td>\n\t\t</tr>";
 			}
 
@@ -361,24 +375,24 @@
 				echo "\n\t<td valign=\"top\">";
 
 				// Start middle sub-table:
-				echo "\n\t\t<table border=\"0\" cellpadding=\"0\" cellspacing=\"10\" summary=\"User account options\">";
+				echo "\n\t\t<table id=\"accountopt\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" summary=\"User account options\">";
 
-				echo "\n\t\t<tr>\n\t\t\t<th align=\"left\" class=\"smaller\">Display Options:</th>"
-				   . "\n\t\t\t<th align=\"right\" class=\"smaller\">";
+				echo "\n\t\t<tr>\n\t\t\t<td align=\"left\"><b>Display Options:</b></td>"
+				   . "\n\t\t\t<td align=\"right\">";
 
 				if ((mysql_num_rows($result) == 1) OR ($userID == 0)) // If there's a user associated with this user ID (or if we're supposed to display options/permissions for anyone who isn't logged in)
 					echo "<a href=\"user_options.php?userID=" . $userID . "\"><img src=\"img/options.gif\" alt=\"options\" title=\"edit options\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
 
-				echo "</th>\n\t\t</tr>";
+				echo "</td>\n\t\t</tr>";
 
 				// Show the user's selected interface language:
 				echo "\n\t\t<tr valign=\"top\">"
 				   . "\n\t\t\t<td>Use language:</td>";
 
 				if (mysql_num_rows($result) == 1) // If there's a user associated with this user ID
-					echo "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>" . $row["language"] . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>";
+					echo "\n\t\t\t<td>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>" . $row["language"] . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>";
 				else // no user exists with this user ID
-					echo "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>" . $defaultLanguage . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>";
+					echo "\n\t\t\t<td>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>" . $defaultLanguage . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>";
 
 				echo "\n\t\t</tr>";
 
@@ -388,7 +402,7 @@
 				// show the user's default number of records per page:
 				echo "\n\t\t<tr valign=\"top\">"
 				   . "\n\t\t\t<td>Show records per page:</td>"
-				   . "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>" . $recordsPerPage . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
+				   . "\n\t\t\t<td>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>" . $recordsPerPage . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
 				   . "\n\t\t</tr>";
 
 				if ($loginEmail == $adminLoginEmail) // if the admin is logged in
@@ -428,7 +442,7 @@
 				// list types:
 				echo "\n\t\t<tr valign=\"top\">"
 				   . "\n\t\t\t<td>" . $ShowEnabledDescriptor . " reference types:</td>"
-				   . "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>";
+				   . "\n\t\t\t<td>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>";
 
 				if (empty($userTypesArray))
 					echo "(none)";
@@ -441,7 +455,7 @@
 				// list styles:
 				echo "\n\t\t<tr valign=\"top\">"
 				   . "\n\t\t\t<td>" . $ShowEnabledDescriptor . " citation styles:</td>"
-				   . "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>";
+				   . "\n\t\t\t<td>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>";
 
 				if (empty($citationStylesArray))
 					echo "(none)";
@@ -454,7 +468,7 @@
 				// list cite formats:
 				echo "\n\t\t<tr valign=\"top\">"
 				   . "\n\t\t\t<td>" . $ShowEnabledDescriptor . " citation formats:</td>"
-				   . "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>";
+				   . "\n\t\t\t<td>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>";
 
 				if (empty($citationFormatsArray))
 					echo "(none)";
@@ -467,7 +481,7 @@
 				// list export formats:
 				echo "\n\t\t<tr valign=\"top\">"
 				   . "\n\t\t\t<td>" . $ShowEnabledDescriptor . " export formats:</td>"
-				   . "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>";
+				   . "\n\t\t\t<td>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>";
 
 				if (empty($exportFormatsArray))
 					echo "(none)";
@@ -483,7 +497,7 @@
 				// list all fields that were selected by the current user as "main fields":
 				echo "\n\t\t<tr valign=\"top\">"
 				   . "\n\t\t\t<td>\"Main fields\" searches:</td>"
-				   . "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>";
+				   . "\n\t\t\t<td>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>";
 
 				if (empty($mainFieldsArray))
 					echo "(none)";
@@ -505,7 +519,7 @@
 				echo "\n\t<td valign=\"top\">";
 
 				// Start right sub-table:
-				echo "\n\t\t<table border=\"0\" cellpadding=\"0\" cellspacing=\"10\" summary=\"User account permissions\">";
+				echo "\n\t\t<table id=\"accountperm\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" summary=\"User account permissions\">";
 
 				if ($loginEmail == $adminLoginEmail) // if the admin is logged in
 				{
@@ -518,6 +532,7 @@
 														   'allow_delete'           => 'UserPermission_AllowDelete',
 														   'allow_download'         => 'UserPermission_AllowDownload',
 														   'allow_upload'           => 'UserPermission_AllowUpload',
+														   'allow_list_view'        => 'UserPermission_AllowListView',
 														   'allow_details_view'     => 'UserPermission_AllowDetailsView',
 														   'allow_print_view'       => 'UserPermission_AllowPrintView',
 														   'allow_browse_view'      => 'UserPermission_AllowBrowseView',
@@ -551,22 +566,22 @@
 					if (empty($disabledUserActionsArray))
 						$disabledUserActionsArray[] = "(none)";
 
-					echo "\n\t\t<tr>\n\t\t\t<th align=\"left\" class=\"smaller\">User Permissions:</th>"
-					   . "\n\t\t\t<th align=\"right\" class=\"smaller\">";
+					echo "\n\t\t<tr>\n\t\t\t<td align=\"left\"><b>User Permissions:</b></td>"
+					   . "\n\t\t\t<td align=\"right\">";
 
 					if ((mysql_num_rows($result) == 1) OR ($userID == 0)) // If there's a user associated with this user ID (or if we're supposed to display options/permissions for anyone who isn't logged in)
 						echo "<a href=\"user_options.php?userID=" . $userID . "#permissions\"><img src=\"img/options.gif\" alt=\"permissions\" title=\"edit permissions\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
 
-					echo "</th>\n\t\t</tr>";
+					echo "</td>\n\t\t</tr>";
 
 					echo "\n\t\t<tr valign=\"top\">"
 					   . "\n\t\t\t<td>Enabled features:</td>"
-					   . "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>" . implode("</li>\n\t\t\t\t\t<li>", $enabledUserActionsArray) . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
+					   . "\n\t\t\t<td>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>" . implode("</li>\n\t\t\t\t\t<li>", $enabledUserActionsArray) . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
 					   . "\n\t\t</tr>";
 
 					echo "\n\t\t<tr valign=\"top\">"
 					   . "\n\t\t\t<td>Disabled features:</td>"
-					   . "\n\t\t\t<td>\n\t\t\t\t<ul type=\"none\" class=\"smallup\">\n\t\t\t\t\t<li>" . implode("</li>\n\t\t\t\t\t<li>", $disabledUserActionsArray) . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
+					   . "\n\t\t\t<td>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>" . implode("</li>\n\t\t\t\t\t<li>", $disabledUserActionsArray) . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>"
 					   . "\n\t\t</tr>";
 				}
 
@@ -587,7 +602,7 @@
 
 	// DISPLAY THE HTML FOOTER:
 	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
-	showPageFooter($HeaderString, "");
+	showPageFooter($HeaderString);
 
 	displayHTMLfoot();
 

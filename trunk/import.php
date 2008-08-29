@@ -109,7 +109,7 @@
 		$rowSpan = " rowspan=\"2\"";
 	}
 
-	// Extract the view type requested by the user (either 'Print', 'Web' or ''):
+	// Extract the view type requested by the user (either 'Mobile', 'Print', 'Web' or ''):
 	// ('' will produce the default 'Web' output style)
 	if (isset($_REQUEST['viewType']))
 		$viewType = $_REQUEST['viewType'];
@@ -119,7 +119,10 @@
 	// If there were some errors on submit -> Re-load the data that were submitted by the user:
 	if (!empty($errors))
 	{
-		$formType = $formVars['formType']; // get the form type that was submitted by the user (and which subsequently caused an error)
+		if (isset($formVars['formType']))
+			$formType = $formVars['formType']; // get the form type that was submitted by the user (and which subsequently caused an error)
+		else
+			$formType = "";
 
 		// (A) main import form:
 		if (isset($formVars['sourceText'])) // '$formVars['sourceText']' may be non-existent in the (unlikely but possible) event that a user calls 'import_modify.php' directly
@@ -143,11 +146,11 @@
 		else
 			$skipBadRecords = "";
 
-		// (B) PubMed import form (import via PubMed ID):
-		if (isset($formVars['pubmedIDs']))
-			$pubmedIDs = $formVars['pubmedIDs'];
+		// (B) "Import IDs" form (imports records from PubMed ID, arXiv ID, DOI or OpenURL):
+		if (isset($formVars['sourceIDs']))
+			$sourceIDs = $formVars['sourceIDs'];
 		else
-			$pubmedIDs = "";
+			$sourceIDs = "";
 	}
 	else // display an empty form (i.e., set all variables to an empty string [""] or their default values, respectively):
 	{
@@ -159,8 +162,8 @@
 		$importRecords = "1";
 		$skipBadRecords = "";
 
-		// (B) PubMed import form:
-		$pubmedIDs = "";
+		// (B) "Import IDs" form:
+		$sourceIDs = "";
 	}
 
 	// Show the login status:
@@ -169,7 +172,7 @@
 	// (2a) Display header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
 	displayHTMLhead(encodeHTML($officialDatabaseName) . $pageTitle, "index,follow", "Import records into the " . encodeHTML($officialDatabaseName), "", false, "", $viewType, array());
-	showPageHeader($HeaderString, "");
+	showPageHeader($HeaderString);
 
 	// (2b) Start <form> and <table> holding the form elements of the main import form:
 	echo "\n<form enctype=\"multipart/form-data\" action=\"import_modify.php\" method=\"POST\">"
@@ -205,21 +208,21 @@
 
 	if (!empty($skipBadRecordsInput))
 	{
-		if ($formType == "importPubMed")
+		if ($formType == "importID")
 		{
 			$skipBadRecordsInputMain = "";
-			$skipBadRecordsInputPubmed = $skipBadRecordsInput;
+			$skipBadRecordsInputID = $skipBadRecordsInput;
 		}
 		else // $formType == "import"
 		{
 			$skipBadRecordsInputMain = $skipBadRecordsInput;
-			$skipBadRecordsInputPubmed = "";
+			$skipBadRecordsInputID = "";
 		}
 	}
 	else
 	{
 		$skipBadRecordsInputMain = "";
-		$skipBadRecordsInputPubmed = "";
+		$skipBadRecordsInputID = "";
 	}
 
 	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the main import form\">"
@@ -262,7 +265,7 @@
 		}
 
 		echo "\n\t<td width=\"98\" valign=\"top\"" . $rowSpan . ">Import records:</td>"
-				. "\n\t<td valign=\"top\"><input type=\"radio\" name=\"importRecordsRadio\" value=\"all\"$importRecordsRadioAllChecked title=\"choose 'All' if you want to import all pasted records at once\">&nbsp;All</td>"
+				. "\n\t<td valign=\"top\"><input type=\"radio\" name=\"importRecordsRadio\" value=\"all\"$importRecordsRadioAllChecked title=\"choose 'All' if you want to import all records at once\">&nbsp;All</td>"
 				. "\n</tr>"
 				. "\n<tr>"
 				. "\n\t<td valign=\"top\">" . fieldError("importRecords", $errors) . "<input type=\"radio\" name=\"importRecordsRadio\" value=\"only\"$importRecordsRadioOnlyChecked title=\"choose 'Only' if you just want to import particular records\">&nbsp;Only:&nbsp;&nbsp;<input type=\"text\" name=\"importRecords\" value=\"$importRecords\" size=\"5\" title=\"enter record number(s): e.g. '1-5 7' imports the first five and the seventh\"></td>";
@@ -282,13 +285,13 @@
 	{
 		$importButtonLock = "";
 		$importTitleMain = "press this button to import the given source data";
-		$importTitlePubmed = "press this button to fetch &amp; import source data for the given PubMed IDs";
+		$importTitleID = "press this button to fetch &amp; import source data for the given IDs";
 	}
 	else // Note, that disabling the submit button is just a cosmetic thing -- the user can still submit the form by pressing enter or by building the correct URL from scratch!
 	{
 		$importButtonLock = " disabled";
 		$importTitleMain = "not available since you have no permission to import any records";
-		$importTitlePubmed = "not available since you have no permission to import any records";
+		$importTitleID = "not available since you have no permission to import any records";
 	}
 
 	echo "\n\t<td colspan=\"3\">\n\t\t<input type=\"submit\" name=\"submit\" value=\"Import\"$importButtonLock title=\"$importTitleMain\">\n\t</td>"
@@ -296,18 +299,18 @@
 			. "\n</table>"
 			. "\n</form>";
 
-	// (2c) Start <form> and <table> holding the form elements of the PubMed import form (import via PubMed ID):
+	// (2c) Start <form> and <table> holding the form elements of the "Import IDs" form:
 	echo "\n<form action=\"import_modify.php\" method=\"POST\">"
-			. "\n<input type=\"hidden\" name=\"formType\" value=\"importPubMed\">"
+			. "\n<input type=\"hidden\" name=\"formType\" value=\"importID\">"
 			. "\n<input type=\"hidden\" name=\"submit\" value=\"Import\">" // provide a default value for the 'submit' form tag. Otherwise, some browsers may not recognize the correct output format when a user hits <enter> within a form field (instead of clicking the "Import" button)
 			. "\n<input type=\"hidden\" name=\"showSource\" value=\"1\">"; // in case of the MEDLINE format, original source data will be displayed alongside the parsed data for easier comparison
 
-	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds the PubMed import form\">"
-			. "\n<tr>\n\t<td width=\"94\" valign=\"top\"><b>PubMed IDs:</b></td>\n\t<td width=\"10\">&nbsp;</td>"
-			. "\n\t<td colspan=\"3\">" . fieldError("pubmedIDs", $errors) . $skipBadRecordsInputPubmed . "<input type=\"text\" name=\"pubmedIDs\" value=\"$pubmedIDs\" size=\"66\" title=\"enter any PubMed IDs, multiple IDs must be delimited by any non-digit chars\"></td>"
+	echo "\n<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\" summary=\"This table holds a form to import records via their ID\">"
+			. "\n<tr>\n\t<td width=\"94\" valign=\"top\"><b>Import IDs:</b></td>\n\t<td width=\"10\">&nbsp;</td>"
+			. "\n\t<td colspan=\"3\">" . fieldError("sourceIDs", $errors) . $skipBadRecordsInputID . "<input type=\"text\" name=\"sourceIDs\" value=\"$sourceIDs\" size=\"66\" title=\"enter PubMed IDs, arXiv IDs, DOIs or OpenURLs, multiple IDs must be delimited by whitespace\"></td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td colspan=\"3\">\n\t\t<input type=\"submit\" name=\"submit\" value=\"Import\"$importButtonLock title=\"$importTitlePubmed\">\n\t</td>"
+			. "\n\t<td colspan=\"3\">\n\t\t<input type=\"submit\" name=\"submit\" value=\"Import\"$importButtonLock title=\"$importTitleID\">\n\t</td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td align=\"center\" colspan=\"5\">&nbsp;</td>"
 			. "\n</tr>";
@@ -315,7 +318,7 @@
 	// (2d) Display a table row with some help text:
 	echo "\n<tr>\n\t<td valign=\"top\"><b>Help:</b></td>\n\t<td>&nbsp;</td>"
 			. "\n\t<td valign=\"top\" colspan=\"3\">The upper form enables you to import records from "
-			. "<a href=\"http://www.endnote.com/\" target=\"top\">Endnote</a>, "
+			. "<a href=\"http://www.endnote.com/\" target=\"top\">Endnote</a> (tagged text or XML), "
 			. "<a href=\"http://www.refman.com/\" target=\"top\">Reference Manager</a> (RIS), "
 			. "<a href=\"http://www.refworks.com/\" target=\"top\">RefWorks</a>, "
 			. "<a href=\"http://en.wikipedia.org/wiki/Bibtex\" target=\"top\">BibTeX</a>, "
@@ -328,7 +331,7 @@
 			. " Please see the <a href=\"http://import.refbase.net/\" target=\"top\">refbase online documentation</a> for more information about the supported formats and any requirements in format structure.</td>"
 			. "\n</tr>"
 			. "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>"
-			. "\n\t<td colspan=\"3\">The lower form allows you to import records by their <a href=\"http://www.pubmed.gov/\" target=\"top\">PubMed</a> ID (PMID). Just enter one or more PubMed IDs (delimited by any non-digit characters) and press the <em>Import</em> button.</td>"
+			. "\n\t<td colspan=\"3\">The lower form allows you to import records via their ID; supported IDs: <a href=\"http://www.pubmed.gov/\" target=\"top\">PubMed</a> <a href=\"http://en.wikipedia.org/wiki/PMID\" target=\"top\">ID (PMID)</a>, <a href=\"http://arxiv.org/\" target=\"top\">arXiv</a> <a href=\"http://arxiv.org/help/arxiv_identifier\" target=\"top\">ID</a>, <a href=\"http://www.doi.org/\" target=\"top\">DOI</a> and <a href=\"http://en.wikipedia.org/wiki/OpenURL\" target=\"top\">OpenURL</a>. Just enter one or more IDs (delimited by whitespace) and press the <em>Import</em> button. Please note that currently you cannot mix different IDs within the same import action, i.e. specify either PubMed IDs or DOIs, etc.</td>"
 			. "\n</tr>"
 			. "\n</table>"
 			. "\n</form>";
@@ -346,7 +349,7 @@
 
 	// DISPLAY THE HTML FOOTER:
 	// call the 'showPageFooter()' and 'displayHTMLfoot()' functions (which are defined in 'footer.inc.php')
-	showPageFooter($HeaderString, "");
+	showPageFooter($HeaderString);
 
 	displayHTMLfoot();
 

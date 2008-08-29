@@ -32,7 +32,7 @@
 	// Requires the MINIMALRTF Package (by Mark Grimshaw), which is available
 	// under the GPL from: <http://bibliophile.sourceforge.net>
 
-	function citeRecords($result, $rowsFound, $query, $oldQuery, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
+	function citeRecords($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
 	{
 		global $contentTypeCharset; // defined in 'ini.inc.php'
 
@@ -46,21 +46,31 @@
 		$typeTitlesArray = array();
 
 		// Define inline text markup to be used by the 'citeRecord()' function:
-		$markupPatternsArray = array("bold-prefix"     => "{\\b ",
-									"bold-suffix"      => "}",
-									"italic-prefix"    => "{\\i ",
-									"italic-suffix"    => "}",
-									"underline-prefix" => "{\\ul ",
-									"underline-suffix" => "}",
-									"endash"           => "\\endash ",
-									"emdash"           => "\\emdash ",
-									"newline"          => "\n{\f1\fs24 \par}\n");
+		$markupPatternsArray = array("bold-prefix"        => "{\\b ",
+		                             "bold-suffix"        => "}",
+		                             "italic-prefix"      => "{\\i ",
+		                             "italic-suffix"      => "}",
+		                             "underline-prefix"   => "{\\ul ",
+		                             "underline-suffix"   => "}",
+		                             "endash"             => "\\endash ", // or use "\\uc0\\u8211 " or "\\u8211\\'2D" (the first two seem to work more reliably than the third one)
+		                             "emdash"             => "\\emdash ", // or use "\\uc0\\u8212 " or "\\u8212\\'2D"
+		                             "ampersand"          => "&",
+		                             "double-quote"       => '"',
+		                             "double-quote-left"  => "\\ldblquote ", // or use "\\uc0\\u8220 " or "\\u8220\\'22"
+		                             "double-quote-right" => "\\rdblquote ", // or use "\\uc0\\u8221 " or "\\u8221\\'22"
+		                             "single-quote"       => "'",
+		                             "single-quote-left"  => "\\lquote ", // or use "\\uc0\\u8216 " or "\\u8216\\'27"
+		                             "single-quote-right" => "\\rquote ", // or use "\\uc0\\u8217 " or "\\u8217\\'27"
+		                             "less-than"          => "<",
+		                             "greater-than"       => ">",
+		                             "newline"            => "\n{\\f1\\fs24 \par}\n"
+		                            );
 
 		// Defines search & replace 'actions' that will be applied upon RTF output to all those refbase fields that are listed
 		// in the corresponding 'fields' element:
 		$rtfSearchReplaceActionsArray = array(
 												array(
-														'fields'  => array("title", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes", "publication"),
+														'fields'  => array("title", "publication", "abbrev_journal", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes"),
 														'actions' => $transtab_refbase_rtf
 													)
 											);
@@ -83,7 +93,15 @@
 
 		// Header:
 		if (!empty($headerMsg))
+		{
+			// Remove any colon (":") from end of header message:
+			$headerMsg = trimTextPattern($headerMsg, ":", false, true); // function 'trimTextPattern()' is defined in 'include.inc.php'
+
+			// Convert refbase markup in the header message into appropriate RTF markup & entities:
+			$headerMsg = searchReplaceText($transtab_refbase_rtf, $headerMsg, true); // function 'searchReplaceText()' is defined in 'include.inc.php'
+
 			$rtfData .= "{\header\pard\qc $headerMsg\par}\n";
+		}
 
 		$rtfData .= $rtf->justify("full", 0.5, 0, -0.5); // by default, we'll justify text and set a hanging indent (left indent: 0.5, right indent: 0, first-line indent: -0.5)
 
@@ -118,7 +136,7 @@
 					if ($citeOrder == "type") // for 'citeOrder=type' we'll always print an empty paragraph after the heading
 						$headingSuffix .= $rtf->paragraph(0, 12); // create empty paragraph using "Arial" (font block 0) and a font size of 12pt
 
-					list($yearsArray, $typeTitlesArray, $sectionHeading) = generateSectionHeading($yearsArray, $typeTitlesArray, $row, $citeOrder, $headingPrefix, $headingSuffix, "{\f0\fs28 {\b ", "}\par}\n", "{\f0\fs24 {\b ", "}\par}\n"); // function 'generateSectionHeading()' is defined in 'cite.inc.php'
+					list($yearsArray, $typeTitlesArray, $sectionHeading) = generateSectionHeading($yearsArray, $typeTitlesArray, $row, $citeOrder, $headingPrefix, $headingSuffix, "{\\f0\\fs28 {\b ", "}\par}\n", "{\\f0\\fs24 {\b ", "}\par}\n"); // function 'generateSectionHeading()' is defined in 'cite.inc.php'
 
 					// Note that we pass raw RTF commands to the above function instead of using the 'textBlock()' function from 'MINIMALRTF.php'. This is due to a current limitation of the 'generateSectionHeading()' function.
 					// For 'citeOrder=year', the appropriate call to the 'textBlock()' function would look like this:
