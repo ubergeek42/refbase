@@ -119,7 +119,7 @@
 
 
 	// The default interface language:
-	$defaultLanguage = "en"; // e.g. "en", "de", "fr", "es" or "cn"
+	$defaultLanguage = "en"; // possible values: "en", "de", "fr", or "cn"
 
 
 	// The number of records that's returned by default:
@@ -156,6 +156,17 @@
 	// The URL path to a favicon image (which gets used in the OpenSearch description document):
 	// (this must be a 16x16 image of type ".ico")
 	$faviconImageURL = "img/favicon.ico"; // e.g. "img/favicon.ico"
+
+
+	// Specify whether auto-completions (search suggestions) shall be provided
+	// (via Ajax calls) for user input in text entry fields:
+	$autoCompleteUserInput = "yes"; // possible values: "yes", "no"
+
+
+	// Specify whether visual effects (such as a sliding effect) shall be used
+	// when a user toggles the display of particular GUI sections (e.g. the
+	// Search & Display Options above the search results list):
+	$useVisualEffects = "yes"; // possible values: "yes", "no"
 
 
 	// Defines the default user permissions when adding new users:
@@ -245,6 +256,20 @@
 	// selected from a search field drop-down menu; these fields will also be included as
 	// separate entries in the "Quick Search" drop-down menu.
 	$defaultMainFields = "author, title, publication, keywords, abstract"; // e.g. "author, title, publication, keywords, abstract"
+
+
+	// The list of fields that are available in the "main fields" selector of the user's
+	// account options page:
+	// The given field names must match column names in MySQL tables 'refs' and 'user_data'.
+	// The given fields will be available to the user to add them to his/her preferred list
+	// of "main fields". The fields selected by the user will be used instead of the default
+	// list of "main fields" provided in '$defaultMainFields' (see above). The user's
+	// default list of "main fields" can be specified in '$defaultUserOptions["main_fields"]'
+	// (see below).
+	$availableMainFields = array("author", "title", "year", "publication", "abbrev_journal",
+	                             "editor", "series_title", "abbrev_series_title", "keywords",
+	                             "abstract", "area", "notes", "call_number", "serial",
+	                             "user_keys", "user_notes", "user_groups", "cite_key");
 
 
 	// The list of fields that will be displayed by default in List view (i.e. the default
@@ -643,42 +668,43 @@
 	// disable all access keys, specify an empty array, like: '$accessKeys = array();'
 	$accessKeys = array(
 	                    // page header:
-	                    "home"        => "0", // "Home" link
-	                    "show_all"    => "1", // "Show All" link
-	                    "search"      => "s", // "Simple Search" link
+	                    "home"        => "0", // "Home" link (e.g. "0")
+	                    "show_all"    => "1", // "Show All" link (e.g. "1")
+	                    "search"      => "", // "Simple Search" link (e.g. "s")
 	                    "adv_search"  => "",  // "Advanced Search" link
-	                    "add"         => "a", // "Add Record" link
-	                    "import"      => "i", // "Import" link
-	                    "sql_query"   => "q", // "your query" link
-	                    "save_query"  => "v", // "save" link
-	                    "dups"        => "u", // "dups" link
-	                    "history"     => "y", // "history" link
-	                    "my_refs"     => "7", // "My Refs" link
-	                    "my_opt"      => "8", // "Options" link
-	                    "login"       => "9", // "Login/Logout" link
+	                    "add"         => "", // "Add Record" link (e.g. "a")
+	                    "import"      => "", // "Import" link (e.g. "i")
+	                    "sql_query"   => "", // "your query" link (e.g. "q")
+	                    "save_query"  => "", // "save" link (e.g. "v")
+	                    "dups"        => "", // "dups" link (e.g. "u")
+	                    "history"     => "", // "history" link (e.g. "y")
+	                    "my_refs"     => "7", // "My Refs" link (e.g. "7")
+	                    "my_opt"      => "8", // "Options" link (e.g. "8")
+	                    "login"       => "9", // "Login/Logout" link (e.g. "9")
+	                    "qck_search"  => "f", // text entry field of the "Quick Search" form (e.g. "f")
 	                    // results header:
-	                    "header"      => ",", // "Search & Display Options" link that toggles visibility of the results header
-	                    "refine"      => "f", // text entry field of the "Search within Results" form
-	                    "max_rows"    => "r", // "records per page" text entry field of the "Display Options" form
+	                    "header"      => ",", // "Search & Display Options" link that toggles visibility of the results header (e.g. ",")
+	                    "refine"      => "",  // text entry field of the "Search within Results" form
+	                    "max_rows"    => "r", // "records per page" text entry field of the "Display Options" form (e.g. "r")
 	                    // browse links:
-	                    "next"        => "n", // "next results page" link
-	                    "previous"    => "p", // "previous results page" link
-	                    "list"        => "2", // "List View" link
-	                    "cite"        => "3", // "Citations" link
-	                    "details"     => "4", // "Details" link
-	                    "print"       => "5", // "Web/Print View" link
+	                    "next"        => "2", // "next results page" link (e.g. "2" or "n")
+	                    "previous"    => "", // "previous results page" link (e.g. "p")
+	                    "list"        => "3", // "List View" link (e.g. "3")
+	                    "cite"        => "4", // "Citations" link (e.g. "4")
+	                    "details"     => "5", // "Details" link (e.g. "5")
+	                    "print"       => "6", // "Web/Print View" link (e.g. "6")
 	                    // results footer:
-	                    "footer"      => ".", // "Cite, Group & Export Options" link that toggles visibility of the results footer
-	                    "biblio"      => "c", // "Cite" button of the "Save Citations" form
-	                    "export"      => "e", // "Export" button of the "Export Records" form
+	                    "footer"      => ".", // "Cite, Group & Export Options" link that toggles visibility of the results footer (e.g. ".")
+	                    "biblio"      => "", // "Cite" button of the "Save Citations" form (e.g. "c")
+	                    "export"      => "", // "Export" button of the "Export Records" form (e.g. "e")
 	                    // page footer:
 	                    "sql_search"  => "",  // "SQL Search" link
 	                    "lib_search"  => "",  // "Library Search" link
-	                    "show_rec"    => "w", // "Show Record" link
-	                    "extract"     => "x", // "Extract Citations" link
+	                    "show_rec"    => "", // "Show Record" link (e.g. "w")
+	                    "extract"     => "", // "Extract Citations" link (e.g. "x")
 	                    // search pages:
-	                    "search_opt"  => ",",  // "Search/Display Options" link that toggles visibility of the search/display options
-	                    "search_help" => ".",  // "Help/Examples" link that toggles visibility of the inline help/examples
+	                    "search_opt"  => ",", // "Search/Display Options" link that toggles visibility of the search/display options (e.g. ",")
+	                    "search_help" => ".", // "Help/Examples" link that toggles visibility of the inline help/examples (e.g. ".")
 	                   );
 
 
