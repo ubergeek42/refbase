@@ -247,62 +247,14 @@
 	else // if ($loginEmail != $adminLoginEmail) // if a normal user is logged in
 		$selectListIdentifier = "Show";
 
+	// Map MySQL field names to localized column names:
+	$fieldNamesArray = mapFieldNames(true); // function 'mapFieldNames()' is defined in 'include.inc.php'
+	$mainFieldsArray = array();
+
 	// Define fields that can be designated as "main fields":
-	$mainFieldsArray = array("author"              => $loc["DropDownFieldName_Author"],
-//	                         "address"             => $loc["DropDownFieldName_Address"],
-//	                         "corporate_author"    => $loc["DropDownFieldName_CorporateAuthor"],
-//	                         "thesis"              => $loc["DropDownFieldName_Thesis"],
-	                         "title"               => $loc["DropDownFieldName_Title"],
-//	                         "orig_title"          => $loc["DropDownFieldName_OrigTitle"],
-	                         "year"                => $loc["DropDownFieldName_Year"],
-	                         "publication"         => $loc["DropDownFieldName_Publication"],
-	                         "abbrev_journal"      => $loc["DropDownFieldName_AbbrevJournal"],
-	                         "editor"              => $loc["DropDownFieldName_Editor"],
-//	                         "volume"              => $loc["DropDownFieldName_Volume"],
-//	                         "issue"               => $loc["DropDownFieldName_Issue"],
-//	                         "pages"               => $loc["DropDownFieldName_Pages"],
-	                         "series_title"        => $loc["DropDownFieldName_SeriesTitle"],
-	                         "abbrev_series_title" => $loc["DropDownFieldName_AbbrevSeriesTitle"],
-//	                         "series_editor"       => $loc["DropDownFieldName_SeriesEditor"],
-//	                         "series_volume"       => $loc["DropDownFieldName_SeriesVolume"],
-//	                         "series_issue"        => $loc["DropDownFieldName_SeriesIssue"],
-//	                         "publisher"           => $loc["DropDownFieldName_Publisher"],
-//	                         "place"               => $loc["DropDownFieldName_Place"],
-//	                         "edition"             => $loc["DropDownFieldName_Edition"],
-//	                         "medium"              => $loc["DropDownFieldName_Medium"],
-//	                         "issn"                => $loc["DropDownFieldName_Issn"],
-//	                         "isbn"                => $loc["DropDownFieldName_Isbn"],
-//	                         "language"            => $loc["DropDownFieldName_Language"],
-//	                         "summary_language"    => $loc["DropDownFieldName_SummaryLanguage"],
-	                         "keywords"            => $loc["DropDownFieldName_Keywords"],
-	                         "abstract"            => $loc["DropDownFieldName_Abstract"],
-	                         "area"                => $loc["DropDownFieldName_Area"],
-//	                         "expedition"          => $loc["DropDownFieldName_Expedition"],
-//	                         "conference"          => $loc["DropDownFieldName_Conference"],
-//	                         "doi"                 => $loc["DropDownFieldName_Doi"],
-//	                         "url"                 => $loc["DropDownFieldName_Url"],
-//	                         "file"                => $loc["DropDownFieldName_File"],
-	                         "notes"               => $loc["DropDownFieldName_Notes"],
-//	                         "location"            => $loc["DropDownFieldName_Location"],
-	                         "call_number"         => $loc["DropDownFieldName_CallNumber"],
-	                         "serial"              => $loc["DropDownFieldName_Serial"],
-//	                         "type"                => $loc["DropDownFieldName_Type"],
-//	                         "approved"            => $loc["DropDownFieldName_Approved"],
-//	                         "created_date"        => $loc["DropDownFieldName_CreatedDate"],
-//	                         "created_time"        => $loc["DropDownFieldName_CreatedTime"],
-//	                         "created_by"          => $loc["DropDownFieldName_CreatedBy"],
-//	                         "modified_date"       => $loc["DropDownFieldName_ModifiedDate"],
-//	                         "modified_time"       => $loc["DropDownFieldName_ModifiedTime"],
-//	                         "modified_by"         => $loc["DropDownFieldName_ModifiedBy"],
-//	                         "marked"              => $loc["DropDownFieldName_Marked"],
-//	                         "copy"                => $loc["DropDownFieldName_Copy"],
-//	                         "selected"            => $loc["DropDownFieldName_Selected"],
-//	                         "user_keys"           => $loc["DropDownFieldName_UserKeys"],
-//	                         "user_notes"          => $loc["DropDownFieldName_UserNotes"],
-//	                         "user_file"           => $loc["DropDownFieldName_UserFile"],
-//	                         "user_groups"         => $loc["DropDownFieldName_UserGroups"],
-	                         "cite_key"            => $loc["DropDownFieldName_CiteKey"],
-	                        );
+	foreach ($availableMainFields as $field) // variable '$availableMainFields' is defined in 'ini.inc.php'
+		if (isset($fieldNamesArray[$field]))
+			$mainFieldsArray[$field] = $fieldNamesArray[$field];
 
 	// Build properly formatted <option> tag elements from array items given in '$mainFieldsArray':
 	$mainFieldsOptionTags = buildSelectMenuOptions($mainFieldsArray, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
@@ -505,15 +457,15 @@
 	<td colspan="2"></td>
 </tr>
 <tr>
-	<td align="left"><b><a id="export">Export Options:</a></b></td>
+	<td align="left"><b><a id="export">Import/Export Options:</a></b></td>
 	<td colspan="2">
-		<input type="checkbox" name="export_cite_keys" value="yes"<?php echo $exportCiteKeysChecked; ?>>&nbsp;&nbsp;Include cite keys on export
+		<input type="checkbox" name="export_cite_keys" value="yes"<?php echo $exportCiteKeysChecked; ?>>&nbsp;&nbsp;Include or generate cite keys
 	</td>
 </tr>
 <tr>
 	<td align="left"></td>
 	<td colspan="2">
-		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="autogenerate_cite_keys" value="yes"<?php echo $autogenerateCiteKeysChecked; ?>>&nbsp;&nbsp;Auto-generate cite keys on export for:
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="autogenerate_cite_keys" value="yes"<?php echo $autogenerateCiteKeysChecked; ?>>&nbsp;&nbsp;Auto-generate cite keys for:
 	</td>
 </tr>
 <tr>
@@ -525,7 +477,7 @@
 <tr>
 	<td align="left"></td>
 	<td colspan="2">
-		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="prefer_autogenerated_cite_keys" value="no"<?php echo $dontPreferAutogeneratedCiteKeysChecked; ?>>&nbsp;&nbsp;records with empty 'Cite Key' field
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="prefer_autogenerated_cite_keys" value="no"<?php echo $dontPreferAutogeneratedCiteKeysChecked; ?>>&nbsp;&nbsp;records with empty 'Cite Key' (ID) field
 	</td>
 </tr>
 <tr>

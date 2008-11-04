@@ -103,24 +103,20 @@
 											// NOTE: URL encoded data that are included within a *link* will get URL decoded automatically *before* extraction via '$_REQUEST'!
 											//       But, opposed to that, URL encoded data that are included within a form by means of a hidden form tag will *NOT* get URL decoded automatically! Then, URL decoding has to be done manually (as is done here)!
 
-	if (isset($_REQUEST['showQuery']))
-		$showQuery = $_REQUEST['showQuery'];
+	if (isset($_REQUEST['showQuery']) AND ($_REQUEST['showQuery'] == "1"))
+		$showQuery = "1";
 	else
-		$showQuery = "";
+		$showQuery = "0"; // don't show the SQL query by default
 
-	if (isset($_REQUEST['showLinks']))
-		$showLinks = $_REQUEST['showLinks'];
+	if (isset($_REQUEST['showLinks']) AND ($_REQUEST['showLinks'] == "0"))
+		$showLinks = "0";
 	else
-		$showLinks = "";
+		$showLinks = "1"; // show the links column by default
 
-	// If $showLinks is empty we set it to true (i.e., show the links column by default):
-	if (empty($showLinks))
-		$showLinks = "1";
-
-	if (isset($_REQUEST['showRows']))
+	if (isset($_REQUEST['showRows']) AND ereg("^[1-9]+[0-9]*$", $_REQUEST['showRows']))
 		$showRows = $_REQUEST['showRows'];
 	else
-		$showRows = 0;
+		$showRows = $_SESSION['userRecordsPerPage']; // get the default number of records per page preferred by the current user
 
 	if (isset($_REQUEST['rowOffset']))
 		$rowOffset = $_REQUEST['rowOffset'];
@@ -289,6 +285,8 @@
 		global $defaultCiteStyle;
 		global $maximumBrowseLinks;
 
+		global $loc; // '$loc' is made globally available in 'core.php'
+
 		if ($rowsFound > 0) // If the query has results ...
 		{
 			// BEGIN RESULTS HEADER --------------------
@@ -344,7 +342,11 @@
 				                             "modified_by"           => "modified_by"
 				                            );
 
-				$selectedField = "last_name"; // this column will be selected by default
+				// Extract the first field from the 'WHERE' clause:
+				if (preg_match("/ WHERE [ ()]*(\w+)/i", $query))
+					$selectedField = preg_replace("/.+ WHERE [ ()]*(\w+).*/i", "\\1", $query);
+				else
+					$selectedField = "last_name"; // in the 'Search within Results" form, we'll select the 'last_name' field by default
 
 				// Build a TABLE with forms containing options to show the user groups, refine the search results or change the displayed columns:
 
@@ -369,7 +371,7 @@
 
 			// Build a TABLE with links for "previous" & "next" browsing, as well as links to intermediate pages
 			// call the 'buildBrowseLinks()' function (defined in 'include.inc.php'):
-			$BrowseLinks = buildBrowseLinks("users.php", $query, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, $maximumBrowseLinks, "sqlSearch", $displayType, $defaultCiteStyle, "", "", "", $viewType); // Note: we set the last 3 fields ('$citeOrder', '$orderBy' & $headerMsg') to "" since they aren't (yet) required here
+			$BrowseLinks = buildBrowseLinks("users.php", $query, $NoColumns, $rowsFound, $showQuery, $showLinks, $showRows, $rowOffset, $previousOffset, $nextOffset, "1", $maximumBrowseLinks, "sqlSearch", $displayType, $defaultCiteStyle, "", "", "", $viewType); // Note: we set the last 3 fields ('$citeOrder', '$orderBy' & $headerMsg') to "" since they aren't (yet) required here
 			echo $BrowseLinks;
 
 
@@ -400,7 +402,7 @@
 				$HTMLafterLink = "</th>"; // close the table header tag
 				// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
 				// as well as the URL encoded query with the appropriate ORDER clause:
-				$tableHeaderLink = buildFieldNameLinks("users.php", $query, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $defaultCiteStyle, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", $displayType, "", "", "", $viewType);
+				$tableHeaderLink = buildFieldNameLinks("users.php", $query, "", $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, "1", $defaultCiteStyle, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", $displayType, "", "", "", $viewType);
 				echo $tableHeaderLink; // print the attribute name as link
 			 }
 
@@ -412,7 +414,7 @@
 					$HTMLafterLink = "</th>"; // close the table header tag
 					// call the 'buildFieldNameLinks()' function (defined in 'include.inc.php'), which will return a properly formatted table header tag holding the current field's name
 					// as well as the URL encoded query with the appropriate ORDER clause:
-					$tableHeaderLink = buildFieldNameLinks("users.php", $query, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, $defaultCiteStyle, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", $displayType, "Links", "user_id", "", $viewType);
+					$tableHeaderLink = buildFieldNameLinks("users.php", $query, $newORDER, $result, $i, $showQuery, $showLinks, $rowOffset, $showRows, "1", $defaultCiteStyle, $HTMLbeforeLink, $HTMLafterLink, "sqlSearch", $displayType, $loc["Links"], "user_id", "", $viewType);
 					echo $tableHeaderLink; // print the attribute name as link
 				}
 
@@ -456,18 +458,18 @@
 					echo "\n\t<td valign=\"top\">";
 
 					echo "\n\t\t<a href=\"user_receipt.php?userID=" . $row["user_id"]
-						. "\"><img src=\"img/details.gif\" alt=\"details\" title=\"show details and options\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
+						. "\"><img src=\"img/details.gif\" alt=\"" . $loc["details"] . "\" title=\"" . $loc["LinkTitle_ShowDetailsAndOptions"] . "\" width=\"9\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
 
 					echo "\n\t\t<a href=\"user_details.php?userID=" . $row["user_id"]
-						. "\"><img src=\"img/edit.gif\" alt=\"edit\" title=\"edit details\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
+						. "\"><img src=\"img/edit.gif\" alt=\"" . $loc["edit"] . "\" title=\"" . $loc["LinkTitle_EditDetails"] . "\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
 
 					echo "\n\t\t<a href=\"user_options.php?userID=" . $row["user_id"]
-						. "\"><img src=\"img/options.gif\" alt=\"options\" title=\"edit options\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
+						. "\"><img src=\"img/options.gif\" alt=\"" . $loc["options"] . "\" title=\"" . $loc["LinkTitle_EditOptions"] . "\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>&nbsp;&nbsp;";
 
 					$adminUserID = getUserID($adminLoginEmail); // ...get the admin's 'user_id' using his/her 'adminLoginEmail' (function 'getUserID()' is defined in 'include.inc.php')
 					if ($row["user_id"] != $adminUserID) // we only provide a delete link if this user isn't the admin:
 						echo "\n\t\t<a href=\"user_receipt.php?userID=" . $row["user_id"] . "&amp;userAction=Delete"
-							. "\"><img src=\"img/delete.gif\" alt=\"delete\" title=\"delete user\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
+							. "\"><img src=\"img/delete.gif\" alt=\"" . $loc["delete"] . "\" title=\"" . $loc["LinkTitle_DeleteUser"] . "\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
 
 					echo "\n\t</td>";
 				}

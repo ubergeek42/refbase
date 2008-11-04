@@ -33,6 +33,8 @@
 		global $defaultStyleSheet;
 		global $printStyleSheet;
 		global $mobileStyleSheet;
+		global $autoCompleteUserInput;
+		global $useVisualEffects;
 		global $databaseBaseURL;
 		global $databaseKeywords;
 		global $defaultFeedFormat;
@@ -51,7 +53,7 @@
 			echo $additionalMeta;
 ?>
 
-	<meta http-equiv="content-language" content="en">
+	<meta http-equiv="content-language" content="<?php echo getUserLanguage(); ?>">
 	<meta http-equiv="content-type" content="text/html; charset=<?php echo $contentTypeCharset; ?>">
 	<meta http-equiv="Content-Style-Type" content="text/css"><?php
 
@@ -86,7 +88,7 @@
 			// ...include a link tag pointing to a dynamic RSS feed for the current query:
 ?>
 
-	<link rel="alternate" type="<?php echo $feedContentType; ?>" href="<?php echo $rssURL['href']; ?>" title="<?php echo $rssURL['title']; ?>"><?php
+	<link rel="alternate" type="<?php echo $feedContentType; ?>" href="<?php echo $databaseBaseURL . $rssURL['href']; ?>" title="<?php echo $rssURL['title']; ?>"><?php
 			}
 		}
 ?>
@@ -94,67 +96,29 @@
 	<link rel="unapi-server" type="application/xml" title="unAPI" href="<?php echo $databaseBaseURL; ?>unapi.php">
 	<link rel="search" type="application/opensearchdescription+xml" title="<?php echo encodeHTML($officialDatabaseName); ?>" href="<?php echo $databaseBaseURL; ?>opensearch.php?operation=explain"><?php
 
+		if ($includeJavaScript OR ($autoCompleteUserInput == "yes") OR ($useVisualEffects == "yes"))
+		{
+			// ...include common refbase JavaScript functions:
+?>
+
+	<script language="JavaScript" type="text/javascript" src="javascript/common.js"></script><?php
+		}
+
+		if (($autoCompleteUserInput == "yes") OR ($useVisualEffects == "yes"))
+		{
+			// ...include the Prototype & script.aculo.us JavaScript frameworks:
+?>
+
+	<script language="JavaScript" type="text/javascript" src="javascript/prototype.js"></script>
+	<script language="JavaScript" type="text/javascript" src="javascript/scriptaculous.js?load=effects,controls"></script><?php
+		}
+
 		if (!empty($includeJavaScriptFile))
 		{
+			// ...include additional JavaScript functions:
 ?>
 
 	<script language="JavaScript" type="text/javascript" src="<?php echo $includeJavaScriptFile; ?>"></script><?php
-		}
-
-		if ($includeJavaScript)
-		{
-?>
-
-	<script language="JavaScript" type="text/javascript">
-		function checkall(val, formpart) {
-			var x = 0;
-			while(document.queryResults.elements[x]) {
-				if(document.queryResults.elements[x].name == formpart) {
-					document.queryResults.elements[x].checked = val;
-				}
-				x++;
-			}
-			toggleRadio('allRecs', 'selRecs', val);
-		}
-		function toggleVisibility(id, imgid, txtid, txt) {
-			var e = document.getElementById(id);
-			var i = document.getElementById(imgid);
-			var t = document.getElementById(txtid);
-			if(e.style.display == 'block') {
-				e.style.display = 'none';
-				i.src = 'img/closed.gif';
-				t.innerHTML = txt;
-			}
-			else {
-				e.style.display = 'block';
-				i.src = 'img/open.gif';
-				t.innerHTML = '';
-			}
-		}
-		function toggleRadio(id1, id2, val) {
-			document.getElementById(id1).checked = !(val);
-			document.getElementById(id2).checked = val;
-		}
-		function updateAllRecs() {
-			var val=!eval("document.getElementById('allRecs').checked");
-			var x=0;
-			var checked=0;
-			while(document.queryResults.elements[x]) {
-				if(document.queryResults.elements[x].name == "marked[]") {
-					if (eval("document.queryResults.elements[x].checked")) {
-						checked++;
-					}
-				}
-				x++;
-			}
-			if (checked>0) {
-				val=true;
-			} else {
-				val=false;
-			}
-			toggleRadio('allRecs', 'selRecs', val);
-		}
-	</script><?php
 		}
 ?>
 
@@ -179,6 +143,16 @@
 		global $loginWelcomeMsg; // these variables are globally defined in function 'showLogin()' in 'include.inc.php'
 		global $loginStatus;
 		global $loginLinks;
+
+		global $displayType;
+		global $query;
+		global $queryURL;
+		global $showQuery;
+		global $showLinks;
+		global $showRows;
+
+		global $citeStyle;
+		global $citeOrder;
 
 		global $loc; // '$loc' is made globally available in 'core.php'
 ?>
@@ -215,14 +189,21 @@
 		// -------------------------------------------------------
 ?>
 
-			<!--&nbsp;|&nbsp;<a href="help.php" title="display help">Help</a>-->
 		</span>
 	</td>
-	<td class="small" align="right" valign="middle"><?php echo $loginWelcomeMsg; ?><br><?php echo $loginStatus; ?></td>
+	<td class="small" valign="bottom" rowspan="2" align="right">
+		<div id="loginInfo">
+			<div id="loginStatus"><?php echo $loginStatus; ?></div>
+			<div id="loginName"><?php echo $loginWelcomeMsg; ?></div>
+			<div id="loginLinks"><?php echo $loginLinks; ?></div>
+		</div>
+		<div id="queryrefs">
+<?php echo buildQuickSearchElements($query, $queryURL, $showQuery, $showLinks, $showRows, $citeStyle, $citeOrder, $displayType); ?>
+		</div>
+	</td>
 </tr>
 <tr>
 	<td><?php echo $HeaderString; ?></td>
-	<td class="small" align="right" valign="middle"><?php echo $loginLinks; ?></td>
 </tr>
 </table>
 <hr class="pageheader" align="center" width="95%"><?php

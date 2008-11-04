@@ -56,8 +56,12 @@
 	// NOTE: we don't provide a full CQL parser here but will (for now) concentrate on a rather limited feature
 	//       set that makes sense in conjunction with refbase. However, future versions should employ far better
 	//       CQL parsing logic.
-	function parseCQL($sruVersion, $sruQuery)
+	// 
+	// TODO: the special index 'main_fields' should be mapped to the user's preferred list of "main fields"
+	function parseCQL($sruVersion, $sruQuery, $operation = "")
 	{
+		global $alnum, $alpha, $cntrl, $dash, $digit, $graph, $lower, $print, $punct, $space, $upper, $word, $patternModifiers; // defined in 'transtab_unicode_charset.inc.php' and 'transtab_latin1_charset.inc.php'
+
 		// map CQL indexes to refbase field names:
 		$indexNamesArray = mapCQLIndexes();
 
@@ -70,7 +74,13 @@
 		{
 			// check for presence of context set/index name and any of the main relations:
 			if (!preg_match('/^[^\" <>=]+( +(all|any|exact|within) +| *(<>|<=|>=|<|>|=) *)/', $sruQuery))
-				$sruQuery = "cql.serverChoice any " . $sruQuery; // if no context set/index name and relation was given we'll use 'cql.serverChoice any ' by default
+			{
+				 // if no context set/index name and relation was given we'll add meaningful defaults:
+				if (eregi("^suggest$", $operation))
+					$sruQuery = "main_fields all " . $sruQuery; // for OpenSearch search suggestions, we use the special 'main_fields' index by default
+				else
+					$sruQuery = "cql.serverChoice all " . $sruQuery; // otherwise we currently use 'cql.serverChoice' (since 'main_fields' isn't yet supported for regular OpenSearch queries)
+			}
 
 			// extract the context set:
 			if (preg_match('/^([^\" <>=.]+)\./', $sruQuery))
@@ -136,6 +146,11 @@
 			$searchTerm = preg_replace('/^\"/', '', $searchTerm);
 			$searchTerm = preg_replace('/\"$/', '', $searchTerm);
 
+			// OpenSearch search suggestions ('$operation=suggest'): since CQL matches full words (not sub-strings),
+			// we need to make sure that every search term ends with the '*' masking character:
+			if (eregi("^suggest$", $operation) AND ($mainRelation != "exact"))
+				$searchTerm = preg_replace("/([$word]+)(?![?*^])/$patternModifiers", "\\1*", $searchTerm);
+
 			// escape meta characters (including '/' that is used as delimiter for the PCRE replace functions below and which gets passed as second argument):
 			$searchTerm = preg_quote($searchTerm, "/"); // escape special regular expression characters: . \ + * ? [ ^ ] $ ( ) { } = ! < > | :
 
@@ -145,11 +160,16 @@
 			//       (The expression '\\\\' in the patterns below describes only *one* backslash! -> '\'.
 			//        The reason for this is that before the regex engine can interpret the \\ into \, PHP interprets it.
 			//        Thus, you have to escape your backslashes twice: once for PHP, and once for the regex engine.)
+			// 
+			// more info about masking characters in CQL:  <http://zing.z3950.org/cql/intro.html#6>
+			// more info about word anchoring in CQL:      <http://zing.z3950.org/cql/intro.html#6.1>
 
 			// recognize any anchor at the beginning of a search term (like '^foo'):
+			// (in CQL, a word beginning with ^ must be the first in its field)
 			$searchTerm = preg_replace('/(^| )\\\\\^/', '\\1^', $searchTerm);
 
 			// convert any anchor at the end of a search term (like 'foo^') to the correct MySQL variant ('foo$'):
+			// (in CQL, a word ending with ^ must be the last in its field)
 			$searchTerm = preg_replace('/\\\\\^( |$)/', '$\\1', $searchTerm);
 
 			// recognize any masking ('*' and '?') characters:
@@ -513,7 +533,9 @@
 		                         "oai.identifier"                => "serial",
 //		                         "oai.datestamp"                 => "modified_date-modified_time", // see TODO note above (same as 'rec.lastModificationDate')
 
-		                         "cql.serverChoice"              => "title", // TODO: the special index 'main_fields' resolves to 'cql.serverChoice', and that, in turn, should resolve to the user's preferred list of "main fields"
+		                         "cql.serverChoice"              => "keywords", // TODO: the special index 'main_fields' should resolve to 'cql.serverChoice', and that, in turn, should resolve to the user's preferred list of "main fields";
+		                                                                        //       alternatively, function 'parseCQL()' could map 'main_fields' to the user's preferred list of "main fields" -- and 'cql.serverChoice' would just resolve to a single field (as specified here)
+		                         "main_fields"                   => "main_fields", // NOTE: the special index 'main_fields' currently only works for OpenSearch search suggestions, otherwise we'll fall back to 'cql.serverChoice'
 
 		                         "author"                        => "author", // for indexes that have no public context set we simply accept refbase field names
 		                         "title"                         => "title",
@@ -571,14 +593,14 @@
 
 		                         "orig_record"                   => "orig_record",
 
-//		                         "marked"                        => "marked", // querying for user-specific fields requires that the 'x-...authenticationToken' is given in the SRU query
-//		                         "copy"                          => "copy",
-//		                         "selected"                      => "selected",
-//		                         "user_keys"                     => "user_keys",
-//		                         "user_notes"                    => "user_notes",
-//		                         "user_file"                     => "user_file",
-//		                         "user_groups"                   => "user_groups",
-//		                         "related"                       => "related",
+		                         "marked"                        => "marked", // in case of 'sru.php', querying for user-specific fields requires that the 'x-...authenticationToken' is given in the SRU query
+		                         "copy"                          => "copy",// for 'opensearch.php', querying of user-specific fields will only work with a user being logged in
+		                         "selected"                      => "selected",
+		                         "user_keys"                     => "user_keys",
+		                         "user_notes"                    => "user_notes",
+		                         "user_file"                     => "user_file",
+		                         "user_groups"                   => "user_groups",
+		                         "related"                       => "related",
 		                         "cite_key"                      => "cite_key" // currently, only the user-specific 'cite_key' field can be queried by every user using 'sru.php'
 		                        );
 
