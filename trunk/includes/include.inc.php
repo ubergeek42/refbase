@@ -51,6 +51,8 @@
 	// Start a session:
 	function start_session($updateUserFormatsStylesTypesPermissions)
 	{
+		global $defaultMainFields; // defined in 'ini.inc.php'
+
 		global $loginEmail;
 		global $loginUserID;
 		global $loginFirstName;
@@ -99,7 +101,8 @@
 			$lastLogin = $_SESSION['lastLogin'];
 		}
 		elseif ($updateUserFormatsStylesTypesPermissions)
-			// if the user isn't logged in we set the available export formats, citation styles, document types and permissions to
+		{
+			// If the user isn't logged in we set the available export formats, citation styles, document types and permissions to
 			// the defaults which are specified in the 'formats', 'styles', 'types' and 'user_permissions' tables for 'user_id = 0'.
 			// (a 'user_id' of zero is used within these tables to indicate the default settings if the user isn't logged in)
 			// NOTE: As an exception, for anyone who isn't logged in, we don't load the default number of records from option
@@ -107,7 +110,7 @@
 			//       in 'ini.inc.php'. Similarly, if the user isn't logged in, the list of "main fields" is taken from variable
 			//       '$defaultMainFields' in 'ini.inc.php' and not from option 'main_fields' in table 'user_options. Same holds true
 			//       for variable '$autoCompleteUserInput' vs. option 'show_auto_completions'.
-		{
+
 			// Get all export formats that were selected by the admin to be visible if a user isn't logged in
 			// and (if some formats were found) save them as semicolon-delimited string to the session variable 'user_export_formats':
 			getVisibleUserFormatsStylesTypes(0, "format", "export");
@@ -143,6 +146,16 @@
 			// Get the list of "main fields" for the current user
 			// and save the list of fields as comma-delimited string to the session variable 'userMainFields':
 			getMainFields(0);
+		}
+		else // if ($updateUserFormatsStylesTypesPermissions == false)
+		{
+			// The scripts 'error.php', 'install.php' & 'update.php' use 'start_session(false);' so that they execute without errors
+			// when there isn't any database yet. However, function 'buildQuickSearchElements()' (which builds the "Quick Search" form
+			// in the page header) requires the session variable 'userMainFields' to be present. So we take the list of "main fields"
+			// directly from the global variable '$defaultMainFields' and save it as session variable (we cannot use function
+			// 'getMainFields()' here since this would require database access):
+			if (!isset($_SESSION['userMainFields']))
+				saveSessionVariable("userMainFields", $defaultMainFields);
 		}
 
 		// Set the referrer:
@@ -1981,7 +1994,7 @@
 			$firstField = "";
 
 		// build HTML elements that allow for search suggestions for text entered by the user:
-		if ($_SESSION['userAutoCompletions'] == "yes")
+		if (isset($_SESSION['userAutoCompletions']) AND ($_SESSION['userAutoCompletions'] == "yes"))
 			$suggestElements = buildSuggestElements("quickSearchName", "quickSearchSuggestions", "quickSearchSuggestProgress", "id-quickSearchSelector-", "\t\t\t\t\t\t");
 		else
 			$suggestElements = "";
@@ -1990,6 +2003,7 @@
 		$quickSearchForm = <<<EOF
 			<form action="search.php" method="GET" name="quickSearch">
 				<fieldset>
+					<legend>$loc[QuickSearch]:</legend>
 					<input type="hidden" name="formType" value="quickSearch">
 					<input type="hidden" name="originalDisplayType" value="$displayType">
 					<input type="hidden" name="sqlQuery" value="$queryURL">
@@ -1999,7 +2013,6 @@
 					<input type="hidden" name="client" value="$encodedClient">
 					<input type="hidden" name="citeStyle" value="$encodedCiteStyle">
 					<input type="hidden" name="citeOrder" value="$citeOrder">
-					<legend>$loc[QuickSearch]:</legend>
 					<div id="queryField">
 						<label for="quickSearchSelector">$loc[Field]:</label>
 						<select id="quickSearchSelector" name="quickSearchSelector" title="$loc[DescriptionSelectFieldQuickSearchForm]">
@@ -2060,7 +2073,7 @@ EOF;
 		$accessKeyTitle = addAccessKey("title", "refine");
 
 		// build HTML elements that allow for search suggestions for text entered by the user:
-		if (($href == "search.php") AND ($_SESSION['userAutoCompletions'] == "yes"))
+		if (($href == "search.php") AND (isset($_SESSION['userAutoCompletions']) AND ($_SESSION['userAutoCompletions'] == "yes")))
 			$suggestElements = buildSuggestElements("refineSearchName", "refineSearchSuggestions", "refineSearchSuggestProgress", "id-refineSearchSelector-", "\t\t\t\t\t");
 		else
 			$suggestElements = "";
@@ -2068,6 +2081,7 @@ EOF;
 		$refineSearchForm = <<<EOF
 		<form action="$href" method="GET" name="refineSearch">
 			<fieldset>
+				<legend>$loc[SearchWithinResults]:</legend>
 				<input type="hidden" name="formType" value="refineSearch">
 				<input type="hidden" name="submit" value="$loc[ButtonTitle_Search]">
 				<input type="hidden" name="originalDisplayType" value="$displayType">
@@ -2078,7 +2092,6 @@ EOF;
 				<input type="hidden" name="client" value="$encodedClient">
 				<input type="hidden" name="citeStyle" value="$encodedCiteStyle">
 				<input type="hidden" name="citeOrder" value="$citeOrder">
-				<legend>$loc[SearchWithinResults]:</legend>
 				<div id="refineField">
 					<label for="refineSearchSelector">$loc[Field]:</label>
 					<select id="refineSearchSelector" name="refineSearchSelector" title="$loc[DescriptionSelectFieldRefineResultsForm]">
@@ -2172,6 +2185,7 @@ EOF;
 			$groupSearchForm = <<<EOF
 		<form action="$href" method="GET" name="groupSearch">
 			<fieldset>
+				<legend>$formLegend</legend>
 				<input type="hidden" name="formType" value="groupSearch">
 				<input type="hidden" name="originalDisplayType" value="$displayType">
 				<input type="hidden" name="sqlQuery" value="$queryURL">
@@ -2181,7 +2195,6 @@ EOF;
 				<input type="hidden" name="client" value="$encodedClient">
 				<input type="hidden" name="citeStyle" value="$encodedCiteStyle">
 				<input type="hidden" name="citeOrder" value="$citeOrder">
-				<legend>$formLegend</legend>
 				<div id="groupSelect">
 					<label for="groupSearchSelector">$dropdownLabel</label>
 					<select id="groupSearchSelector" name="groupSearchSelector" title="$groupSearchSelectorTitle"$groupSearchDisabled>
@@ -2308,6 +2321,7 @@ EOF;
 		$displayOptionsForm = <<<EOF
 		<form action="$href" method="GET" name="displayOptions">
 			<fieldset>
+				<legend>$loc[DisplayOptions]:</legend>
 				<input type="hidden" name="formType" value="displayOptions">
 				<input type="hidden" name="submit" value="$submitValue">
 				<input type="hidden" name="originalDisplayType" value="$displayType">
@@ -2320,7 +2334,6 @@ EOF;
 				<input type="hidden" name="citeStyle" value="$encodedCiteStyle">
 				<input type="hidden" name="citeOrder" value="$citeOrder">
 				<input type="hidden" name="headerMsg" value="$encodedHeaderMsg">
-				<legend>$loc[DisplayOptions]:</legend>
 				<div id="optMain">
 					<div id="$selectorDivID">
 						<label for="$selectorID">$selectorLabel</label>
