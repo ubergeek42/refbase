@@ -280,55 +280,43 @@ form[name="simpleSearch"] .searchSuggestions, form[name="simpleSearch"] .suggest
 }
 
 #userlogin #loginUser, #userlogin #loginPwd {
-	text-align: right;
 	font-size: 1em;
 }
 
-#userlogin #loginUserLabel {
-	display: inline;
-	position: relative;
-	left: -2.4em;
+/* NOTE: Support for the 'inline-block' display type was added in Firefox 3.
+         A JavaScript work-around that works for Firefox 2 users is given at:
+         <http://www.alistapart.com/articles/prettyaccessibleforms>
+*/
+#userlogin #loginUserLabel, #userlogin #loginPwdLabel {
+	display: inline-block;
+	width: 38%;
 	font-size: 1em;
 }
 
-#userlogin #loginUserLabel:lang(fr) {
-	left: -4.0em;
+#userlogin #loginUserLabel:lang(fr), #userlogin #loginPwdLabel:lang(fr) {
+	width: 52%;
 }
 
-#userlogin #loginUserLabel:lang(cn) {
-	left: -1em;
-}
-
-#userlogin #loginPwdLabel {
-	display: inline;
-	position: relative;
-	left: -0.35em;
-	font-size: 1em;
-}
-
-#userlogin #loginPwdLabel:lang(de) {
-	left: -0.7em;
-}
-
-#userlogin #loginPwdLabel:lang(fr) {
-	left: 0em;
-}
-
-#userlogin #loginPwdLabel:lang(cn) {
-	left: -1.5em;
+#userlogin #loginUserLabel:lang(cn), #userlogin #loginPwdLabel:lang(cn) {
+	width: 27%;
 }
 
 #userlogin #loginUserInput, #userlogin #loginPwdInput {
 	display: inline;
 }
 
+#userlogin #loginEmail, #userlogin #loginPassword {
+	width: 55%;
+}
+
 #userlogin #loginEmail:lang(fr), #userlogin #loginPassword:lang(fr) {
-	width: 7.7em;
+	width: 41%;
 }
 
 #userlogin #loginEmail:lang(cn), #userlogin #loginPassword:lang(cn) {
-	width: 11em;
+	width: 66%;
 }
+
 #userlogin #loginSubmit input[type=submit] {
 	margin-top: 0.6em;
 }
