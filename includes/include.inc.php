@@ -61,6 +61,10 @@
 		global $lastLogin;
 		global $referer; // '$referer' is made globally available from within this function
 
+        // Added next two variables to global. --TT
+    global $defaultLanguage; 
+    global $officialDatabaseName;
+
 		global $connection;
 
 		// Initialize the session:
@@ -1518,7 +1522,11 @@
 			// List view:
 			else // produce the default columnar output style:
 			{
-				$querySELECTclause .= $defaultFieldsListViewMajor . ", " . $defaultFieldsListViewMinor;
+				$querySELECTclause .= $defaultFieldsListViewMajor;
+				if (!empty($defaultFieldsListViewMinor)
+				{
+					$querySELECTclause .= ", " . $defaultFieldsListViewMinor;
+				}
 			}
 		}
 
