@@ -32,7 +32,7 @@
 
 		// --- BEGIN TYPE = JOURNAL ARTICLE / MAGAZINE ARTICLE / NEWSPAPER ARTICLE --------------------------------------------------------------
 
-		if (ereg("^(Journal Article|Magazine Article|Newspaper Article)$", $row['type']))
+		if (preg_match("/^(Journal Article|Magazine Article|Newspaper Article)$/", $row['type']))
 			{
 				if (!empty($row['author']))      // author
 					{
@@ -60,10 +60,10 @@
 						//  16. output: boolean value that specifies whether the re-ordered string shall be returned with higher ASCII chars HTML encoded
 						$author = reArrangeAuthorContents($row['author'], // 1.
 						                                  true, // 2.
-						                                  " *; *", // 3.
+						                                  "/ *; */", // 3.
 						                                  ", ", // 4.
 						                                  ", ", // 5.
-						                                  " *, *", // 6.
+						                                  "/ *, */", // 6.
 						                                  ", ", // 7.
 						                                  ", ", // 8.
 						                                  ".", // 9.
@@ -84,7 +84,7 @@
 				if (!empty($row['title']))      // title
 					{
 						$record .= $row['title'];
-						if (!ereg("[?!.]$", $row['title']))
+						if (!preg_match("/[?!.]$/", $row['title']))
 							$record .= ".";
 						$record .= " ";
 					}
@@ -130,13 +130,13 @@
 					}
 				}
 
-				if (!ereg("\. *$", $record))
+				if (!preg_match("/\. *$/", $record))
 					$record .= ".";
 			}
 
 		// --- BEGIN TYPE = ABSTRACT / BOOK CHAPTER / CONFERENCE ARTICLE ------------------------------------------------------------------------
 
-		elseif (ereg("^(Abstract|Book Chapter|Conference Article)$", $row['type']))
+		elseif (preg_match("/^(Abstract|Book Chapter|Conference Article)$/", $row['type']))
 			{
 				if (!empty($row['author']))      // author
 					{
@@ -164,10 +164,10 @@
 						//  16. output: boolean value that specifies whether the re-ordered string shall be returned with higher ASCII chars HTML encoded
 						$author = reArrangeAuthorContents($row['author'], // 1.
 						                                  true, // 2.
-						                                  " *; *", // 3.
+						                                  "/ *; */", // 3.
 						                                  ", ", // 4.
 						                                  ", ", // 5.
-						                                  " *, *", // 6.
+						                                  "/ *, */", // 6.
 						                                  ", ", // 7.
 						                                  ", ", // 8.
 						                                  ".", // 9.
@@ -188,7 +188,7 @@
 				if (!empty($row['title']))      // title
 					{
 						$record .= $row['title'];
-						if (!ereg("[?!.]$", $row['title']))
+						if (!preg_match("/[?!.]$/", $row['title']))
 							$record .= ".";
 						$record .= " ";
 					}
@@ -219,10 +219,10 @@
 						//  16. output: boolean value that specifies whether the re-ordered string shall be returned with higher ASCII chars HTML encoded
 						$editor = reArrangeAuthorContents($row['editor'], // 1.
 						                                  true, // 2.
-						                                  " *; *", // 3.
+						                                  "/ *; */", // 3.
 						                                  ", ", // 4.
 						                                  ", ", // 5.
-						                                  " *, *", // 6.
+						                                  "/ *, */", // 6.
 						                                  ", ", // 7.
 						                                  ", ", // 8.
 						                                  ".", // 9.
@@ -235,13 +235,13 @@
 						                                  $encodeHTML); // 16.
 
 						$record .= "In: " . $editor;
-						if (ereg("^[^;\r\n]+(;[^;\r\n]+)+$", $row['editor'])) // there are at least two editors (separated by ';')
+						if (preg_match("/^[^;\r\n]+(;[^;\r\n]+)+$/", $row['editor'])) // there are at least two editors (separated by ';')
 							$record .= " (Eds.)";
 						else // there's only one editor (or the editor field is malformed with multiple editors but missing ';' separator[s])
 							$record .= " (Ed.)";
 					}
 
-				$publication = ereg_replace("[ \r\n]*\(Eds?:[^\)\r\n]*\)", "", $row['publication']);
+				$publication = preg_replace("/[ \r\n]*\(Eds?:[^\)\r\n]*\)/i", "", $row['publication']);
 				if (!empty($publication))      // publication
 					$record .= ", " . $publication . ". ";
 				else
@@ -274,7 +274,7 @@
 									$record .= ", ";
 								else
 								{
-									if (!ereg(",$", $row['publisher']))
+									if (!preg_match("/,$/", $row['publisher']))
 										$record .= ",";
 									$record .= " ";
 								}
@@ -285,7 +285,7 @@
 								$record .= $row['place'];
 								if (!empty($row['pages']))
 									{
-										if (!ereg(",$", $row['place']))
+										if (!preg_match("/,$/", $row['place']))
 											$record .= ",";
 										$record .= " ";
 									}
@@ -295,18 +295,18 @@
 				if (!empty($row['pages']))      // pages
 					$record .= formatPageInfo($row['pages'], $markupPatternsArray["endash"], "p. ", "pp. ", "pp"); // function 'formatPageInfo()' is defined in 'cite.inc.php'
 
-				if (!ereg("\. *$", $record))
+				if (!preg_match("/\. *$/", $record))
 					$record .= ".";
 			}
 
 		// --- BEGIN TYPE = BOOK WHOLE / CONFERENCE VOLUME / JOURNAL / MANUAL / MANUSCRIPT / MAP / MISCELLANEOUS / PATENT / REPORT / SOFTWARE ---
 
-		else // if (ereg("Book Whole|Conference Volume|Journal|Manual|Manuscript|Map|Miscellaneous|Patent|Report|Software", $row['type']))
+		else // if (preg_match("/Book Whole|Conference Volume|Journal|Manual|Manuscript|Map|Miscellaneous|Patent|Report|Software/", $row['type']))
 			// note that this also serves as a fallback: unrecognized resource types will be formatted similar to whole books
 			{
 				if (!empty($row['author']))      // author
 					{
-						$author = ereg_replace("[ \r\n]*\(eds?\)", "", $row['author']);
+						$author = preg_replace("/[ \r\n]*\(eds?\)/i", "", $row['author']);
 
 						// Call the 'reArrangeAuthorContents()' function (defined in 'include.inc.php') in order to re-order contents of the author field. Required Parameters:
 						//   1. input:  contents of the author field
@@ -332,10 +332,10 @@
 						//  16. output: boolean value that specifies whether the re-ordered string shall be returned with higher ASCII chars HTML encoded
 						$author = reArrangeAuthorContents($author, // 1.
 						                                  true, // 2.
-						                                  " *; *", // 3.
+						                                  "/ *; */", // 3.
 						                                  ", ", // 4.
 						                                  ", ", // 5.
-						                                  " *, *", // 6.
+						                                  "/ *, */", // 6.
 						                                  ", ", // 7.
 						                                  ", ", // 8.
 						                                  ".", // 9.
@@ -356,7 +356,7 @@
 				if (!empty($row['title']))      // title
 					{
 						$record .= $row['title'];
-						if (!ereg("[?!.]$", $row['title']))
+						if (!preg_match("/[?!.]$/", $row['title']))
 							$record .= ".";
 						$record .= " ";
 					}
@@ -371,7 +371,7 @@
 							$record .= ", ";
 						else
 						{
-							if (!ereg("[?!.]$", $row['publisher']))
+							if (!preg_match("/[?!.]$/", $row['publisher']))
 								$record .= ". ";
 							else
 								$record .= " ";
@@ -383,7 +383,7 @@
 						$record .= $row['place'];
 						if (!empty($row['series_title']) || !empty($row['pages']))
 							{
-								if (!ereg(",$", $row['place']))
+								if (!preg_match("/,$/", $row['place']))
 									$record .= ",";
 								$record .= " ";
 							}
@@ -401,7 +401,7 @@
 
 						if (!empty($row['pages']))
 							{
-								if (!ereg(",$", $row['series_volume']))
+								if (!preg_match("/,$/", $row['series_volume']))
 									$record .= ",";
 								$record .= " ";
 							}
@@ -414,21 +414,21 @@
 
 						if (preg_match("/\d *[$dash] *\d/$patternModifiers", $row['pages'])) // if the 'pages' field contains a page range (like: "127-132")
 							// Note that we'll check for page ranges here although for whole books the 'pages' field should NOT contain a page range but the total number of pages! (like: "623 pp")
-							$pagesDisplay = (preg_replace("/(\d+) *[$dash] *(\d+)/$patternModifiers", "\\1" . $markupPatternsArray["endash"] . "\\2", $row['pages']));
+							$pagesDisplay = (preg_replace("@(\d+) *[$dash] *(\d+)@$patternModifiers", "\\1" . $markupPatternsArray["endash"] . "\\2", $row['pages']));
 						else
 							$pagesDisplay = $row['pages'];
 						$record .= $pagesDisplay;
 					}
 
-				if (!ereg("\. *$", $record))
+				if (!preg_match("/\. *$/", $record))
 					$record .= ".";
 			}
 
 		// --- BEGIN POST-PROCESSING -----------------------------------------------------------------------------------------------------------
 
 		// do some further cleanup:
-		$record = ereg_replace("[ \r\n]*$", "", $record); // remove whitespace at end of line
-		$record = ereg_replace("([0-9]+) *pp\.$", "\\1pp.", $record); // remove space between (book whole) page numbers & "pp"
+		$record = preg_replace("/[ \r\n]*$/i", "", $record); // remove whitespace at end of line
+		$record = preg_replace("/([0-9]+) *pp\.$/i", "\\1pp.", $record); // remove space between (book whole) page numbers & "pp"
 
 
 		return $record;
