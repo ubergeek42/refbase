@@ -85,7 +85,7 @@
 	                                    "starts with"      => $loc["starts with"],
 	                                    "ends with"        => $loc["ends with"]);
 
-	$dropDownItems1 = buildSelectMenuOptions($dropDownConditionals1Array, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
+	$dropDownItems1 = buildSelectMenuOptions($dropDownConditionals1Array, "//", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
 
 
 	$dropDownConditionals2Array = array("is greater than" => $loc["is greater than"],
@@ -93,7 +93,7 @@
 	                                    "is within range" => $loc["is within range"],
 	                                    "is within list"  => $loc["is within list"]);
 
-	$dropDownItems2 = buildSelectMenuOptions($dropDownConditionals2Array, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
+	$dropDownItems2 = buildSelectMenuOptions($dropDownConditionals2Array, "//", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
 
 
 	// TODO: if possible, we should use function 'mapFieldNames()' here
@@ -104,7 +104,7 @@
 	                                "volume_numeric" => $loc["DropDownFieldName_Volume"], // 'volume_numeric' is used instead of 'volume' in the sort dropdown menus
 	                                "pages"          => $loc["DropDownFieldName_Pages"]);
 
-	$dropDownItems3 = buildSelectMenuOptions($dropDownFieldNameArray, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
+	$dropDownItems3 = buildSelectMenuOptions($dropDownFieldNameArray, "//", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
 
 	// Build HTML elements that allow for search suggestions for text entered by the user:
 	if (isset($_SESSION['userAutoCompletions']) AND ($_SESSION['userAutoCompletions'] == "yes"))
@@ -242,7 +242,7 @@
 	<td>
 		<select id="sortSelector1" name="sortSelector1"><?php
 
-$sortSelector1DropDownItems = ereg_replace("<option([^>]*)>" . $loc["DropDownFieldName_Author"], "<option\\1 selected>" . $loc["DropDownFieldName_Author"], $dropDownItems3); // select the 'author' menu entry ...
+$sortSelector1DropDownItems = preg_replace("/<option([^>]*)>" . $loc["DropDownFieldName_Author"] . "/", "<option\\1 selected>" . $loc["DropDownFieldName_Author"], $dropDownItems3); // select the 'author' menu entry ...
 echo $sortSelector1DropDownItems;
 ?>
 
@@ -260,7 +260,7 @@ echo $sortSelector1DropDownItems;
 	<td>
 		<select id="sortSelector2" name="sortSelector2"><?php
 
-$sortSelector2DropDownItems = ereg_replace("<option([^>]*)>" . $loc["DropDownFieldName_Year"], "<option\\1 selected>" . $loc["DropDownFieldName_Year"], $dropDownItems3); // select the 'year' menu entry ...
+$sortSelector2DropDownItems = preg_replace("/<option([^>]*)>" . $loc["DropDownFieldName_Year"] . "/", "<option\\1 selected>" . $loc["DropDownFieldName_Year"], $dropDownItems3); // select the 'year' menu entry ...
 echo $sortSelector2DropDownItems;
 ?>
 
@@ -278,7 +278,7 @@ echo $sortSelector2DropDownItems;
 	<td>
 		<select id="sortSelector3" name="sortSelector3"><?php
 
-$sortSelector3DropDownItems = ereg_replace("<option([^>]*)>" . $loc["DropDownFieldName_Publication"], "<option\\1 selected>" . $loc["DropDownFieldName_Publication"], $dropDownItems3); // select the 'publication' menu entry ...
+$sortSelector3DropDownItems = preg_replace("/<option([^>]*)>" . $loc["DropDownFieldName_Publication"] . "/", "<option\\1 selected>" . $loc["DropDownFieldName_Publication"], $dropDownItems3); // select the 'publication' menu entry ...
 echo $sortSelector3DropDownItems;
 ?>
 

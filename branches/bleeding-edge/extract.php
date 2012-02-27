@@ -110,7 +110,7 @@
 			. "\n</tr>"
 			. "\n<tr>\n\t<td>&nbsp;</td>\n\t<td>&nbsp;</td>";
 
-	if (isset($_SESSION['user_permissions']) AND ereg("allow_cite", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_cite'...
+	if (isset($_SESSION['user_permissions']) AND preg_match("/allow_cite/", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_cite'...
 	// adjust the title string for the show cite button
 	{
 		$citeButtonLock = "";
@@ -128,7 +128,7 @@
 
 	if (isset($_SESSION['user_styles']))
 	{
-		$optionTags = buildSelectMenuOptions($_SESSION['user_styles'], " *; *", "\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'user_styles' session variable
+		$optionTags = buildSelectMenuOptions($_SESSION['user_styles'], "/ *; */", "\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'user_styles' session variable
 		echo $optionTags;
 	}
 	else
@@ -148,7 +148,7 @@
 
 	if (isset($_SESSION['user_cite_formats']))
 	{
-		$optionTags = buildSelectMenuOptions($_SESSION['user_cite_formats'], " *; *", "\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'user_cite_formats' session variable
+		$optionTags = buildSelectMenuOptions($_SESSION['user_cite_formats'], "/ *; */", "\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'user_cite_formats' session variable
 		echo $optionTags;
 	}
 	else

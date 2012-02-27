@@ -90,7 +90,7 @@
 	                                    "starts with"      => $loc["starts with"],
 	                                    "ends with"        => $loc["ends with"]);
 
-	$dropDownItems1 = buildSelectMenuOptions($dropDownConditionals1Array, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
+	$dropDownItems1 = buildSelectMenuOptions($dropDownConditionals1Array, "//", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
 
 
 	$dropDownConditionals2Array = array("is greater than" => $loc["is greater than"],
@@ -98,7 +98,7 @@
 	                                    "is within range" => $loc["is within range"],
 	                                    "is within list"  => $loc["is within list"]);
 
-	$dropDownItems2 = buildSelectMenuOptions($dropDownConditionals2Array, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
+	$dropDownItems2 = buildSelectMenuOptions($dropDownConditionals2Array, "//", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
 
 
 	// TODO: if possible, we should use function 'mapFieldNames()' here (see also below)
@@ -174,7 +174,7 @@
 	if (isset($_SESSION['loginEmail'])) // we only include the 'modified_by' field if the user is logged in
 		$dropDownFieldNames2Array["modified_by"] = $loc["DropDownFieldName_ModifiedBy"];
 
-	$dropDownItems3 = buildSelectMenuOptions(array_merge($dropDownFieldNames1Array,$dropDownFieldNames2Array), "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
+	$dropDownItems3 = buildSelectMenuOptions(array_merge($dropDownFieldNames1Array,$dropDownFieldNames2Array), "//", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
 
 	// (2b) Start <form> and <table> holding the form elements:
 
@@ -1141,7 +1141,7 @@
 	// - the variable '$fileVisibility' (defined in 'ini.inc.php') is set to 'everyone'
 	// - the variable '$fileVisibility' is set to 'login' AND the user is logged in
 	// - the variable '$fileVisibility' is set to 'user-specific' AND the 'user_permissions' session variable contains 'allow_download'
-	if ($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND ereg("allow_download", $_SESSION['user_permissions']))))
+	if ($fileVisibility == "everyone" OR ($fileVisibility == "login" AND isset($_SESSION['loginEmail'])) OR ($fileVisibility == "user-specific" AND (isset($_SESSION['user_permissions']) AND preg_match("/allow_download/", $_SESSION['user_permissions']))))
 	{
 ?>
 
@@ -1791,7 +1791,7 @@
 		                                         "user_groups" => $loc["DropDownFieldName_UserGroups"],
 		                                         "cite_key"    => $loc["DropDownFieldName_CiteKey"]);
 
-		$dropDownItems4 = buildSelectMenuOptions($userSpecificSortFieldsNameArray, "", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
+		$dropDownItems4 = buildSelectMenuOptions($userSpecificSortFieldsNameArray, "//", "\t\t\t", true); // function 'buildSelectMenuOptions()' is defined in 'include.inc.php'
 	}
 	else
 	{
@@ -1806,7 +1806,7 @@
 	<td>
 		<select name="sortSelector1"><?php
 
-$sortSelector1DropDownItems = ereg_replace("<option([^>]*)>" . $loc["DropDownFieldName_Author"], "<option\\1 selected>" . $loc["DropDownFieldName_Author"], $dropDownItems3); // select the 'author' menu entry ...
+$sortSelector1DropDownItems = preg_replace("/<option([^>]*)>/i" . $loc["DropDownFieldName_Author"], "<option\\1 selected>" . $loc["DropDownFieldName_Author"], $dropDownItems3); // select the 'author' menu entry ...
 echo $sortSelector1DropDownItems . $dropDownItems4;
 ?>
 
@@ -1825,7 +1825,7 @@ echo $sortSelector1DropDownItems . $dropDownItems4;
 	<td>
 		<select name="sortSelector2"><?php
 
-$sortSelector2DropDownItems = ereg_replace("<option([^>]*)>" . $loc["DropDownFieldName_Year"], "<option\\1 selected>" . $loc["DropDownFieldName_Year"], $dropDownItems3); // select the 'year' menu entry ...
+$sortSelector2DropDownItems = preg_replace("/<option([^>]*)>/i" . $loc["DropDownFieldName_Year"], "<option\\1 selected>" . $loc["DropDownFieldName_Year"], $dropDownItems3); // select the 'year' menu entry ...
 echo $sortSelector2DropDownItems . $dropDownItems4;
 ?>
 
@@ -1844,7 +1844,7 @@ echo $sortSelector2DropDownItems . $dropDownItems4;
 	<td>
 		<select name="sortSelector3"><?php
 
-$sortSelector3DropDownItems = ereg_replace("<option([^>]*)>" . $loc["DropDownFieldName_Publication"], "<option\\1 selected>" . $loc["DropDownFieldName_Publication"], $dropDownItems3); // select the 'publication' menu entry ...
+$sortSelector3DropDownItems = preg_replace("/<option([^>]*)>/i" . $loc["DropDownFieldName_Publication"], "<option\\1 selected>" . $loc["DropDownFieldName_Publication"], $dropDownItems3); // select the 'publication' menu entry ...
 echo $sortSelector3DropDownItems . $dropDownItems4;
 ?>
 
