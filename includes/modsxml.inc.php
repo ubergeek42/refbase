@@ -63,13 +63,13 @@
 
     // title
     if (!empty($series_title))
-      $series->setTagContent(encodeField('series_title', $series_title), "relatedItem/titleInfo/title");
+      $series->setTagContent(encodeXMLField('series_title', $series_title), "relatedItem/titleInfo/title");
 
     // abbrev. title
     if (!empty($abbrev_series_title)) {
       $titleabbrev = NEW XMLBranch("titleInfo");
       $titleabbrev->setTagAttribute("type", "abbreviated");
-      $titleabbrev->setTagContent(encodeField('abbrev_series_title', $abbrev_series_title), "titleInfo/title");
+      $titleabbrev->setTagContent(encodeXMLField('abbrev_series_title', $abbrev_series_title), "titleInfo/title");
       $series->addXMLBranch($titleabbrev);
     }
 
@@ -89,13 +89,13 @@
       $part = new XMLBranch("part");
       if (!empty($series_volume)) {
         $detailvolume = new XMLBranch("detail");
-        $detailvolume->setTagContent(encodeField('series_volume', $series_volume), "detail/number");
+        $detailvolume->setTagContent(encodeXMLField('series_volume', $series_volume), "detail/number");
         $detailvolume->setTagAttribute("type", "volume");
         $part->addXMLBranch($detailvolume);
       }
       if (!empty($series_issue)) {
         $detailnumber = new XMLBranch("detail");
-        $detailnumber->setTagContent(encodeField('series_issue', $series_issue), "detail/number");
+        $detailnumber->setTagContent(encodeXMLField('series_issue', $series_issue), "detail/number");
         $detailnumber->setTagAttribute("type", "issue");
         $part->addXMLBranch($detailnumber);
       }
@@ -132,7 +132,7 @@
 
       $nameFamilyBranch = new XMLBranch("namePart");
       $nameFamilyBranch->setTagAttribute("type", "family");
-      $nameFamilyBranch->setTagContent(encodeField($rowFieldName, $singleNameFamily));
+      $nameFamilyBranch->setTagContent(encodeXMLField($rowFieldName, $singleNameFamily));
       $nameBranch->addXMLBranch($nameFamilyBranch);
 
       if (!empty($singleNameGivens)) {
@@ -146,12 +146,12 @@
         foreach ($singleNameGivenArray as $singleNameGiven) {
           $nameGivenBranch = new XMLBranch("namePart");
           $nameGivenBranch->setTagAttribute("type", "given");
-          $nameGivenBranch->setTagContent(encodeField($rowFieldName, $singleNameGiven));
+          $nameGivenBranch->setTagContent(encodeXMLField($rowFieldName, $singleNameGiven));
           $nameBranch->addXMLBranch($nameGivenBranch);
         }
       }
 
-      $nameBranch->setTagContent(encodeField('name_role', $role), "name/role/roleTerm");
+      $nameBranch->setTagContent(encodeXMLField('name_role', $role), "name/role/roleTerm");
       $nameBranch->setTagAttribute("authority", "marcrelator",
                                      "name/role/roleTerm");
       $nameBranch->setTagAttribute("type", "text", "name/role/roleTerm");
@@ -265,6 +265,8 @@
     $formVars = buildFormVarsArray($row); // function 'buildFormVarsArray()' is defined in 'include.inc.php'
 
     // generate or extract the cite key for this record
+    // (note that charset conversion can only be done *after* the cite key has been generated,
+    //  otherwise cite key generation will produce garbled text!)
     $citeKey = generateCiteKey($formVars); // function 'generateCiteKey()' is defined in 'include.inc.php'
 
     // Create an XML object for a single record.
@@ -276,14 +278,14 @@
     // titleInfo
     //   Regular Title
     if (!empty($row['title']))
-      $record->setTagContent(encodeField('title', $row['title']), "mods/titleInfo/title");
+      $record->setTagContent(encodeXMLField('title', $row['title']), "mods/titleInfo/title");
 
     //   Translated Title
     //   NOTE: This field is excluded by the default cite SELECT method
     if (!empty($row['orig_title'])) {
       $orig_title = new XMLBranch("titleInfo");
       $orig_title->setTagAttribute("type", "translated");
-      $orig_title->setTagContent(encodeField('orig_title', $row['orig_title']), "titleInfo/title");
+      $orig_title->setTagContent(encodeXMLField('orig_title', $row['orig_title']), "titleInfo/title");
       $record->addXMLBranch($orig_title);
     }
 
@@ -318,23 +320,23 @@
 
       // dateIssued
       if (!empty($row['year']))
-        $origin->setTagContent(encodeField('year', $row['year']), "originInfo/dateIssued");
+        $origin->setTagContent(encodeXMLField('year', $row['year']), "originInfo/dateIssued");
 
       // Book Chapters and Journal Articles only have a dateIssued
       // (editions, places, and publishers are associated with the host)
       if (!preg_match("/^(Book Chapter|Journal Article)$/", $row['type'])) {
         // publisher
         if (!empty($row['publisher']))
-          $origin->setTagContent(encodeField('publisher', $row['publisher']), "originInfo/publisher");
+          $origin->setTagContent(encodeXMLField('publisher', $row['publisher']), "originInfo/publisher");
         // place
         if (!empty($row['place'])) {
-          $origin->setTagContent(encodeField('place', $row['place']), "originInfo/place/placeTerm");
+          $origin->setTagContent(encodeXMLField('place', $row['place']), "originInfo/place/placeTerm");
           $origin->setTagAttribute("type", "text",
                                    "originInfo/place/placeTerm");
         }
         // edition
         if (!empty($row['edition']))
-          $origin->setTagContent(encodeField('edition', $row['edition']), "originInfo/edition");
+          $origin->setTagContent(encodeXMLField('edition', $row['edition']), "originInfo/edition");
       }
 
       if ($origin->hasBranch())
@@ -343,15 +345,15 @@
 
     // language
     if (!empty($row['language']))
-      $record->setTagContent(encodeField('language', $row['language']), "mods/language");
+      $record->setTagContent(encodeXMLField('language', $row['language']), "mods/language");
 
     // abstract
     // NOTE: This field is excluded by the default cite SELECT method
     if (!empty($row['abstract'])) {
       $abstract = new XMLBranch("abstract");
-      $abstract->setTagContent(encodeField('abstract', $row['abstract']));
+      $abstract->setTagContent(encodeXMLField('abstract', $row['abstract']));
       if (!empty($row['summary_language'])) {
-        $abstract->setTagAttribute("lang", encodeField('summary_language', $row['summary_language']));
+        $abstract->setTagAttribute("lang", encodeXMLField('summary_language', $row['summary_language']));
       }
       $record->addXMLBranch($abstract);
     }
@@ -368,7 +370,7 @@
         $topicArray = preg_split("/\s*,\s*/", $singleSubject); // "related" keywords
         foreach ($topicArray as $singleTopic) {
           $topicBranch = new XMLBranch("topic");
-          $topicBranch->setTagContent(encodeField('keywords', $singleTopic));
+          $topicBranch->setTagContent(encodeXMLField('keywords', $singleTopic));
 
           $subjectBranch->addXMLBranch($topicBranch);
         }
@@ -387,7 +389,7 @@
         $topicArray = preg_split("/\s*,\s*/", $singleSubject); // "related" user_keys
         foreach ($topicArray as $singleTopic) {
           $topicBranch = new XMLBranch("topic");
-          $topicBranch->setTagContent(encodeField('user_keys', $singleTopic));
+          $topicBranch->setTagContent(encodeXMLField('user_keys', $singleTopic));
 
           $subjectBranch->addXMLBranch($topicBranch);
         }
@@ -406,7 +408,7 @@
         $topicArray = preg_split("/\s*,\s*/", $singleSubject); // "related" user_groups
         foreach ($topicArray as $singleTopic) {
           $topicBranch = new XMLBranch("topic");
-          $topicBranch->setTagContent(encodeField('user_groups', $singleTopic));
+          $topicBranch->setTagContent(encodeXMLField('user_groups', $singleTopic));
 
           $subjectBranch->addXMLBranch($topicBranch);
         }
@@ -416,10 +418,10 @@
 
     // notes
     if (!empty($row['notes']))
-      $record->setTagContent(encodeField('notes', $row['notes']), "mods/note");
+      $record->setTagContent(encodeXMLField('notes', $row['notes']), "mods/note");
     // user_notes
     if ((!empty($row['user_notes'])) && $exportPrivate) // replaces any generic notes
-      $record->setTagContent(encodeField('user_notes', $row['user_notes']), "mods/note");
+      $record->setTagContent(encodeXMLField('user_notes', $row['user_notes']), "mods/note");
     // refbase attribution string
     if ($exportRecordURL) {
         $attributionBranch = new XMLBranch("note");
@@ -457,7 +459,7 @@
       $locationArray = preg_split("/\s*;\s*/", $row['location']);
       foreach ($locationArray as $singleLocation) {
         $locationBranch = new XMLBranch("physicalLocation");
-        $locationBranch->setTagContent(encodeField('location', $singleLocation));
+        $locationBranch->setTagContent(encodeXMLField('location', $singleLocation));
         $location->addXMLBranch($locationBranch);
       }
       $record->addXMLBranch($location);
@@ -466,7 +468,7 @@
     //   NOTE: This field is excluded by the default cite SELECT method
     if (!empty($row['url'])) {
       $location = new XMLBranch("location");
-      $location->setTagContent(encodeField('url', $row['url']), "location/url");
+      $location->setTagContent(encodeXMLField('url', $row['url']), "location/url");
       $record->addXMLBranch($location);
     }
     // Include a link to any corresponding FILE if one of the following conditions is met:
@@ -494,7 +496,7 @@
             $URLprefix = $databaseBaseURL . $filesBaseURL;
         }
 
-        $location->setTagContent(encodeField('file', $URLprefix . $row['file']), "location/url");
+        $location->setTagContent(encodeXMLField('file', $URLprefix . $row['file']), "location/url");
         $location->setTagAttribute("displayLabel", "Electronic full text", "location/url");
         // the 'access' attribute requires MODS v3.2 or greater:
         $location->setTagAttribute("access", "raw object", "location/url");
@@ -506,14 +508,14 @@
     //   url
     if (!empty($row['url'])) {
       $identifier = new XMLBranch("identifier");
-      $identifier->setTagContent(encodeField('url', $row['url']));
+      $identifier->setTagContent(encodeXMLField('url', $row['url']));
       $identifier->setTagAttribute("type", "uri");
       $record->addXMLBranch($identifier);
     }
     //   doi
     if (!empty($row['doi'])) {
       $identifier = new XMLBranch("identifier");
-      $identifier->setTagContent(encodeField('doi', $row['doi']));
+      $identifier->setTagContent(encodeXMLField('doi', $row['doi']));
       $identifier->setTagAttribute("type", "doi");
       $record->addXMLBranch($identifier);
     }
@@ -537,7 +539,7 @@
     //   cite_key
     if (!empty($citeKey)) {
       $identifier = new XMLBranch("identifier");
-      $identifier->setTagContent(encodeField('cite_key', $citeKey));
+      $identifier->setTagContent(encodeXMLField('cite_key', $citeKey));
       $identifier->setTagAttribute("type", "citekey");
       $record->addXMLBranch($identifier);
     }
@@ -549,7 +551,7 @@
       foreach ($identifierArray as $singleIdentifier) {
         if (!preg_match("/@\s*$/", $singleIdentifier)) {
           $identifierBranch = new XMLBranch("identifier");
-          $identifierBranch->setTagContent(encodeField('call_number', $singleIdentifier));
+          $identifierBranch->setTagContent(encodeXMLField('call_number', $singleIdentifier));
           $identifierBranch->setTagAttribute("type", "local");
           $record->addXMLBranch($identifierBranch);
         }
@@ -592,7 +594,7 @@
       if (!empty($row['corporate_author'])) {
         $nameBranch = new XMLBranch("name");
         $nameBranch->setTagAttribute("type", "corporate");
-        $nameBranch->setTagContent(encodeField('corporate_author', $row['corporate_author']), "name/namePart");
+        $nameBranch->setTagContent(encodeXMLField('corporate_author', $row['corporate_author']), "name/namePart");
         if (empty($row['thesis']))
           $nameBranch->setTagContent("author", "name/role/roleTerm");
         else // thesis
@@ -605,7 +607,7 @@
       if (!empty($row['conference'])) {
         $nameBranch = new XMLBranch("name");
         $nameBranch->setTagAttribute("type", "conference");
-        $nameBranch->setTagContent(encodeField('conference', $row['conference']), "name/namePart");
+        $nameBranch->setTagContent(encodeXMLField('conference', $row['conference']), "name/namePart");
         $record->addXMLBranch($nameBranch);
       }
 
@@ -659,7 +661,7 @@
           $genre->setTagContent("software");
         }
         else if (!empty($row['type'])) { // catch-all: don't use a MARC genre
-          $genre->setTagContent(encodeField('type', $row['type']));
+          $genre->setTagContent(encodeXMLField('type', $row['type']));
         }
         if ($genremarc->hasLeaf())
           $record->addXMLBranch($genremarc);
@@ -673,14 +675,14 @@
         $thesismarc = new XMLBranch("genre");
         $thesis = new XMLBranch("genre");
 
-        $thesismarc->setTagContent("theses");
+        $thesismarc->setTagContent("thesis");
         $thesismarc->setTagAttribute("authority", "marcgt");
 
         // tweak thesis names so that Bibutils will recognize them:
         if ($row['thesis'] == "Master's thesis")
           $row['thesis'] = "Masters thesis";
 
-        $thesis->setTagContent(encodeField('thesis', $row['thesis']));
+        $thesis->setTagContent(encodeXMLField('thesis', $row['thesis']));
 
         $record->addXMLBranch($thesismarc);
         $record->addXMLBranch($thesis);
@@ -696,19 +698,19 @@
           // split the page range into start and end pages
           list($pagestart, $pageend) = preg_split('/\s*[-]\s*/', $row['pages']);
           if ($pagestart < $pageend) { // extents MUST span multiple pages
-            $pages->setTagContent(encodeField('pages', $pagestart), "extent/start");
-            $pages->setTagContent(encodeField('pages', $pageend), "extent/end");
+            $pages->setTagContent(encodeXMLField('pages', $pagestart), "extent/start");
+            $pages->setTagContent(encodeXMLField('pages', $pageend), "extent/end");
           }
           else {
-            $pages->setTagContent(encodeField('pages', $row['pages']));
+            $pages->setTagContent(encodeXMLField('pages', $row['pages']));
           }
         }
         else if (preg_match("/^\d\d*\s*pp?.?$/", $row['pages'])) {
           list($pagetotal) = preg_split('/\s*pp?/', $row['pages']);
-          $pages->setTagContent(encodeField('pages', $pagetotal), "extent/total");
+          $pages->setTagContent(encodeXMLField('pages', $pagetotal), "extent/total");
         }
         else {
-          $pages->setTagContent(encodeField('pages', $row['pages']));
+          $pages->setTagContent(encodeXMLField('pages', $row['pages']));
         }
         $description->addXMLBranch($pages);
         $record->addXMLBranch($description);
@@ -718,14 +720,14 @@
       //   isbn
       if (!empty($row['isbn'])) {
         $identifier = new XMLBranch("identifier");
-        $identifier->setTagContent(encodeField('isbn', $row['isbn']));
+        $identifier->setTagContent(encodeXMLField('isbn', $row['isbn']));
         $identifier->setTagAttribute("type", "isbn");
         $record->addXMLBranch($identifier);
       }
       //   issn
       if (!empty($row['issn'])) {
         $identifier = new XMLBranch("identifier");
-        $identifier->setTagContent(encodeField('issn', $row['issn']));
+        $identifier->setTagContent(encodeXMLField('issn', $row['issn']));
         $identifier->setTagAttribute("type", "issn");
         $record->addXMLBranch($identifier);
       }
@@ -759,14 +761,14 @@
 
       // title (Publication)
       if (!empty($row['publication']))
-        $related->setTagContent(encodeField('publication', $row['publication']),
+        $related->setTagContent(encodeXMLField('publication', $row['publication']),
                                 "relatedItem/titleInfo/title");
 
       // title (Abbreviated Journal)
       if (!empty($row['abbrev_journal'])) {
         $titleabbrev = NEW XMLBranch("titleInfo");
         $titleabbrev->setTagAttribute("type", "abbreviated");
-        $titleabbrev->setTagContent(encodeField('abbrev_journal', $row['abbrev_journal']), "titleInfo/title");
+        $titleabbrev->setTagContent(encodeXMLField('abbrev_journal', $row['abbrev_journal']), "titleInfo/title");
         $related->addXMLBranch($titleabbrev);
       }
 
@@ -788,7 +790,7 @@
       if (!empty($row['corporate_author'])) {
         $nameBranch = new XMLBranch("name");
         $nameBranch->setTagAttribute("type", "corporate");
-        $nameBranch->setTagContent(encodeField('corporate_author', $row['corporate_author']), "name/namePart");
+        $nameBranch->setTagContent(encodeXMLField('corporate_author', $row['corporate_author']), "name/namePart");
         if (empty($row['thesis']))
           $nameBranch->setTagContent("author", "name/role/roleTerm");
         else // thesis
@@ -803,7 +805,7 @@
       if (!empty($row['conference'])) {
         $nameBranch = new XMLBranch("name");
         $nameBranch->setTagAttribute("type", "conference");
-        $nameBranch->setTagContent(encodeField('conference', $row['conference']), "name/namePart");
+        $nameBranch->setTagContent(encodeXMLField('conference', $row['conference']), "name/namePart");
         $related->addXMLBranch($nameBranch);
       }
 
@@ -811,19 +813,19 @@
       $relorigin = new XMLBranch("originInfo");
       // dateIssued
       if (!empty($row['year']))
-        $relorigin->setTagContent(encodeField('year', $row['year']), "originInfo/dateIssued");
+        $relorigin->setTagContent(encodeXMLField('year', $row['year']), "originInfo/dateIssued");
       // publisher
       if (!empty($row['publisher']))
-        $relorigin->setTagContent(encodeField('publisher', $row['publisher']), "originInfo/publisher");
+        $relorigin->setTagContent(encodeXMLField('publisher', $row['publisher']), "originInfo/publisher");
       // place
       if (!empty($row['place'])) {
-        $relorigin->setTagContent(encodeField('place', $row['place']), "originInfo/place/placeTerm");
+        $relorigin->setTagContent(encodeXMLField('place', $row['place']), "originInfo/place/placeTerm");
         $relorigin->setTagAttribute("type", "text",
                                     "originInfo/place/placeTerm");
       }
       // edition
       if (!empty($row['edition']))
-        $relorigin->setTagContent(encodeField('edition', $row['edition']), "originInfo/edition");
+        $relorigin->setTagContent(encodeXMLField('edition', $row['edition']), "originInfo/edition");
       if ($relorigin->hasBranch())
         $related->addXMLBranch($relorigin);
 
@@ -872,14 +874,14 @@
         $thesismarc = new XMLBranch("genre");
         $thesis = new XMLBranch("genre");
 
-        $thesismarc->setTagContent("theses");
+        $thesismarc->setTagContent("thesis");
         $thesismarc->setTagAttribute("authority", "marcgt");
 
         // tweak thesis names so that Bibutils will recognize them:
         if ($row['thesis'] == "Master's thesis")
           $row['thesis'] = "Masters thesis";
 
-        $thesis->setTagContent(encodeField('thesis', $row['thesis']));
+        $thesis->setTagContent(encodeXMLField('thesis', $row['thesis']));
 
         $related->addXMLBranch($thesismarc);
         $related->addXMLBranch($thesis);
@@ -890,16 +892,16 @@
         $part = new XMLBranch("part");
 
         if (!empty($row['year']))
-          $part->setTagContent(encodeField('year', $row['year']), "date");
+          $part->setTagContent(encodeXMLField('year', $row['year']), "date");
         if (!empty($row['volume'])) {
           $detailvolume = new XMLBranch("detail");
-          $detailvolume->setTagContent(encodeField('volume', $row['volume']), "detail/number");
+          $detailvolume->setTagContent(encodeXMLField('volume', $row['volume']), "detail/number");
           $detailvolume->setTagAttribute("type", "volume");
           $part->addXMLBranch($detailvolume);
         }
         if (!empty($row['issue'])) {
           $detailnumber = new XMLBranch("detail");
-          $detailnumber->setTagContent(encodeField('issue', $row['issue']), "detail/number");
+          $detailnumber->setTagContent(encodeXMLField('issue', $row['issue']), "detail/number");
           $detailnumber->setTagAttribute("type", "issue");
           $part->addXMLBranch($detailnumber);
         }
@@ -909,22 +911,22 @@
             list($pagestart, $pageend) = preg_split('/\s*[-]\s*/', $row['pages']);
             if ($pagestart < $pageend) { // extents MUST span multiple pages
               $pages = new XMLBranch("extent");
-              $pages->setTagContent(encodeField('pages', $pagestart), "extent/start");
-              $pages->setTagContent(encodeField('pages', $pageend), "extent/end");
+              $pages->setTagContent(encodeXMLField('pages', $pagestart), "extent/start");
+              $pages->setTagContent(encodeXMLField('pages', $pageend), "extent/end");
               $pages->setTagAttribute("unit", "page");
             }
             else {
               $pages = new XMLBranch("detail");
               if ($pagestart == $pageend) // single-page item
-                $pages->setTagContent(encodeField('pages', $pagestart), "detail/number");
+                $pages->setTagContent(encodeXMLField('pages', $pagestart), "detail/number");
               else
-                $pages->setTagContent(encodeField('pages', $row['pages']), "detail/number");
+                $pages->setTagContent(encodeXMLField('pages', $row['pages']), "detail/number");
               $pages->setTagAttribute("type", "page");
             }
           }
           else {
             $pages = new XMLBranch("detail");
-            $pages->setTagContent(encodeField('pages', $row['pages']), "detail/number");
+            $pages->setTagContent(encodeXMLField('pages', $row['pages']), "detail/number");
             $pages->setTagAttribute("type", "page");
           }
           $part->addXMLBranch($pages);
@@ -936,14 +938,14 @@
       //   isbn
       if (!empty($row['isbn'])) {
         $identifier = new XMLBranch("identifier");
-        $identifier->setTagContent(encodeField('isbn', $row['isbn']));
+        $identifier->setTagContent(encodeXMLField('isbn', $row['isbn']));
         $identifier->setTagAttribute("type", "isbn");
         $related->addXMLBranch($identifier);
       }
       //   issn
       if (!empty($row['issn'])) {
         $identifier = new XMLBranch("identifier");
-        $identifier->setTagContent(encodeField('issn', $row['issn']));
+        $identifier->setTagContent(encodeXMLField('issn', $row['issn']));
         $identifier->setTagAttribute("type", "issn");
         $related->addXMLBranch($identifier);
       }
@@ -972,31 +974,12 @@
 
   // Encode special chars, perform charset conversions and apply any
   // field-specific search & replace actions:
-  function encodeField($rowFieldName, $rowFieldValue)
+  function encodeXMLField($fieldName, $fieldValue)
   {
-    global $contentTypeCharset; // these variables are defined in 'ini.inc.php'
-    global $convertExportDataToUTF8;
-
     global $fieldSpecificSearchReplaceActionsArray; // defined in function 'modsCollection()'
 
-    // We only convert those special chars to entities which are supported by XML:
-    // function 'encodeHTMLspecialchars()' is defined in 'include.inc.php'
-    $encodedFieldValue = encodeHTMLspecialchars($rowFieldValue);
-
-    // Convert field data to UTF-8:
-    // (if '$convertExportDataToUTF8' is set to "yes" in 'ini.inc.php' and character encoding is not UTF-8 already)
-    // (Note that charset conversion can only be done *after* the cite key has been generated, otherwise cite key
-    //  generation will produce garbled text!)
-    // function 'convertToCharacterEncoding()' is defined in 'include.inc.php'
-    if (($convertExportDataToUTF8 == "yes") AND ($contentTypeCharset != "UTF-8"))
-      $encodedFieldValue = convertToCharacterEncoding("UTF-8", "IGNORE", $encodedFieldValue);
-
-    // Apply field-specific search & replace 'actions' to all fields that are listed in the
-    // 'fields' element of the arrays contained in '$fieldSpecificSearchReplaceActionsArray':
-    // function 'searchReplaceText()' is defined in 'include.inc.php'
-    foreach ($fieldSpecificSearchReplaceActionsArray as $fieldActionsArray)
-        if (in_array($rowFieldName, $fieldActionsArray['fields']))
-          $encodedFieldValue = searchReplaceText($fieldActionsArray['actions'], $encodedFieldValue, true);
+	// function 'encodeField()' is defined in 'include.inc.php'
+	$encodedFieldValue = encodeField($fieldName, $fieldValue, $fieldSpecificSearchReplaceActionsArray, array(), true, "XML");
 
     return $encodedFieldValue;
   }
