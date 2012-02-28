@@ -38,6 +38,7 @@
 	function showPageFooter($HeaderString)
 	{
 		global $officialDatabaseName; // usage example: <a href="index.php">[? echo encodeHTML($officialDatabaseName); ?]</a>
+		global $adminLoginEmail;
 		global $hostInstitutionAbbrevName; // usage example: <a href="[? echo $hostInstitutionURL; ?]">[? echo encodeHTML($hostInstitutionAbbrevName); ?] Home</a>
 		global $hostInstitutionName; // (note: in the examples above, square brackets must be replaced by their respective angle brackets)
 		global $hostInstitutionURL;
@@ -47,6 +48,8 @@
 		global $loginWelcomeMsg; // these variables are globally defined in function 'showLogin()' in 'include.inc.php'
 		global $loginStatus;
 		global $loginLinks;
+
+		global $loginEmail;
 
 		global $loc; // '$loc' is made globally available in 'core.php'
 ?>
@@ -58,13 +61,19 @@
 	<td class="small" align="center"><?php
 
 		// -------------------------------------------------------
+		// ... include a link to 'opensearch.php':
+?>
+
+		<a href="opensearch.php"<?php echo addAccessKey("attribute", "cql_search"); ?> title="<?php echo $loc["LinkTitle_CQLSearch"] . addAccessKey("title", "cql_search"); ?>"><?php echo $loc["CQLSearch"]; ?></a><?php
+
+		// -------------------------------------------------------
 		if (isset($_SESSION['user_permissions']) AND preg_match("/allow_sql_search/", $_SESSION['user_permissions'])) // if the 'user_permissions' session variable contains 'allow_sql_search'...
 		{
 		// ... include a link to 'sql_search.php':
 ?>
 
-		<a href="sql_search.php"<?php echo addAccessKey("attribute", "sql_search"); ?> title="<?php echo $loc["LinkTitle_SQLSearch"] . addAccessKey("title", "sql_search"); ?>"><?php echo $loc["SQLSearch"]; ?></a>
-		&nbsp;|&nbsp;<?php
+		&nbsp;|&nbsp;
+		<a href="sql_search.php"<?php echo addAccessKey("attribute", "sql_search"); ?> title="<?php echo $loc["LinkTitle_SQLSearch"] . addAccessKey("title", "sql_search"); ?>"><?php echo $loc["SQLSearch"]; ?></a><?php
 		}
 
 		// -------------------------------------------------------
@@ -73,8 +82,8 @@
 		// ... include a link to 'library_search.php':
 ?>
 
-		<a href="library_search.php"<?php echo addAccessKey("attribute", "lib_search"); ?> title="<?php echo $loc["LinkTitle_LibrarySearch_Prefix"] . encodeHTML($hostInstitutionName) . $loc["LinkTitle_LibrarySearch_Suffix"] . addAccessKey("title", "lib_search"); ?>"><?php echo $loc["LibrarySearch"]; ?></a>
-		&nbsp;|&nbsp;<?php
+		&nbsp;|&nbsp;
+		<a href="library_search.php"<?php echo addAccessKey("attribute", "lib_search"); ?> title="<?php echo $loc["LinkTitle_LibrarySearch_Prefix"] . encodeHTML($hostInstitutionName) . $loc["LinkTitle_LibrarySearch_Suffix"] . addAccessKey("title", "lib_search"); ?>"><?php echo $loc["LibrarySearch"]; ?></a><?php
 		}
 
 		// -------------------------------------------------------
@@ -83,8 +92,8 @@
 		// ... include a link to 'show.php':
 ?>
 
-		<a href="show.php"<?php echo addAccessKey("attribute", "show_rec"); ?> title="<?php echo $loc["LinkTitle_ShowRecord"] . addAccessKey("title", "show_rec"); ?>"><?php echo $loc["ShowRecord"]; ?></a>
-		&nbsp;|&nbsp;<?php
+		&nbsp;|&nbsp;
+		<a href="show.php"<?php echo addAccessKey("attribute", "show_rec"); ?> title="<?php echo $loc["LinkTitle_ShowRecord"] . addAccessKey("title", "show_rec"); ?>"><?php echo $loc["ShowRecord"]; ?></a><?php
 		}
 
 		// -------------------------------------------------------
@@ -93,7 +102,18 @@
 		// ... include a link to 'extract.php':
 ?>
 
+		&nbsp;|&nbsp;
 		<a href="extract.php"<?php echo addAccessKey("attribute", "extract"); ?> title="<?php echo $loc["LinkTitle_ExtractCitations"] . addAccessKey("title", "extract"); ?>"><?php echo $loc["ExtractCitations"]; ?></a><?php
+		}
+
+		// -------------------------------------------------------
+		if (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail)) // if the admin is logged in ('$adminLoginEmail' is specified in 'ini.inc.php')...
+		{
+		// ... include a link to 'duplicate_manager.php':
+?>
+
+		&nbsp;|&nbsp;
+		<a href="duplicate_manager.php" title="<?php echo $loc["LinkTitle_ManageDuplicates"]; ?>"><?php echo $loc["ManageDuplicates"]; ?></a><?php
 		}
 
 		// -------------------------------------------------------
