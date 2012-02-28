@@ -17,8 +17,8 @@
 	//             $Revision$
 
 	// This is an import format file (which must reside within the 'import/' sub-directory of your refbase root directory). It contains a version of the
-	// 'importRecords()' function that imports records from 'Endnote'-formatted data, i.e. data that were formatted according to the export format used
-	// by the commercial bibliographic package 'Endnote' (http://www.endnote.com).
+	// 'importRecords()' function that imports records from 'Endnote tagged'-formatted data, i.e. data that were formatted according to the tagged export
+	// format used by the commercial bibliographic package 'Endnote' (http://www.endnote.com).
 	
 	// --------------------------------------------------------------------
 
@@ -31,7 +31,7 @@
 
 	function importRecords($sourceText, $importRecordsRadio, $importRecordNumbersArray)
 	{
-		// convert Endnote format to MODS XML format:
+		// convert Endnote tagged format to MODS XML format:
 		$sourceText = importBibutils($sourceText,"end2xml"); // function 'importBibutils()' is defined in 'execute.inc.php'
 
 		// convert MODS XML format to RIS format:
