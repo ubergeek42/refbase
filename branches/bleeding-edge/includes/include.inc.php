@@ -51,7 +51,10 @@
 	// Start a session:
 	function start_session($updateUserFormatsStylesTypesPermissions)
 	{
-		global $defaultMainFields; // defined in 'ini.inc.php'
+		global $databaseBaseURL; // these variables are defined in 'ini.inc.php'
+		global $defaultMainFields;
+		global $filesBaseDir;
+		global $filesBaseURL;
 
 		global $loginEmail;
 		global $loginUserID;
@@ -60,10 +63,6 @@
 		global $abbrevInstitution;
 		global $lastLogin;
 		global $referer; // '$referer' is made globally available from within this function
-
-        // Added next two variables to global. --TT
-    global $defaultLanguage; 
-    global $officialDatabaseName;
 
 		global $connection;
 
@@ -84,15 +83,14 @@
 
 		// Set the system's locale information:
 		list($systemLocaleCollate, $systemLocaleCType) = setSystemLocale();
+	
+		// Set the default timezone used by all date/time functions
+		// Note: The 'date_default_timezone_set/date_default_timezone_get' functions are available since PHP 5.1.0
+		if (function_exists("date_default_timezone_set") && function_exists("date_default_timezone_get"))
+			@date_default_timezone_set(@date_default_timezone_get());
 
-		// Get the MySQL version and save it to a session variable:
-		// Note: we only check for the MySQL version if a connection has been established already. Otherwise, a non-existing MySQL user
-		//       (or incorrect MySQL pwd) would prevent 'install.php' or 'error.php' from loading correctly when setting up a new refbase database.
-		if (!isset($_SESSION['mysqlVersion']) AND isset($connection))
-		{
-			$mysqlVersion = getMySQLversion();
-			saveSessionVariable("mysqlVersion", $mysqlVersion);
-		}
+		// NOTE: Upon first connection to the MySQL server, function 'connectToMySQLDatabase()' will query the
+		//       MySQL server for the MySQL version and save it to a session variable
 
 		// Extract session variables (only necessary if register globals is OFF!):
 		if (isset($_SESSION['loginEmail']))
@@ -177,6 +175,12 @@
 
 		else // as an example, the referrer won't be set if a user clicked on a URL of type 'show.php?record=12345' within an email announcement
 			$referer = "index.php"; // if all other attempts fail, we'll re-direct to the main page
+
+		// Verify important variables from 'ini.inc.php':
+		// - Ensure that the given paths/URLs end with a slash:
+		$databaseBaseURL = checkPath($databaseBaseURL, "URL");
+		$filesBaseDir = checkPath($filesBaseDir);
+		$filesBaseURL = checkPath($filesBaseURL, "URL");
 	}
 
 	// --------------------------------------------------------------------
@@ -224,10 +228,15 @@
 				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 					showErrorMsg("The following error occurred while trying to connect to the host:");
 
+			//     Get the MySQL version and save it to a session variable:
+			if (!isset($_SESSION['mysqlVersion']))
+				saveSessionVariable("mysqlVersion", getMySQLversion());
+
 			// (2) Set the connection character set (if connected to MySQL 4.1.x or greater):
 			//     more info at <http://dev.mysql.com/doc/refman/5.1/en/charset-connection.html>
-			if (isset($_SESSION['mysqlVersion']) AND ereg("^(4\.1|5)", $_SESSION['mysqlVersion']))
+			if (isset($_SESSION['mysqlVersion']) AND ($_SESSION['mysqlVersion'] >= 4.1))
 			{
+				// NOTE: "SET NAMES ..." requires MySQL 4.1 or greater
 				if ($contentTypeCharset == "UTF-8")
 					queryMySQLDatabase("SET NAMES utf8"); // set the character set for this connection to 'utf8'
 				else
@@ -245,6 +254,7 @@
 	// --------------------------------------------------------------------
 
 	// Query the MySQL database:
+	// NOTE: This function requires an established MySQL $connection
 	// TODO: I18n
 	function queryMySQLDatabase($query)
 	{
@@ -283,10 +293,9 @@
 	// --------------------------------------------------------------------
 
 	// Get MySQL version:
+	// NOTE: This function requires an established MySQL $connection
 	function getMySQLversion()
 	{
-		connectToMySQLDatabase();
-
 		// CONSTRUCT SQL QUERY:
 		$query = "SELECT VERSION()";
 
@@ -310,7 +319,7 @@
 		$fieldInfoArray = array();
 
 		// Get field (column) metadata:
-		$fieldInfo = mysql_fetch_field($result, $fieldOffset); // returns an object containing the field information
+		$fieldInfo = mysql_fetch_field($result, (int)$fieldOffset); // returns an object containing the field information
 
 		// Copy object properties to an array:
 		$fieldInfoArray["name"]         = $fieldInfo->name;         // column name
@@ -3581,6 +3590,129 @@ EOF;
 
 	// --------------------------------------------------------------------
 
+	// LINKIFY FIELD ITEMS
+	// (this function generates 'show.php' HTML links for the items of the given field)
+	// NOTE: HTML links are only generated for fields that are supported by 'show.php', and
+	//       only for those where it makes sense (e.g. the 'abstract' field doesn't get linked).
+	//       The list of fields can be adopted in variable '$linkedFields' in 'ini.inc.php'.
+	function linkifyFieldItems($field, $fieldData, $userID = "", $localSearchReplaceActionsArray = array(), $encodingExceptionsArray = array(), $itemDelim = "/\s*[;]+\s*/", $joinDelim = "; ", $showQuery = "", $showLinks = "", $showRows = "", $citeStyle = "", $citeOrder = "", $wrapResults = "", $displayType = "", $viewType = "")
+	{
+		global $databaseBaseURL; // these variables are defined in 'ini.inc.php'
+		global $linkedFields;
+
+		global $loc; // '$loc' is made globally available in 'core.php'
+
+		global $client;
+
+		// Fields that may contain multiple items (delimited by '$itemDelim'):
+		static $multiItemFields = array("author", "keywords", "area", "notes", "location", "contribution_id",
+		                                "user_keys", "user_notes", "user_groups");
+
+		// Fields that require the 'userID' parameter:
+		// (note that, currently, 'show.php' only supports the fields 'marked',
+		//  'selected', 'user_keys', 'user_notes', 'user_groups' and 'cite_key')
+		static $userSpecificFields = array("marked", "copy", "selected", "user_keys", "user_notes",
+		                                   "user_file", "user_groups", "cite_key");
+
+		// Display results in Details view when querying for one of the given fields:
+		// (see note below)
+		static $showFieldsInDetailsView = array("title", "serial", "cite_key");
+
+		// Check whether we're dealing with an unsupported field or if data are missing:
+		if (!in_array($field, $linkedFields) OR empty($fieldData) OR (in_array($field, $userSpecificFields) AND empty($userID)))
+		{
+			// Contents of unsupported fields won't get hotlinked but we'll have to HTML
+			// encode special chars and apply any field-specific search & replace actions:
+			if (!empty($fieldData))
+				return encodeField($field, $fieldData, $localSearchReplaceActionsArray, $encodingExceptionsArray);
+			else
+				return $fieldData;
+		}
+		else // supported field
+		{	
+			$queryParametersArray = array();
+
+			// Add the 'userID' parameter for user-specific fields:
+			if (in_array($field, $userSpecificFields) AND !empty($userID))
+				$queryParametersArray["userID"] = $userID;
+
+			// Add query parameters if they're different from the defaults:
+			if (!empty($client))
+				$queryParametersArray["client"] = $client;
+
+			// NOTE: refbase usually tries to keep the user's current view. However, in
+			//       case of the search links, I think it usually makes sense to present
+			//       results in one of the two list-style views (i.e. List view or
+			//       Citation view) -- and not in Details view, for example. Thus, we
+			//       exclude Details view for regular fields. However, as an exception,
+			//       fields listed in '$showFieldsInDetailsView' will be always displayed
+			//       in Details view. This is done since the user most likely expects to
+			//       see record details when he clicks on a record identifier (such as the
+			//       'serial' or 'cite_key' field) or the record's title.
+			if (in_array($field, $showFieldsInDetailsView))
+				$queryParametersArray["submit"] = "Display";
+			elseif (!empty($displayType) AND ($displayType != $_SESSION['userDefaultView']) AND (preg_match("/^(List|Cite)$/i", $displayType)))
+				$queryParametersArray["submit"] = $displayType;
+
+			if (!empty($viewType) AND ($viewType != "Web"))
+				$queryParametersArray["viewType"] = $viewType;
+
+			if ($showQuery == "1")
+				$queryParametersArray["showQuery"] = $showQuery;
+
+			if ($showLinks == "0")
+				$queryParametersArray["showLinks"] = $showLinks;
+
+			if ($wrapResults == "0")
+				$queryParametersArray["wrapResults"] = $wrapResults;
+
+			// We use absolute links for CLI clients, for include mechanisms, or when
+			// returning only a partial document structure:
+			if (preg_match("/^(cli|inc)/i", $client) OR ($wrapResults == "0"))
+				$baseURL = $databaseBaseURL;
+			else
+				$baseURL = "";
+
+			// Map MySQL field names to localized column names:
+			$fieldNamesArray = mapFieldNames();
+
+			$linkifiedFieldItems = array();
+
+			// Check whether we need to split field values for this field:
+			if (in_array($field, $multiItemFields))
+				$itemArray = preg_split($itemDelim, $fieldData);
+			else
+				$itemArray = array($fieldData);
+
+			// Linkify each field item:
+			foreach ($itemArray as $item)
+			{
+				$queryParametersArrayTemp = $queryParametersArray;
+
+				// Escape any meta characters:
+				$escapedItem = preg_quote($item, "");
+
+				// Adopt 'show.php' parameter name if it doesn't equal the field name:
+				if ($field == "serial")
+					$queryParametersArrayTemp["record"] = $escapedItem;
+				elseif ($field == "marked")
+					$queryParametersArrayTemp["ismarked"] = $escapedItem;
+				else
+					$queryParametersArrayTemp[$field] = $escapedItem;
+
+				// Generate item link:
+				$linkifiedFieldItems[] = "<a href=\"" . $baseURL . generateURL("show.php", "html", $queryParametersArrayTemp, true, $showRows, 0, $citeStyle, $citeOrder) . "\""
+				                       . " title=\"" . $loc["LinkTitle_SearchFieldItem_Prefix"] . $fieldNamesArray[$field] . $loc["LinkTitle_SearchFieldItem_Suffix"] . encodeHTML($item) . "\">"
+				                       . encodeField($field, $item, $localSearchReplaceActionsArray, $encodingExceptionsArray) // HTML encode special chars AND apply any field-specific search & replace actions
+				                       . "</a>";
+			}
+
+			return "<span class=\"itemlinks\">" . implode($joinDelim, $linkifiedFieldItems) . "</span>";
+		}
+	}
+
+	// --------------------------------------------------------------------
+
 	// MODIFY USER GROUPS
 	// add (remove) selected records to (from) the specified user group
 	// Note: this function serves two purposes (which must not be confused!):
@@ -5045,6 +5177,31 @@ EOF;
 
 	// --------------------------------------------------------------------
 
+	// Verify the given path:
+	// 
+	// NOTES: - Currently, this function just ensures that the given '$path' (i.e. a
+	//          file directory path or URL) ends with a slash. However, it would be
+	//          nice if this function would also check whether the given path or URL
+	//          exists, and issue a warning if not.
+	//        - '$type' must be either "path" or "URL"
+	// 
+	// TODO:  - Should we attempt to auto-guess the '$type' form the given '$path'?
+	//        - Make sure that the correct path separator gets used on Windows
+	function checkPath($path, $type = "path", $addTrailingSlash = true)
+	{
+//		if (preg_match("/Windows/i", getenv("OS")) // should we query 'HTTP_USER_AGENT' instead?
+//			$pathSeparator = '\\'; // is this actually necessary? (I vaguely remember that PHP also uses '/' on Windows)
+//		else
+			$pathSeparator = '/';
+
+		if ($addTrailingSlash)
+			$path = preg_replace('#(?<!^|/)$#', $pathSeparator, $path);
+
+		return $path;
+	}
+
+	// --------------------------------------------------------------------
+
 	// Removes slashes from the input string if 'magic_quotes_gpc = On':
 	function stripSlashesIfMagicQuotes($sourceString)
 	{
@@ -5104,6 +5261,10 @@ EOF;
 	//  are included within the search pattern ['true'] or not ['false'])
 	function searchReplaceText($searchReplaceActionsArray, $sourceString, $includesSearchPatternDelimiters)
 	{
+		// this allows to use '$loc' within the replacement pattern
+		// e.g. like this: array("/(.+)/e" => "\$loc['\\1']")
+		global $loc; // '$loc' is made globally available in 'core.php'
+
 		// apply the search & replace actions defined in '$searchReplaceActionsArray' to the text passed in '$sourceString':
 		foreach ($searchReplaceActionsArray as $searchString => $replaceString)
 		{
@@ -5622,6 +5783,53 @@ EOF;
 
 	// --------------------------------------------------------------------
 
+	// Encode special chars, perform charset conversions (if necessary)
+	// and apply any field-specific search & replace actions:
+	// ('$targetFormat' must be either "HTML" or "XML")
+	function encodeField($fieldName, $fieldValue, $localSearchReplaceActionsArray = array(), $encodingExceptionsArray = array(), $encode = true, $targetFormat = "HTML")
+	{
+		global $contentTypeCharset; // these variables are defined in 'ini.inc.php'
+		global $convertExportDataToUTF8;
+		global $searchReplaceActionsArray;
+
+		if (($encode) AND (!in_array($fieldName, $encodingExceptionsArray)))
+		{
+			if ($targetFormat == "HTML")
+			{
+				// Encode non-ASCII chars as HTML entities:
+				$fieldValue = encodeHTML($fieldValue);
+			}
+			elseif ($targetFormat == "XML")
+			{
+				// Only convert those special chars to entities which are supported by XML:
+				$fieldValue = encodeHTMLspecialchars($fieldValue);
+
+				// Convert field data to UTF-8:
+				if (($convertExportDataToUTF8 == "yes") AND ($contentTypeCharset != "UTF-8"))
+					$fieldValue = convertToCharacterEncoding("UTF-8", "IGNORE", $fieldValue);
+			}
+		}
+
+		// Apply *locally* defined search & replace 'actions' to all fields that are listed
+		// in the 'fields' element of the arrays contained in '$localSearchReplaceActionsArray':
+		foreach ($localSearchReplaceActionsArray as $fieldActionsArray)
+			if (in_array($fieldName, $fieldActionsArray['fields']))
+				$fieldValue = searchReplaceText($fieldActionsArray['actions'], $fieldValue, true);
+
+		if ($targetFormat == "HTML")
+		{
+			// Apply *globally* defined search & replace 'actions' to all fields that are listed
+			// in the 'fields' element of the arrays contained in '$searchReplaceActionsArray':
+			foreach ($searchReplaceActionsArray as $fieldActionsArray)
+				if (in_array($fieldName, $fieldActionsArray['fields']))
+					$fieldValue = searchReplaceText($fieldActionsArray['actions'], $fieldValue, true);
+		}
+
+		return $fieldValue;
+	}
+
+	// --------------------------------------------------------------------
+
 	// Strip HTML and PHP tags from input string:
 	// See <http://www.php.net/strip_tags>
 	function stripTags($sourceString, $allowedTags = "")
@@ -6068,7 +6276,7 @@ EOF;
 				$queryParametersArray["rowOffset"] = $rowOffset;
 		}
 
-		if (!empty($showRows))
+		if (!empty($showRows) AND ($showRows != $_SESSION['userRecordsPerPage']))
 		{
 			if (preg_match("#^((opensearch|sru)\.php)$#i", $baseURL))
 				$queryParametersArray["maximumRecords"] = $showRows;
