@@ -261,7 +261,7 @@
 		global $showSource;
 
 		// Pattern by which the input text will be split into individual records:
-		$recordDelimiter = "(\s*<doi_records[^<>\r\n]*>)?\s*(?=<doi_record[^<>\r\n]*>)" // splits before '<doi_record>'
+		$recordDelimiter = "(\s*(<\?xml[^<>]*\?>\s*)?<doi_records[^<>]*>)?\s*(?=<doi_record[^<>]*>)" // splits before '<doi_record>'
 		                 . "|"
 		                 . "(?<=<\/doi_record>)\s*(<\/doi_records>\s*)?"; // splits after '</doi_record>'
 
@@ -930,13 +930,20 @@
 											array(
 													'fields'  => array("notes"),
 													'actions' => array(
-																		"/exported from refbase \(http[^ ]+ last updated.+?\d{2}:\d{2}:\d{2} [+-]\d{4}/" =>  "" // remove refbase attribution string (such as "exported from refbase (http://localhost/refs/show.php?record=12345), last updated on Sat, 15 Jul 2006 22:24:16 +0200")
+																		"/(; ?)?exported from refbase \(http[^ ]+ last updated.+?\d{2}:\d{2}:\d{2} [+-]\d{4}/" =>  "" // remove refbase attribution string (such as "exported from refbase (http://localhost/refs/show.php?record=12345), last updated on Sat, 15 Jul 2006 22:24:16 +0200")
 																	)
 												),
 											array(
 													'fields'  => array("url"),
 													'actions' => array(
 																		"/^PM:(\d+)$/i" =>  "http://www.ncbi.nlm.nih.gov/pubmed/\\1" // convert "PM:17302433" into a resolvable PubMed URL; Bibutils 'xml2ris' (<= v3.40) converts "<identifier type="pubmed">17302433</identifier>" to "UR  - PM:17302433"
+																	)
+												),
+											array(
+													'fields'  => array("doi"),
+													'actions' => array(
+																		"#^(?:.*?)(?=10\.\d{4}/\S+?)|^(?!10\.\d{4}/\S+?).+$#" =>  "", // remove any text before the DOI (this also deletes the field's contents if it doesn't contain a DOI at all)
+																		"#(10\.\d{4}/\S+?)(?=$|\s).*$#" =>  "\\1" // remove any text after the DOI
 																	)
 												),
 											array(
@@ -1003,6 +1010,7 @@
 											"T3"  =>  "series_title", // Title Series (in case of "TY=CONF", "T3" appears to be used for conference title)
 
 											"VL"  =>  "volume", // Volume number
+											"CP"  =>  "issue", // Issue
 											"IS"  =>  "issue", // Issue
 											"SP"  =>  "startPage", // Start page number (contents of the special fields 'startPage' and 'endPage' will be merged into a range and copied to the refbase 'pages' field)
 											"EP"  =>  "endPage", // Ending page number
@@ -1013,24 +1021,23 @@
 
 											"PB"  =>  "publisher", // Publisher
 											"CY"  =>  "place", // City of publication
-											"CP"  =>  "place", // City of publication
 
 		//									""    =>  "edition",
 		//									""    =>  "medium",
 											"SN"  =>  array("BOOK" => "isbn", "CHAP" => "isbn", "STD" => "isbn", "THES" => "isbn", "Other" => "issn"), // Book Whole, Book Chapter, Generic and Thesis: ISBN; Other reference types: ISSN (note that this will fail for a thesis that was published within a series with an ISSN number)
 
-		//									""    =>  "language",
+											"LA"  =>  "language",
 		//									""    =>  "summary_language",
 
 											"KW"  =>  "keywords", // Keywords
-											"AB"  =>  "abstract", // Abstract
+											"AB"  =>  "abstract", // Notes (NOTE: by mapping 'AB' to "abstract" we deviate from the RIS spec which treats 'AB' as synonym to 'N1', i.e. notes)
 											"N2"  =>  "abstract", // Abstract
 
 		//									""    =>  "area",
 		//									""    =>  "expedition",
 		//									""    =>  "conference",
 
-		//									""    =>  "doi",
+											"DO"  =>  "doi", // DOI (we also recognize a DOI when given in the M3 or UR fields; see below)
 											"UR"  =>  "url", // URL (URL addresses can be entered individually, one per tag or multiple addresses can be entered on one line using a semi-colon as a separator)
 											"L1"  =>  "file", // Link to PDF (same syntax rules as for "UR")
 		//									"L2"  =>  "", // Link to Full-text (same syntax rules as for "UR")
@@ -1042,7 +1049,7 @@
 
 		//									"M1"  =>  "", // Miscellaneous 1
 		//									"M2"  =>  "", // Miscellaneous 2
-		//									"M3"  =>  "", // Miscellaneous 3
+											"M3"  =>  "doi", // Miscellaneous 3 (ISI Web of Science exports the DOI number in the M3 field)
 											"U1"  =>  "thesis", // User definable 1 ('U1' is used by Bibutils to indicate the type of thesis, e.g. "Masters thesis" or "Ph.D. thesis"; function 'parseRecords()' will further tweak the contents of the refbase 'thesis' field)
 											"U2"  =>  "user_notes", // User definable 2
 		//									"U3"  =>  "", // User definable 3
@@ -1132,6 +1139,326 @@
 		$importDataArray = buildImportArray("refbase", // 'type' - the array format of the 'records' element
 											"1.0", // 'version' - the version of the given array structure
 											"http://refbase.net/import/ris/", // 'creator' - the name of the script/importer (preferably given as unique URI)
+											"Matthias Steffens", // 'author' - author/contact name of the person who's responsible for this script/importer
+											"refbase@extracts.de", // 'contact' - author's email/contact address
+											array('prefix_call_number' => "true"), // 'options' - array with settings that control the behaviour of the 'addRecords()' function
+											$parsedRecordsArray); // 'records' - array of record(s) (with each record being a sub-array of fields)
+
+
+		return array($importDataArray, $recordsCount, $importRecordNumbersRecognizedFormatArray, $importRecordNumbersNotRecognizedFormatArray, $errors);
+	}
+
+	// --------------------------------------------------------------------
+
+	// ENDNOTE TO REFBASE
+	// This function converts records from Endnote tagged (Endnote Refer) format into the standard "refbase"
+	// array format which can be then imported by the 'addRecords()' function in 'include.inc.php'.
+	function endnoteToRefbase($sourceText, $importRecordsRadio, $importRecordNumbersArray)
+	{
+		global $contentTypeCharset; // defined in 'ini.inc.php'
+
+		global $errors;
+		global $showSource;
+
+		// Define regular expression patterns that will facilitate parsing of Endnote Refer data:
+		// (patterns must be specified as perl-style regular expression, without the leading & trailing slashes, if not stated otherwise)
+
+		// Pattern by which the input text will be split into individual records:
+		$recordDelimiter = "\s*(\r\n|\r(?!\n)|(?<!\r)\n){2,}\s*(?=%\S )";
+
+		// Pattern by which records will be split into individual fields:
+		$fieldDelimiter = "(\r\n|\r(?!\n)|(?<!\r)\n)+(?=%\S )";
+
+		// Pattern by which fields will be split into their field label (tag) and field data:
+		$dataDelimiter = "(?<=^%\S) ";
+
+		// Pattern by which multiple persons are separated within the author, editor or series editor fields of the source data:
+		// (Notes: - name standardization occurs after multiple author fields have been merged by '; '
+		//         - the split pattern must be specified as perl-style regular expression (including the leading & trailing
+		//           slashes) and may include mode modifiers (such as '/.../i' to perform a case insensitive match))
+		$personDelimiter = "/ *; */";
+
+		// Pattern by which a person's family name is separated from the given name (or initials):
+		// (the split pattern must be specified as perl-style regular expression (including the leading & trailing
+		//  slashes) and may include mode modifiers (such as '/.../i' to perform a case insensitive match))
+		$familyNameGivenNameDelimiter = "/ *, */";
+
+		// Specifies whether the person's family name comes first within a person's name
+		// ('true' means that the family name is followed by the given name (or initials), 'false' means that the person's family name comes *after* the given name (or initials))
+		$familyNameFirst = true;
+
+		// Specifies whether a person's full given name(s) shall be shortened to initial(s):
+		// (Notes: - if set to 'true', given names will be abbreviated and initials will get normalized (meaning removal of extra whitespace, adding of dots between initials, etc)
+		//         - if set to 'false', given names (and any initials) are taken as is
+		//         - in your database, you should stick to either fully written given names OR initials; if you mix these, records won't get sorted correctly on citation output)
+		$shortenGivenNames = true;
+
+		// Specifies whether fields whose contents are entirely in upper case shall be transformed to title case ('true') or not ('false'):
+		$transformCase = true;
+
+		// Preprocessor actions:
+		// Defines search & replace 'actions' that will be applied to each record's raw source data if the pattern in the corresponding 'match' element is matched:
+		// (If you don't want to perform any preprocessor actions, specify an empty array, like: '$preprocessorActionsArray = array();'.
+		//  Note that, in this case, the search patterns MUST include the leading & trailing slashes -- which is done to allow for mode modifiers such as 'imsxU'.)
+		// 								  "/Search Pattern/"  =>  "Replace Pattern"
+		$preprocessorActionsArray = array(
+											array(
+													'match'   => "/&#?\w+;/", // if HTML encoded text (such as "&auml;", "&#xF6;" or "&#233;") occurs in the source data
+													'actions' => array(
+																		"/(&#?\w+;)/e"  =>  "html_entity_decode('\\1', ENT_QUOTES, '$contentTypeCharset')" // HTML decode source data (see <http://www.php.net/manual/en/function.html-entity-decode.php>)
+																	)
+												)
+										);
+
+		// Postprocessor actions:
+		// Defines search & replace 'actions' that will be applied to all those refbase fields that are listed in the corresponding 'fields' element:
+		// (If you don't want to perform any search and replace actions, specify an empty array, like: '$postprocessorActionsArray = array();'.
+		//  Note that, in this case, the search patterns MUST include the leading & trailing slashes -- which is done to allow for mode modifiers such as 'imsxU'.)
+		// 								  "/Search Pattern/"  =>  "Replace Pattern"
+		$postprocessorActionsArray = array(
+											array(
+													'fields'  => array("year"),
+													'actions' => array(
+																		"/^.*?(\d{4}).*/" =>  "\\1" // for the 'year' field, extract any four-digit number (and discard everything else)
+																	)
+												),
+											array(
+													'fields'  => array("title"),
+													'actions' => array(
+																		"/[,.;:!] *$/" =>  "" // remove any punctuation (except for question marks) from end of field contents
+																	)
+												),
+											array(
+													'fields'  => array("notes"),
+													'actions' => array(
+																		"/(; ?)?exported from refbase \(http[^ ]+ last updated.+?\d{2}:\d{2}:\d{2} [+-]\d{4}/" =>  "" // remove refbase attribution string (such as "exported from refbase (http://localhost/refs/show.php?record=12345), last updated on Sat, 15 Jul 2006 22:24:16 +0200")
+																	)
+												),
+											array(
+													'fields'  => array("url"),
+													'actions' => array(
+																		"/^PM:(\d+)$/i" =>  "http://www.ncbi.nlm.nih.gov/pubmed/\\1" // convert "PM:17302433" into a resolvable PubMed URL; Bibutils 'xml2ris' (<= v3.40) converts "<identifier type="pubmed">17302433</identifier>" to "UR  - PM:17302433"
+																	)
+												),
+											array(
+													'fields'  => array("doi"),
+													'actions' => array(
+																		"#^(?:.*?)(?=10\.\d{4}/\S+?)|^(?!10\.\d{4}/\S+?).+$#" =>  "", // remove any text before the DOI (this also deletes the field's contents if it doesn't contain a DOI at all)
+																		"#(10\.\d{4}/\S+?)(?=$|\s).*$#" =>  "\\1" // remove any text after the DOI
+																	)
+												),
+											array(
+													'fields'  => array("title", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes"), // convert font attributes (which publishers might have included in Endnote Refer records that are available on their web pages)
+													'actions' => array(
+																		"/<sup>(.+?)<\/sup>/i" =>  "[super:\\1]", // replace '<sup>...</sup>' with refbase markup ('[super:...]')
+																		"/<sub>(.+?)<\/sub>/i" =>  "[sub:\\1]", // replace '<sub>...</sub>' with refbase markup ('[sub:...]')
+																		"/<i>(.+?)<\/i>/i"     =>  "_\\1_", // replace '<i>...</i>' with refbase markup ('_..._')
+																		"/<b>(.+?)<\/b>/i"     =>  "**\\1**", // replace '<b>...</b>' with refbase markup ('**...**')
+																		"/\\x10(.+?)\\x11/"    =>  "_\\1_" // replace '<ASCII#10>...<ASCII#11>' (which is used by Reference Manager to indicate italic strings) with refbase markup ('_..._')
+																	)
+												),
+											array(
+													'fields'  => array("title", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes"), // convert RefWorks font attributes (which RefWorks supports in title fields, notes, abstracts and user 1 - 5 fields)
+													'actions' => array(
+																		"/0RW1S34RfeSDcfkexd09rT3(.+?)1RW1S34RfeSDcfkexd09rT3/"  =>  "[super:\\1]", // replace RefWorks indicators for superscript text with refbase markup ('[super:...]')
+																		"/0RW1S34RfeSDcfkexd09rT4(.+?)1RW1S34RfeSDcfkexd09rT4/"  =>  "[sub:\\1]", // replace RefWorks indicators for subscript text with refbase markup ('[sub:...]')
+																		"/0RW1S34RfeSDcfkexd09rT2(.+?)1RW1S34RfeSDcfkexd09rT2/"  =>  "_\\1_", // replace RefWorks indicators for italic text with refbase markup ('_..._')
+																		"/0RW1S34RfeSDcfkexd09rT0(.+?)1RW1S34RfeSDcfkexd09rT0/"  =>  "**\\1**", // replace RefWorks indicators for bold text with refbase markup ('**...**')
+																		"/0RW1S34RfeSDcfkexd09rT1(.+?)1RW1S34RfeSDcfkexd09rT1/"  =>  "__\\1__" // replace RefWorks indicators for underline text with refbase markup ('__...__')
+																	)
+												)
+										);
+
+
+		// This array lists patterns which match all Endnote Refer tags that must occur within a record to be recognized as valid Endnote Refer record:
+		// (Array keys must contain the tag name as it should be displayed to the user; as is the case with search & replace actions,
+		//  the search patterns MUST include the leading & trailing slashes.)
+		// 				"tag display name"  =>  "tag search pattern"
+		$requiredTagsArray = array(
+									"%0"    =>  "/^%0 /m"
+								);
+
+		// This array matches Endnote Refer tags with their corresponding refbase fields:
+		// (fields that are unsupported in either Endnote Refer or refbase are commented out)
+		//					  "Endnote Refer tag" => "refbase field" // Endnote Refer tag name (comment)
+		$tagsToRefbaseFieldsArray = array(
+											"%0"  =>  "type", // Reference Type (IMPORTANT: the array element that maps to 'type' must be listed as the first element!)
+
+											"%A"  =>  "author", // Author (Primary Author)
+											"%E"  =>  "editor", // Editor (Secondary Author)
+											"%Y"  =>  "series_editor", // Tertiary Author (Series Author)
+											"%+"  =>  "address", // Address
+		//									""    =>  "corporate_author", // Corporate Author (in the original Refer format '%Q' was referring to the corporate author)
+
+											"%T"  =>  "title", // Title (Primary Title)
+		//									""    =>  "orig_title",
+
+											"%D"  =>  "year", // Year (Primary Date; the year should be specified in full, and the month name rather than number should be used)
+
+											"%B"  =>  array("Journal Article" => "publication", "Book Section" => "publication", "Conference Proceedings" => "publication", "Magazine Article" => "publication", "Newspaper Article" => "publication", "Other" => "series_title"), // Secondary Title (of a Book or Conference Name); refbase "in-container" types: Secondary Title; Other reference types: Tertiary Title (Series Title)
+											"%J"  =>  "publication", // Secondary Title (Journal Name / Periodical Name)
+		//									""    =>  "abbrev_journal", // Periodical Name: Standard Abbreviation (Endnote Refer doesn't seem to distinguish between full format & abbreviated formats)
+											"%S"  =>  "series_title", // Tertiary Title (Series Title)
+
+											"%V"  =>  "volume", // Volume
+											"%N"  =>  "issue", // Number (Issue)
+											"%P"  =>  "pages", // Pages
+
+		//									""    =>  "series_volume", // (for 'series_volume' and 'series_issue', some magic will be applied within the 'parseRecords()' function)
+		//									""    =>  "series_issue",
+
+											"%I"  =>  "publisher", // Publisher
+											"%C"  =>  "place", // Place Published
+
+											"%7"  =>  "edition", // Edition
+		//									""    =>  "medium",
+											"%@"  =>  array("Book" => "isbn", "Book Section" => "isbn", "Edited Book" => "isbn", "Classical Work" => "isbn", "Generic" => "isbn", "Thesis" => "isbn", "Other" => "issn"), // ISBN/ISSN; Book Whole, Book Chapter, Generic and Thesis: ISBN; Other reference types: ISSN (note that this will fail for a thesis that was published within a series with an ISSN number)
+
+											"%G"  =>  "language", // Language
+		//									""    =>  "summary_language",
+
+											"%K"  =>  "keywords", // Keywords
+											"%X"  =>  "abstract", // Abstract
+
+		//									""    =>  "area",
+		//									""    =>  "expedition",
+		//									""    =>  "conference", // see '%8' below
+
+		//									""    =>  "doi", // DOI
+											"%U"  =>  "url", // URL
+											"%>"  =>  "file", // Link to PDF
+		//									""    =>  "related", // Related Records (this mapping would require some postprocessing of the field value so that it's suitable for the 'related' field)
+
+											"%O"  =>  "notes", // Notes (Bibutils uses '%O' for notes instead!)
+											"%Z"  =>  "notes", // Notes
+											"%F"  =>  "cite_key", // Label (Reference ID)
+
+											"%9"  =>  "thesis", // Type of Work (how the entry was published; for reports, this would be the report type, and for theses, the thesis type (e.g. "Masters thesis" or "Ph.D. thesis"); function 'parseRecords()' will further tweak the contents of the refbase 'thesis' field; the original Refer format seems to use '%R' for report, paper, or thesis type)
+
+		//									"%H"  =>  "", // Translated Author (in the original Refer format '%H' was referring to the "Header commentary which is printed before the reference")
+											"%L"  =>  "call_number", // Call Number (NOTE: if no other field gets mapped to the 'cite_key' field, the contents of the 'call_number' field will be also copied to the 'cite_key' field of the currently logged-in user)
+											"%8"  =>  array("Conference Proceedings" => "conference", "Other" => "notes"), // Date (date associated with entry; for conference proceedings, this would be the date of the conference)
+
+		//									""    =>  "contribution_id",
+		//									""    =>  "online_publication",
+		//									""    =>  "online_citation",
+		//									""    =>  "approved",
+		//									""    =>  "orig_record",
+
+		//									""    =>  "copy", // Reprint status (this mapping would require some postprocessing of the field value so that it's suitable for the 'copy' field)
+
+		//									"%M"  =>  "", // Accession Number
+		//									"%Q"  =>  "", // Translated Title (in the original Refer format '%Q' was referring to the corporate author)
+		//									"%R"  =>  "", // Electronic Resource Number
+		//									"%W"  =>  "", // Database Provider
+
+		//									"%1"  =>  "", // Custom 1
+		//									"%2"  =>  "", // Custom 2
+		//									"%3"  =>  "", // Custom 3
+		//									"%4"  =>  "", // Custom 4
+		//									"%6"  =>  "", // Number of Volumes
+
+		//									"%?"  =>  "", // Subsidiary Author
+		//									"%!"  =>  "", // Short Title
+		//									"%#"  =>  "", // Custom 5
+		//									"%$"  =>  "", // Custom 6
+		//									"%]"  =>  "", // Custom 7
+		//									"%&"  =>  "", // Section
+		//									"%("  =>  "", // Original Publication (date)
+		//									"%)"  =>  "", // Reprint Edition (date)
+		//									"%*"  =>  "", // Reviewed Item
+		//									"%^"  =>  "", // Caption
+		//									"%<"  =>  "", // Research Notes
+		//									"%["  =>  "", // Access Date
+		//									"%="  =>  "", // Last Modified Date
+		//									"%~"  =>  "", // Name of Database
+										);
+
+		// This array lists all Endnote Refer tags that may occur multiple times:
+		$tagsMultipleArray = array(
+									"%A",
+									"%E",
+									"%I",
+									"%K",
+									"%O",
+									"%Y",
+									"%Z",
+									"%@"
+								);
+
+
+		// This array matches Endnote Refer reference types with their corresponding refbase types:
+		// (Endnote Refer types that are currently not supported in refbase will be taken as is but will get
+		//  prefixed with an "Unsupported: " label; '#fallback#' in comments indicates a type mapping that
+		//  is not a perfect match but as close as currently possible)
+		// 								   "Endnote Refer type"  =>  "refbase type" // comment
+		$referenceTypesToRefbaseTypesArray = array(
+		//											""                          =>  "Abstract",
+													"Aggregated Database"       =>  "Unsupported: Aggregated Database", // EN X2
+													"Ancient Text"              =>  "Unsupported: Ancient Text", // EN X
+													"Artwork"                   =>  "Unsupported: Artwork",
+													"Audiovisual Material"      =>  "Unsupported: Audiovisual Material",
+													"Bill"                      =>  "Unsupported: Bill",
+													"Blog"                      =>  "Unsupported: Blog", // EN X2
+													"^Book$"                    =>  "Book Whole", // without the Regex anchors "Book Section" would get renamed incorrectly as "Book Whole Section"
+													"Book Section"              =>  "Book Chapter",
+													"Case"                      =>  "Unsupported: Case",
+													"Catalog"                   =>  "Unsupported: Catalog", // EN X2
+													"Chart or Table"            =>  "Unsupported: Chart or Table",
+													"Classical Work"            =>  "Book Whole", // #fallback# // EN 8 (Classical Works)
+													"Computer Program"          =>  "Software",
+													"Conference Paper"          =>  "Conference Article", // EN 8
+													"Conference Proceedings"    =>  "Conference Volume",
+													"Dictionary"                =>  "Unsupported: Dictionary", // EN X
+													"Edited Book"               =>  "Book Whole",
+													"Electronic Article"        =>  "Journal Article", // #fallback# // EN 8 (Electronic Journal); renamed in EN 9 (was: Electronic Journal)
+													"Electronic Book"           =>  "Book Whole", // #fallback# // EN 8
+													"Encyclopedia"              =>  "Unsupported: Encyclopedia", // EN X
+													"Equation"                  =>  "Unsupported: Equation",
+													"Figure"                    =>  "Unsupported: Figure",
+													"Film or Broadcast"         =>  "Unsupported: Film or Broadcast",
+													"Generic"                   =>  "Miscellaneous",
+													"Government Document"       =>  "Report", // #fallback# // EN 8 (Government Report or Document)
+													"Grant"                     =>  "Unsupported: Grant", // EN X
+													"Hearing"                   =>  "Unsupported: Hearing",
+													"Journal Article"           =>  "Journal Article",
+													"Legal Rule or Regulation"  =>  "Unsupported: Legal Rule or Regulation", // EN 8 (Legal Rule/Regulation)
+													"Magazine Article"          =>  "Magazine Article",
+													"Manuscript"                =>  "Manuscript",
+													"Map"                       =>  "Map",
+													"Newspaper Article"         =>  "Newspaper Article",
+													"Online Database"           =>  "Unsupported: Online Database", // EN 8
+													"Online Multimedia"         =>  "Unsupported: Online Multimedia", // EN 8
+													"Pamphlet"                  =>  "Unsupported: Pamphlet", // EN X2
+													"Patent"                    =>  "Patent",
+													"Personal Communication"    =>  "Unsupported: Personal Communication",
+													"Report"                    =>  "Report",
+													"Serial"                    =>  "Unsupported: Serial", // EN X2
+													"Standard"                  =>  "Unsupported: Standard", // EN X2
+													"Statute"                   =>  "Unsupported: Statute",
+													"Thesis"                    =>  "Thesis", // function 'parseRecords()' will set the special type 'Thesis' back to 'Book Whole' and adopt the refbase 'thesis' field
+													"Unpublished Work"          =>  "Manuscript", // #fallback# // EN 8
+													"Web Page"                  =>  "Unsupported: Web Page", // renamed in EN X (was: Electronic Source)
+													"Unused 1"                  =>  "Unsupported: Unused 1",
+													"Unused 2"                  =>  "Unsupported: Unused 2",
+													"Unused 3"                  =>  "Unsupported: Unused 3"
+												);
+
+		// -----------------------------------------
+
+		// Split input text into individual records:
+		$recordArray = splitSourceText($sourceText, $recordDelimiter, false); // split on the blank line that delimites Endnote Refer records
+
+		// Validate all records that shall be imported:
+		list($errors, $importRecordNumbersRecognizedFormatArray, $importRecordNumbersNotRecognizedFormatArray) = validateRecords($recordArray, $requiredTagsArray, $importRecordsRadio, $importRecordNumbersArray, $errors);
+
+		// Parse all records that shall be imported:
+		list($parsedRecordsArray, $recordsCount) = parseRecords($recordArray, "Endnote", $importRecordNumbersRecognizedFormatArray, $tagsToRefbaseFieldsArray, $tagsMultipleArray, $referenceTypesToRefbaseTypesArray, $fieldDelimiter, $dataDelimiter, $personDelimiter, $familyNameGivenNameDelimiter, $familyNameFirst, $shortenGivenNames, $transformCase, $postprocessorActionsArray, $preprocessorActionsArray);
+
+		// Build refbase import array:
+		$importDataArray = buildImportArray("refbase", // 'type' - the array format of the 'records' element
+											"1.0", // 'version' - the version of the given array structure
+											"http://refbase.net/import/endnote-refer/", // 'creator' - the name of the script/importer (preferably given as unique URI)
 											"Matthias Steffens", // 'author' - author/contact name of the person who's responsible for this script/importer
 											"refbase@extracts.de", // 'contact' - author's email/contact address
 											array('prefix_call_number' => "true"), // 'options' - array with settings that control the behaviour of the 'addRecords()' function
@@ -2111,8 +2438,8 @@
 			$sourceFormat = "Copac";
 
 		// Endnote format:
-		elseif (preg_match("/^%0 /m", $sourceText) AND preg_match("/^%T /m", $sourceText)) // Endnote records must at least start with the "%0" tag (we'll only check for presence, though) and contain a "%T" tag
-			$sourceFormat = "Endnote";
+		elseif (preg_match("/^%0 /m", $sourceText)) // Endnote records must at least contain the "%0" tag
+			$sourceFormat = "Endnote"; // Endnote tagged text aka Endnote Refer
 
 		// MODS XML format:
 		elseif (preg_match("/<mods[^<>\r\n]*>/i", $sourceText) AND preg_match("/<\/mods>/", $sourceText)) // MODS XML records must at least contain the "<mods>...</mods>" root element
@@ -2123,7 +2450,7 @@
 			$sourceFormat = "Endnote XML";
 
 		// BibTeX format:
-		elseif (preg_match("/^@\w+\{[^ ,\r\n]* *, *[\r\n]/m", $sourceText)) // BibTeX records must start with the "@" sign, followed by a type specifier and an optional cite key (such as in '@article{steffens1988,')
+		elseif (preg_match("/^@\w+\s*\{[^ ,\r\n]* *, *[\r\n]/m", $sourceText)) // BibTeX records must start with the "@" sign, followed by a type specifier and an optional cite key (such as in '@article{steffens1988,')
 			$sourceFormat = "BibTeX";
 
 		// CrossRef "unixref" XML format:
@@ -2320,7 +2647,32 @@
 						foreach ($tagsMultipleArray as $tagMultiple)
 						{
 							if (preg_match("/^" . $tagMultiple . "$/i", $fieldLabel))
-								$tagContentsMultipleArray[$tagsToRefbaseFieldsArray[$fieldLabel]][] = $fieldData;
+							{
+								if(!is_array($tagsToRefbaseFieldsArray[$fieldLabel]))
+								{
+									$tagContentsMultipleArray[$tagsToRefbaseFieldsArray[$fieldLabel]][] = $fieldData;
+								}
+								else // if the current tag's value in '$tagsToRefbaseFieldsArray' is an array...
+								{
+									// ...we'll copy field data to different refbase fields depending on the current records reference type:
+									// NOTE: this will only work if the array element that maps to 'type' has been already parsed,
+									//       which is why '$tagsToRefbaseFieldsArray' should contain this as the first element!
+									$useDefault = true;
+		
+									foreach ($tagsToRefbaseFieldsArray[$fieldLabel] as $referenceType => $refbaseField)
+									{
+										if ($fieldParametersArray['type'] == $referenceType)
+										{
+											$tagContentsMultipleArray[$refbaseField][] = $fieldData;
+											$useDefault = false;
+											break;
+										}
+									}
+		
+									if ($useDefault AND isset($tagsToRefbaseFieldsArray[$fieldLabel]['Other']))
+										$tagContentsMultipleArray[$tagsToRefbaseFieldsArray[$fieldLabel]['Other']][] = $fieldData;
+								}
+							}
 						}
 
 						// copy field data to array of field parameters (using the corresponding refbase field name as element key):
@@ -2331,17 +2683,18 @@
 						else // if the current tag's value in '$tagsToRefbaseFieldsArray' is an array...
 						{
 							// ...we'll copy field data to different refbase fields depending on the current records reference type:
-							// (note that this will only work if the array element that maps to 'type' has been already parsed,
-							//  which is why '$tagsToRefbaseFieldsArray' should contain this as the first element!)
+							// (see also above note about '$tagsToRefbaseFieldsArray' requiring 'type' as the first element)
 							$useDefault = true;
 
 							foreach ($tagsToRefbaseFieldsArray[$fieldLabel] as $referenceType => $refbaseField)
+							{
 								if ($fieldParametersArray['type'] == $referenceType)
 								{
 									$fieldParametersArray[$refbaseField] = $fieldData;
 									$useDefault = false;
 									break;
 								}
+							}
 
 							if ($useDefault AND isset($tagsToRefbaseFieldsArray[$fieldLabel]['Other']))
 								$fieldParametersArray[$tagsToRefbaseFieldsArray[$fieldLabel]['Other']] = $fieldData;
@@ -2356,17 +2709,43 @@
 				if (empty($showSource) AND isset($fieldParametersArray['source'])) // if we're NOT supposed to display the original source data
 					unset($fieldParametersArray['source']); // remove the special 'source' field from the array of fields
 
+				// merge individual items of fields that can occur multiple times:
+				foreach ($tagsMultipleArray as $tagMultiple)
+				{
+					if(!is_array($tagsToRefbaseFieldsArray[$tagMultiple]))
+					{
+						if (isset($tagContentsMultipleArray[$tagsToRefbaseFieldsArray[$tagMultiple]]))
+							$fieldParametersArray[$tagsToRefbaseFieldsArray[$tagMultiple]] = implode("; ", $tagContentsMultipleArray[$tagsToRefbaseFieldsArray[$tagMultiple]]);
+					}
+					else // if the current tag's value in '$tagsToRefbaseFieldsArray' is an array...
+					{
+						// ...we'll copy field data to different refbase fields depending on the current records reference type:
+						// (see also above note about '$tagsToRefbaseFieldsArray' requiring 'type' as the first element)
+						$useDefault = true;
+
+						foreach ($tagsToRefbaseFieldsArray[$tagMultiple] as $referenceType => $refbaseField)
+						{
+							if ($fieldParametersArray['type'] == $referenceType)
+							{
+								if (isset($tagContentsMultipleArray[$refbaseField]))
+								{
+									$fieldParametersArray[$refbaseField] = implode("; ", $tagContentsMultipleArray[$refbaseField]);
+									$useDefault = false;
+									break;
+								}
+							}
+						}
+
+						if ($useDefault AND isset($tagsToRefbaseFieldsArray[$tagMultiple]['Other']))
+							if (isset($tagContentsMultipleArray[$tagsToRefbaseFieldsArray[$tagMultiple]['Other']]))
+								$fieldParametersArray[$tagsToRefbaseFieldsArray[$tagMultiple]['Other']] = implode("; ", $tagContentsMultipleArray[$tagsToRefbaseFieldsArray[$tagMultiple]['Other']]);
+					}
+				}
+
 				// convert format-specific reference types into refbase format:
 				// (e.g. for the RIS format, convert "JOUR" into "Journal Article", etc)
 				if (isset($fieldParametersArray['type']))
 					$fieldParametersArray['type'] = searchReplaceText($referenceTypesToRefbaseTypesArray, $fieldParametersArray['type'], false); // function 'searchReplaceText()' is defined in 'include.inc.php'
-
-				// merge individual items of fields that can occur multiple times:
-				foreach ($tagsMultipleArray as $tagMultiple)
-				{
-					if (isset($tagContentsMultipleArray[$tagsToRefbaseFieldsArray[$tagMultiple]]))
-						$fieldParametersArray[$tagsToRefbaseFieldsArray[$tagMultiple]] = implode("; ", $tagContentsMultipleArray[$tagsToRefbaseFieldsArray[$tagMultiple]]);
-				}
 
 				// standardize field data contained in '$fieldParametersArray':
 				// (function 'standardizeFieldData()' e.g. performs case transformation, standardizes thesis names, normalizes page ranges, and reformats person names according to preference)
@@ -2552,7 +2931,7 @@
 
 			// if (except for a DOI) no other URL(s) are given AND the 'notes' field contains a PubMed ID, we extract the
 			// PubMed ID and copy a resolvable URL (that points to the PubMed article's abstract page) to the 'url' field:
-			if (!isset($fieldParametersArray['url']) AND preg_match("/PMID *: *\d+/i", $fieldParametersArray['notes']))
+			if (!isset($fieldParametersArray['url']) AND isset($fieldParametersArray['notes']) AND preg_match("/PMID *: *\d+/i", $fieldParametersArray['notes']))
 				$fieldParametersArray['url'] = "http://www.ncbi.nlm.nih.gov/pubmed/" . preg_replace("/.*?PMID *: *(\d+).*/i", "\\1", $fieldParametersArray['notes']);
 		}
 
@@ -2825,49 +3204,65 @@
 
 	// --------------------------------------------------------------------
 
-  function fetchDOIsFromPubMed($itemArray, $sourceFormat = "CrossRef XML")
-  {
-    global $errors;
+	// This function tries to fetch PubMed IDs from PubMed.gov for all DOIs given
+	// in '$doiArray':
+	// 
+	// NOTE: The function 'SimpleXMLElement()' requires the SimpleXML extension which,
+	//       in turn, requires PHP 5 compiled with the --enable-libxml option.
+	// 
+	// Author: Nicholaus Lance Hepler <mailto:nhelper@gmail.com>
+	function fetchDOIsFromPubMed($doiArray, $sourceFormat = "CrossRef XML")
+	{
+		global $errors;
 
-    $sourceText = "";
+		$sourceText = "";
 
-    $pmidArray = array();
-    $failedIDs = array();
+		$pmidArray = array();
+		$failedIDs = array();
 
-    if (!empty($itemArray))
-    {
-      $itemArray = array_unique($itemArray);
+		if (!empty($doiArray))
+		{
+			// Remove any duplicate IDs:
+			$doiArray = array_unique($doiArray);
 
-      foreach ($itemArray as $item)
-      {
-        $sourceURL = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
-                   . "?db=pubmed"
-                   . "&retmax=1"
-                   . "&field=doi"
-                   . "&term=" . $item;
+			foreach ($doiArray as $doi)
+			{
+				// Build query URL:
+				$sourceURL = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+									 . "?db=pubmed"
+									 . "&retmax=1"
+									 . "&field=doi"
+									 . "&term=" . $doi;
 
-        $esearchText = fetchDataFromURL($sourceURL);
+				// Perform query:
+				$esearchText = fetchDataFromURL($sourceURL);
 
-        $xml = new SimpleXMLElement($esearchText);
+				$xml = new SimpleXMLElement($esearchText); // requires PHP 5 with --enable-libxml
 
-        if ($xml->Count != 1 || (isset($xml->ErrorList->PhraseNotFound) && !empty($xml->ErrorList->PhraseNotFound)))
-          $failedIDs[] = $item;
-        else
-          $pmidArray[] = $xml->IdList->Id[0];
-      }
-    }
+				if ($xml->Count != 1 || (isset($xml->ErrorList->PhraseNotFound) && !empty($xml->ErrorList->PhraseNotFound)))
+				{
+					$failedIDs[] = $doi;
+				}
+				else
+				{
+					// Extract PubMed ID:
+					$pmidArray[] = $xml->IdList->Id[0];
+				}
+			}
+		}
 
-    if (!empty($failedIDs))
-    {
-      $failedIDs = array_merge($failedIDS, $pmidArray);
-    }
-    else
-    {
-      list($errors, $sourceText) = fetchDataFromPubMed($pmidArray);
-    }
+		if (!empty($failedIDs))
+		{
+			$failedIDs = array_merge($failedIDs, $pmidArray);
+		}
+		else
+		{
+			// Fetch source data from PubMed.gov for all found PubMed IDs:
+			list($errors, $sourceText) = fetchDataFromPubMed($pmidArray);
+		}
 
-    return array($errors, $sourceText, $failedIDs);
-  }
+		return array($errors, $sourceText, $failedIDs);
+	}
 
 	// --------------------------------------------------------------------
 
@@ -2880,12 +3275,7 @@
 	function fetchDataFromCrossRef($itemArray, $sourceFormat = "CrossRef XML")
 	{
 		global $errors;
-
-		//  Notes: - the CrossRef resolver requires users to have an account and to supply their login
-		//           credentials in the 'pid' or 'req_dat' parameters; for more info please see:
-		//           <http://www.crossref.org/openurl_info.html>
-		//         - to request an account, complete the form at: <http://www.crossref.org/requestaccount/>
-		$crossRefReqDat = ""; // please enter your 'pid'/'req_dat' ("username:password") here // TODO: move to 'ini.inc.php'
+		global $crossRefReqDat;
 
 		$sourceText = "";
 
@@ -2908,7 +3298,7 @@
 						   . "&format=" . $fetchType;
 
 				if (!empty($crossRefReqDat))
-					$sourceURL .= "&pid=" . $crossRefReqDat;
+					$sourceURL .= "&pid=" . rawurlencode($crossRefReqDat);
 
 				if (preg_match("#^10\.\d{4}/\S+$#", $item)) // '$item' is a DOI
 					$sourceURL .= "&id=" . rawurlencode("doi:" . $item);
