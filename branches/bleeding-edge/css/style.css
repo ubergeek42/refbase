@@ -248,7 +248,7 @@ form[name="simpleSearch"] .searchSuggestions, form[name="simpleSearch"] .suggest
 
 #queryrefs {
 	margin-top: 1.3em;
-	margin-bottom: -2em;
+	margin-bottom: -1em;
 	margin-right: -11px;
 	font-size: 1em;
 }
@@ -499,9 +499,33 @@ form[name="simpleSearch"] .searchSuggestions, form[name="simpleSearch"] .suggest
 	left: 4px;
 }
 
+#columns .itemlinks a {
+	color: #000000;
+	border-bottom: 1px #CCCCCC solid;
+}
+
+#columns .itemlinks a:hover {
+	color: #3366FF;
+	border-bottom: 0px;
+}
+
 #details {
 	position: relative;
 	left: 4px;
+}
+
+#details .itemlinks a {
+	color: #000000;
+	border-bottom: 1px #CCCCCC solid;
+}
+
+#details .mainfieldsbg .itemlinks a {
+	border-bottom: 1px #CCCCCC solid;
+}
+
+#details .itemlinks a:hover {
+	color: #3366FF;
+	border-bottom: 0px;
 }
 
 #citations {
@@ -544,6 +568,16 @@ form[name="simpleSearch"] .searchSuggestions, form[name="simpleSearch"] .suggest
 	font-size: 1em;
 }
 
+.citation .moreinfo .itemlinks a {
+	color: #333333;
+	border-bottom: 1px #CCCCCC solid;
+}
+
+.citation .moreinfo .itemlinks a:hover {
+	color: #3366FF;
+	border-bottom: 0px;
+}
+
 #error {
 	
 }
@@ -566,6 +600,10 @@ form[name="simpleSearch"] .searchSuggestions, form[name="simpleSearch"] .suggest
 	font-size: 1em;
 }
 
+.helpbody {
+	font-size: 1em;
+}
+
 .examples {
 	font-size: 1em;
 }
@@ -575,8 +613,8 @@ form[name="simpleSearch"] .searchSuggestions, form[name="simpleSearch"] .suggest
 }
 
 .sect {
-	padding-top: 2px;
 	font-size: 1em;
+	font-weight: bold;
 }
 
 .even {
@@ -676,6 +714,10 @@ form[name="simpleSearch"] .searchSuggestions, form[name="simpleSearch"] .suggest
 	display: none;
 }
 
+#helptxt .sect {
+	padding-top: 2px;
+}
+
 #helptxt .even {
 	margin-left: -5px;
 	margin-top: -3px;
@@ -696,11 +738,11 @@ form[name="simpleSearch"] .searchSuggestions, form[name="simpleSearch"] .suggest
 }
 
 a:link .toggletxt {
-	color: #000000;
+	color: #0033CC;
 }
 
 a:visited .toggletxt {
-	color: #000000;
+	color: #666666;
 }
 
 a:hover .toggletxt {
