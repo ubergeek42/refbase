@@ -148,30 +148,68 @@
 <input type="hidden" name="formType" value="flagDuplicates">
 <input type="hidden" name="viewType" value="<?php echo $viewType; ?>">
 <input type="hidden" name="submit" value="Flag Duplicates">
-<table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds forms that enable you to manage any duplicate database entries">
-	<tr>
-		<td width="58"><b>Original:</b></td>
-		<td width="10">&nbsp;</td>
-		<td><?php echo fieldError("origRecord", $errors); ?><input type="text" name="origRecord" value="<?php echo encodeHTML($origRecord); ?>" size="10" title="enter the serial number of the original (master) record"></td>
-	</tr>
-	<tr>
-		<td width="58"><b>Duplicates:</b></td>
-		<td width="10">&nbsp;</td>
-		<td><?php echo fieldError("dupRecords", $errors); ?><input type="text" name="dupRecords" value="<?php echo encodeHTML($dupRecords); ?>" size="50" title="enter the serial number(s) of all records that are duplicate entries of the above specified record; separate multiple serials with any non-digit characters"></td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td><input type="submit" name="submit" value="Flag Duplicates" title="mark the given records as original/duplicate entries"></td>
-	</tr>
-	<tr>
-		<td align="center" colspan="3">&nbsp;</td>
-	</tr>
-	<tr>
-		<td valign="top"><b>Help:</b></td>
-		<td>&nbsp;</td>
-		<td>This form allows you to manually flag records as original or duplicate entries. If the database contains multiple entries of the same bibliographic resource, enter the serial number of the "original" record (i.e. the master record) in the upper text entry field. Then enter the serial number(s) of its duplicate record entries (delimited by any non-digit characters) in the lower text entry field and press the <em>Flag Duplicates</em> button.</td>
-	</tr>
+<table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds a form that allows you to manage duplicate database entries">
+<tr>
+	<td width="120">
+		<div class="sect"><?php echo $loc["Original"]; ?>:</div>
+	</td>
+	<td><?php echo fieldError("origRecord", $errors); ?>
+
+		<input type="text" name="origRecord" value="<?php echo encodeHTML($origRecord); ?>" size="10" title="enter the serial number of the original (master) record">
+	</td>
+</tr>
+<tr>
+	<td width="120">
+		<div class="sect"><?php echo $loc["Duplicates"]; ?>:</div>
+	</td>
+	<td><?php echo fieldError("dupRecords", $errors); ?>
+
+		<input type="text" name="dupRecords" value="<?php echo encodeHTML($dupRecords); ?>" size="50" title="enter the serial number(s) of all records that are duplicate entries of the above specified record; separate multiple serials with any non-digit characters">
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;</td>
+	<td>
+		<input type="submit" name="submit" value="Flag Duplicates" title="mark the given records as original/duplicate entries">
+	</td>
+</tr>
+</table>
+<table class="showhide" align="center" border="0" cellpadding="0" cellspacing="10" width="95%">
+<tr>
+	<td class="small" width="120" valign="top">
+		<a href="javascript:toggleVisibility('helptxt','helpToggleimg','helpToggletxt','<?php echo rawurlencode($loc["HelpAndExamples"]); ?>')"<?php echo addAccessKey("attribute", "search_help"); ?> title="<?php echo $loc["LinkTitle_ToggleVisibility"] . addAccessKey("title", "search_help"); ?>">
+			<img id="helpToggleimg" class="toggleimg" src="img/closed.gif" alt="<?php echo $loc["LinkTitle_ToggleVisibility"]; ?>" width="9" height="9" hspace="0" border="0">
+			<span id="helpToggletxt" class="toggletxt"><?php echo $loc["HelpAndExamples"]; ?></span>
+		</a>
+	</td>
+</tr>
+</table>
+<table id="helptxt" align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds some help text for the form on this page" style="display: none;">
+<tr>
+	<td width="120" valign="top">
+		<div class="sect"><?php echo $loc["Help"]; ?>:</div>
+	</td>
+	<td class="helpbody" valign="top">
+		<div class="even">
+			This form allows you to manually flag records as original or duplicate entries. If the database contains multiple entries of the same bibliographic resource, enter the serial number of the "original" record (i.e. the master record) in the upper text entry field. Then enter the serial number(s) of its duplicate record entries (delimited by any non-digit characters) in the lower text entry field and press the <em>Flag Duplicates</em> button.
+		</div>
+		<div class="odd">
+			If records have been flagged as original or duplicate entries, a small icon is displayed next to these records in list view to inform the user about it: <img src="img/ok.gif" alt="(original)" title="original record" width="14" height="16" hspace="0" border="0"> indicates original entries, while <img src="img/caution.gif" alt="(duplicate)" title="duplicate record" width="5" height="16" hspace="0" border="0"> denotes duplicate entries.
+		</div>
+	</td>
+</tr>
+<tr>
+	<td width="120" valign="top">
+		<div class="sect"><?php echo $loc["Examples"]; ?>:</div>
+	</td>
+	<td class="examples" valign="top">
+		<div class="even">
+			To flag record number 123 as an original record, and mark records 456, 7890 and 13579 as duplicate entries (which get linked to their original record), use:
+			<pre><b>Original:</b>    123</pre>
+			<pre><b>Duplicates:</b>  456 7890 13579</pre>
+		</div>
+	</td>
+</tr>
 </table>
 </form><?php
 
