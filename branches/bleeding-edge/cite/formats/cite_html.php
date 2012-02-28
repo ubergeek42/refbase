@@ -27,8 +27,7 @@
 
 	function citeRecords($result, $rowsFound, $query, $queryURL, $showQuery, $showLinks, $rowOffset, $showRows, $previousOffset, $nextOffset, $wrapResults, $citeStyle, $citeOrder, $citeType, $orderBy, $headerMsg, $userID, $viewType)
 	{
-		global $searchReplaceActionsArray; // these variables are defined in 'ini.inc.php'
-		global $databaseBaseURL;
+		global $databaseBaseURL; // these variables are defined in 'ini.inc.php'
 		global $useVisualEffects;
 		global $defaultDropDownFieldsEveryone;
 		global $defaultDropDownFieldsLogin;
@@ -37,6 +36,7 @@
 		global $displayResultsHeaderDefault;
 		global $displayResultsFooterDefault;
 		global $showLinkTypesInCitationView;
+		global $showFieldItemLinks;
 		global $maximumBrowseLinks;
 
 		global $loc; // '$loc' is made globally available in 'core.php'
@@ -53,6 +53,9 @@
 			$NoColumns = 2; // first column: literature citation, second column: 'display details' link
 		else
 			$NoColumns = 1;
+
+		if (empty($displayType))
+			$displayType = $_SESSION['userDefaultView']; // get the default view for the current user
 
 		 // If the results footer is displayed, we increase the colspan value by 1 to account for the checkbox column:
 		if ((!preg_match("/^(Print|Mobile)$/i", $viewType)) AND (!preg_match("/^cli/i", $client)) AND ($wrapResults != "0") AND (!isset($displayResultsFooterDefault[$displayType]) OR (isset($displayResultsFooterDefault[$displayType]) AND ($displayResultsFooterDefault[$displayType] != "hidden"))))
@@ -83,30 +86,55 @@
 		                             "newline"            => "\n<br>\n"
 		                            );
 
+		// Defines field-specific search & replace 'actions' that will be applied to the actual citation
+		// for all those refbase fields that are listed in the corresponding 'fields' element:
+		// (These search and replace actions will be performed *in addition* to those specified globally
+		//  in '$searchReplaceActionsArray' (defined in 'ini.inc.php'). Same rules apply as for
+		//  '$searchReplaceActionsArray'.)
+		$fieldSpecificSearchReplaceActionsArray = array(
+		                                                array(
+		                                                      'fields'  => array("abstract"),
+		                                                      'actions' => array("/[\r\n]+/" => "\n<br>\n") // for the 'abstract' field, transform runs of newline ('\n') or return ('\r') characters into a single <br> tag
+		                                                     )
+		                                               );
+
+		// In addition, for the "more info" section, we also substitute contents of the below 'fields'
+		// with localized field values from variable '$loc'. Since the locales in '$loc' are already
+		// HTML encoded, we have to exclude these fields from any further HTML encoding (done below).
+		$fieldSpecificSearchReplaceActionsArray2 = $fieldSpecificSearchReplaceActionsArray;
+		$fieldSpecificSearchReplaceActionsArray2[] = array(
+		                                                  'fields'  => array("thesis", "approved", "marked", "copy", "selected"),
+		                                                  'actions' => array("/(.+)/e" => "\$loc['\\1']") // use localized field values (e.g., in case of german we display 'ja' instead of 'yes', etc)
+		                                                 );
+
+		static $encodingExceptionsArray = array("thesis", "approved", "marked", "copy", "selected");
+
 
 		// LOOP OVER EACH RECORD:
 		// Fetch one page of results (or less if on the last page)
 		// (i.e., upto the limit specified in $showRows) fetch a row into the $row array and ...
 		for ($rowCounter=0; (($rowCounter < $showRows) && ($row = @ mysql_fetch_array($result))); $rowCounter++)
 		{
-			foreach ($row as $rowFieldName => $rowFieldValue)
+			$encodedRowData = $row; // we keep '$row' in its original (unencoded) form since unencoded data will be required by function 'linkifyFieldItems()' below
+
+			// NOTES: - Currently, HTML encoding and search & replace actions are applied separately
+			//          for the citation and the "more info" section underneath the citation. The
+			//          actions in this 'foreach' block concern the actual citation
+			//        - It might be better to pass the unencoded '$row' data to function 'citeRecord()'
+			//          which would then make calls to function 'encodeField()' individually for each
+			//          field (similar to as it is done it 'modsxml.inc.php')
+			foreach ($encodedRowData as $rowFieldName => $rowFieldValue)
 			{
-				if (!ereg("^(author|editor)$", $rowFieldName)) // we HTML encode higher ASCII chars for all but the author & editor fields. The author & editor fields are excluded here
-					// since these fields must be passed *without* HTML entities to the 'reArrangeAuthorContents()' function (which will then handle the HTML encoding by itself)
-					$row[$rowFieldName] = encodeHTML($row[$rowFieldName]); // HTML encode higher ASCII characters within each of the fields
-
-				if (ereg("^abstract$", $rowFieldName)) // for the 'abstract' field, transform runs of newline ('\n') or return ('\r') characters into a single <br> tag
-					$row[$rowFieldName] = preg_replace("/[\r\n]+/", "\n<br>\n", $row[$rowFieldName]);
-
-				// Apply search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$searchReplaceActionsArray' (which is defined in 'ini.inc.php'):
-				foreach ($searchReplaceActionsArray as $fieldActionsArray)
-					if (in_array($rowFieldName, $fieldActionsArray['fields']))
-						$row[$rowFieldName] = searchReplaceText($fieldActionsArray['actions'], $row[$rowFieldName], true); // function 'searchReplaceText()' is defined in 'include.inc.php'
+				// NOTES: - We HTML encode non-ASCII chars for all but the author & editor fields. The author & editor
+				//          fields are excluded here since these fields must be passed *without* HTML entities to the
+				//          'reArrangeAuthorContents()' function (which will then handle the HTML encoding by itself)
+				//        - Function 'encodeField()' will also apply any field-specific search & replace actions
+				$encodedRowData[$rowFieldName] = encodeField($rowFieldName, $rowFieldValue, $fieldSpecificSearchReplaceActionsArray, array("author", "editor")); // function 'encodeField()' is defined in 'include.inc.php'
 			}
 
 
 			// Order attributes according to the chosen output style & record type:
-			$record = citeRecord($row, $citeStyle, $citeType, $markupPatternsArray, true); // function 'citeRecord()' is defined in the citation style file given in '$citeStyleFile' (which, in turn, must reside in the 'cite' directory of the refbase root directory), see function 'generateCitations()'
+			$record = citeRecord($encodedRowData, $citeStyle, $citeType, $markupPatternsArray, true); // function 'citeRecord()' is defined in the citation style file given in '$citeStyleFile' (which, in turn, must reside in the 'cite' directory of the refbase root directory), see function 'generateCitations()'
 
 
 			// Print out the current record:
@@ -208,8 +236,22 @@
 
 						// Print additional fields:
 						foreach ($additionalFieldsCitationView as $field)
+						{
 							if (isset($row[$field]) AND !empty($row[$field]))
-								$recordData .= "\n\t\t\t<div class=\"" . $field . "\"><strong>" . $fieldNamesArray[$field] . ":</strong> " . $row[$field] . "</div>";
+							{
+								$recordData .= "\n\t\t\t<div class=\"" . $field . "\"><strong>" . $fieldNamesArray[$field] . ":</strong> ";
+
+								// Make field items into clickable search links:
+								if (in_array($displayType, $showFieldItemLinks))
+									// Note: Function 'linkifyFieldItems()' will also call function 'encodeField()' to HTML
+									//       encode non-ASCII chars and to apply any field-specific search & replace actions
+									$recordData .= linkifyFieldItems($field, $row[$field], $userID, $fieldSpecificSearchReplaceActionsArray2, $encodingExceptionsArray, "/\s*[;]+\s*/", "; ", $showQuery, $showLinks, $showRows, $citeStyle, $citeOrder, $wrapResults, $displayType, $viewType); // function 'linkifyFieldItems()' is defined in 'include.inc.php'
+								else // don't hotlink field items
+									$recordData .= encodeField($field, $row[$field], $fieldSpecificSearchReplaceActionsArray2, $encodingExceptionsArray); // function 'encodeField()' is defined in 'include.inc.php'
+
+								$recordData .= "</div>";
+							}
+						}
 
 						// Print a row with links for the current record:
 						$recordData .= "\n\t\t\t<div class=\"reflinks\">";
