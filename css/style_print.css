@@ -205,8 +205,26 @@ div.resultsfooter {
 	
 }
 
+#columns .itemlinks a {
+	color: #000000;
+	text-decoration: none;
+}
+
+#columns .itemlinks a:hover {
+	color: #3366FF;
+}
+
 #details {
 	
+}
+
+#details .itemlinks a {
+	color: #000000;
+	text-decoration: none;
+}
+
+#details .itemlinks a:hover {
+	color: #3366FF;
 }
 
 #citations {
@@ -238,6 +256,15 @@ div.resultsfooter {
 .citation .moreinfo .reflinks > * {
 	display: inline;
 	font-size: 1em;
+}
+
+.citation .moreinfo .itemlinks a {
+	color: #000000;
+	text-decoration: none;
+}
+
+.citation .moreinfo .itemlinks a:hover {
+	color: #3366FF;
 }
 
 #error {
