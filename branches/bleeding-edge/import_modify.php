@@ -285,6 +285,10 @@
 	//         markup (if possible), and finally transform all Unicode characters that can't be successfully converted to their ASCII equivalents.
 	//       - Alternatively, it might be easier to always use UTF-8 as page encoding for 'import.php' so that we'll always receive UTF-8 encoded data, then use function
 	//         'detectCharacterEncoding()' to detect the actual character encoding of the given source text, and convert to refbase markup/latin1 if needed.
+	// 
+	// TODO: - this conversion causes invalid XML when importing MODS XML that contains encoded angle brackets! (e.g. '<title>Harbours &lt;dt.&gt;</title>');
+	//         to work around this issue, the next line needs to be commented out; for a real fix, the decoding of characters needs to be adopted based on the '$sourceFormat'
+	//         (which, ATM, is only identified further down below)
 	$sourceText = decodeHTML($contentTypeCharset, $sourceText); // function 'decodeHTML()' is defined in 'include.inc.php', and '$contentTypeCharset' is defined in 'ini.inc.php'
 
 	// Process record number input:
@@ -378,9 +382,11 @@
 			// Split on any whitespace between DOIs/OpenURLs:
 			$idArray = preg_split("/\s+/", $sourceIDs, -1, PREG_SPLIT_NO_EMPTY);
 
+			// Try to retrieve information from PubMed.gov before querying CrossRef.org:
+			// TODO: Test with $sourceIDs containing a mixture of DOIs and OpenURLs, as well as with $sourceIDs containing DOIs for articles listed in PubMed AND NOT listed in PubMed!
 			if (preg_match("#10\.\d{4}/\S+?(?=$|\s)#i", $sourceIDs))
 			{
-				list($errors, $sourceText, $idArray) = fetchDOIsFromPubMed($idArray);
+				list($errors, $sourceText, $idArray) = fetchDOIsFromPubMed($idArray); // function 'fetchDOIsFromPubMed()' is defined in 'import.inc.php'
 			}
 
 			if (!empty($idArray))
@@ -393,7 +399,9 @@
 					$sourceText = convertToCharacterEncoding("ISO-8859-1", "TRANSLIT", $sourceText, "UTF-8");
 			}
 			else
+			{
 				$sourceFormat = "Pubmed Medline";
+			}
 		}
 	}
 
