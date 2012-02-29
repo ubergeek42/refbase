@@ -653,7 +653,7 @@
 <table id="queryform" align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds a query form">
 <tr>
 	<td width="120" valign="top">
-		<div class="sect"><b><?php echo $loc["Query"]; ?>:</b></div>
+		<div class="sect"><?php echo $loc["Query"]; ?>:</div>
 	</td><?php
 
 // NOTE: the field selectors and search options don't work yet (see the TODO items at the top of this function)
@@ -704,15 +704,15 @@
 <input type="hidden" name="viewType" value="<?php echo $viewType; ?>">
 <table id="queryform" align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds the query form">
 <tr>
-	<td width="120" valign="top">
-		<div class="sect"><b><?php
+	<td width="120" valign="middle">
+		<div class="sect"><?php
 
 		if (preg_match("/^Mobile$/i", $viewType))
 			echo $officialDatabaseName;
 		else
 			echo $loc["CQLQuery"];
 
-?>:</b></div>
+?>:</div>
 	</td>
 	<td>
 		<input type="text" name="query" value="" size="60" title="<?php echo $loc["DescriptionEnterSearchString"]; ?>">
@@ -728,33 +728,32 @@
 <table class="showhide" align="center" border="0" cellpadding="0" cellspacing="10" width="95%">
 <tr>
 	<td class="small" width="120" valign="top">
-		<a href="javascript:toggleVisibility('searchopt','optToggleimg','optToggletxt','<?php echo rawurlencode($loc["SearchOptions"]); ?>')"<?php echo addAccessKey("attribute", "search_opt"); ?> title="<?php echo $loc["LinkTitle_ToggleVisibility"] . addAccessKey("title", "search_opt"); ?>">
+		<a href="javascript:toggleVisibility('searchopt','optToggleimg','optToggletxt','<?php echo rawurlencode($loc["DisplayOptions"]); ?>')"<?php echo addAccessKey("attribute", "search_opt"); ?> title="<?php echo $loc["LinkTitle_ToggleVisibility"] . addAccessKey("title", "search_opt"); ?>">
 			<img id="optToggleimg" class="toggleimg" src="img/closed.gif" alt="<?php echo $loc["LinkTitle_ToggleVisibility"]; ?>" width="9" height="9" hspace="0" border="0">
-			<span id="optToggletxt" class="toggletxt"><?php echo $loc["SearchOptions"]; ?></span>
+			<span id="optToggletxt" class="toggletxt"><?php echo $loc["DisplayOptions"]; ?></span>
 		</a>
 	</td>
 </tr>
 </table>
-<table id="searchopt" align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds display options" style="display: none;">
+<table id="searchopt" align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds search &amp; display options" style="display: none;">
 <tr>
-	<td width="120" valign="top">
-		<div class="sect"><b><?php echo $loc["SearchOptions"]; ?>:</b></div>
+	<td width="120" valign="middle">
+		<div class="sect"><?php echo $loc["DisplayOptions"]; ?>:</div>
 	</td>
 	<td width="215" valign="top">
-		Start at record:&nbsp;&nbsp;
-		<input type="text" name="startRecord" value="<?php echo ($rowOffset + 1); ?>" size="4">
+		<?php echo $loc["StartAtRecord"]; ?>:&nbsp;&nbsp;
+		<input type="text" name="startRecord" value="<?php echo ($rowOffset + 1); ?>" size="4" title="<?php echo $loc["DescriptionStartAtRecord"]; ?>">
 	</td>
 	<td valign="top">
-		<?php echo $loc["ShowRecordsPerPage_Prefix"]; ?>&nbsp;&nbsp;&nbsp;<input type="text" name="maximumRecords" value="<?php echo $showRows; ?>" size="4" title="<?php echo $loc["DescriptionShowRecordsPerPage"]; ?>">&nbsp;&nbsp;&nbsp;<?php echo $loc["ShowRecordsPerPage_Suffix"]; ?>
+		<?php echo $loc["ShowRecordsPerPage_Prefix"]; ?>&nbsp;&nbsp;&nbsp;<input type="text" id="maximumRecords" name="maximumRecords" value="<?php echo $showRows; ?>" size="4" title="<?php echo $loc["DescriptionShowRecordsPerPage"]; ?>">&nbsp;&nbsp;&nbsp;<?php echo $loc["ShowRecordsPerPage_Suffix"]; ?>
 
 	</td>
 </tr>
 <tr>
 	<td>&nbsp;</td>
-	<td>&nbsp;</td>
-	<td valign="top">
-		Output format:&nbsp;&nbsp;
-		<select name="recordSchema"><?php echo $dropDownItems4; ?>
+	<td valign="top" colspan="2">
+		<?php echo $loc["Format"]; ?>:&nbsp;&nbsp;
+		<select name="recordSchema" title="<?php echo $loc["DescriptionSelectCiteFormat"]; ?>"><?php echo $dropDownItems4; ?>
 
 		</select>
 	</td>
@@ -773,13 +772,17 @@
 <table id="helptxt" align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds some help text and example queries" style="display: none;">
 <tr>
 	<td width="120" valign="top">
-		<div class="sect"><b><?php echo $loc["Help"]; ?>:</b></div>
+		<div class="sect"><?php echo $loc["Help"]; ?>:</div>
 	</td>
-	<td valign="top">This form lets you search the literature database using a standard CQL query (<a href="http://www.loc.gov/standards/sru/specs/cql.html" target="top">Common Query Language</a>). You can simply enter a query term, in which case the <em><?php echo $indexNamesArray["cql.serverChoice"]; ?></em> field will be searched by default. You can also search any other field, some query examples are given below. An introduction to CQL is given <a href="http://zing.z3950.org/cql/intro.html" target="top">here</a>.</td>
+	<td class="helpbody" valign="top">
+		<div class="even">
+			This form lets you search the literature database using a standard CQL query (<a href="http://www.loc.gov/standards/sru/specs/cql.html" target="top">Common Query Language</a>). You can simply enter a query term, in which case the <em><?php echo $indexNamesArray["cql.serverChoice"]; ?></em> field will be searched by default. You can also search any other field, some query examples are given below. An introduction to CQL is given <a href="http://zing.z3950.org/cql/intro.html" target="top">here</a>.
+		</div>
+	</td>
 </tr>
 <tr>
 	<td width="120" valign="top">
-		<div class="sect"><b><?php echo $loc["Examples"]; ?>:</b></div>
+		<div class="sect"><?php echo $loc["Examples"]; ?>:</div>
 	</td>
 	<td class="examples" valign="top">
 		<div class="even">
