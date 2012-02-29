@@ -28,7 +28,7 @@
 	//       In case of a UTF-8 based system, Unicode character properties ("\p{...}" or "\P{...}") can be used instead of the
 	//       normal and POSIX character classes. These are available since PHP 4.4.0 and PHP 5.1.0. Note that the use of Unicode
 	//       properties requires the "/.../u" PCRE pattern modifier! More info:
-	//       <http://www.php.net/manual/en/regexp.reference.php#regexp.reference.unicode>
+	//       <http://www.php.net/manual/en/regexp.reference.unicode.php>
 
 	//       The variables '$alnum', '$alpha', '$cntrl', '$dash', '$digit', '$graph', '$lower', '$print', '$punct', '$space',
 	//       '$upper', '$word' must be used within a perl-style regex character class and require the "/.../u" PCRE pattern modifier.
