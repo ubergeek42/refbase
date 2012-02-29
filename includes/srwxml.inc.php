@@ -40,7 +40,24 @@
 
 		global $exportFormat; // this is needed so that we can distinguish between "SRW_DC XML" and "SRW_MODS XML" record formats
 
+		// The array '$transtab_refbase_unicode' contains search & replace patterns
+		// for conversion from refbase markup to Unicode entities.
+		global $transtab_refbase_unicode; // defined in 'transtab_refbase_unicode.inc.php'
+
+		global $fieldSpecificSearchReplaceActionsArray;
+
 		// Individual records are objects and collections of records are strings
+
+		// Defines field-specific search & replace 'actions' that will be applied to all those refbase fields that are listed in the corresponding 'fields' element:
+		// (If you don't want to perform any search and replace actions, specify an empty array, like: '$fieldSpecificSearchReplaceActionsArray = array();'.
+		//  Note that the search patterns MUST include the leading & trailing slashes -- which is done to allow for mode modifiers such as 'imsxU'.)
+		//                                          "/Search Pattern/"  =>  "Replace Pattern"
+		$fieldSpecificSearchReplaceActionsArray = array();
+
+		if ($convertExportDataToUTF8 == "yes")
+			$fieldSpecificSearchReplaceActionsArray[] = array('fields'  => array("title", "publication", "abbrev_journal", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes"),
+			                                                  'actions' => $transtab_refbase_unicode
+			                                                 );
 
 		$srwCollectionDoc = new XMLDocument();
 
