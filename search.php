@@ -859,6 +859,7 @@
 		global $defaultDropDownFieldsLogin;
 		global $displayResultsHeaderDefault;
 		global $displayResultsFooterDefault;
+		global $showFieldItemLinks;
 		global $showLinkTypesInListView;
 		global $maximumBrowseLinks;
 		global $tableRefs, $tableUserData; // defined in 'db.inc.php'
@@ -903,6 +904,23 @@
 
 				// Save the current List view query to a session variable:
 				saveSessionVariable("lastListViewQuery", $query);
+
+				// Defines field-specific search & replace 'actions' that will be applied to all those refbase
+				// fields that are listed in the corresponding 'fields' element:
+				// (These search and replace actions will be performed *in addition* to those specified globally
+				//  in '$searchReplaceActionsArray' (defined in 'ini.inc.php'). Same rules apply as for
+				//  '$searchReplaceActionsArray'.)
+				$fieldSpecificSearchReplaceActionsArray = array(
+				                                                array(
+				                                                      'fields'  => array("thesis", "approved", "marked", "copy", "selected"), // see also note for '$encodingExceptionsArray' below
+				                                                      'actions' => array("/(.+)/e" => "\$loc['\\1']") // use localized field values (e.g., in case of german we display 'ja' instead of 'yes', etc)
+				                                                     )
+				                                               );
+
+				// NOTE: We substitute contents of the given fields with localized field values from variable
+				//       '$loc' (see '$fieldSpecificSearchReplaceActionsArray'). Since the locales in '$loc'
+				//       are already HTML encoded, we have to exclude these fields from any further HTML encoding.
+				static $encodingExceptionsArray = array("thesis", "approved", "marked", "copy", "selected");
 
 
 				// Note: we omit the results header, browse links & query form for CLI clients, and when outputting only a partial document structure ('wrapResults=0')
@@ -1083,25 +1101,23 @@
 						// fetch the current attribute name:
 						$orig_fieldname = getMySQLFieldInfo($result, $i, "name"); // function 'getMySQLFieldInfo()' is defined in 'include.inc.php'
 
-						if (!empty($row[$i]))
-						{
-							if (preg_match("/^(thesis|approved|marked|copy|selected)$/", $orig_fieldname)) // for the fields 'thesis', 'approved', 'marked', 'copy' and 'selected', we'll use localized field values (e.g., in case of german we display 'ja' instead of 'yes', etc)
-								$encodedRowAttribute = preg_replace("/.+/", $loc[$row[$i]], $row[$i]); // note that the locales in '$loc' are already HTML encoded
-							else
-								$encodedRowAttribute = encodeHTML($row[$i]); // HTML encode higher ASCII characters (we write the data into a new variable since we still need unencoded data when including them into a link for Browse view)
-						}
-						else
-							$encodedRowAttribute = "";
-
 						if (($displayType == "Browse") AND ($i == 0)) // in Browse view we save the first field name to yet another variable (since it'll be needed when generating correct queries in the Links column)
 							$browseFieldName = $orig_fieldname;
 
-						// apply search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$searchReplaceActionsArray' (which is defined in 'ini.inc.php'):
-						foreach ($searchReplaceActionsArray as $fieldActionsArray)
-							if (in_array($orig_fieldname, $fieldActionsArray['fields']))
-								$encodedRowAttribute = searchReplaceText($fieldActionsArray['actions'], $encodedRowAttribute, true); // function 'searchReplaceText()' is defined in 'include.inc.php'
+						echo "\n\t<td valign=\"top\">";
 
-						echo "\n\t<td valign=\"top\">" . $encodedRowAttribute . "</td>";
+						if (!empty($row[$i]))
+						{
+							// make field items into clickable search links:
+							if (in_array($displayType, $showFieldItemLinks))
+								// Note: function 'linkifyFieldItems()' will also call function 'encodeField()' to HTML
+								//       encode non-ASCII chars and to apply any field-specific search & replace actions
+								echo linkifyFieldItems($orig_fieldname, $row[$i], $userID, $fieldSpecificSearchReplaceActionsArray, $encodingExceptionsArray, "/\s*[;]+\s*/", "; ", $showQuery, $showLinks, $showRows, $citeStyle, $citeOrder, $wrapResults, $displayType, $viewType); // function 'linkifyFieldItems()' is defined in 'include.inc.php'
+							else // don't hotlink field items
+								echo encodeField($orig_fieldname, $row[$i], $fieldSpecificSearchReplaceActionsArray, $encodingExceptionsArray); // function 'encodeField()' is defined in 'include.inc.php'
+						}
+
+						echo "</td>";
 					}
 
 					// embed appropriate links (if available):
@@ -1222,6 +1238,7 @@
 		global $defaultDropDownFieldsLogin;
 		global $displayResultsHeaderDefault;
 		global $displayResultsFooterDefault;
+		global $showFieldItemLinks;
 		global $fileVisibility;
 		global $fileVisibilityException;
 		global $maximumBrowseLinks;
@@ -1262,6 +1279,27 @@
 
 				// Save the current Details view query to a session variable:
 				saveSessionVariable("lastDetailsViewQuery", $query);
+
+				// Defines field-specific search & replace 'actions' that will be applied to all those refbase
+				// fields that are listed in the corresponding 'fields' element:
+				// (These search and replace actions will be performed *in addition* to those specified globally
+				//  in '$searchReplaceActionsArray' (defined in 'ini.inc.php'). Same rules apply as for
+				//  '$searchReplaceActionsArray'.)
+				$fieldSpecificSearchReplaceActionsArray = array(
+				                                                array(
+				                                                      'fields'  => array("abstract"),
+				                                                      'actions' => array("/[\r\n]+/" => "<br><br>") // for the 'abstract' field, transform runs of newline ('\n') or return ('\r') characters into two <br> tags
+				                                                     ),
+				                                                array(
+				                                                      'fields'  => array("thesis", "approved", "marked", "copy", "selected"), // see also note for '$encodingExceptionsArray' below
+				                                                      'actions' => array("/(.+)/e" => "\$loc['\\1']") // use localized field values (e.g., in case of german we display 'ja' instead of 'yes', etc)
+				                                                     )
+				                                               );
+
+				// NOTE: We substitute contents of the given fields with localized field values from variable
+				//       '$loc' (see '$fieldSpecificSearchReplaceActionsArray'). Since the locales in '$loc'
+				//       are already HTML encoded, we have to exclude these fields from any further HTML encoding.
+				static $encodingExceptionsArray = array("thesis", "approved", "marked", "copy", "selected");
 
 
 				// Note: we omit the results header, browse links & query form for CLI clients, and when outputting only a partial document structure ('wrapResults=0')
@@ -1456,29 +1494,23 @@
 									$recordData .= "\n\t<td valign=\"top\" class=\"otherfieldsbg\">"; // ...without colspan attribute
 							}
 
-							if (preg_match("/^(author|title|year)$/", $orig_fieldname)) // print author, title & year fields in bold
-								$recordData .= "<b>";
-
+							// print the attribute data:
 							if (!empty($row[$i]))
 							{
-								if (preg_match("/^(thesis|approved|marked|copy|selected)$/", $orig_fieldname)) // for the fields 'thesis', 'approved', 'marked', 'copy' and 'selected', we'll use localized field values (e.g., in case of german we display 'ja' instead of 'yes', etc)
-									$row[$i] = preg_replace("/.+/", $loc[$row[$i]], $row[$i]); // note that the locales in '$loc' are already HTML encoded
-								else
-									$row[$i] = encodeHTML($row[$i]); // HTML encode higher ASCII characters
+								if (preg_match("/^(author|title|year)$/", $orig_fieldname)) // print author, title & year fields in bold
+									$recordData .= "<b>";
+
+								// make field items into clickable search links:
+								if (in_array($displayType, $showFieldItemLinks))
+									// Note: function 'linkifyFieldItems()' will also call function 'encodeField()' to HTML
+									//       encode non-ASCII chars and to apply any field-specific search & replace actions
+									$recordData .= linkifyFieldItems($orig_fieldname, $row[$i], $userID, $fieldSpecificSearchReplaceActionsArray, $encodingExceptionsArray, "/\s*[;]+\s*/", "; ", $showQuery, $showLinks, $showRows, $citeStyle, $citeOrder, $wrapResults, $displayType, $viewType); // function 'linkifyFieldItems()' is defined in 'include.inc.php'
+								else // don't hotlink field items
+									$recordData .= encodeField($orig_fieldname, $row[$i], $fieldSpecificSearchReplaceActionsArray, $encodingExceptionsArray); // function 'encodeField()' is defined in 'include.inc.php'
+
+								if (preg_match("/^(author|title|year)$/", $orig_fieldname))
+									$recordData .= "</b>";
 							}
-
-							if (preg_match("/^abstract$/", $orig_fieldname)) // for the 'abstract' field, transform newline ('\n') characters into <br> tags
-								$row[$i] = preg_replace("/\n/", "<br>", $row[$i]);
-
-							// apply search & replace 'actions' to all fields that are listed in the 'fields' element of the arrays contained in '$searchReplaceActionsArray' (which is defined in 'ini.inc.php'):
-							foreach ($searchReplaceActionsArray as $fieldActionsArray)
-								if (in_array($orig_fieldname, $fieldActionsArray['fields']))
-									$row[$i] = searchReplaceText($fieldActionsArray['actions'], $row[$i], true); // function 'searchReplaceText()' is defined in 'include.inc.php'
-
-							$recordData .= $row[$i]; // print the attribute data
-
-							if (preg_match("/^(author|title|year)$/", $orig_fieldname))
-								$recordData .= "</b>";
 
 							$recordData .= "</td>"; // finish the TD tag
 
