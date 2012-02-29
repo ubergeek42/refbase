@@ -184,7 +184,7 @@
 
 	// (4) DISPLAY header:
 	// call the 'displayHTMLhead()' and 'showPageHeader()' functions (which are defined in 'header.inc.php'):
-	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Details", "noindex,nofollow", "User details required for use of the " . encodeHTML($officialDatabaseName), "\n\t<meta http-equiv=\"expires\" content=\"0\">", false, "", $viewType, array());
+	displayHTMLhead(encodeHTML($officialDatabaseName) . " -- User Details", "noindex,nofollow", "User details required for use of the " . encodeHTML($officialDatabaseName), "\n\t<meta http-equiv=\"expires\" content=\"0\">", true, "", $viewType, array());
 	showPageHeader($HeaderString);
 
 	// (5) CLOSE the database connection:
@@ -269,7 +269,118 @@
 <form method="POST" action="user_validation.php">
 <input type="hidden" name="userID" value="<?php echo encodeHTML($userID) ?>">
 <input type="hidden" name="email" value="<?php echo encodeHTML($formVars["email"]) ?>">
-<table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds a form with user details">
+<table id="requiredFields" align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds form elements with user details">
+<tr>
+	<td align="left" width="169"><b><?php echo $loc["FirstName"]; ?>:</b></td>
+	<td><?php echo fieldError("firstName", $errors); ?>
+
+		<input type="text" name="firstName" value="<?php echo encodeHTML($formVars["firstName"]); ?>" size="50">
+	</td>
+</tr>
+<tr>
+	<td align="left"><b><?php echo $loc["LastName"]; ?>:</b></td>
+	<td><?php echo fieldError("lastName", $errors); ?>
+
+		<input type="text" name="lastName" value="<?php echo encodeHTML($formVars["lastName"]); ?>" size="50">
+	</td>
+</tr>
+<?php
+	// Only show the username/email and password widgets to new users (or the admin, since he's allowed to call 'user_details.php' w/o any 'userID' when logged in):
+	if (!isset($_SESSION['loginEmail']) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($userID == "")))
+	{
+?>
+<tr>
+	<td align="left"><b><?php echo $loc["Email"]; ?>:</b></td>
+	<td><?php echo fieldError("email", $errors); ?>
+
+		<input type="text" name="email" value="<?php echo encodeHTML($formVars["email"]); ?>" size="30">
+	</td>
+</tr>
+<tr>
+	<td align="left"><b><?php echo $loc["Password"]; ?>:</b></td>
+	<td><?php echo fieldError("loginPassword", $errors); ?>
+
+		<input type="password" name="loginPassword" value="" size="30">
+	</td>
+</tr>
+<tr>
+	<td align="left"><b><?php echo $loc["VerifyPassword"]; ?>:</b></td>
+	<td><?php echo fieldError("loginPasswordRetyped", $errors); ?>
+
+		<input type="password" name="loginPasswordRetyped" value="" size="30">
+	</td>
+</tr>
+<?php
+	}
+
+	// if a user is logged in, we also show the password field (but with a different label text) so that the user is able to change his password later on:
+	// (just keep the password field empty, if you don't want to change your password)
+	elseif (isset($_SESSION['loginEmail']) && isset($userID))
+	{
+?>
+<tr>
+	<td align="left"><?php echo $loc["NewPassword"]; ?>:</td>
+	<td><?php echo fieldError("loginPassword", $errors); ?>
+
+		<input type="password" name="loginPassword" value="" size="30">
+	</td>
+</tr>
+<tr>
+	<td align="left"><?php echo $loc["VerifyNewPassword"]; ?>:</td>
+	<td><?php echo fieldError("loginPasswordRetyped", $errors); ?>
+
+		<input type="password" name="loginPasswordRetyped" value="" size="30">
+	</td>
+</tr>
+<?php
+	}
+?>
+<tr>
+	<td align="left"><b><?php echo $loc["InstitutionAbbr"]; ?>:</b></td>
+	<td><?php echo fieldError("abbrevInstitution", $errors); ?>
+
+		<input type="text" name="abbrevInstitution" value="<?php echo encodeHTML($formVars["abbrevInstitution"]); ?>" size="12">
+	</td>
+</tr>
+<tr>
+	<td align="left"></td>
+	<td>
+<?php
+
+	// The submit button reads 'Add' if an authorized user uses 'user_details.php' to add a new user (-> 'userID' is empty!)
+	// This should make it more clear that submitting the form is going to add a new user without any further approval!
+	// INSERTs are allowed to:
+	//         1. EVERYONE who's not logged in (but ONLY if variable '$addNewUsers' in 'ini.inc.php' is set to "everyone"!)
+	//            (Note that this feature is actually only meant to add the very first user to the users table.
+	//             After you've done so, it is highly recommended to change the value of '$addNewUsers' to 'admin'!)
+	//   -or-  2. the ADMIN only (if variable '$addNewUsers' in 'ini.inc.php' is set to "admin")
+	if ((!isset($_SESSION['loginEmail']) && ($addNewUsers == "everyone") && ($userID == "")) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($userID == "")))
+	{
+?>
+		<input type="submit" value="Add User">
+<?php
+	}
+	else // ...otherwise the submit button reads (guess what) 'Submit' (i.e., solely an email will be sent to the admin for further approval):
+	{
+?>
+		<input type="submit" value="Submit">
+<?php
+	}
+?>
+	</td>
+</tr>
+</table>
+<table class="showhide" align="center" border="0" cellpadding="0" cellspacing="10" width="95%">
+<tr>
+	<td class="small" width="120" valign="top">
+		<a href="javascript:toggleVisibility('optionalFields','optToggleimg','optToggletxt','<?php echo rawurlencode($loc["OptionalFields"]); ?>')"<?php echo addAccessKey("attribute", "search_opt"); ?> title="<?php echo $loc["LinkTitle_ToggleVisibility"] . addAccessKey("title", "search_opt"); ?>">
+			<img id="optToggleimg" class="toggleimg" src="img/closed.gif" alt="<?php echo $loc["LinkTitle_ToggleVisibility"]; ?>" width="9" height="9" hspace="0" border="0">
+			<span id="optToggletxt" class="toggletxt"><?php echo $loc["OptionalFields"]; ?></span>
+		</a>
+	</td>
+</tr>
+</table>
+<table id="optionalFields" align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds form elements with user details" style="display: none;">
 <tr>
 	<td align="left" width="169"><?php echo $loc["Title"]; ?>:</td>
 	<td>
@@ -283,31 +394,10 @@
 	</td>
 </tr>
 <tr>
-	<td align="left"><b><?php echo $loc["FirstName"]; ?>:</b></td>
-	<td><?php echo fieldError("firstName", $errors); ?>
-
-		<input type="text" name="firstName" value="<?php echo encodeHTML($formVars["firstName"]); ?>" size="50">
-	</td>
-</tr>
-<tr>
-	<td align="left"><b><?php echo $loc["LastName"]; ?>:</b></td>
-	<td><?php echo fieldError("lastName", $errors); ?>
-
-		<input type="text" name="lastName" value="<?php echo encodeHTML($formVars["lastName"]); ?>" size="50">
-	</td>
-</tr>
-<tr>
 	<td align="left"><?php echo $loc["Institution"]; ?>:</td>
 	<td><?php echo fieldError("institution", $errors); ?>
 
 		<input type="text" name="institution" value="<?php echo encodeHTML($formVars["institution"]); ?>" size="50">
-	</td>
-</tr>
-<tr>
-	<td align="left"><b><?php echo $loc["InstitutionAbbr"]; ?>:</b></td>
-	<td><?php echo fieldError("abbrevInstitution", $errors); ?>
-
-		<input type="text" name="abbrevInstitution" value="<?php echo encodeHTML($formVars["abbrevInstitution"]); ?>" size="12">
 	</td>
 </tr>
 <tr>
@@ -415,88 +505,12 @@
 	<td><?php echo fieldError("marked", $errors); ?>
 
 		<input type="radio" name="marked" value="yes"<?php echo $markedRadioYesChecked; ?>>&nbsp;&nbsp;<?php echo $loc["yes"]; ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="marked" value="no"<?php echo $markedRadioNoChecked; ?>>&nbsp;&nbsp;<?php echo $loc["no"]; ?>
-	</td>
-</tr>
-<?php
-	}
 
-	// Only show the username/email and password widgets to new users (or the admin, since he's allowed to call 'user_details.php' w/o any 'userID' when logged in):
-	if (!isset($_SESSION['loginEmail']) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($userID == "")))
-	{
-?>
-<tr>
-	<td align="left"><b><?php echo $loc["Email"]; ?>:</b></td>
-	<td><?php echo fieldError("email", $errors); ?>
-
-		<input type="text" name="email" value="<?php echo encodeHTML($formVars["email"]); ?>" size="30">
-	</td>
-</tr>
-<tr>
-	<td align="left"><b><?php echo $loc["Password"]; ?>:</b></td>
-	<td><?php echo fieldError("loginPassword", $errors); ?>
-
-		<input type="password" name="loginPassword" value="" size="30">
-	</td>
-</tr>
-<tr>
-	<td align="left"><b><?php echo $loc["VerifyPassword"]; ?>:</b></td>
-	<td><?php echo fieldError("loginPasswordRetyped", $errors); ?>
-
-		<input type="password" name="loginPasswordRetyped" value="" size="30">
-	</td>
-</tr>
-<?php
-	}
-
-	// if a user is logged in, we also show the password field (but with a different label text) so that the user is able to change his password later on:
-	// (just keep the password field empty, if you don't want to change your password)
-	elseif (isset($_SESSION['loginEmail']) && isset($userID))
-	{
-?>
-<tr>
-	<td align="left"><?php echo $loc["NewPassword"]; ?>:</td>
-	<td><?php echo fieldError("loginPassword", $errors); ?>
-
-		<input type="password" name="loginPassword" value="" size="30">
-	</td>
-</tr>
-<tr>
-	<td align="left"><?php echo $loc["VerifyNewPassword"]; ?>:</td>
-	<td><?php echo fieldError("loginPasswordRetyped", $errors); ?>
-
-		<input type="password" name="loginPasswordRetyped" value="" size="30">
 	</td>
 </tr>
 <?php
 	}
 ?>
-<tr>
-	<td align="left"></td>
-	<td>
-<?php
-
-	// The submit button reads 'Add' if an authorized user uses 'user_details.php' to add a new user (-> 'userID' is empty!)
-	// This should make it more clear that submitting the form is going to add a new user without any further approval!
-	// INSERTs are allowed to:
-	//         1. EVERYONE who's not logged in (but ONLY if variable '$addNewUsers' in 'ini.inc.php' is set to "everyone"!)
-	//            (Note that this feature is actually only meant to add the very first user to the users table.
-	//             After you've done so, it is highly recommended to change the value of '$addNewUsers' to 'admin'!)
-	//   -or-  2. the ADMIN only (if variable '$addNewUsers' in 'ini.inc.php' is set to "admin")
-	if ((!isset($_SESSION['loginEmail']) && ($addNewUsers == "everyone") && ($userID == "")) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($userID == "")))
-	{
-?>
-		<input type="submit" value="Add User">
-<?php
-	}
-	else // ...otherwise the submit button reads (guess what) 'Submit' (i.e., solely an email will be sent to the admin for further approval):
-	{
-?>
-		<input type="submit" value="Submit">
-<?php
-	}
-?>
-	</td>
-</tr>
 </table>
 </form><?php
 
