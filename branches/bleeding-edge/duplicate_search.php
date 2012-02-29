@@ -19,6 +19,7 @@
 	// This script provides a form that lets you search for duplicate records.
 	// 
 	// 
+	// TODO: I18n
 
 
 	// Incorporate some include files:
@@ -349,69 +350,110 @@
 <input type="hidden" name="citeStyle" value="<?php echo rawurlencode($citeStyle); ?>">
 <input type="hidden" name="citeOrder" value="<?php echo $citeOrder; ?>">
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds a form that lets you search for duplicate records">
-	<tr>
-		<td width="58" valign="top"><b>Match Fields:</b></td>
-		<td width="10">&nbsp;</td>
-		<td valign="top"><?php echo fieldError("matchFieldsSelector", $errors); ?>
+<tr>
+	<td width="120" valign="top">
+		<div class="sect"><?php echo $loc["MatchFields"]; ?>:</div>
+	</td>
+	<td valign="top"><?php echo fieldError("matchFieldsSelector", $errors); ?>
 
-			<select name="matchFieldsSelector[]" multiple><?php echo $matchFieldsOptionTags; ?>
+		<select name="matchFieldsSelector[]" multiple><?php echo $matchFieldsOptionTags; ?>
 
-			</select>
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" name="submit" value="Find Duplicates">
-		</td>
-	</tr>
-	<tr>
-		<td align="center" colspan="3">&nbsp;</td>
-	</tr>
-	<tr>
-		<td valign="top" rowspan="5"><b>Search Options:</b></td>
-		<td rowspan="5">&nbsp;</td>
-		<td valign="top"><input type="checkbox" name="ignoreWhitespace" value="1"<?php echo $ignoreWhitespaceChecked; ?>>&nbsp;&nbsp;&nbsp;Ignore whitespace</td>
-	</tr>
-	<tr>
-		<td valign="top"><input type="checkbox" name="ignorePunctuation" value="1"<?php echo $ignorePunctuationChecked; ?>>&nbsp;&nbsp;&nbsp;Ignore punctuation</td>
-	</tr>
-	<tr>
-		<td valign="top"><input type="checkbox" name="ignoreCharacterCase" value="1"<?php echo $ignoreCharacterCaseChecked; ?>>&nbsp;&nbsp;&nbsp;Ignore character case</td>
-	</tr>
-	<tr>
-		<td valign="top"><input type="checkbox" name="ignoreAuthorInitials" value="1"<?php echo $ignoreAuthorInitialsChecked; ?>>&nbsp;&nbsp;&nbsp;Ignore initials in author names</td>
-	</tr>
-	<tr>
-		<td valign="top">
-			<select name="nonASCIIChars"><?php echo $nonASCIICharsOptionTags; ?>
+		</select>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" name="submit" value="Find Duplicates">
+	</td>
+</tr>
+</table>
+<table class="showhide" align="center" border="0" cellpadding="0" cellspacing="10" width="95%">
+<tr>
+	<td class="small" width="120" valign="top">
+		<a href="javascript:toggleVisibility('searchopt','optToggleimg','optToggletxt','<?php echo rawurlencode($loc["SearchAndDisplayOptions"]); ?>')"<?php echo addAccessKey("attribute", "search_opt"); ?> title="<?php echo $loc["LinkTitle_ToggleVisibility"] . addAccessKey("title", "search_opt"); ?>">
+			<img id="optToggleimg" class="toggleimg" src="img/closed.gif" alt="<?php echo $loc["LinkTitle_ToggleVisibility"]; ?>" width="9" height="9" hspace="0" border="0">
+			<span id="optToggletxt" class="toggletxt"><?php echo $loc["SearchAndDisplayOptions"]; ?></span>
+		</a>
+	</td>
+</tr>
+</table>
+<table id="searchopt" align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds search &amp; display options" style="display: none;">
+<tr>
+	<td width="120" valign="top" rowspan="5">
+		<div class="sect"><?php echo $loc["SearchOptions"]; ?>:</div>
+	</td>
+	<td valign="top" colspan="2">
+		<input type="checkbox" name="ignoreWhitespace" value="1"<?php echo $ignoreWhitespaceChecked; ?>>&nbsp;&nbsp;&nbsp;Ignore whitespace
+	</td>
+</tr>
+<tr>
+	<td valign="top" colspan="2">
+		<input type="checkbox" name="ignorePunctuation" value="1"<?php echo $ignorePunctuationChecked; ?>>&nbsp;&nbsp;&nbsp;Ignore punctuation
+	</td>
+</tr>
+<tr>
+	<td valign="top" colspan="2">
+		<input type="checkbox" name="ignoreCharacterCase" value="1"<?php echo $ignoreCharacterCaseChecked; ?>>&nbsp;&nbsp;&nbsp;Ignore character case
+	</td>
+</tr>
+<tr>
+	<td valign="top" colspan="2">
+		<input type="checkbox" name="ignoreAuthorInitials" value="1"<?php echo $ignoreAuthorInitialsChecked; ?>>&nbsp;&nbsp;&nbsp;Ignore initials in author names
+	</td>
+</tr>
+<tr>
+	<td valign="top" colspan="2">
+		<select name="nonASCIIChars"><?php echo $nonASCIICharsOptionTags; ?>
 
-			</select>
-			&nbsp;&nbsp;&nbsp;non-ASCII characters before comparison
-		</td>
+		</select>
+		&nbsp;&nbsp;&nbsp;non-ASCII characters before comparison
+	</td>
+</tr>
+<tr>
+	<td valign="top">
+		<div class="sect"><?php echo $loc["SQLQuery"]; ?>:</div>
+	</td>
+	<td colspan="2"><?php echo fieldError("sqlQuery", $errors); ?>
 
-	</tr>
-	<tr>
-		<td align="center" colspan="3">&nbsp;</td>
-	</tr>
-	<tr>
-		<td width="58" valign="top"><b>SQL Query:</b></td>
-		<td width="10">&nbsp;</td>
-		<td><?php echo fieldError("sqlQuery", $errors); ?><textarea name="sqlQuery" rows="6" cols="60"><?php echo $sqlQuery; ?></textarea></td>
-	</tr>
-	<tr>
-		<td valign="top"><b>Display Options:</b></td>
-		<td>&nbsp;</td>
-		<td valign="top"><input type="checkbox" name="showLinks" value="1"<?php echo $checkLinks; ?>>&nbsp;&nbsp;&nbsp;Display links&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Show&nbsp;&nbsp;&nbsp;<input type="text" name="showRows" value="<?php echo $showRows; ?>" size="4">&nbsp;&nbsp;&nbsp;records per page</td>
-	</tr>
-	<tr>
-		<td align="center" colspan="3">&nbsp;</td>
-	</tr>
-	<tr>
-		<td valign="top"><b>Help:</b></td>
-		<td>&nbsp;</td>
-		<td>Modify the elements of this form as needed and click the <em>Find Duplicates</em> button. You can use the field selector to specify which fields shall be considered when matching records. The search options allow you to normalize field contents before comparison. The SQL query string defines the scope of the duplicate search and (in case of List view) specifies the columns that will be displayed in the results list.</td>
-	</tr>
-	<tr>
-		<td valign="top">&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>The <a href="http://www.mysql.com/documentation/index.html">MySQL online manual</a> has a <a href="http://dev.mysql.com/doc/mysql/en/tutorial.html">tutorial introduction</a> on using MySQL and provides a detailed description of the <a href="http://www.mysql.com/doc/S/E/SELECT.html"><code>SELECT</code> syntax</a>.</td>
-	</tr>
+		<textarea name="sqlQuery" rows="6" cols="60"><?php echo $sqlQuery; ?>
+
+		</textarea>
+	</td>
+</tr>
+<tr>
+	<td valign="middle">
+		<div class="sect"><?php echo $loc["DisplayOptions"]; ?>:</div>
+	</td>
+	<td width="205" valign="middle">
+		<input type="checkbox" id="showLinks" name="showLinks" value="1"<?php echo $checkLinks; ?>>&nbsp;&nbsp;&nbsp;<?php echo $loc["ShowLinks"]; ?>
+
+	</td>
+	<td valign="middle">
+		<?php echo $loc["ShowRecordsPerPage_Prefix"]; ?>&nbsp;&nbsp;&nbsp;<input type="text" name="showRows" value="<?php echo $showRows; ?>" size="4" title="<?php echo $loc["DescriptionShowRecordsPerPage"]; ?>">&nbsp;&nbsp;&nbsp;<?php echo $loc["ShowRecordsPerPage_Suffix"]; ?>
+
+	</td>
+</tr>
+</table>
+<table class="showhide" align="center" border="0" cellpadding="0" cellspacing="10" width="95%">
+<tr>
+	<td class="small" width="120" valign="top">
+		<a href="javascript:toggleVisibility('helptxt','helpToggleimg','helpToggletxt','<?php echo rawurlencode($loc["Help"]); ?>')"<?php echo addAccessKey("attribute", "search_help"); ?> title="<?php echo $loc["LinkTitle_ToggleVisibility"] . addAccessKey("title", "search_help"); ?>">
+			<img id="helpToggleimg" class="toggleimg" src="img/closed.gif" alt="<?php echo $loc["LinkTitle_ToggleVisibility"]; ?>" width="9" height="9" hspace="0" border="0">
+			<span id="helpToggletxt" class="toggletxt"><?php echo $loc["Help"]; ?></span>
+		</a>
+	</td>
+</tr>
+</table>
+<table id="helptxt" align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds the help text" style="display: none;">
+<tr>
+	<td width="120" valign="top">
+		<div class="sect"><?php echo $loc["Help"]; ?>:</div>
+	</td>
+	<td class="helpbody" valign="top">
+		<div class="even">
+			This form allows you to find duplicate records within your current query results. Modify the elements of this form as needed and click the <em>Find Duplicates</em> button. You can use the field selector to specify which fields shall be considered when matching records. The search options allow you to normalize field contents before comparison. The SQL query string defines the scope of the duplicate search and (in case of List view) specifies the columns that will be displayed in the results list.
+		</div>
+		<div class="odd">
+			Some usage tips: Generally it should suffice to simply press the <em>Find Duplicates</em> button. W.r.t. the field selector, it's usually a good idea to leave a few more fields selected. The more fields you select, the more conservative will the dup detection be (and vice versa). The default selection (<code>author</code>, <code>title</code>, <code>year</code>, <code>publication</code>, <code>volume</code>, <code>pages</code>) is rather conservative and should thus avoid false positives. In general, deselecting one or more of the fields <code>author</code>, <code>title</code> and/or <code>publication</code> will often detect additional duplicate entries but may also display some false positives.
+		</div>
+	</td>
+</tr>
 </table>
 </form><?php
 
