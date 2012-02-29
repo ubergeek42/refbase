@@ -339,7 +339,7 @@
 	// note: we provide a default value for the 'submit' form tag so that hitting <enter> within a text entry field will act as if the user clicked the 'Add/Edit Query' button
 ?>
 
-<form action="query_modify.php" method="POST">
+<form action="query_modify.php" method="POST" name="saveQuery">
 <input type="hidden" name="formType" value="saveQuery">
 <input type="hidden" name="submit" value="<?php echo $pageTitle; ?>">
 <input type="hidden" name="queryAction" value="<?php echo $queryAction; ?>">
@@ -349,12 +349,19 @@
 <input type="hidden" name="citeOrder" value="<?php echo $citeOrder; ?>">
 <input type="hidden" name="origQueryName" value="<?php echo rawurlencode($origQueryName); ?>">
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds forms that enable you to manage your custom queries">
-	<tr>
-		<td width="58" valign="top"><b>Query Name:</b></td>
-		<td width="10">&nbsp;</td>
-		<td>
-			<?php echo fieldError("queryName", $errors); ?><input type="text" name="queryName" value="<?php echo encodeHTML($queryName); ?>" size="33">
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" name="submit" value="<?php echo $pageTitle; ?>"><?php
+<tr>
+	<td width="120" valign="middle">
+		<div class="sect"><?php echo $loc["QueryName"]; ?>:</div>
+	</td>
+	<td><?php echo fieldError("queryName", $errors); ?>
+
+		<input type="text" name="queryName" value="<?php echo encodeHTML($queryName); ?>" size="62">
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;</td>
+	<td>
+		<input type="submit" name="submit" value="<?php echo $pageTitle; ?>"><?php
 
 	if ($queryAction == "edit") // add a DELETE button (CAUTION: the delete button must be displayed *AFTER* the edit button, otherwise DELETE will be the default action if the user hits return!!)
 								// (this is since the first displayed submit button represents the default submit action in several browsers!! [like OmniWeb or Mozilla])
@@ -365,45 +372,86 @@
 	}
 ?>
 
-		</td>
-	</tr>
-	<tr>
-		<td align="center" colspan="3">&nbsp;</td>
-	</tr>
-	<tr>
-		<td width="58" valign="top"><b>SQL Query:</b></td>
-		<td width="10">&nbsp;</td>
-		<td><?php echo fieldError("sqlQuery", $errors); ?><textarea name="sqlQuery" rows="6" cols="60"><?php echo $sqlQuery; ?></textarea></td>
-	</tr>
-	<tr>
-		<td valign="top"><b>Display Options:</b></td>
-		<td>&nbsp;</td>
-		<td valign="top"><input type="checkbox" name="showLinks" value="1"<?php echo $checkLinks; ?>>&nbsp;&nbsp;&nbsp;Display Links&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Show&nbsp;&nbsp;&nbsp;<input type="text" name="showRows" value="<?php echo $showRows; ?>" size="4">&nbsp;&nbsp;&nbsp;records per page</td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td valign="top"><input type="checkbox" name="showQuery" value="1"<?php echo $checkQuery; ?>>&nbsp;&nbsp;&nbsp;Display SQL query&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;View type:&nbsp;&nbsp;
-			<select name="queryViewType">
-				<option<?php echo $webViewTypeSelected; ?>>Web</option>
-				<option<?php echo $printViewTypeSelected; ?>>Print</option>
-				<option<?php echo $mobileViewTypeSelected; ?>>Mobile</option>
-			</select>
-		</td>
-	</tr>
-	<tr>
-		<td align="center" colspan="3">&nbsp;</td>
-	</tr>
-	<tr>
-		<td valign="top"><b>Help:</b></td>
-		<td>&nbsp;</td>
-		<td><?php echo $helpText; ?></td>
-	</tr>
-	<tr>
-		<td valign="top">&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>The <a href="http://www.mysql.com/documentation/index.html">MySQL online manual</a> has a <a href="http://dev.mysql.com/doc/mysql/en/tutorial.html">tutorial introduction</a> on using MySQL and provides a detailed description of the <a href="http://www.mysql.com/doc/S/E/SELECT.html"><code>SELECT</code> syntax</a>.</td>
-	</tr>
+	</td>
+</tr>
+</table>
+<table class="showhide" align="center" border="0" cellpadding="0" cellspacing="10" width="95%">
+<tr>
+	<td class="small" width="120" valign="top">
+		<a href="javascript:toggleVisibility('searchopt','optToggleimg','optToggletxt','<?php echo rawurlencode($loc["SearchAndDisplayOptions"]); ?>')"<?php echo addAccessKey("attribute", "search_opt"); ?> title="<?php echo $loc["LinkTitle_ToggleVisibility"] . addAccessKey("title", "search_opt"); ?>">
+			<img id="optToggleimg" class="toggleimg" src="img/closed.gif" alt="<?php echo $loc["LinkTitle_ToggleVisibility"]; ?>" width="9" height="9" hspace="0" border="0">
+			<span id="optToggletxt" class="toggletxt"><?php echo $loc["SearchAndDisplayOptions"]; ?></span>
+		</a>
+	</td>
+</tr>
+</table>
+<table id="searchopt" align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds search &amp; display options" style="display: none;">
+<tr>
+	<td width="120" valign="top">
+		<div class="sect"><?php echo $loc["SQLQuery"]; ?>:</div>
+	</td>
+	<td colspan="2"><?php echo fieldError("sqlQuery", $errors); ?>
+
+		<textarea name="sqlQuery" rows="6" cols="60"><?php echo $sqlQuery; ?>
+
+		</textarea>
+	</td>
+</tr>
+<tr>
+	<td valign="middle">
+		<div class="sect"><?php echo $loc["DisplayOptions"]; ?>:</div>
+	</td>
+	<td width="205" valign="middle">
+		<input type="checkbox" name="showLinks" value="1"<?php echo $checkLinks; ?>>&nbsp;&nbsp;&nbsp;<?php echo $loc["ShowLinks"]; ?>
+
+	</td>
+	<td valign="middle">
+		<?php echo $loc["ShowRecordsPerPage_Prefix"]; ?>&nbsp;&nbsp;&nbsp;<input type="text" name="showRows" value="<?php echo $showRows; ?>" size="4" title="<?php echo $loc["DescriptionShowRecordsPerPage"]; ?>">&nbsp;&nbsp;&nbsp;<?php echo $loc["ShowRecordsPerPage_Suffix"]; ?>
+
+	</td>
+</tr>
+<tr>
+	<td>&nbsp;</td>
+	<td valign="top">
+		<input type="checkbox" name="showQuery" value="1"<?php echo $checkQuery; ?>>&nbsp;&nbsp;&nbsp;<?php echo $loc["DisplaySQLquery"]; ?>
+
+	</td>
+	<td valign="top">
+		<?php echo $loc["ViewType"]; ?>:&nbsp;&nbsp;
+		<select name="queryViewType">
+			<option value="Web"<?php echo $webViewTypeSelected; ?>><?php echo $loc["web"]; ?></option>
+			<option value="Print"<?php echo $printViewTypeSelected; ?>><?php echo $loc["print"]; ?></option>
+			<option value="Mobile"<?php echo $mobileViewTypeSelected; ?>><?php echo $loc["mobile"]; ?></option>
+		</select>
+	</td>
+</tr>
+</table>
+<table class="showhide" align="center" border="0" cellpadding="0" cellspacing="10" width="95%">
+<tr>
+	<td class="small" width="120" valign="top">
+		<a href="javascript:toggleVisibility('helptxt','helpToggleimg','helpToggletxt','<?php echo rawurlencode($loc["Help"]); ?>')"<?php echo addAccessKey("attribute", "search_help"); ?> title="<?php echo $loc["LinkTitle_ToggleVisibility"] . addAccessKey("title", "search_help"); ?>">
+			<img id="helpToggleimg" class="toggleimg" src="img/closed.gif" alt="<?php echo $loc["LinkTitle_ToggleVisibility"]; ?>" width="9" height="9" hspace="0" border="0">
+			<span id="helpToggletxt" class="toggletxt"><?php echo $loc["Help"]; ?></span>
+		</a>
+	</td>
+</tr>
+</table>
+<table id="helptxt" align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds some help text and example queries" style="display: none;">
+<tr>
+	<td width="120" valign="top">
+		<div class="sect"><?php echo $loc["Help"]; ?>:</div>
+	</td>
+	<td class="helpbody" valign="top">
+		<div class="even">
+			<?php echo $helpText; ?>
+
+		</div>
+		<div class="odd">
+			<?php echo $loc["MySQL-Info"]; ?>
+
+		</div>
+	</td>
+</tr>
 </table>
 </form><?php
 
