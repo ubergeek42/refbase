@@ -172,7 +172,7 @@
 
 	if (($queryAction == "add") OR (($queryAction == "edit") AND ($queryName != $origQueryName))) // if the user did modify the query name, check if the new query name does already exist for this user:
 	{
-		$query = "SELECT query_id, query_name FROM $tableQueries WHERE user_id = $loginUserID AND query_name = '$queryName'"; // the global variable '$loginUserID' gets set in function 'start_session()' within 'include.inc.php'
+		$query = "SELECT query_id, query_name FROM $tableQueries WHERE user_id = " . quote_smart($loginUserID) . " AND query_name = " . quote_smart($queryName); // the global variable '$loginUserID' gets set in function 'start_session()' within 'include.inc.php'
 
 		$result = queryMySQLDatabase($query); // RUN the query on the database through the connection (function 'queryMySQLDatabase()' is defined in 'include.inc.php')
 
