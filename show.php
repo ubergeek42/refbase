@@ -104,7 +104,7 @@
 		$wrapResults = "1"; // we'll output a full document (HTML, RTF, LaTeX, etc) structure unless the 'wrapResults' parameter is set explicitly to "0"
 
 	if (isset($_REQUEST['citeStyle']) AND !empty($_REQUEST['citeStyle']))
-		$citeStyle = $_REQUEST['citeStyle']; // get cite style
+		$citeStyle = $_REQUEST['citeStyle'];
 	else
 		$citeStyle = $defaultCiteStyle; // if no cite style was given, we'll use the default cite style which is defined by the '$defaultCiteStyle' variable in 'ini.inc.php'
 
@@ -127,7 +127,7 @@
 		$citeType = "html";
 
 	if (isset($_REQUEST['exportFormat']) AND !empty($_REQUEST['exportFormat']))
-		$exportFormat = $_REQUEST['exportFormat']; // get export format style
+		$exportFormat = $_REQUEST['exportFormat'];
 	else
 		$exportFormat = $defaultExportFormat; // if no export format was given, we'll use the default export format which is defined by the '$defaultExportFormat' variable in 'ini.inc.php'
 
@@ -139,7 +139,7 @@
 	// - 'file' => return data as downloadable file
 	// - 'email' => send data as email (to the user's login email address)
 	if (isset($_REQUEST['exportType']) AND preg_match("/^(text|html|xml|rss|file|email)$/i", $_REQUEST['exportType']))
-		$exportType = $_REQUEST['exportType']; // get export type
+		$exportType = $_REQUEST['exportType'];
 	else
 		$exportType = "html";
 
@@ -230,12 +230,12 @@
 	}
 
 	if (isset($_REQUEST['date']))
-		$date = $_REQUEST['date']; // get date
+		$date = $_REQUEST['date'];
 	else
 		$date = "";
 
 	if (isset($_REQUEST['time']))
-		$time = $_REQUEST['time']; // get time
+		$time = $_REQUEST['time'];
 	else
 		$time = "";
 
@@ -250,12 +250,12 @@
 		$range = "";
 
 	if (isset($_REQUEST['year']))
-		$year = $_REQUEST['year']; // get year
+		$year = $_REQUEST['year'];
 	else
 		$year = "";
 
 	if (isset($_REQUEST['author']))
-		$author = $_REQUEST['author']; // get author
+		$author = $_REQUEST['author'];
 	else
 		$author = "";
 
@@ -265,63 +265,72 @@
 		$without = "";
 
 	if (isset($_REQUEST['title']))
-		$title = $_REQUEST['title']; // get title
+		$title = $_REQUEST['title'];
 	else
 		$title = "";
 
 	if (isset($_REQUEST['publication']))
-		$publication = $_REQUEST['publication']; // get publication
+		$publication = $_REQUEST['publication'];
 	else
 		$publication = "";
 
 	if (isset($_REQUEST['abbrev_journal']))
-		$abbrevJournal = $_REQUEST['abbrev_journal']; // get abbreviated journal
+		$abbrevJournal = $_REQUEST['abbrev_journal'];
 	else
 		$abbrevJournal = "";
 
 	if (isset($_REQUEST['keywords']))
-		$keywords = $_REQUEST['keywords']; // get keywords
+		$keywords = $_REQUEST['keywords'];
 	else
 		$keywords = "";
 
 	if (isset($_REQUEST['abstract']))
-		$abstract = $_REQUEST['abstract']; // get abstract
+		$abstract = $_REQUEST['abstract'];
 	else
 		$abstract = "";
 
 	if (isset($_REQUEST['area']))
-		$area = $_REQUEST['area']; // get area
+		$area = $_REQUEST['area'];
 	else
 		$area = "";
 
+	if (isset($_REQUEST['expedition']))
+		$expedition = $_REQUEST['expedition'];
+	else
+		$expedition = "";
+
 	if (isset($_REQUEST['notes']))
-		$notes = $_REQUEST['notes']; // get notes
+		$notes = $_REQUEST['notes'];
 	else
 		$notes = "";
 
 	if (isset($_REQUEST['location']))
-		$location = $_REQUEST['location']; // get location
+		$location = $_REQUEST['location'];
 	else
 		$location = "";
 
 	if (isset($_REQUEST['type']))
-		$type = $_REQUEST['type']; // get type
+		$type = $_REQUEST['type'];
 	else
 		$type = "";
 
 	if (isset($_REQUEST['contribution_id']))
-		$contributionID = $_REQUEST['contribution_id']; // get contribution ID
+		$contributionID = $_REQUEST['contribution_id'];
 	else
 		$contributionID = "";
 
 	if (isset($_REQUEST['thesis'])) // given value must be either 'yes' (= find only theses) or 'no' (= exclude any theses) or a search string (like 'master', 'bachelor' or 'doctor')
-		$thesis = $_REQUEST['thesis']; // get thesis
+		$thesis = $_REQUEST['thesis'];
 	else
 		$thesis = "";
 
+	// NOTE: When querying any user-specific fields (i.e. 'marked', 'copy', 'selected',
+	//       'user_keys', 'user_notes', 'user_file', 'user_groups', 'cite_key'), the
+	//       'userID' parameter must be given as well!
+
 	if (isset($_REQUEST['selected'])) // given value must be either 'yes' or 'no'
 		$selected = $_REQUEST['selected']; // if e.g. "selected=yes", we'll restrict the search results to those records that have the 'selected' bit set to 'yes' for a particular user.
-	else								// IMPORTANT: Since the 'selected' field is specific to every user (table 'user_data'), the 'userID' parameter must be specified as well!
+	else
 		$selected = "";					//            (the 'selected' parameter can be queried with a user ID that's different from the current user's own user ID, see note at "Build FROM clause")
 
 	if (isset($_REQUEST['only']))
@@ -332,13 +341,32 @@
 
 	if (isset($_REQUEST['ismarked'])) // given value must be either 'yes' or 'no' (note that this parameter is named 'ismarked' instead of 'marked' to avoid any name collisions with the 'marked' parameter that's used in conjunction with checkboxes!)
 		$marked = $_REQUEST['ismarked']; // if e.g. "ismarked=yes", we'll restrict the search results to those records that have the 'marked' bit set to 'yes' for a particular user.
-	else								// IMPORTANT: Since the 'marked' field is specific to every user (table 'user_data'), the 'userID' parameter must be specified as well!
+	else
 		$marked = "";					//            (currently, the 'ismarked' parameter can NOT be queried with a user ID that's different from the current user's own user ID!)
 
+	if (isset($_REQUEST['user_keys']))
+		$userKeys = $_REQUEST['user_keys'];
+	else
+		$userKeys = "";					//            (currently, the 'user_keys' parameter can NOT be queried with a user ID that's different from the current user's own user ID!)
+
+	if (isset($_REQUEST['user_notes']))
+		$userNotes = $_REQUEST['user_notes'];
+	else
+		$userNotes = "";					//            (currently, the 'user_notes' parameter can NOT be queried with a user ID that's different from the current user's own user ID!)
+
+	if (isset($_REQUEST['user_groups']))
+		$userGroups = $_REQUEST['user_groups'];
+	else
+		$userGroups = "";					//            (currently, the 'user_groups' parameter can NOT be queried with a user ID that's different from the current user's own user ID!)
+
+	// NOTE: Actually, the 'cite_key' can be queried with a foreign user ID! This
+	//        was permitted in function 'verifySQLQuery()' to allow every user to
+	//        query other user's 'cite_key' fields using 'sru.php' (e.g., by URLs
+	//        like: 'sru.php?version=1.1&query=bib.citekey=...&x-info-2-auth1.0-authenticationToken=email=...')
 	if (isset($_REQUEST['cite_key']))
 		$citeKey = $_REQUEST['cite_key'];
-	else								// IMPORTANT: Since the 'cite_key' field is specific to every user (table 'user_data'), the 'userID' parameter must be specified as well!
-		$citeKey = "";					//            (currently, the 'cite_key' parameter can NOT be queried with a user ID that's different from the current user's own user ID!)
+	else
+		$citeKey = "";
 
 	if (isset($_REQUEST['call_number']))
 		$callNumber = $_REQUEST['call_number'];
@@ -346,23 +374,23 @@
 		$callNumber = "";
 
 	if (isset($_REQUEST['userID']) AND preg_match("/^[0-9]+$/", $_REQUEST['userID']))
-		$userID = $_REQUEST['userID']; // when searching user specific fields (like the 'selected' or 'marked' field), this parameter specifies the user's user ID.
-									// I.e., the 'userID' parameter does only make sense when specified together with either the 'selected' or the 'marked' parameter. As an example,
-	else							// "show.php?author=...&selected=yes&userID=2" will show every record where the user who's identified by user ID "2" has set the selected bit to "yes".
+		$userID = $_REQUEST['userID']; // when searching user specific fields, this parameter specifies the user's user ID. I.e., the 'userID' parameter does only make
+									// sense when specified together with any of the user-specific parameters. As an example, "show.php?author=...&selected=yes&userID=2"
+	else							// will show every record where the user who's identified by user ID "2" has set the selected bit to "yes".
 		$userID = "";
 
 	if (isset($_REQUEST['by']))
-		$browseByField = $_REQUEST['by']; // get 'by' parameter
+		$browseByField = $_REQUEST['by'];
 	else
 		$browseByField = "";
 
 	if (isset($_REQUEST['where']))
-		$where = stripSlashesIfMagicQuotes($_REQUEST['where']); // get custom WHERE clause (and remove slashes from WHERE clause if 'magic_quotes_gpc = On'; function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php')
+		$where = stripSlashesIfMagicQuotes($_REQUEST['where']); // remove slashes from custom WHERE clause if 'magic_quotes_gpc = On'; function 'stripSlashesIfMagicQuotes()' is defined in 'include.inc.php')
 	else
 		$where = "";
 
 	if (isset($_REQUEST['queryType']))
-		$queryType = $_REQUEST['queryType']; // get 'queryType' parameter
+		$queryType = $_REQUEST['queryType'];
 	else
 		$queryType = "";
 
@@ -403,7 +431,12 @@
 
 
 	// Check the correct parameters have been passed:
-	if (empty($serial) AND empty($date) AND empty($time) AND empty($year) AND empty($author) AND empty($title) AND empty($publication) AND empty($abbrevJournal) AND empty($keywords) AND empty($abstract) AND empty($area) AND empty($notes) AND empty($location) AND empty($type) AND empty($contributionID) AND empty($thesis) AND empty($without) AND (empty($selected) OR (!empty($selected) AND empty($userID))) AND (empty($marked) OR (!empty($marked) AND empty($userID))) AND (empty($citeKey) OR (!empty($citeKey) AND empty($userID))) AND empty($callNumber) AND empty($where) AND (empty($browseByField) OR (!empty($browseByField) AND $displayType != "Browse")))
+	if (empty($serial) AND empty($date) AND empty($time) AND empty($year) AND empty($author) AND empty($title) AND empty($publication) AND empty($abbrevJournal) AND empty($keywords)
+	    AND empty($abstract) AND empty($area) AND empty($expedition) AND empty($notes) AND empty($location) AND empty($type) AND empty($contributionID) AND empty($thesis) AND empty($without)
+	    AND (empty($selected) OR (!empty($selected) AND empty($userID))) AND (empty($marked) OR (!empty($marked) AND empty($userID))) AND (empty($userKeys) OR (!empty($userKeys)
+	    AND empty($userID))) AND (empty($userNotes) OR (!empty($userNotes) AND empty($userID))) AND (empty($userGroups) OR (!empty($userGroups) AND empty($userID))) AND
+	    (empty($citeKey) OR (!empty($citeKey) AND empty($userID))) AND empty($callNumber) AND empty($where) AND (empty($browseByField) OR (!empty($browseByField)
+	    AND $displayType != "Browse")))
 	{
 		// if 'show.php' was called without any valid parameters, we'll present a form where a user can input a record serial number.
 		// Currently, this form will not present form elements for other supported options (like searching by date, year or author),
@@ -453,11 +486,13 @@
 
 		// Build HTML elements that allow for search suggestions for text entered by the user:
 		if (isset($_SESSION['userAutoCompletions']) AND ($_SESSION['userAutoCompletions'] == "yes"))
-			$suggestElements = buildSuggestElements("recordID", "showSuggestions", "showSuggestProgress", "id-recordIDSelector-"); // function 'buildSuggestElements()' is defined in 'include.inc.php'
+			$suggestElements = buildSuggestElements("recordID", "showSuggestions", "showSuggestProgress", "id-recordIDSelector-", "\t\t", "[';',',',' ']"); // function 'buildSuggestElements()' is defined in 'include.inc.php'
 		else
 			$suggestElements = "";
 
 		// Start <form> and <table> holding the form elements:
+		// 
+		// TODO: use divs + CSS styling (instead of a table-based layout) for _all_ output, especially for 'viewType=Mobile'
 ?>
 
 <form action="show.php" method="GET" name="show">
@@ -465,10 +500,11 @@
 <input type="hidden" name="submit" value="<?php echo $loc["ButtonTitle_ShowRecord"]; ?>">
 <input type="hidden" name="showLinks" value="1">
 <input type="hidden" name="userID" value="<?php echo $loginUserID; // '$loginUserID' is made available globally by the 'start_session()' function ?>">
-<table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds a form that offers to show a record by its serial number, call number or cite key">
+<table id="queryform" align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds a form that offers to show a record by its serial number, call number or cite key">
 <tr>
-	<td width="58" valign="top"><b><?php echo $loc["ShowRecord"]; ?>:</b></td>
-	<td width="10">&nbsp;</td>
+	<td width="120">
+		<div class="sect"><?php echo $loc["ShowRecord"]; ?>:</div>
+	</td>
 	<td width="<?php echo $recordIDCellWidth; ?>">
 		<select id="recordIDSelector" name="recordIDSelector"><?php echo $dropDownItems2; ?>
 
@@ -488,16 +524,59 @@
 	<td>&nbsp;</td>
 	<td>&nbsp;</td>
 	<td>&nbsp;</td>
-	<td>&nbsp;</td>
 	<td><input type="submit" name="submit" value="<?php echo $loc["ButtonTitle_ShowRecord"]; ?>" title="display record details for the entered record identifier"></td>
 </tr>
+</table>
+<table class="showhide" align="center" border="0" cellpadding="0" cellspacing="10" width="95%">
 <tr>
-	<td align="center" colspan="5">&nbsp;</td>
+	<td class="small" width="120" valign="top">
+		<a href="javascript:toggleVisibility('helptxt','helpToggleimg','helpToggletxt','<?php echo rawurlencode($loc["HelpAndExamples"]); ?>')"<?php echo addAccessKey("attribute", "search_help"); ?> title="<?php echo $loc["LinkTitle_ToggleVisibility"] . addAccessKey("title", "search_help"); ?>">
+			<img id="helpToggleimg" class="toggleimg" src="img/closed.gif" alt="<?php echo $loc["LinkTitle_ToggleVisibility"]; ?>" width="9" height="9" hspace="0" border="0">
+			<span id="helpToggletxt" class="toggletxt"><?php echo $loc["HelpAndExamples"]; ?></span>
+		</a>
+	</td>
+</tr>
+</table>
+<table id="helptxt" align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds some help text and example queries" style="display: none;">
+<tr>
+	<td width="120" valign="top">
+		<div class="sect"><?php echo $loc["Help"]; ?>:</div>
+	</td>
+	<td class="helpbody" valign="top">
+		<div class="even">
+			If you know the record identifier (i.e. the database serial number<?php if (isset($_SESSION['loginEmail'])) { echo ", call number or cite key"; } ?>) for a specific record, you can enter it here, then press the <em>Show Record</em> button to jump directly to that record. While the <em>is equal to</em> option requires exact matches, the <em>contains</em> option allows for partial matches. You can use the <em>is within list</em> option to enter multiple record IDs (delimited by whitespace).
+		</div>
+	</td>
 </tr>
 <tr>
-	<td valign="top"><b><?php echo $loc["Help"]; ?>:</b></td>
-	<td>&nbsp;</td>
-	<td colspan="3" valign="top">This form enables you to directly jump to a particular record and display its record details. Just enter the database serial number for that record and press the 'Show Record' button. (In order to view the database serial number of a particular record, click the <img src="img/details.gif" alt="<?php echo $loc["details"]; ?>" title="<?php echo $loc["LinkTitle_ShowDetails"]; ?>" width="9" height="17" hspace="0" border="0" align="top"> icon that's available in any list view next to that record and note the number listed within the 'Serial' field.)</td>
+	<td width="120" valign="top">
+		<div class="sect"><?php echo $loc["Examples"]; ?>:</div>
+	</td>
+	<td class="examples" valign="top">
+		<div class="even">
+			Jump to record number 12 and display its record details in Details view:
+			<pre>[ serial ]   [ is equal to ]   12</pre>
+		</div>
+		<div class="odd">
+			List records with serial numbers 1, 6 and 12:
+			<pre>[ serial ]   [ is within list ]   1 6 12</pre>
+		</div>
+<?php
+	if (isset($_SESSION['loginEmail'])) // if a user is logged in
+	{
+?>
+		<div class="even">
+			Find all records where any of my entries contains "lib" in the <em>call_number</em> field:
+			<pre>[ my call_number ]   [ contains ]   lib</pre>
+		</div>
+		<div class="odd">
+			Display records where my <em>cite_key</em> field equals "Meiners2002", "MaelkkiTamsalu1985" or "GranskogEtal2006":
+			<pre>[ my cite_key ]   [ is within list ]   Meiners2002 MaelkkiTamsalu1985 GranskogEtal2006</pre>
+		</div>
+<?php
+	}
+?>
+	</td>
 </tr>
 </table>
 </form><?php
@@ -518,7 +597,7 @@
 	// -------------------------------------------------------------------------------------------------------------------
 
 
-	else // the script was called with at least one of the following parameters: 'record', 'records', 'date', 'time', 'year', 'author', 'title', 'publication', 'abbrev_journal', 'keywords', 'abstract', 'area', 'notes', 'location', 'type', 'contribution_id', 'thesis', 'without', 'selected', 'marked', 'cite_key', 'call_number', 'where', 'by'
+	else // the script was called with at least one of the following parameters: 'record', 'records', 'date', 'time', 'year', 'author', 'title', 'publication', 'abbrev_journal', 'keywords', 'abstract', 'area', 'expedition', 'notes', 'location', 'type', 'contribution_id', 'thesis', 'without', 'selected', 'marked', 'user_keys', 'user_notes', 'user_groups', 'cite_key', 'call_number', 'where', 'by'
 	{
 		// CONSTRUCT SQL QUERY:
 		// TODO: build the complete SQL query using functions 'buildFROMclause()' and 'buildORDERclause()'
@@ -568,7 +647,8 @@
 
 		$multipleParameters = false;
 
-		if (!empty($serial)) // if the 'record' parameter is present:
+		// serial/record:
+		if (!empty($serial))
 		{
 			// first, check if the user is allowed to display any record details:
 			if (preg_match("/^Display$/i", $displayType) AND isset($_SESSION['user_permissions']) AND !preg_match("/allow_details_view/", $_SESSION['user_permissions'])) // no, the 'user_permissions' session variable does NOT contain 'allow_details_view'...
@@ -601,6 +681,7 @@
 				$query .= " serial RLIKE " . quote_smart($serial);
 		}
 
+		// date + time:
 		if (!empty($date) AND !empty($time)) // if both, 'date' AND 'time' parameters are present:
 		{
 			if ($when == "edited")
@@ -657,6 +738,7 @@
 				$query .= " ((" . $queryDateField . " = " . quote_smart($date) . " AND " . $queryTimeField . " " . $searchOperatorTime . " " . quote_smart($time) . ") OR " . $queryDateField . " " . $searchOperatorDate . " " . quote_smart($date) . ")";
 		}
 
+		// date:
 		elseif (!empty($date)) // if only the 'date' parameter is present (and not the 'time' parameter):
 		{
 			if ($range == "after")
@@ -678,6 +760,7 @@
 				$query .= " created_date " . $searchOperator . " " . quote_smart($date);
 		}
 
+		// time:
 		elseif (!empty($time)) // if only the 'time' parameter is present (and not the 'date' parameter):
 		{
 			if ($range == "after")
@@ -699,98 +782,107 @@
 				$query .= " created_time " . $searchOperator . " " . quote_smart($time);
 		}
 
-		if (!empty($year)) // if the 'year' parameter is present:
+		// year:
+		if (!empty($year))
 		{
 			$query .= connectConditionals();
-
 			$query .= " year RLIKE " . quote_smart($year);
 		}
 
-		if (!empty($author)) // if the 'author' parameter is present:
+		// author:
+		if (!empty($author))
 		{
 			$query .= connectConditionals();
-
 			$query .= " author RLIKE " . quote_smart($author);
 		}
 
-		if (!empty($without)) // if the 'without' parameter is present:
+		// without:
+		if (!empty($without))
 		{
 			$query .= connectConditionals();
 			if (preg_match("/^dups$/i", $without))
 				$query .= " (orig_record IS NULL OR orig_record < 0)";
 		}
 
-		if (!empty($title)) // if the 'title' parameter is present:
+		// title:
+		if (!empty($title))
 		{
 			$query .= connectConditionals();
-
 			$query .= " title RLIKE " . quote_smart($title);
 		}
 
-		if (!empty($publication)) // if the 'publication' parameter is present:
+		// publication:
+		if (!empty($publication))
 		{
 			$query .= connectConditionals();
-
 			$query .= " publication RLIKE " . quote_smart($publication);
 		}
 
-		if (!empty($abbrevJournal)) // if the 'abbrev_journal' parameter is present:
+		// abbrev_journal:
+		if (!empty($abbrevJournal))
 		{
 			$query .= connectConditionals();
-
 			$query .= " abbrev_journal RLIKE " . quote_smart($abbrevJournal);
 		}
 
-		if (!empty($keywords)) // if the 'keywords' parameter is present:
+		// keywords:
+		if (!empty($keywords))
 		{
 			$query .= connectConditionals();
-
 			$query .= " keywords RLIKE " . quote_smart($keywords);
 		}
 
-		if (!empty($abstract)) // if the 'abstract' parameter is present:
+		// abstract:
+		if (!empty($abstract))
 		{
 			$query .= connectConditionals();
-
 			$query .= " abstract RLIKE " . quote_smart($abstract);
 		}
 
-		if (!empty($area)) // if the 'area' parameter is present:
+		// area:
+		if (!empty($area))
 		{
 			$query .= connectConditionals();
-
 			$query .= " area RLIKE " . quote_smart($area);
 		}
 
-		if (!empty($notes)) // if the 'notes' parameter is present:
+		// expedition:
+		if (!empty($expedition))
 		{
 			$query .= connectConditionals();
+			$query .= " expedition RLIKE " . quote_smart($expedition);
+		}
 
+		// notes:
+		if (!empty($notes))
+		{
+			$query .= connectConditionals();
 			$query .= " notes RLIKE " . quote_smart($notes);
 		}
 
-		if (!empty($location)) // if the 'location' parameter is present:
+		// location:
+		if (!empty($location))
 		{
 			$query .= connectConditionals();
-
 			$query .= " location RLIKE " . quote_smart($location);
 		}
 
-		if (!empty($type)) // if the 'type' parameter is present:
+		// type:
+		if (!empty($type))
 		{
 			$query .= connectConditionals();
-
 			$query .= " type RLIKE " . quote_smart($type);
 		}
 
-		if (!empty($contributionID)) // if the 'contribution_id' parameter is present:
+		// contribution_id:
+		if (!empty($contributionID))
 		{
 			$query .= connectConditionals();
-
 			$query .= " contribution_id RLIKE " . quote_smart($contributionID);
 		}
 
-		if (!empty($thesis)) // if the 'thesis' parameter is present:
+		// thesis:
+		if (!empty($thesis))
 		{
 			$query .= connectConditionals();
 
@@ -802,21 +894,43 @@
 				$query .= " thesis RLIKE " . quote_smart($thesis);
 		}
 
-		if (!empty($selected) AND !empty($userID)) // if the 'selected' parameter is present (in order to search for user specific fields (like 'selected'), the 'userID' parameter must be given as well!):
+		// selected:
+		if (!empty($selected) AND !empty($userID))
 		{
 			$query .= connectConditionals();
-
 			$query .= " selected RLIKE " . quote_smart($selected); // we use 'selected RLIKE "..."' instead of 'selected = "..."' to allow command line utilities to query for '-s=.+' which will display records with 'selected=yes' AND with 'selected=no'
 		}
 
-		if (!empty($marked) AND !empty($userID)) // if the 'ismarked' parameter is present (in order to search for user specific fields (like 'marked'), the 'userID' parameter must be given as well!):
+		// marked:
+		if (!empty($marked) AND !empty($userID))
 		{
 			$query .= connectConditionals();
-
 			$query .= " marked RLIKE " . quote_smart($marked); // regarding the use of RLIKE, see note for 'selected'
 		}
 
-		if (!empty($citeKey) AND !empty($userID)) // if the 'cite_key' parameter is present (in order to search for user specific fields (like 'cite_key'), the 'userID' parameter must be given as well!):
+		// user_notes:
+		if (!empty($userNotes) AND !empty($userID))
+		{
+			$query .= connectConditionals();
+			$query .= " user_notes RLIKE " . quote_smart($userNotes);
+		}
+
+		// user_groups:
+		if (!empty($userGroups) AND !empty($userID))
+		{
+			$query .= connectConditionals();
+			$query .= " user_groups RLIKE " . quote_smart($userGroups);
+		}
+
+		// user_keys:
+		if (!empty($userKeys) AND !empty($userID))
+		{
+			$query .= connectConditionals();
+			$query .= " user_keys RLIKE " . quote_smart($userKeys);
+		}
+
+		// cite_key:
+		if (!empty($citeKey) AND !empty($userID))
 		{
 			$query .= connectConditionals();
 
@@ -838,7 +952,8 @@
 				$query .= " cite_key RLIKE " . quote_smart($citeKey);
 		}
 
-		if (!empty($callNumber)) // if the 'call_number' parameter is present:
+		// call_number:
+		if (!empty($callNumber))
 		{
 			$query .= connectConditionals();
 
@@ -863,7 +978,8 @@
 				$query .= " call_number RLIKE " . quote_smart($callNumberPrefix . " @ [^@;]*" . $callNumber . "[^@;]*");
 		}
 
-		if (!empty($where)) // if the 'where' parameter is present:
+		// where:
+		if (!empty($where))
 		{
 			$query .= connectConditionals();
 
