@@ -29,6 +29,7 @@
 
   function openURL($row, $resolver = "") {
     global $openURLResolver; // these variables are defined in 'ini.inc.php'
+    global $crossRefReqDat;
     global $hostInstitutionAbbrevName;
 
     $co = contextObject($row); 
@@ -43,6 +44,9 @@
       $openURL .= "?";
     else
       $openURL .= "&amp;";
+
+    if (preg_match("#^http://www\.crossref\.org/openurl#", $openURL) && !empty($crossRefReqDat))
+      $openURL .= "pid=" . rawurlencode($crossRefReqDat) . "&amp;";
 
     $openURL .= "ctx_ver=Z39.88-2004";
 
@@ -82,6 +86,8 @@
       $coKey = preg_replace("/au[0-9]*/i", "au", $coKey);
 
       // While COinS does not specify encoding, most javascript tools assume that it is UTF-8
+      // TODO: use function 'detectCharacterEncoding()' instead of the 'mb_*()' functions?
+      //       if (($contentTypeCharset == "ISO-8859-1") AND (detectCharacterEncoding($coValue) != "UTF-8"))
       if (mb_detect_encoding($coValue) != "UTF-8" || !(mb_check_encoding($coValue,"UTF-8")))
         $coValue = utf8_encode($coValue);
       $coins .= "&amp;" . $coKey . "=" . urlencode($coValue);
