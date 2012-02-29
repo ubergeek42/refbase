@@ -391,17 +391,7 @@
 
 		// First, check if we're a dealing with MySQL version 4.1.x or greater:
 		// (MySQL 4.1.x is required if the refbase MySQL database/tables shall be installed using Unicode/UTF-8 as default character set)
-		$queryCheckVersion = "SELECT VERSION()";
-
-		// Run the version check query on the mysql database through the connection:
-		if (!($result = @ mysql_query ($queryCheckVersion, $connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
-				showErrorMsg("The following error occurred while trying to query the MySQL version:", "");
-
-		// Extract result:
-		$row = mysql_fetch_row($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
-		$mysqlVersionString = $row[0]; // extract the contents of the first (and only) row (returned version string will be something like "4.0.20-standard" etc.)
-		$mysqlVersion = preg_replace("/^(\d+\.\d+).+/", "\\1", $mysqlVersionString); // extract main version number (e.g. "4.0") from version string
+		$mysqlVersion = getMySQLversion(); // function 'getMySQLversion()' is defined in 'include.inc.php'
 
 		// --------------------------------------------------------------------
 
