@@ -304,6 +304,11 @@
 	else
 		$notes = "";
 
+	if (isset($_REQUEST['approved'])) // given value must be either 'yes' or 'no'
+		$approved = $_REQUEST['approved'];
+	else
+		$approved = "";
+
 	if (isset($_REQUEST['location']))
 		$location = $_REQUEST['location'];
 	else
@@ -432,7 +437,7 @@
 
 	// Check the correct parameters have been passed:
 	if (empty($serial) AND empty($date) AND empty($time) AND empty($year) AND empty($author) AND empty($title) AND empty($publication) AND empty($abbrevJournal) AND empty($keywords)
-	    AND empty($abstract) AND empty($area) AND empty($expedition) AND empty($notes) AND empty($location) AND empty($type) AND empty($contributionID) AND empty($thesis) AND empty($without)
+	    AND empty($abstract) AND empty($area) AND empty($expedition) AND empty($notes) AND empty($approved) AND empty($location) AND empty($type) AND empty($contributionID) AND empty($thesis) AND empty($without)
 	    AND (empty($selected) OR (!empty($selected) AND empty($userID))) AND (empty($marked) OR (!empty($marked) AND empty($userID))) AND (empty($userKeys) OR (!empty($userKeys)
 	    AND empty($userID))) AND (empty($userNotes) OR (!empty($userNotes) AND empty($userID))) AND (empty($userGroups) OR (!empty($userGroups) AND empty($userID))) AND
 	    (empty($citeKey) OR (!empty($citeKey) AND empty($userID))) AND empty($callNumber) AND empty($where) AND (empty($browseByField) OR (!empty($browseByField)
@@ -597,7 +602,7 @@
 	// -------------------------------------------------------------------------------------------------------------------
 
 
-	else // the script was called with at least one of the following parameters: 'record', 'records', 'date', 'time', 'year', 'author', 'title', 'publication', 'abbrev_journal', 'keywords', 'abstract', 'area', 'expedition', 'notes', 'location', 'type', 'contribution_id', 'thesis', 'without', 'selected', 'marked', 'user_keys', 'user_notes', 'user_groups', 'cite_key', 'call_number', 'where', 'by'
+	else // the script was called with at least one of the following parameters: 'record', 'records', 'date', 'time', 'year', 'author', 'title', 'publication', 'abbrev_journal', 'keywords', 'abstract', 'area', 'expedition', 'notes', 'approved', 'location', 'type', 'contribution_id', 'thesis', 'without', 'selected', 'marked', 'user_keys', 'user_notes', 'user_groups', 'cite_key', 'call_number', 'where', 'by'
 	{
 		// CONSTRUCT SQL QUERY:
 		// TODO: build the complete SQL query using functions 'buildFROMclause()' and 'buildORDERclause()'
@@ -858,6 +863,13 @@
 		{
 			$query .= connectConditionals();
 			$query .= " notes RLIKE " . quote_smart($notes);
+		}
+
+		// approved:
+		if (!empty($approved))
+		{
+			$query .= connectConditionals();
+			$query .= " approved RLIKE " . quote_smart($approved); // regarding the use of RLIKE, see note for 'selected'
 		}
 
 		// location:
