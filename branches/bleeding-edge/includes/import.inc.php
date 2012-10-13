@@ -988,8 +988,12 @@
 											"A2"  =>  "editor", // Author Secondary (see note for 'corporate_author' below)
 											"ED"  =>  "editor", // Author Secondary
 											"A3"  =>  "series_editor", // Author Series
+		//									"A4"  =>  "", // Subsidary Authors
 											"AD"  =>  "address", // Address
 		//									""    =>  "corporate_author", // note that bibutils uses the RIS 'A2' tag to indicate corporate authors ('<name type="corporate">'), e.g., when importing contents of the BibTeX 'organization' field
+		//									"AN"  =>  "", // Accession Number
+		//									"CA"  =>  "", // Caption
+		//									"LB"  =>  "", // Label
 
 											"TI"  =>  "title", // Title Primary
 											"T1"  =>  "title", // Title Primary
@@ -1021,8 +1025,11 @@
 
 											"PB"  =>  "publisher", // Publisher
 											"CY"  =>  "place", // City of publication
+		//									"DA"  =>  "", // Date Created
+		//									"DB"  =>  "", // Database
+		//									"DP"  =>  "", // Database provider
 
-		//									""    =>  "edition",
+											"ET"  =>  "edition",
 		//									""    =>  "medium",
 											"SN"  =>  array("BOOK" => "isbn", "CHAP" => "isbn", "STD" => "isbn", "THES" => "isbn", "Other" => "issn"), // Book Whole, Book Chapter, Generic and Thesis: ISBN; Other reference types: ISSN (note that this will fail for a thesis that was published within a series with an ISSN number)
 
@@ -1049,7 +1056,7 @@
 
 		//									"M1"  =>  "", // Miscellaneous 1
 		//									"M2"  =>  "", // Miscellaneous 2
-											"M3"  =>  "doi", // Miscellaneous 3 (ISI Web of Science exports the DOI number in the M3 field)
+											"M3"  =>  "doi", // Miscellaneous 3 (ISI Web of Science exports the DOI number in the M3 field) but TR specified it should be Type of Work.
 											"U1"  =>  "thesis", // User definable 1 ('U1' is used by Bibutils to indicate the type of thesis, e.g. "Masters thesis" or "Ph.D. thesis"; function 'parseRecords()' will further tweak the contents of the refbase 'thesis' field)
 											"U2"  =>  "user_notes", // User definable 2
 		//									"U3"  =>  "", // User definable 3
@@ -1064,6 +1071,14 @@
 
 		//									"RP"  =>  "copy", // Reprint status (valid values: "IN FILE", "NOT IN FILE", "ON REQUEST (MM/DD/YY)") (this mapping would require some postprocessing of the field value so that it's suitable for the 'copy' field)
 		//									"AV"  =>  "", // Availability
+		//									"C1"  =>  "", // Custom 1
+		//									"C2"  =>  "", // Custom 2
+		//									"C3"  =>  "", // Custom 3
+		//									"C4"  =>  "", // Custom 4
+		//									"C5"  =>  "", // Custom 5
+		//									"C6"  =>  "", // Custom 6
+		//									"C7"  =>  "", // Custom 7
+		//									"C8"  =>  "", // Custom 8
 										);
 
 		// This array lists all RIS tags that may occur multiple times:
@@ -1088,25 +1103,45 @@
 		$referenceTypesToRefbaseTypesArray = array(
 													"ABST"       =>  "Abstract", // Abstract
 													"ADVS"       =>  "Unsupported: Audiovisual Material", // Audiovisual material
-													"ART"        =>  "Unsupported: Art Work", // Art Work
+													"AGGR"       =>  "Unsupported: Aggregated Database", // Aggregated database
+													"ANCIENT"    =>  "Unsupported: Ancient Text", // Ancient text
+													"ART"        =>  "Unsupported: Art Work", // Art work
 													"BILL"       =>  "Unsupported: Bill/Resolution", // Bill/Resolution
+													"BLOG"       =>  "Unsupported: Blog", // Blog
 													"BOOK"       =>  "Book Whole", // Book, Whole
 													"CASE"       =>  "Unsupported: Case", // Case
 													"CHAP(TER)?" =>  "Book Chapter", // Book chapter (the incorrect CHAPTER type gets used by SpringerLink, see e.g. RIS output at <http://www.springerlink.com/content/57w5dd51eh0h8a25>)
+													"CHART"      =>  "Unsupported: Chart", // Chart
+													"CLSWK"      =>  "Unsupported: Classical Work", // Classical work
 													"COMP"       =>  "Software", // Computer program
 													"CONF"       =>  "Conference Article", // Conference proceeding
+													"CPAPER"     =>  "Conference Article", // Conference paper
 													"CTLG"       =>  "Book Whole", // Catalog (#fallback#)
 													"DATA"       =>  "Unsupported: Data File", // Data file
+													"DBASE"      =>  "Unsupported: Online Database", // Online database
+													"DICT"       =>  "Book Whole", // Dictionary (#fallback#)
+													"EBOOK"      =>  "Book Whole", // Electronic book
+													"ECHAP"      =>  "Book Chapter", // Electronic book section
+													"EDBOOK"     =>  "Book Whole", // Edited book
+													"EJOUR"      =>  "Journal Article", // Electronic article
 													"ELEC"       =>  "Unsupported: Electronic Citation", // Electronic Citation
+													"ENCYC"      =>  "Book Whole", // Encyclopedia (#fallback#)
+													"EQUA"       =>  "Unsupported: Equation", // Equation
+													"FIGURE"     =>  "Unsupported: Figure", // Firure
 													"GEN"        =>  "Miscellaneous", // Generic
+													"GOVDOC"     =>  "Unsupported: Government Document", // Government document
+													"GRNT"       =>  "Unsupported: Grant", // Grant
 													"HEAR"       =>  "Unsupported: Hearing", // Hearing
 													"ICOMM"      =>  "Unsupported: Internet Communication", // Internet Communication
-													"INPR"       =>  "Unsupported: In Press", // In Press
+													"INPR"       =>  "Journal Article", // In Press (#fallback#)
 													"JFULL"      =>  "Journal", // Journal (full)
 													"JOUR"       =>  "Journal Article", // Journal
+													"LEGAL"      =>  "Unsupported: Legal Rule", // Legal rule
 													"MAP"        =>  "Map", // Map
+													"MANSCPT"    =>  "Manuscript", // Manuscript
 													"MGZN"       =>  "Magazine Article", // Magazine article
 													"MPCT"       =>  "Unsupported: Motion Picture", // Motion picture
+													"MULTI"      =>  "Unsupported: Multimedia", // Multimedia
 													"MUSIC"      =>  "Unsupported: Music Score", // Music score
 													"NEWS"       =>  "Newspaper Article", // Newspaper
 													"PAMP"       =>  "Unsupported: Pamphlet", // Pamphlet
@@ -1116,6 +1151,7 @@
 													"SER"        =>  "Unsupported: Serial (Book, Monograph)", // Serial (Book, Monograph)
 													"SLIDE"      =>  "Unsupported: Slide", // Slide
 													"SOUND"      =>  "Unsupported: Sound Recording", // Sound recording
+													"STAND"      =>  "Miscellaneous", // Standard (#fallback#) due to STD handling
 													"STAT"       =>  "Unsupported: Statute", // Statute
 													"STD"        =>  "Miscellaneous", // Generic (note that 'STD' is used by bibutils although it is NOT listed as a recognized reference type at <http://www.refman.com/support/risformat_reftypes.asp>)
 													"THES"       =>  "Thesis", // Thesis/Dissertation (function 'parseRecords()' will set the special type 'Thesis' back to 'Book Whole' and adopt the refbase 'thesis' field)
@@ -1954,9 +1990,10 @@
 											"T3"  =>  "abbrev_series_title", // Tertiary Title
 
 											"VO"  =>  "volume", // Volume
+		//									"NV"  =>  "", // Number of volumes
 											"IS"  =>  "issue", // Issue
 											"SP"  =>  "startPage", // Start Page (contents of the special fields 'startPage' and 'endPage' will be merged into a range and copied to the refbase 'pages' field)
-											"OP"  =>  "endPage", // Other Pages ('SP' is the tag for the starting page and should only contain this information; the 'OP' tag is used for any additional pages or page information)
+		//									"OP"  =>  "", // Either [1] "endPage", Other Pages ('SP' is the tag for the starting page and should only contain this information; the 'OP' tag is used for any additional pages or page information) or [2] Original publication 
 
 		//									""    =>  "series_volume", // (for 'series_volume' and 'series_issue', some magic will be applied within the 'parseRecords()' function)
 		//									""    =>  "series_issue",
@@ -2005,6 +2042,7 @@
 											"AV"  =>  "notes", // Availability
 
 		//									"AN"  =>  "", // Accession Number
+		//									"CA"  =>  "", // Caption
 		//									"CL"  =>  "", // Classification
 		//									"SF"  =>  "", // Subfile/Database
 		//									"DB"  =>  "", // Database
