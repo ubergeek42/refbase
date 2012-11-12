@@ -173,6 +173,13 @@
 
 		$fileContents = file_get_contents($file);
 
+		// Remove UTF-8 BOM if present
+		$bom = "\xef\xbb\xbf";
+		if (0 == strncmp($fileContents, $bom, 3)) {
+			$fileContents = substr($fileContents, 3);
+		}
+
+
 		return $fileContents;
 	}
 
