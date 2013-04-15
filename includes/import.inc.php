@@ -35,7 +35,7 @@
 	else // we assume "ISO-8859-1" by default
 		include_once 'includes/transtab_latex_latin1.inc.php'; // include LaTeX -> Latin1 translation table
 
-	include_once('includes/classes/org/simplepie/simplepie.inc'); // include the SimplePie library
+	include_once('includes/classes/org/simplepie/SimplePie.compiled.php'); // include the SimplePie library
 
 	// --------------------------------------------------------------------
 
