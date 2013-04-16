@@ -488,6 +488,8 @@
 "refbaseDesc"=>'The database is powered by <a href="http://www.refbase.net">refbase</a>, an open source database front-end for managing scientific literature & citations.',
 "RecordSuccessfullyImported"=>"record has been successfully imported",
 "RecordsSuccessfullyImported"=>"records have been successfully imported",
+"Register"=>"Enregistrer",
+"registerAccount"=>"créer un nouveau compte",
 "related"=>"apparenté",
 "Related"=>"Apparenté",
 "Reports"=>"Reports",

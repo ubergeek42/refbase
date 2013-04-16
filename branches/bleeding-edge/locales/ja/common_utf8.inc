@@ -488,6 +488,8 @@
 "refbaseDesc"=>'このデータベースは、科学的文献および引用を管理するためのオープンソースのデータベース・フロントエンドである<a href="http://www.refbase.net">refbase</a>によって動いています。',
 "RecordSuccessfullyImported"=>"レコードのインポートに成功しました",
 "RecordsSuccessfullyImported"=>"レコードのインポートに成功しました",
+"Register"=>"Register",
+"registerAccount"=>"register new account",
 "related"=>"関連のある",
 "Related"=>"関連のある",
 "Reports"=>"レポート",

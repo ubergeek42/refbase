@@ -488,6 +488,8 @@
 "refbaseDesc"=>'文献数据库平台：<a href="http://www.refbase.net">refbase</a>是开源的科学文献和引文数据库管理系统。',
 "RecordSuccessfullyImported"=>"record has been successfully imported",
 "RecordsSuccessfullyImported"=>"records have been successfully imported",
+"Register"=>"Register",
+"registerAccount"=>"register new account",
 "related"=>"相关的",
 "Related"=>"相关的",
 "Reports"=>"Reports",
