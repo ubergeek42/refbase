@@ -540,6 +540,9 @@
 		$values = "(NULL, 'ru', 'true', '6')";
 		$resultArray["Table 'languages': inserted Russian language option"] = insertIfNotExists(array("language_name" => "ru"), $tableLanguages, $values);
 
+		$values = "(NULL, 'ja', 'true', '7')";
+		$resultArray["Table 'languages': inserted Japanese language option"] = insertIfNotExists(array("language_name" => "ja"), $tableLanguages, $values);
+
 		// Enable disabled localizations
 		$query = "UPDATE " . $tableLanguages . " SET language_enabled = 'true' WHERE language_name = 'de'";
 		$result = queryMySQLDatabase($query);
