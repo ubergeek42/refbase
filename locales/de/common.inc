@@ -488,6 +488,8 @@
 "refbaseDesc"=>'Die technische Implementierung dieser Datenbank basiert auf <a href="http://www.refbase.net">refbase</a>, einer freien Datenbank-Schnittstelle zur Verwaltung wissenschaftlicher Literatur und Artikel.',
 "RecordSuccessfullyImported"=>"Eintrag wurde erfolgreich importiert",
 "RecordsSuccessfullyImported"=>"Einträge wurden erfolgreich importiert",
+"Register"=>"Registrieren",
+"registerAccount"=>"Neues Konto erstellen",
 "related"=>"verwandt",
 "Related"=>"Verwandt mit",
 "Reports"=>"Berichte",

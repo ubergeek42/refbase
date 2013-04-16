@@ -488,6 +488,8 @@
 "refbaseDesc"=>'',
 "RecordSuccessfullyImported"=>"запись успешно импортирована",
 "RecordsSuccessfullyImported"=>"записи успешно импортированы",
+"Register"=>"Register",
+"registerAccount"=>"register new account",
 "related"=>"related",
 "Related"=>"Related",
 "Reports"=>"Reports",
