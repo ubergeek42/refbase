@@ -147,7 +147,17 @@ if (!isset($_SESSION['loginEmail']))
 							</div>
 							<div id="loginSubmit">
 								<input type="submit" value="<?php echo $loc["ButtonTitle_Login"]; ?>">
-							</div>
+							</div><?php
+		if ($addNewUsers == "everyone")
+			{
+?>
+
+							<div id="register">
+								<a href="user_details.php" title="<?php echo $loc["registerAccount"]; ?>"><?php echo $loc["Register"]; ?></a>
+							</div><?php
+			}
+?>
+
 						</fieldset>
 					</form>
 				</div>
