@@ -281,7 +281,7 @@
 	// select all fields that shall be searched when the "main fields" search option is chosen:
 	// (these fields will also be included as separate entries in the "Quick Search drop-down menu)
 	foreach($userMainFieldsArray as $userMainField)
-		$mainFieldsOptionTags = preg_replace("#<option([^>]*)>" . $mainFieldsArray[$userMainField] . "</option>#", "<option\\1 selected>" . $mainFieldsArray[$userMainField] . "</option>", $mainFieldsOptionTags);
+		$mainFieldsOptionTags = preg_replace("/<option([^>]*)>" . $mainFieldsArray[$userMainField] . "<\\/option>/", "<option\\1 selected>" . $mainFieldsArray[$userMainField] . "</option>", $mainFieldsOptionTags);
 
 
 	// Cite Options:

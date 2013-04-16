@@ -315,7 +315,7 @@
 	// by default we select all fields that are listed within '$selectedFieldsArray':
 	$selectedFields = implode("|", $selectedFieldsArray); // merge array of fields that shall be selected
 
-	$matchFieldsOptionTags = preg_replace("#<option([^>]*)>($selectedFields)</option>#", "<option\\1 selected>\\2</option>", $matchFieldsOptionTags);
+	$matchFieldsOptionTags = preg_replace("/<option([^>]*)>($selectedFields)<\\/option>/", "<option\\1 selected>\\2</option>", $matchFieldsOptionTags);
 
 
 	// define variable holding the 'nonASCIIChars' drop-down elements:
@@ -327,7 +327,7 @@
 	$nonASCIICharsOptionTags = buildSelectMenuOptions($dropDownItemArray2, "//", "\t\t\t\t", true);
 
 	// add 'selected' attribute:
-	$nonASCIICharsOptionTags = preg_replace("#<option([^>]*)>($dropDownItemArray2[$nonASCIICharsSelected])</option>#", "<option\\1 selected>\\2</option>", $nonASCIICharsOptionTags);
+	$nonASCIICharsOptionTags = preg_replace("/<option([^>]*)>($dropDownItemArray2[$nonASCIICharsSelected])<\\/option>/", "<option\\1 selected>\\2</option>", $nonASCIICharsOptionTags);
 
 	// --------------------------------------------------------------------
 

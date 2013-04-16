@@ -2226,7 +2226,7 @@ EOF;
 					$optionTags = buildSelectMenuOptions($_SESSION['adminUserGroups'], "/ *; */", "\t\t\t\t\t\t", false);
 
 				if (!empty($currentGroup)) // if the current SQL query contains a 'WHERE' clause that searches for a particular user group
-					$optionTags = preg_replace("#<option>(?=$currentGroup</option>)#i", "<option selected>", $optionTags); // we select that group by adding the 'selected' parameter to the appropriate <option> tag
+					$optionTags = preg_replace("/<option>(?=$currentGroup<\\/option>)/i", "<option selected>", $optionTags); // we select that group by adding the 'selected' parameter to the appropriate <option> tag
 
 				$groupSearchForm .= $optionTags;
 			}
@@ -2405,7 +2405,7 @@ EOF;
 			$citeOrderOptionTags = buildSelectMenuOptions($citeOrderItemsArray, "//", "\t\t\t\t\t\t\t", true);
 
 			if (isset($citeOrderItemsArray[$citeOrder]))
-				$citeOrderOptionTags = preg_replace("#<option([^>]*)>(" . $citeOrderItemsArray[$citeOrder] . ")</option>#", "<option\\1 selected>\\2</option>", $citeOrderOptionTags); // add 'selected' attribute to the currently chosen 'citeOrder' option
+				$citeOrderOptionTags = preg_replace("/<option([^>]*)>(" . $citeOrderItemsArray[$citeOrder] . ")<\\/option>/", "<option\\1 selected>\\2</option>", $citeOrderOptionTags); // add 'selected' attribute to the currently chosen 'citeOrder' option
 			else // add & select a "(custom order)" option (which indicates that the current sort order matches none of the above 'citeOrder' options):
 				$citeOrderOptionTags = "\n\t\t\t\t\t\t\t<option value=\"\" selected>(" . $loc["DropDownFieldName_Custom"] . ")</option>" . $citeOrderOptionTags;
 
@@ -4161,7 +4161,7 @@ EOF;
 
 		$selectedFormatsStylesTypes = implode("|", $selectedFormatsStylesTypesArray); // merge array of formats/styles/types that shall be selected
 
-		$optionTags = preg_replace("#<option([^>]*)>($selectedFormatsStylesTypes)</option>#", "<option\\1 selected>\\2</option>", $optionTags); // select all formats/styles/types that are listed within '$selectedFormatsStylesTypesArray'
+		$optionTags = preg_replace("/<option([^>]*)>($selectedFormatsStylesTypes)<\\/option>/", "<option\\1 selected>\\2</option>", $optionTags); // select all formats/styles/types that are listed within '$selectedFormatsStylesTypesArray'
 
 		return $optionTags;
 	}
@@ -5032,7 +5032,7 @@ EOF;
 				// Build correct option tags from the provided database values:
 				$optionTags .= buildSelectMenuOptions($resultBuffer, "//", "\t\t\t", false);
 
-				$outputData .= preg_replace("#<option([^>]*)>($defaultValue)</option>#", "<option\\1 selected>\\2</option>", $optionTags); // add 'selected' attribute
+				$outputData .= preg_replace("/<option([^>]*)>($defaultValue)<\\/option>/", "<option\\1 selected>\\2</option>", $optionTags); // add 'selected' attribute
 
 				if ($wrapSearchSuggestions)
 					$outputData .= "\n\t\t</select>";
