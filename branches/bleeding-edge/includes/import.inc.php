@@ -985,12 +985,12 @@
 
 											"AU"  =>  "author", // Author Primary
 											"A1"  =>  "author", // Author Primary
-											"A2"  =>  "editor", // Author Secondary (see note for 'corporate_author' below)
+											"A2"  =>  array("CONF" => "conference", "CPAPER" => "conference", "Other" => "editor"), // Author Secondary (see note for 'corporate_author' below)
 											"ED"  =>  "editor", // Author Secondary
 											"A3"  =>  "series_editor", // Author Series
 		//									"A4"  =>  "", // Subsidary Authors
 											"AD"  =>  "address", // Address
-		//									""    =>  "corporate_author", // note that bibutils uses the RIS 'A2' tag to indicate corporate authors ('<name type="corporate">'), e.g., when importing contents of the BibTeX 'organization' field
+		//									""    =>  "corporate_author", // note that bibutils uses the RIS 'A2' tag to indicate conference titles ('<name type="conference">') and corporate authors ('<name type="corporate">', e.g., when importing contents of the BibTeX 'organization' field)
 		//									"AN"  =>  "", // Accession Number
 		//									"CA"  =>  "", // Caption
 		//									"LB"  =>  "", // Label
@@ -1000,9 +1000,10 @@
 											"CT"  =>  "title", // Title Primary
 		//									""    =>  "orig_title",
 
-											"PY"  =>  "year", // Date Primary (date must be in the following format: "YYYY/MM/DD/other_info"; the year, month and day fields are all numeric; the other info field can be any string of letters, spaces and hyphens; note that each specific date information is optional, however the slashes ("/") are not)
-											"Y1"  =>  "year", // Date Primary (same syntax rules as for "PY")
-		//									"Y2"  =>  "", // Date Secondary (same syntax rules as for "PY")
+											"PY"  =>  "year", // RIS Spec 2009: Publication Year (four digits); RIS Spec 2004: Date Primary (date must be in the following format: "YYYY/MM/DD/other_info"; the year, month and day fields are all numeric; the other info field can be any string of letters, spaces and hyphens; note that each specific date information is optional, however the slashes ("/") are not)
+											"Y1"  =>  "year", // Date Primary (same syntax rules as for "PY", RIS Spec 2004)
+		//									"Y2"  =>  "", // Date Secondary (same syntax rules as for "PY", RIS Spec 2004)
+											"DA"  =>  "year", // RIS Spec 2009: Date (same syntax rules as for "PY", RIS Spec 2004)
 
 											"BT"  =>  array("BOOK" => "series_title", "STD" => "series_title", "THES" => "series_title", "Other" => "publication"), // according to <http://www.refman.com/support/risformat_tags_01.asp> this would be: array("BOOK" => "title", "Other" => "publication"), // Book Whole: Title Primary; Other reference types: Title Secondary
 											"JF"  =>  "publication", // Periodical name: full format
@@ -1010,7 +1011,7 @@
 											"JA"  =>  "abbrev_journal", // Periodical name: standard abbreviation
 											"J1"  =>  "abbrev_journal", // Periodical name: user abbreviation 1
 											"J2"  =>  "abbrev_journal", // Periodical name: user abbreviation 2
-											"T2"  =>  array("JOUR" => "abbrev_journal", "CHAP" => "publication", "Other" => "abbrev_series_title"), // Title Secondary (## "T2" is used by bibutils (instead of "JA") for abbreviated journal names! ##)
+											"T2"  =>  array("JOUR" => "abbrev_journal", "Other" => "abbrev_series_title"), // Title Secondary (note that "T2" is used by bibutils (instead of "JA") for abbreviated journal names and abbreviated series titles)
 											"T3"  =>  "series_title", // Title Series (in case of "TY=CONF", "T3" appears to be used for conference title)
 
 											"VL"  =>  "volume", // Volume number
@@ -1025,7 +1026,6 @@
 
 											"PB"  =>  "publisher", // Publisher
 											"CY"  =>  "place", // City of publication
-		//									"DA"  =>  "", // Date Created
 		//									"DB"  =>  "", // Database
 		//									"DP"  =>  "", // Database provider
 
