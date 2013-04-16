@@ -42,6 +42,9 @@ Thanks to:
 - Alexander Belozerov <alexander.belozerov@gmail.com>:
   Russian localization.
 
+- Masahiro Mikami <ZBN15427@nifty.com>:
+  Japanese localization.
+
 - Chris Putnam <cdputnam@scripps.edu>:
   Developer of Bibutils, a set of command line programs that interconvert
   between various bibliography formats using a common XML intermediate.
