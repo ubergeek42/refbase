@@ -1993,7 +1993,7 @@
 		//									"NV"  =>  "", // Number of volumes
 											"IS"  =>  "issue", // Issue
 											"SP"  =>  "startPage", // Start Page (contents of the special fields 'startPage' and 'endPage' will be merged into a range and copied to the refbase 'pages' field)
-		//									"OP"  =>  "", // Either [1] "endPage", Other Pages ('SP' is the tag for the starting page and should only contain this information; the 'OP' tag is used for any additional pages or page information) or [2] Original publication 
+											"OP"  =>  "endPage", // Either [1] "endPage", Other Pages ('SP' is the tag for the starting page and should only contain this information; the 'OP' tag is used for any additional pages or page information) or [2] Original publication 
 
 		//									""    =>  "series_volume", // (for 'series_volume' and 'series_issue', some magic will be applied within the 'parseRecords()' function)
 		//									""    =>  "series_issue",
