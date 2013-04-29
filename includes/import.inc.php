@@ -1605,7 +1605,8 @@
 											array(
 													'fields'  => array("notes"),
 													'actions' => array(
-																		"/^(\d+)/"  =>  "PMID:\\1" // insert a "PMID:" prefix in front of any number that's at the beginning of the notes field
+																		"/^(\d+)/"  =>  "PMID:\\1", // insert a "PMID:" prefix in front of any number that's at the beginning of the notes field
+																		"/Pmc(\d+)/"  =>  "PMCID:PMC\\1" // insert a "PMCID:" prefix in front of any number that is prefixed with "Pmc"
 																	)
 												),
 											array(
@@ -1750,6 +1751,7 @@
 
 											"GN"    =>  "notes", // General Note [Supplemental or descriptive information related to the document]
 											"PMID"  =>  "notes", // PubMed Unique Identifier [Unique number assigned to each PubMed citation]
+											"PMC"   =>  "notes", // PubMed Central ID
 		//									""      =>  "call_number",
 
 		//									""      =>  "contribution_id",
@@ -1811,7 +1813,8 @@
 									"MH",
 									"OT",
 									"AID",
-									"PMID", // by allowing "PMID" and "GN" to occur multiple times we can merge contents of both of these fields into the 'notes' field
+									"PMID", // by allowing "PMID", "PMC" and "GN" to occur multiple times we can merge the contents of these fields into the 'notes' field
+									"PMC",
 									"GN"
 								);
 
