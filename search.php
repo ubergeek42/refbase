@@ -413,6 +413,7 @@
 	{
 		if ((!isset($loginEmail)) OR ((isset($loginEmail)) AND ($loginEmail != $adminLoginEmail))) // if the user isn't logged in -OR- any normal user is logged in...
 		{
+				$all_fields = "author|author_count|online_citation|doi|online_publication|title|type|year|publication|abbrev_journal|volume|issue|pages|keywords|abstract|address|corporate_author|thesis|publisher|place|editor|language|summary_language|orig_title|series_editor|series_title|abbrev_series_title|series_volume|series_issue|edition|issn|isbn|medium|area|expedition|conference|notes|approved|serial|call_number|marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related";
 			$tablesArray = array($tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserOptions, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers);
 			$forbiddenSQLCommandsArray = array("DROP DATABASE", "DROP TABLE"); // the refbase MySQL user shouldn't have permissions for these commands anyhow, but by listing & checking for them here, we can return a more appropriate error message
 
@@ -421,6 +422,12 @@
 			{
 				$notPermitted = true;
 				$HeaderString = $loc["NoPermission_ForSQLOtherThanSELECT"] . "!";
+			}
+			// ...or the user tries to SELECT stuff they really shouldn't
+			elseif (!preg_match("/^SELECT ((" . $all_fields . "),* *)+ FROM/i", $sqlQuery))
+			{
+				$notPermitted = true;
+				$HeaderString = $loc["NoPermission"] . $loc["NoPermission_ForThisQuery"] . "!";
 			}
 			// ...or the user tries to hack the SQL query (by providing e.g. the string "FROM refs" within the SELECT statement) -OR- if the user attempts to query anything other than the 'refs' or 'user_data' table:
 			elseif ((preg_match("/FROM .*(" . join("|", $tablesArray) . ").+ FROM /i", $sqlQuery)) OR (!preg_match("/FROM $tableRefs( LEFT JOIN $tableUserData ON serial ?= ?record_id AND user_id ?= ?\d*)?(?= WHERE| ORDER BY| LIMIT| GROUP BY| HAVING| PROCEDURE| FOR UPDATE| LOCK IN|$)/i", $sqlQuery)))
