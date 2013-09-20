@@ -65,7 +65,7 @@
 //	if ((empty($_REQUEST["loginEmail"]) && !empty($_REQUEST["loginPassword"])) || (!empty($_REQUEST["loginEmail"]) && empty($_REQUEST["loginPassword"])))
 	{		 
 		// Save an error message:
-		$HeaderString = "<b><span class=\"warning\">In order to login you must supply both, email address and password!</span></b>";
+		$HeaderString = "<b><span class=\"warning\">" . $loc["InOrderToLoginYouMustSupplyBothEmailAddressAndPassword"] . "</span></b>";
 
 		// Write back session variables:
 		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -101,6 +101,7 @@
 		global $adminLoginEmail;
 		global $abbrevInstitution;
 		global $tableAuth, $tableUserData, $tableUsers; // defined in 'db.inc.php'
+		global $loc;
 
 		// Get the two character salt from the email address collected from the challenge
 		$salt = substr($loginEmail, 0, 2); 
@@ -230,7 +231,7 @@
 				deleteSessionVariable("loginEmail"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
 
 			// Save an error message:
-			$HeaderString = "<b><span class=\"warning\">Login failed! You provided an incorrect email address or password.</span></b>";
+			$HeaderString = "<b><span class=\"warning\">" . $loc["LoginFailedYouProvidedAnIncorrectEmailAddressOrPassword"] . "</span></b>";
 
 			// Write back session variables:
 			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -255,13 +256,14 @@
 		global $loginStatus;
 		global $loginLinks;
 		global $officialDatabaseName;
+		global $loc;
 
 		// Show login status (should be logged out!)
 		showLogin(); // (function 'showLogin()' is defined in 'include.inc.php')
 
 		// If there's no stored message available:
 		if (!isset($_SESSION['HeaderString']))
-			$HeaderString = "You need to login in order to make any changes to the database:"; // Provide the default welcome message
+			$HeaderString = $loc['YouNeedToLoginInOrderToMakeChangesToTheDatabase']; // Provide the default welcome message
 		else
 		{
 			$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)
@@ -283,7 +285,7 @@
 <table align="center" border="0" cellpadding="2" cellspacing="5" width="95%" summary="This table holds a login form for the <?php echo encodeHTML($officialDatabaseName); ?>">
 	<tr>
 		<td width="174" valign="bottom">
-			<b>Email Address:</b>
+			<b><?php echo $loc["EmailAddress"]; ?>:</b>
 		</td>
 		<td valign="bottom">
 			<input type="text" name="loginEmail" size="30">
@@ -291,7 +293,7 @@
 	</tr>
 	<tr>
 		<td valign="bottom">
-			<b>Password:</b>
+			<b><?php echo $loc["EmailAdressPassword"]; ?>:</b>
 		</td>
 		<td valign="bottom">
 			<input type="password" name="loginPassword" size="30">
