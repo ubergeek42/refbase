@@ -1,3 +1,646 @@
+2013-09-25 18:04  Richard Karnesky <karnesky@gmail.com>
+
+	* /branches/bleeding-edge/search.php: Allow a few more fields in
+	  our SELECT queries to fix OpenSearch support.
+
+2013-09-25 13:52  Pierre Nault <pnault@users.sourceforge.net>
+
+	* /branches/bleeding-edge/advanced_search.php: Fixed issue where
+	  'preg_replace()' was trowing an "Unknown modifier 'a'"
+	  This fix also a bug where value for sortRadio1-2-3 author, year
+	  and publication where not "selected" in <input>, as of this,
+	  multiples sort fields in dropdownmenu where not appearing.
+	  Changing preg_replace pattern in
+	  $sortSelector(1-2-3)DropDownItems correct these bugs.
+
+2013-09-20 17:36  Pierre Nault <pnault@users.sourceforge.net>
+
+	* /branches/bleeding-edge/locales/cn/common_utf8.inc,
+	  /branches/bleeding-edge/locales/de/common.inc,
+	  /branches/bleeding-edge/locales/de/common_utf8.inc,
+	  /branches/bleeding-edge/locales/en/common.inc,
+	  /branches/bleeding-edge/locales/en/common_utf8.inc,
+	  /branches/bleeding-edge/locales/fr/common.inc,
+	  /branches/bleeding-edge/locales/fr/common_utf8.inc,
+	  /branches/bleeding-edge/locales/ja/common_utf8.inc,
+	  /branches/bleeding-edge/locales/ru/common_utf8.inc,
+	  /branches/bleeding-edge/user_login.php: I18N of /user_login.php;
+	  adding 5 variables for language support.
+	  -InOrderToLoginYouMustSupplyBothEmailAddressAndPassword
+	  -LoginFailedYouProvidedAnIncorrectEmailAddressOrPassword
+	  -YouNeedToLoginInOrderToMakeChangesToTheDatabase
+	  -EmailAddress
+	  -EmailAdressPassword
+	  Added support for variables in all languages.
+
+2013-08-29 20:34  Richard Karnesky <karnesky@gmail.com>
+
+	* /branches/bleeding-edge/search.php: More restrictions imposed on
+	  SELECT statements to non-admin users
+
+2013-04-29 21:45  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/includes/import.inc.php: function
+	  'medlineToRefbase()' now copies the PubMed Central ID to the
+	  'notes'
+	  field and prefixes it with "PMCID:"
+
+2013-04-17 08:28  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/includes/import.inc.php: function
+	  'refworksToRefbase()': re-enabled the "OP" => "endPage" mapping
+	  so
+	  that last page info is recognized in RefWorks tagged data
+
+2013-04-16 23:21  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/includes/import.inc.php: * function
+	  'risToRefbase()': for the RIS types "CONF" and "CPAPER", we now
+	  map
+	  the RIS 'A2' tag to the 'conference' field (since bibutils uses
+	  the 'A2' tag
+	  to indicate conference titles)
+	  * function 'risToRefbase()': the "DA" tag is now recognized as
+	  publication date
+	  * function 'risToRefbase()': removed the "T2" => "publication"
+	  mapping for book
+	  chapters ("CHAP")
+
+2013-04-16 21:23  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/modify.php: for file uploads that were
+	  meant to go in a subdirectory, the directory
+	  structure wasn't generated correctly; fixed
+
+2013-04-16 20:34  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/css/style.css,
+	  /branches/bleeding-edge/locales/cn/common_utf8.inc,
+	  /branches/bleeding-edge/locales/de/common.inc,
+	  /branches/bleeding-edge/locales/de/common_utf8.inc,
+	  /branches/bleeding-edge/locales/en/common.inc,
+	  /branches/bleeding-edge/locales/en/common_utf8.inc,
+	  /branches/bleeding-edge/locales/fr/common.inc,
+	  /branches/bleeding-edge/locales/fr/common_utf8.inc,
+	  /branches/bleeding-edge/locales/ja/common_utf8.inc,
+	  /branches/bleeding-edge/locales/ru/common_utf8.inc: added support
+	  for the "Register" link beneath the login form on the main page
+
+2013-04-16 20:23  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/index.php: for '$addNewUsers=everyone', a
+	  "Register" link to 'user_details.php' is now
+	  printed beneath the login form
+
+2013-04-16 10:37  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/duplicate_search.php,
+	  /branches/bleeding-edge/includes/include.inc.php,
+	  /branches/bleeding-edge/user_options.php: fixed an issue with
+	  double-byte languages where 'preg_replace()' functions
+	  that used "#" as delimiter could cause an "Unknown modifier ..."
+	  warning
+
+2013-04-16 09:23  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/AUTHORS,
+	  /branches/bleeding-edge/install.sql,
+	  /branches/bleeding-edge/install_utf8.sql,
+	  /branches/bleeding-edge/update.php,
+	  /branches/bleeding-edge/update.sql: added support for Japanese
+	  localization
+
+2013-04-16 09:10  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/locales/ja,
+	  /branches/bleeding-edge/locales/ja/common_utf8.inc: initial
+	  checkin (Japanese localization)
+
+2013-04-15 19:20  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/includes/classes/org/simplepie/README.markdown,
+	  /branches/bleeding-edge/includes/classes/org/simplepie/README.txt,
+	  /branches/bleeding-edge/includes/classes/org/simplepie/SimplePie.compiled.php,
+	  /branches/bleeding-edge/includes/classes/org/simplepie/simplepie.inc,
+	  /branches/bleeding-edge/includes/import.inc.php: updated
+	  SimplePie library to v1.3.1 (requires PHP 5.2.0 or newer)
+
+2013-04-15 12:58  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/BUGS: added two notes concerning the
+	  "clickable search links" feature
+
+2012-11-12 22:43  Richard Karnesky <karnesky@gmail.com>
+
+	* /branches/bleeding-edge/includes/execute.inc.php: Remove BOM from
+	  files, if present, to fix import bug
+
+2012-10-13 19:46  Richard Karnesky <karnesky@gmail.com>
+
+	* /branches/bleeding-edge/includes/import.inc.php: Update RIS
+	  import per current specification
+
+2012-03-19 13:17  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/show.php: added new parameter 'approved'
+	  which corresponds to the respective field in
+	  table 'refs'; usage: 'show.php?approved=yes' or
+	  'show.php?approved=no'
+
+2012-03-05 10:19  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/sql_search.php: changed code to work with
+	  PHP5 w/o emitting E_DEPRECATED errors, e.g. replaced
+	  any 'ereg...()' and 'split...()' functions (which were deprecated
+	  in PHP 5.3.0)
+
+2012-02-29 10:37  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/duplicate_search.php: * localized text
+	  entry field titles
+	  * enhanced the help info text
+	  * the search & display options as well as the help section are
+	  now hidden by
+	  default but can be made visible by clicking the triangle widgets
+
+2012-02-29 00:55  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/user_details.php: * rearranged the order
+	  of fields so that required/important ones come first
+	  * optional fields are now hidden by default but can be made
+	  visible by
+	  clicking the little triangle widget underneath the form
+
+2012-02-29 00:52  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/show.php: * added new parameters
+	  'expedition', 'user_keys', 'user_notes' and
+	  'user_groups' which correspond to the respective fields in table
+	  'refs' or
+	  'user_data', respectively (note that the 'user_*' parameters can
+	  NOT be
+	  queried with a user ID that's different from the current user's
+	  own user ID)
+	  * auto-completion of search terms in the web form now respects
+	  the characters
+	  ';, ' as term delimiters
+	  * adopted the layout of the web form (to bring it more inline
+	  with the other
+	  search pages) and added CSS attributes (id/class names) to HTML
+	  output where
+	  appropriate
+	  * enhanced the help info text and added an examples section
+	  * the help & examples sections are now hidden by default but can
+	  be made
+	  visible by clicking the little triangle widget underneath the
+	  form
+	  * some changes to whitespace and comments
+
+2012-02-29 00:48  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/search.php: added support for clickable
+	  search links
+
+2012-02-29 00:45  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/query_modify.php: some variables in a
+	  SELECT SQL statement were not 'quote_smart'ed; fixed
+
+2012-02-29 00:44  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/query_manager.php: * localized (almost)
+	  all page elements
+	  * the search & display options as well as the help sections are
+	  now hidden by
+	  default but can be made visible by clicking the triangle widgets
+
+2012-02-29 00:42  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/opensearch.php: * section headings are
+	  now styled solely via CSS (instead of using raw <b>
+	  tags within the HTML)
+	  * the previously named "Search Options" are now titled "Display
+	  Options" which
+	  is more inline with the other search pages
+	  * localized more form elements (the help & examples text is still
+	  not
+	  localized) and provided more tooltips
+	  * some changes to the HTML layout
+
+2012-02-29 00:40  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/modify.php: * added 'phtml' and 'phtm' to
+	  the list of invalid file name extensions
+	  * some changes to whitespace
+
+2012-02-29 00:37  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/locales/cn/common_utf8.inc,
+	  /branches/bleeding-edge/locales/de/common.inc,
+	  /branches/bleeding-edge/locales/de/common_utf8.inc,
+	  /branches/bleeding-edge/locales/en/common.inc,
+	  /branches/bleeding-edge/locales/en/common_utf8.inc,
+	  /branches/bleeding-edge/locales/fr/common.inc,
+	  /branches/bleeding-edge/locales/fr/common_utf8.inc,
+	  /branches/bleeding-edge/locales/ru/common_utf8.inc: added new
+	  locales and changed some of the existing ones
+
+2012-02-29 00:30  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/install.php: the MySQL version check is
+	  now done by function 'getMySQLversion()' (in
+	  'include.inc.php')
+
+2012-02-29 00:28  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/initialize/ini.inc.php: * variable
+	  '$additionalFieldsCitationView': added the 'area' field to the
+	  default list of fields
+	  * variable '$displayResultsHeaderDefault': in Browse view, the
+	  results header
+	  is now visible by default
+	  * added new variables '$showFieldItemLinks' and '$linkedFields'
+	  which control
+	  which views & fields shall contain clickable search links
+	  * variable '$accessKeys': added an entry for the "CQL Search"
+	  link in the
+	  footer
+	  * added new variable '$crossRefReqDat' which lets one specify the
+	  CrossRef
+	  account credentials that are now required for CrossRef
+	  DOI/OpenURL queries
+	  * some changes to comments
+
+2012-02-29 00:20  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/includes/transtab_unicode_charset.inc.php:
+	  just updated a web link in the comments
+
+2012-02-29 00:18  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/includes/srwxml.inc.php: similar to
+	  function 'modsCollection()', the variables
+	  '$transtab_refbase_unicode' and
+	  '$fieldSpecificSearchReplaceActionsArray' are
+	  now defined in function 'srwCollection()'
+
+2012-02-29 00:15  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/includes/openurl.inc.php: function
+	  'openURL()': for OpenURL queries to the CrossRef OpenURL
+	  resolver, we
+	  now append the 'pid' parameter with the CrossRef account
+	  credentials given in
+	  variable '$crossRefReqDat' (in 'ini.inc.php')
+
+2012-02-29 00:02  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/import/import_end2refbase.php: initial
+	  checkin (imports records from 'Endnote tagged'-formatted data w/o
+	  requiring Bibutils)
+
+2012-02-28 23:56  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/includes/modsxml.inc.php: * renamed
+	  function 'encodeField()' to 'encodeXMLField()'
+	  * for theses, we now use <genre authority="marcgt">thesis</genre>
+	  instead of
+	  <genre authority="marcgt">theses</genre> (which is inline with
+	  Bibutils 4.3
+	  and the MARC Genre Terms
+	  * function 'encodeXMLField()' now makes use of the new
+	  incarnation of function
+	  'encodeField()' (the latter has been moved to 'include.inc.php'
+	  since it now
+	  handles both HTML and XML output)
+
+2012-02-28 23:53  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/includes/include.inc.php: * function
+	  'start_session()' now uses function 'checkPath()' to ensure that
+	  the paths/URLs given in the 'ini.inc.php' variables
+	  '$databaseBaseURL',
+	  '$filesBaseDir' and '$filesBaseURL' end with a slash
+	  * function 'start_session()': when using PHP 5.1 or above, we now
+	  set the
+	  default timezone used by all date/time functions
+	  * upon first connection, function 'connectToMySQLDatabase()' now
+	  saves the
+	  MySQL version information to a session variable (this was
+	  previously done in
+	  function 'start_session()')
+	  * function 'getMySQLversion()' now uses any existing MySQL
+	  connection (this
+	  allows it to be used from within 'install.php')
+	  * added new function 'linkifyFieldItems()' which generates
+	  'show.php' HTML
+	  links for individual items in the given field
+	  * added new function 'checkPath()' which ensures that the given
+	  file path or
+	  URL ends with a slash
+	  * function 'searchReplaceText()' now allows to use variable
+	  '$loc' in
+	  replacement patterns, e.g.: array("/(.+)/e" => "\$loc['\\1']")
+	  * added new function 'encodeField()' which now handles encoding
+	  of special
+	  chars, performs charset conversions (if necessary) and applies
+	  any
+	  field-specific search & replace actions
+	  * function 'generateURL()': slight fix for the check that ensures
+	  that the
+	  'maximumRecords/showRows' parameter is only added when its value
+	  is
+	  different from the default value
+
+2012-02-28 23:39  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/includes/import.inc.php: * function
+	  'crossrefToRefbase()': updated the pattern that splits the input
+	  text into individual records to the modified CrossRef XML output
+	  * function 'risToRefbase()': improved the pattern that removes
+	  the refbase
+	  attribution string ("exported from refbase...") from the notes
+	  field
+	  * function 'risToRefbase()': any text before and/or after the DOI
+	  is now
+	  stripped from the 'doi' field before import
+	  * function 'risToRefbase()': the RIS tag "CP" was incorrectly
+	  mapped to "city
+	  of publication" (instead of being mapped to "issue"); fixed
+	  * function 'risToRefbase()': added 'LA' as a recognized RIS field
+	  (mapped to
+	  the 'language' field)
+	  * function 'risToRefbase()' now recognizes a DOI when given in
+	  the 'DO' or
+	  'M3' fields
+	  * added function 'endnoteToRefbase()' which converts records from
+	  Endnote
+	  tagged (Endnote Refer) format into the standard "refbase" array
+	  format
+	  * function 'identifySourceFormat()': relaxed parsing logic for
+	  Endnote tagged
+	  records (which now must only contain the "%0" tag)
+	  * function 'identifySourceFormat()': relaxed parsing logic for
+	  BibTeX records
+	  which may now contain whitespace between the type specifier and
+	  the opening
+	  curly bracket
+	  * improved parsing logic in function 'parseRecords()'
+	  * reformatted function 'fetchDOIsFromPubMed()' and changed some
+	  variable names
+	  * function 'standardizeFieldData()': fixed a minor bug when
+	  generating PubMed
+	  URLs from PubMed IDs given in the 'notes' field
+	  * function 'fetchDataFromCrossRef()': the CrossRef account
+	  credentials can now
+	  be specified in variable '$crossRefReqDat' (in 'ini.inc.php') and
+	  they now
+	  get properly URL-encoded
+
+2012-02-28 23:26  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/includes/footer.inc.php: * we now include
+	  a link to 'opensearch.php' (in the GUI its named "CQL Search")
+	  * if the admin is logged in, we also include a link to
+	  'duplicate_manager.php'
+
+2012-02-28 23:23  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/import_modify.php: just some changes to
+	  comments (e.g. added a comment about an incorrect conversion
+	  when importing MODS XML that contains encoded angle brackets)
+
+2012-02-28 23:17  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/import/bibutils/import_end2refbase.php:
+	  just some changes to comments (to clarify that this file deals
+	  with the
+	  Endnote *tagged* format as opposed to the Endnote *XML* format)
+
+2012-02-28 23:14  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/duplicate_manager.php: * localized text
+	  entry field titles
+	  * enhanced the help info text and added an examples section
+	  * the help & examples sections are now hidden by default but can
+	  be made
+	  visible by clicking the little triangle widget underneath the
+	  form
+
+2012-02-28 23:11  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/css/style_print.css: added support for
+	  clickable search links
+
+2012-02-28 23:09  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/css/style.css: * fixed incorrect
+	  positioning of the quickSearch form
+	  * added support for clickable search links
+	  * the links that toggle the visibility of the results header &
+	  footer are now
+	  colored like regular links (to make them more discoverable)
+	  * some more minor refinements
+
+2012-02-28 23:05  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/cite/formats/cite_html.php: * added
+	  support for clickable search links
+	  * where appropriate, we now substitute field contents in the
+	  "more info"
+	  section (underneath citations) with localized field values (e.g.,
+	  in case of
+	  german we display 'ja' instead of 'yes', etc)
+	  * HTML encoding of higher ASCII chars in fields contents is now
+	  handled by
+	  function 'encodeField()' (which also handles any field-specific
+	  search &
+	  replace actions)
+
+2012-02-27 20:25  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/advanced_search.php,
+	  /branches/bleeding-edge/cite/formats/cite_ascii.php,
+	  /branches/bleeding-edge/cite/formats/cite_html.php,
+	  /branches/bleeding-edge/cite/formats/cite_latex.php,
+	  /branches/bleeding-edge/cite/formats/cite_latex_bbl.php,
+	  /branches/bleeding-edge/cite/formats/cite_markdown.php,
+	  /branches/bleeding-edge/cite/formats/cite_pdf.php,
+	  /branches/bleeding-edge/cite/formats/cite_rtf.php,
+	  /branches/bleeding-edge/cite/styles/cite_AMA.php,
+	  /branches/bleeding-edge/cite/styles/cite_APA.php,
+	  /branches/bleeding-edge/cite/styles/cite_AnnGlaciol_JGlaciol.php,
+	  /branches/bleeding-edge/cite/styles/cite_Chicago.php,
+	  /branches/bleeding-edge/cite/styles/cite_DeepSeaRes.php,
+	  /branches/bleeding-edge/cite/styles/cite_Harvard_1.php,
+	  /branches/bleeding-edge/cite/styles/cite_Harvard_2.php,
+	  /branches/bleeding-edge/cite/styles/cite_Harvard_3.php,
+	  /branches/bleeding-edge/cite/styles/cite_MLA.php,
+	  /branches/bleeding-edge/cite/styles/cite_PolarBiol_MarBiol_MEPS.php,
+	  /branches/bleeding-edge/cite/styles/cite_TextCitation.php,
+	  /branches/bleeding-edge/cite/styles/cite_Vancouver.php,
+	  /branches/bleeding-edge/contrib/import_templates/import_template_base.php,
+	  /branches/bleeding-edge/contrib/mediawiki/refbase.php,
+	  /branches/bleeding-edge/contrib/skins/mediawiki-monobook/footer.inc.php,
+	  /branches/bleeding-edge/contrib/skins/mediawiki-monobook/header.inc.php,
+	  /branches/bleeding-edge/duplicate_manager.php,
+	  /branches/bleeding-edge/duplicate_modify.php,
+	  /branches/bleeding-edge/duplicate_search.php,
+	  /branches/bleeding-edge/extract.php,
+	  /branches/bleeding-edge/import.php,
+	  /branches/bleeding-edge/import_csa.php,
+	  /branches/bleeding-edge/import_csa_modify.php,
+	  /branches/bleeding-edge/import_modify.php,
+	  /branches/bleeding-edge/includes/atomxml.inc.php,
+	  /branches/bleeding-edge/includes/cite.inc.php,
+	  /branches/bleeding-edge/includes/footer.inc.php,
+	  /branches/bleeding-edge/includes/header.inc.php,
+	  /branches/bleeding-edge/includes/import.inc.php,
+	  /branches/bleeding-edge/includes/modsxml.inc.php,
+	  /branches/bleeding-edge/includes/oaidcxml.inc.php,
+	  /branches/bleeding-edge/includes/openurl.inc.php,
+	  /branches/bleeding-edge/includes/srwxml.inc.php,
+	  /branches/bleeding-edge/includes/webservice.inc.php,
+	  /branches/bleeding-edge/index.php,
+	  /branches/bleeding-edge/install.php,
+	  /branches/bleeding-edge/modify.php,
+	  /branches/bleeding-edge/opensearch.php,
+	  /branches/bleeding-edge/query_history.php,
+	  /branches/bleeding-edge/query_manager.php,
+	  /branches/bleeding-edge/query_modify.php,
+	  /branches/bleeding-edge/receipt.php,
+	  /branches/bleeding-edge/record.php,
+	  /branches/bleeding-edge/rss.php,
+	  /branches/bleeding-edge/search.php,
+	  /branches/bleeding-edge/show.php,
+	  /branches/bleeding-edge/simple_search.php,
+	  /branches/bleeding-edge/sitemap.php,
+	  /branches/bleeding-edge/sru.php,
+	  /branches/bleeding-edge/unapi.php,
+	  /branches/bleeding-edge/user_details.php,
+	  /branches/bleeding-edge/user_login.php,
+	  /branches/bleeding-edge/user_options.php,
+	  /branches/bleeding-edge/user_options_modify.php,
+	  /branches/bleeding-edge/user_receipt.php,
+	  /branches/bleeding-edge/user_validation.php,
+	  /branches/bleeding-edge/users.php: changed code to work with PHP5
+	  w/o emitting E_DEPRECATED errors, e.g. replaced
+	  any 'ereg...()' and 'split...()' functions (which were deprecated
+	  in PHP 5.3.0)
+
+2012-02-27 20:15  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/includes/include.inc.php: * changed code
+	  to work with PHP5 w/o emitting E_DEPRECATED errors, e.g. replaced
+	  any 'ereg...()' and 'split...()' functions (which were deprecated
+	  in PHP 5.3.0)
+	  * function 'buildSELECTclause()': added a missing closing
+	  parenthesis
+
+2012-01-25 16:30  Richard Karnesky <karnesky@gmail.com>
+
+	* /branches/bleeding-edge/includes/include.inc.php: Allow for empty
+	  $defaultFieldsListViewMinor
+
+2010-05-11 20:43  Richard Karnesky <karnesky@gmail.com>
+
+	* /branches/bleeding-edge/AUTHORS,
+	  /branches/bleeding-edge/import_modify.php,
+	  /branches/bleeding-edge/includes/import.inc.php: Check PubMed for
+	  DOIs before checking CrossRef (as the former often has more data
+	  and has a more stable API and does not need user/pass).
+
+2009-05-13 21:06  Richard Karnesky <karnesky@gmail.com>
+
+	* /branches/bleeding-edge/includes/openurl.inc.php: Specify ctc_enc
+	  to be UTF-8 in COinS
+
+2009-05-13 21:01  Richard Karnesky <karnesky@gmail.com>
+
+	* /branches/bleeding-edge/includes/openurl.inc.php: Force UTF-8
+	  encoding in COinS, to work with various javascript processors
+	  that use decodeURIComponent (which assumes UTF-8).
+
+2008-12-15 13:29  thierry_lemaire
+
+	* /branches/bleeding-edge/users.php: Add display default user
+
+2008-12-13 19:20  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/includes/modsxml.inc.php: - added new
+	  function 'encodeField()' which now triggers the encoding of
+	  special chars, charset conversion and field-specific search &
+	  replace
+	  actions; these transformations are now applied just before
+	  putting field
+	  values into their XML objects; this fixes an issue with
+	  ampersands in
+	  multi-item fields such as the 'keywords' field (thanks to Dave
+	  Burt for
+	  identifying the problem and submitting an initial patch)
+	  - function 'separateNames()' now requires the current field name
+	  as additional
+	  parameter and uses perl-style split patterns to separate author
+	  initials;
+	  this allows to parse initials which aren't separated by any
+	  whitespace or
+	  punctuation (such as in "Steffens, MT") and put them in separate
+	  XML objects
+	  - function 'separateNames()': improved the handling of
+	  initials/forenames that
+	  are connected with a hyphen to ensure that they are kept together
+	  and that
+	  the hyphen is maintained in the XML output
+	  - moved the definition of variables 'transtab_refbase_unicode'
+	  and
+	  '$fieldSpecificSearchReplaceActionsArray' to function
+	  'modsCollection()'
+
+2008-12-05 09:55  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/locales/ru/common_utf8.inc: fixed
+	  incorrect translation for "notes"
+
+2008-12-05 00:05  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/AUTHORS,
+	  /branches/bleeding-edge/initialize/ini.inc.php,
+	  /branches/bleeding-edge/install.sql,
+	  /branches/bleeding-edge/install_utf8.sql,
+	  /branches/bleeding-edge/update.php,
+	  /branches/bleeding-edge/update.sql: added support for Russian
+	  localization
+
+2008-12-04 23:34  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/locales/ru,
+	  /branches/bleeding-edge/locales/ru/common_utf8.inc: initial
+	  checkin (Russian localization; not completed yet)
+
+2008-11-22 13:46  Matthias Steffens <refbase.extracts.de>
+
+	* /tags/refbase-0.9.5: tagged the refbase-0.9.5 release
+
+2008-11-22 13:41  Matthias Steffens <refbase.extracts.de>
+
+	* /trunk/ChangeLog: added last-minute changes done before the
+	  release of refbase-0.9.5
+
+2008-11-22 13:40  Matthias Steffens <refbase.extracts.de>
+
+	* /branches/bleeding-edge/ChangeLog: added last-minute changes done
+	  before the release of refbase-0.9.5
+
+2008-11-22 13:07  Matthias Steffens <refbase.extracts.de>
+
+	* /tags/refbase-0.9.5: deleted incorrectly tagged refbase-0.9.5
+	  release
+
+2008-11-21 16:24  Matthias Steffens <refbase.extracts.de>
+
+	* /tags/refbase-0.9.5: tag the refbase-0.9.5 release
+
+
 2008-11-18 21:13  Matthias Steffens <refbase@extracts.de>
 
 	* /trunk, /trunk/NEWS, /trunk/cite/formats/cite_html.php,

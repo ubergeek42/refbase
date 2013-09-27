@@ -281,7 +281,7 @@
 		$srwDatabaseInfoBranch->setTagContent(encodeHTMLspecialchars($hostInstitutionName) . " (" . $feedbackEmail . ")", "databaseInfo/contact");
 
 		$srwDatabaseImplementationBranch = new XMLBranch("implementation");
-		$srwDatabaseImplementationBranch->setTagAttribute("version", "0.9.5");
+		$srwDatabaseImplementationBranch->setTagAttribute("version", "0.9.6");
 		$srwDatabaseImplementationBranch->setTagAttribute("identifier", "refbase");
 		$srwDatabaseImplementationBranch->setTagContent("Web Reference Database (http://refbase.sourceforge.net)", "implementation/title");
 		$srwDatabaseInfoBranch->addXMLBranch($srwDatabaseImplementationBranch);

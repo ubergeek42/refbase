@@ -16,7 +16,7 @@
 	//             $Author$
 	//             $Revision$
 
-	// This file will update any refbase MySQL database installation from v0.8.0 or greater to v0.9.5.
+	// This file will update any refbase MySQL database installation from v0.8.0 or greater to v0.9.6.
 	// (Note that this script currently doesn't offer any conversion from 'latin1' to 'utf8')
 	// CAUTION: YOU MUST REMOVE THIS SCRIPT FROM YOUR WEB DIRECTORY AFTER THE UPDATE!!
 
@@ -932,7 +932,7 @@
 ?>
 
 	<tr>
-		<td colspan="2"><h3>Welcome to refbase v0.9.5!</h3></td>
+		<td colspan="2"><h3>Welcome to refbase v0.9.6!</h3></td>
 	</tr><?php
 
 		}

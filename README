@@ -1,4 +1,4 @@
-refbase 0.9.5 README
+refbase 0.9.6 README
 ====================
 
 About refbase
@@ -51,7 +51,7 @@ Requirements
 ------------
   refbase requires:
   - a web server (like the Apache HTTP Server <http://httpd.apache.org/>)
-  - PHP <http://www.php.net/> (version 4.4.0 or greater) with enabled
+  - PHP <http://www.php.net/> (version 5.2.0 or greater) with enabled
     session support & installed PHP MySQL module
   - MySQL <http://www.mysql.com/> (version 4.1.x or greater required for
     Unicode support)

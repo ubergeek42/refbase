@@ -15,12 +15,12 @@
 #             $Author$
 #             $Revision$
 
-# This MySQL database structure file will update any refbase v0.8.0 database to v0.9.5
+# This MySQL database structure file will update any refbase v0.8.0 database to v0.9.6
 
 # IMPORTANT: - If possible, use 'update.php' instead of this file to update an
 #              existing refbase installation (v0.8.0 or above), please see the
 #              'UPDATE' file for further information.
-#            - Do NOT use this file in an attempt to update refbase v0.9.0 to v0.9.5,
+#            - Do NOT use this file in an attempt to update refbase v0.9.x to v0.9.6,
 #              please use 'update.php' instead.
 
 # --------------------------------------------------------

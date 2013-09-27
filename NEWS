@@ -1,12 +1,94 @@
 This file presents a summary of the main fixes and enhancements.
 
-See the 'ChangeLog' or the commit messages on SourceForge for a detailed history:
+See the 'ChangeLog' or the commit messages on SourceForge for a detailed
+history:
   <http://refbase.svn.sourceforge.net/viewvc/refbase/>
 
 Following sites list the refbase commit messages in chronological order
 (allowing you to follow the refbase development progress):
   <http://cia.vc/stats/project/refbase/>
   <https://www.ohloh.net/projects/refbase/commits>
+
+refbase-0.9.6
+-------------
+[XX-XXX-2013]
+
+  Feature additions
+-------------------
+
+Interface:
+
+- Support for clickable links in cite_html
+
+Localization:
+
+- Localized user login
+
+- Localized duplicate manager
+
+- Localized query manager
+
+- Added Russian localization
+
+- Added Japanese localization
+
+
+  Changes
+---------
+
+Security:
+
+- Restrictions for non-admin users of search.php to prevent SQL injection
+
+- quote_smart in query_modify.php
+
+General:
+
+- Removed functions deprecated in PHP 5.3.0
+
+- Add parameter 'approved' to show.php
+
+- Unify styling of show.php
+
+- Re-arrange user detail fields by importance
+
+Import:
+
+- RIS import changes to follow the current spec
+
+- File imports are improved by removing a BOM, if present
+
+- Import of Endnote tagged files without requiring bibutils
+
+- PubMed is now preferred over CrossRef for importing DOIs
+
+- Improvements to CrossRef imports
+
+- Improved import of references exported by refbase
+
+- Minor improvements for RefWorks, Medline, and other formats
+
+Export:
+
+- COinS are now encoded as UTF-8, regardless of database encoding
+
+- Change MODS export of theses to use the marcgt genre authority
+
+
+  Bug fixes
+-----------
+
+- Fixed encoding special characters in MODS exporter
+
+- CSS positioning fo quickSearch
+
+- Fixed import of RIS tag "CP"
+
+- Fixed file uploads to subdirectories that don't exist
+
+- Timezone fixes in PHP 5.1 and above
+
+
 
 
 refbase-0.9.5

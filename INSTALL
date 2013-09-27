@@ -4,10 +4,11 @@ How to install?
   If you require help on installation of these packages please visit
   <http://httpd.apache.org>, <http://php.net> and <http://mysql.com>.
 
-- Move all refbase-0.9.5 files to your web directory.
+- Move all refbase-0.9.6 files to your web directory.
 
-- Open the file 'initialize/db.inc.php' in a text editor and edit the values of
-  the variables '$databaseName', '$username' and '$password' to fit your needs.
+- Open the file 'initialize/db.inc.php' in a text editor and edit the values
+  of the variables '$databaseName', '$username' and '$password' to fit your
+  needs.
   (Note that you might be able to use the refbase package without modifying
    these variables, but we highly recommend not to use the default values!)
 
@@ -16,7 +17,7 @@ How to install?
     <http://SERVER_ADDRESS/PATH_ON_SERVER/install.php>
 
   (where the string 'SERVER_ADDRESS' is replaced by your server name and
-   'PATH_ON_SERVER' is the actual path to your refbase-0.9.5 web directory)
+   'PATH_ON_SERVER' is the actual path to your refbase-0.9.6 web directory)
 
   This should bring up the install form. Edit the contents of all text entry
   fields to match your server setup and supply the MySQL admin password, then
@@ -53,8 +54,8 @@ How to setup your own admin user?
   just entered.
 
 - Now open the file 'initialize/ini.inc.php' in a text editor and change the
-  value of the '$adminLoginEmail' variable to the email address you've specified
-  for your new admin user.
+  value of the '$adminLoginEmail' variable to the email address you've
+  specified for your new admin user.
 
 - Log out from the database, then login again using the email address and
   password of your newly created admin account.
@@ -89,30 +90,31 @@ See also:
 Import Options
 --------------
 refbase offers batch import of records via the web interface ('import.php') or
-the command line ('contrib/command_line/refbase_import'). These scripts allow to
-import records from various common bibliographic formats (BibTeX, Copac, Endnote
-(tagged text & XML), MODS XML, RefWorks, RIS or SciFinder) as well as from online
-databases (CSA Illumina, ISI Web of Science or PubMed (MEDLINE & XML)).
+the command line ('contrib/command_line/refbase_import'). These scripts allow
+to import records from various common bibliographic formats (BibTeX, Copac,
+Endnote (tagged text & XML), MODS XML, RefWorks, RIS or SciFinder) as well as
+from online databases (CSA Illumina, ISI Web of Science or PubMed (MEDLINE & XML)).
 
-If you're coming from Endnote you may want to try out the Endnote style file and
-PHP script that's included with refbase. This style file and PHP script allows
-Endnote users to transfer data into refbase at the command line (see the README
-file in the 'contrib/endnote' directory for further information).
+If you're coming from Endnote you may want to try out the Endnote style file
+and PHP script that's included with refbase. This style file and PHP script
+allows Endnote users to transfer data into refbase at the command line (see
+the README file in the 'contrib/endnote' directory for further information).
 
-In addition, refbase allows PHP developers to write their own import parsers and
-use the provided templates to import their records into the refbase database (see
-the 'contrib/import_templates' directory for available templates).
+In addition, refbase allows PHP developers to write their own import parsers
+and use the provided templates to import their records into the refbase
+database (see the 'contrib/import_templates' directory for available
+templates).
 
-If you can't use any of the above mentioned import options, you might be able to
-convert your data into a tab-delimited text format that can be imported directly
-into the MySQL database. Here are some notes how to prepare tab-delimited data
-for direct upload into your newly created MySQL tables:
+If you can't use any of the above mentioned import options, you might be able
+to convert your data into a tab-delimited text format that can be imported
+directly into the MySQL database. Here are some notes how to prepare
+tab-delimited data for direct upload into your newly created MySQL tables:
 
 - Fields are separated by tabs, records are separated by returns
   (if not specified otherwise within the LOAD DATA statement).
 
-- The order of fields must resemble the field order specified in the MySQL table
-  'refs'. Field information for table 'refs' is given at:
+- The order of fields must resemble the field order specified in the MySQL
+  table 'refs'. Field information for table 'refs' is given at:
     <http://wiki.refbase.net/index.php/Table_refs>
 
 - DATE format must be YYYY-MM-DD and TIME format must be HH:MM:SS.
@@ -128,8 +130,8 @@ for direct upload into your newly created MySQL tables:
 
 - File encoding must be UNIX.
 
-- Assuming your data file is named 'refs.txt', you should be able to upload your
-  data via use of the 'mysql' command line interpreter:
+- Assuming your data file is named 'refs.txt', you should be able to upload
+  your data via use of the 'mysql' command line interpreter:
 
     LOAD DATA LOCAL INFILE "/PATH/TO/FILE/refs.txt" INTO TABLE refs;
 
@@ -137,8 +139,8 @@ for direct upload into your newly created MySQL tables:
 
     mysqlimport --local -u root -p YOUR_DB_NAME "/PATH/TO/FILE/refs.txt"
 
-  Note that if you're going to use the mysqlimport data import program the data
-  file *must* be named 'refs.txt'.
+  Note that if you're going to use the mysqlimport data import program the
+  data file *must* be named 'refs.txt'.
 
 See also:
   <http://import.refbase.net>
@@ -159,8 +161,8 @@ Please contribute other skins to <info@refbase.net>.
 Extensions for other software
 -----------------------------
 In 'contribs/mediawiki', there is an extension for MediaWiki to more easily
-include reference information from refbase in a wiki page. This will also allow
-you to use Wikipedia's citation templates, which may have an appearance that you
-like or might be easier for you (and the other users of your wiki) to customize.
-
+include reference information from refbase in a wiki page. This will also
+allow you to use Wikipedia's citation templates, which may have an appearance
+that you like or might be easier for you (and the other users of your wiki) to
+customize.
 
