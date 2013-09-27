@@ -2,8 +2,8 @@ This file lists current & previous members of the refbase development team
 and other contributors.
 
 Please avoid sending e-mail with refbase-related questions directly to them;
-your questions are likely to be answered much faster if you post them to one of
-the mailing lists or forums:
+your questions are likely to be answered much faster if you post them to one
+of the mailing lists or forums:
   <http://support.refbase.net/>
 
 msteffens:Matthias Steffens <refbase@extracts.de>:
@@ -12,6 +12,9 @@ msteffens:Matthias Steffens <refbase@extracts.de>:
 karnesky:Richard Karnesky <karnesky@gmail.com>:
  Project manager, application engineering, MODS XML export, Endnote style,
  COinS, update.php, some bugfixes & docs
+
+pnault:Pierre Nault <pnault@users.sourceforge.net>:
+ Localization efforts, some bugfixes
 
 Previous developers:
 
@@ -31,6 +34,9 @@ Thanks to:
 
 - Oleksandr Moskalenko <oleksa@users.sourceforge.net>:
   Troubleshooting and patch for directory renaming
+
+- Dave Burt:
+  Fix for MODS encoding
 
 - Nicholaus Lance Hepler <nhelper@gmail.com>:
   Patch to retrieve information from PubMed before CrossRef
