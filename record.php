@@ -1202,7 +1202,34 @@
 	
 	if (isset($_SESSION['user_types']))
 	{
-		$optionTags = buildSelectMenuOptions($_SESSION['user_types'], "/ *; */", "\t\t\t", false); // build properly formatted <option> tag elements from the items listed in the 'user_types' session variable
+
+	$userTypesAvail = explode("; ", $_SESSION['user_types']);
+
+	$userTypesAvailInv = array_flip($userTypesAvail);
+
+	$localizedTypeName = array(
+		'Journal Article' => $loc['typeJournal Article'],
+		'Abstract' => $loc['typeAbstract'],
+		'Book Chapter' => $loc['typeBook Chapter'],
+		'Book Whole' => $loc['typeBook Whole'],
+		'Conference Article' => $loc['typeConference Article'],
+		'Conference Volume' => $loc['typeConference Volume'],
+		'Journal' => $loc['typeJournal'],
+		'Magazine Article' => $loc['typeMagazine Article'],
+		'Manual' => $loc['typeManual'],
+		'Manuscript' => $loc['typeManuscript'],
+		'Map' => $loc['typeMap'],
+		'Miscellaneous' => $loc['typeMiscellaneous'],
+		'Newspaper Article' => $loc['typeNewspaper Article'],
+		'Patent' => $loc['typePatent'],
+		'Report' => $loc['typeReport'],
+		'Software' => $loc['typeSoftware'],
+	);
+	
+	$userTypesArray = array_intersect_key($localizedTypeName, $userTypesAvailInv);
+	
+	$optionTags = buildSelectMenuOptions($userTypesArray, "//", "\t\t\t", true); // build properly formatted <option value=""> tag elements from the items listed in the 'user_types' session variable		
+								
 		$recordType .= $optionTags;
 
 		if ($recordAction == "edit" || $mode == "import") // for the edit (or import) record form, the current type is added to the drop down if it isn't one of the user's types
@@ -1218,7 +1245,7 @@
 			}
 			if ($optionPresent != true)
 			{
-				$recordType .= "\t\t\t<option>$typeName</option>";
+				$recordType .= "\n\t\t\t<option value=\"$typeName\" selected>$localizedTypeName[$typeName]</option>";
 			}
 		}
 	}
@@ -1229,7 +1256,7 @@
 				. "\n\t</td>";
 
 	if (!empty($typeName))
-		$recordType = preg_replace("/<option>$typeName/i", "<option selected>$typeName", $recordType);
+		$recordType = preg_replace("/(value=\"$typeName\")/i", "\\1 selected", $recordType);
 	
 	echo "$recordType"
 			. "\n</tr>"

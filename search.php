@@ -919,15 +919,19 @@
 				//  '$searchReplaceActionsArray'.)
 				$fieldSpecificSearchReplaceActionsArray = array(
 				                                                array(
-				                                                      'fields'  => array("thesis", "approved", "marked", "copy", "selected"), // see also note for '$encodingExceptionsArray' below
+				                                                      'fields'  => array("thesis", "approved", "marked", "copy", "selected", "type"), // see also note for '$encodingExceptionsArray' below
 				                                                      'actions' => array("/(.+)/e" => "\$loc['\\1']") // use localized field values (e.g., in case of german we display 'ja' instead of 'yes', etc)
+				                                                     ),
+																array(
+				                                                      'fields'  => array("type"),
+				                                                      'actions' => array("/(.+)/e" => "\$loc['type\\1']") // for the 'type' field, prefix variable with 'type' to match to localized value
 				                                                     )
 				                                               );
 
 				// NOTE: We substitute contents of the given fields with localized field values from variable
 				//       '$loc' (see '$fieldSpecificSearchReplaceActionsArray'). Since the locales in '$loc'
 				//       are already HTML encoded, we have to exclude these fields from any further HTML encoding.
-				static $encodingExceptionsArray = array("thesis", "approved", "marked", "copy", "selected");
+				static $encodingExceptionsArray = array("thesis", "approved", "marked", "copy", "selected", "type");
 
 
 				// Note: we omit the results header, browse links & query form for CLI clients, and when outputting only a partial document structure ('wrapResults=0')
@@ -1300,13 +1304,17 @@
 				                                                array(
 				                                                      'fields'  => array("thesis", "approved", "marked", "copy", "selected"), // see also note for '$encodingExceptionsArray' below
 				                                                      'actions' => array("/(.+)/e" => "\$loc['\\1']") // use localized field values (e.g., in case of german we display 'ja' instead of 'yes', etc)
+				                                                     ),
+																array(
+				                                                      'fields'  => array("type"),
+				                                                      'actions' => array("/(.+)/e" => "\$loc['type\\1']") // for the 'type' field, prefix variable with 'type' to match to localized value
 				                                                     )
 				                                               );
 
 				// NOTE: We substitute contents of the given fields with localized field values from variable
 				//       '$loc' (see '$fieldSpecificSearchReplaceActionsArray'). Since the locales in '$loc'
 				//       are already HTML encoded, we have to exclude these fields from any further HTML encoding.
-				static $encodingExceptionsArray = array("thesis", "approved", "marked", "copy", "selected");
+				static $encodingExceptionsArray = array("thesis", "approved", "marked", "copy", "selected", "type");
 
 
 				// Note: we omit the results header, browse links & query form for CLI clients, and when outputting only a partial document structure ('wrapResults=0')
