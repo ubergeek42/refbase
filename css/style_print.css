@@ -1,0 +1,414 @@
+	/*
+	// Project:    Web Reference Database (refbase) <http://www.refbase.net>
+	// Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+	//             original author(s).
+	//
+	//             This code is distributed in the hope that it will be useful,
+	//             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+	//             License for more details.
+	//
+	// File:       ./css/style_print.css
+	// Repository: $HeadURL$
+	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+	//
+	// Created:    20-Oct-02, 15:08
+	// Modified:   $Date$
+	//             $Author$
+	//             $Revision$
+	*/
+
+	/* refbase CSS definitions - print view style */
+
+body {
+	background: #FFFFFF;
+	color: #000000;
+}
+
+pre, code {
+	font-family: monaco,courier,monospace;
+	font-size: 7pt;
+}
+
+.smaller {
+	font-size: 0.7em;
+}
+
+.small {
+	font-size: 0.7em;
+}
+
+.smallup {
+	font-size: 0.85em;
+	position: relative;
+	top: -10px;
+}
+
+.moveup {
+	position: relative;
+	top: -8px;
+}
+
+.unapi {
+	font-size: smaller;
+}
+
+.Z3988 {
+	font-size: smaller;
+}
+
+.ok {
+	color: #009900;
+}
+
+.warning {
+	color: red;
+}
+
+.warning2 {
+	color: red;
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+	font-size: 0.75em;
+}
+
+.mainfieldsbg {
+	background-color: #FFFFFF;
+}
+
+.otherfieldsbg {
+	background-color: #FFFFFF;
+}
+
+.userfieldsbg {
+	background-color: #FFFFFF;
+}
+
+th {
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+	font-size: 0.8em;
+}
+
+td, div {
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+	font-size: 0.7em;
+}
+
+p {
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+	font-size: 0.7em;
+}
+
+a:link {
+	color: #000000;
+	text-decoration: underline;
+}
+
+a:visited {
+	color: #000000;
+	text-decoration: underline;
+}
+
+a:active {
+	color: #000000;
+	text-decoration: underline;
+}
+
+a:hover {
+	color: #3366FF;
+	text-decoration: underline;
+}
+
+h1, h2, h3, h4 {
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+}
+
+h5, h6 {
+	font-family: "lucida grande",helvetica,arial,sans-serif;
+}
+
+h2, h3 {
+	margin-top: 1em;
+	margin-bottom: 0.5em;
+}
+
+h2 {
+	font-size: 1.8em;
+}
+
+h3 {
+	font-size: 1.35em;
+}
+
+h4, h5 {
+	margin-top: 0em;
+	margin-bottom: 0em;
+}
+
+h4 {
+	font-size: 1.25em;
+}
+
+h5 {
+	font-size: 1.1em;
+}
+
+.pageheader {
+	
+}
+
+.pagefooter {
+	
+}
+
+.results {
+	
+}
+
+.resultsheader {
+	font-size: 1em;
+}
+
+.resultsfooter {
+	margin-left: 3.3em;
+	margin-right: 3.3em;
+}
+
+div.resultsfooter {
+	margin-top: 1.2em;
+	margin-bottom: 0.9em;
+}
+
+.showhide {
+	
+}
+
+#resultoptions {
+	display: none;
+}
+
+.resultnav {
+	
+}
+
+.mainnav {
+	
+}
+
+.pagenav {
+	
+}
+
+.viewnav {
+	font-size: 0.75em;
+}
+
+#columns {
+	
+}
+
+#columns .itemlinks a {
+	color: #000000;
+	text-decoration: none;
+}
+
+#columns .itemlinks a:hover {
+	color: #3366FF;
+}
+
+#details {
+	
+}
+
+#details .itemlinks a {
+	color: #000000;
+	text-decoration: none;
+}
+
+#details .itemlinks a:hover {
+	color: #3366FF;
+}
+
+#citations {
+	
+}
+
+.citation {
+	
+}
+
+.citation .showhide {
+	margin-top: 0.4em;
+}
+
+.citation .moreinfo {
+	margin-left: 1.25em;
+	font-size: 1em;
+}
+
+.citation .moreinfo > * {
+	margin-bottom: 0.4em;
+	font-size: 0.85em;
+}
+
+.citation .moreinfo .reflinks {
+	margin-top: 0.8em;
+}
+
+.citation .moreinfo .reflinks > * {
+	display: inline;
+	font-size: 1em;
+}
+
+.citation .moreinfo .itemlinks a {
+	color: #000000;
+	text-decoration: none;
+}
+
+.citation .moreinfo .itemlinks a:hover {
+	color: #3366FF;
+}
+
+#error {
+	
+}
+
+#queryhistory {
+	margin-left: 2.6em;
+	margin-right: 2.6em;
+	margin-bottom: 1.75em;
+}
+
+#currentquery, #previousqueries {
+	margin-top: 1.2em;
+	font-size: 1em;
+}
+
+#queryhistory .even, #queryhistory .odd {
+	margin-top: 0.25em;
+	margin-left: 1.2em;
+	margin-right: 1.2em;
+	font-size: 1em;
+}
+
+.examples {
+	font-size: 1em;
+}
+
+.links {
+	
+}
+
+.sect {
+	padding-top: 2px;
+	font-size: 1em;
+}
+
+.even {
+	background-color: #FFFFFF;
+	padding: 5px;
+}
+
+.odd {
+	background-color: #F4F4F4;
+	padding: 5px;
+}
+
+#queryform {
+	
+}
+
+#resultactions {
+	display: none;
+}
+
+#searchopt {
+	display: none;
+}
+
+#helptxt {
+	display: none;
+}
+
+#helptxt .even {
+	margin-left: -5px;
+	margin-top: -3px;
+}
+
+#helptxt .odd {
+	margin-left: -5px;
+}
+
+.toggleimg {
+	
+}
+
+.toggletxt {
+	display: inline;
+	margin-left: 5px;
+	font-size: 1em;
+}
+
+a:link .toggletxt {
+	color: #000000;
+}
+
+a:visited .toggletxt {
+	color: #000000;
+}
+
+a:hover .toggletxt {
+	color: #3366FF;
+}
+
+.resultviews {
+	display: inline;
+	font-size: 0.85em;
+}
+
+.activeview {
+	display: inline;
+	font-size: 1em;
+}
+
+.leftview {
+	display: inline;
+	font-size: 1em;
+}
+
+.middleview {
+	display: inline;
+	font-size: 1em;
+}
+
+.rightview {
+	display: inline;
+	font-size: 1em;
+}
+
+.toggleprint {
+	position: relative;
+	top: 3px;
+}
+
+#accountinfo {
+	font-size: 1.25em;
+}
+
+#accountdetails {
+	font-size: 1em;
+}
+
+#accountopt {
+	font-size: 1em;
+}
+
+#accountperm {
+	font-size: 1em;
+}
+
+#accountdetails ul, #accountopt ul, #accountperm ul {
+	position: relative;
+	top: -0.8em;
+	list-style-type: none;
+	font-size: 0.85em;
+	line-height: 1.3em;
+}

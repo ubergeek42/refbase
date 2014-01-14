@@ -1,0 +1,261 @@
+<?php
+  // Project:    Web Reference Database (refbase) <http://www.refbase.net>
+  // Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+  //             original author(s).
+  //
+  //             This code is distributed in the hope that it will be useful,
+  //             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+  //             License for more details.
+  //
+  // File:       ./includes/openurl.inc.php
+  // Repository: $HeadURL$
+  // Author(s):  Richard Karnesky <mailto:karnesky@gmail.com>
+  //
+  // Created:    06-Sep-06, 16:30
+  // Modified:   $Date$
+  //             $Author$
+  //             $Revision$
+
+  // This include file contains functions that generate OpenURL and COinS data.
+  // More info about the OpenURL standard (including pointers to further documentation) is available
+  // at <http://en.wikipedia.org/wiki/OpenURL>. For more info about COinS, see <http://ocoins.info/>.
+
+  // TODO: Multiple aus have the same array key, so we apped a number that is later stripped
+  //       Cleanup if possible
+
+
+  // Include refbase markup -> plain text search & replace patterns
+  include 'includes/transtab_refbase_ascii.inc.php';
+
+  function openURL($row, $resolver = "") {
+    global $openURLResolver; // these variables are defined in 'ini.inc.php'
+    global $crossRefReqDat;
+    global $hostInstitutionAbbrevName;
+
+    $co = contextObject($row); 
+    $co["sid"] = "refbase:" . $hostInstitutionAbbrevName;
+
+    if (empty($resolver))
+      $resolver = $openURLResolver;
+
+    $openURL = $resolver;
+
+    if (!preg_match("/\?/", $resolver))
+      $openURL .= "?";
+    else
+      $openURL .= "&amp;";
+
+    if (preg_match("#^http://www\.crossref\.org/openurl#", $openURL) && !empty($crossRefReqDat))
+      $openURL .= "pid=" . rawurlencode($crossRefReqDat) . "&amp;";
+
+    $openURL .= "ctx_ver=Z39.88-2004";
+
+    foreach ($co as $coKey => $coValue) {
+      $coKey = preg_replace("/rft./i", "", $coKey);
+      $coKey = preg_replace("/au[0-9]*/i", "au", $coKey);
+      $openURL .= "&amp;" . $coKey . "=" . rawurlencode($coValue);
+    }
+
+    return $openURL;
+  }
+
+  function coins($row) {
+    // fmt_info (type)
+    $fmt = "info:ofi/fmt:kev:mtx:";
+    // 'dissertation' is compatible with the 1.0 spec, but not the 0.1 spec
+    if (!empty($row['thesis']))
+      $fmt .= "dissertation";
+    elseif (preg_match("/Journal/", $row['type']))
+      $fmt .= "journal";
+    elseif (preg_match("/Patent/", $row['type']))
+      $fmt .= "patent";
+    elseif (preg_match("/Book/", $row['type']))
+      $fmt .= "book";
+    // 'dc' (dublin core) is compatible with the 1.0 spec, but not the 0.1 spec.
+    // We default to this, as it is the most generic type.
+    else
+      $fmt .= "dc";
+
+    $co = contextObject($row); 
+
+    $coins = "ctx_ver=Z39.88-2004" . "&amp;rft_val_fmt=" . urlencode($fmt);
+
+    foreach ($co as $coKey => $coValue) {
+      // 'urlencode()' differs from 'rawurlencode() (i.e., RFC1738 encoding)
+      // in that spaces are encoded as plus (+) signs
+      $coKey = preg_replace("/au[0-9]*/i", "au", $coKey);
+
+      // While COinS does not specify encoding, most javascript tools assume that it is UTF-8
+      // TODO: use function 'detectCharacterEncoding()' instead of the 'mb_*()' functions?
+      //       if (($contentTypeCharset == "ISO-8859-1") AND (detectCharacterEncoding($coValue) != "UTF-8"))
+      if (mb_detect_encoding($coValue) != "UTF-8" || !(mb_check_encoding($coValue,"UTF-8")))
+        $coValue = utf8_encode($coValue);
+      $coins .= "&amp;" . $coKey . "=" . urlencode($coValue);
+    }
+    $coins .= "%26ctx_enc%3Dinfo%3Aofi%2Fenc%3AUTF-8";
+
+    $coinsSpan = "<span class=\"Z3988\" title=\"" . $coins . "\"></span>";
+
+    return $coinsSpan;
+  }
+
+  function contextObject($row) {
+    global $databaseBaseURL; // defined in 'ini.inc.php'
+
+    // The array '$transtab_refbase_ascii' contains search & replace patterns for
+    // conversion from refbase markup to plain text
+    global $transtab_refbase_ascii; // defined in 'transtab_refbase_ascii.inc.php'
+
+    // Defines search & replace 'actions' that will be applied to all those
+    // refbase fields that are listed in the corresponding 'fields' element:
+    $plainTextSearchReplaceActionsArray = array(
+      array(
+        'fields'  => array("title", "publication", "abbrev_journal", "address", "keywords", "abstract", "orig_title", "series_title", "abbrev_series_title", "notes"),
+        'actions' => $transtab_refbase_ascii
+      )
+    );
+
+    foreach ($row as $rowFieldName => $rowFieldValue)
+      // Apply search & replace 'actions' to all fields that are listed in the 'fields'
+      // element of the arrays contained in '$plainTextSearchReplaceActionsArray':
+      foreach ($plainTextSearchReplaceActionsArray as $fieldActionsArray)
+        if (in_array($rowFieldName, $fieldActionsArray['fields']))
+          // function 'searchReplaceText()' is defined in 'include.inc.php'
+          $row[$rowFieldName] = searchReplaceText($fieldActionsArray['actions'], $row[$rowFieldName], true);
+
+    $co = array();
+
+    // rfr_id
+    $co["rfr_id"] = "info:sid/" . preg_replace("#http://#", "", $databaseBaseURL);
+
+    // genre (type)
+    if (isset($row['type'])) {
+      if ($row['type'] == "Journal Article")
+        $co["rft.genre"] = "article";
+      elseif ($row['type'] == "Book Chapter")
+        $co["rft.genre"] = "bookitem";
+      elseif ($row['type'] == "Book Whole")
+        $co["rft.genre"] = "book";
+      elseif ($row['type'] == "Conference Article")
+        $co["rft.genre"] = "proceeding";
+      elseif ($row['type'] == "Conference Volume")
+        $co["rft.genre"] = "conference";
+      elseif ($row['type'] == "Journal")
+        $co["rft.genre"] = "journal";
+      elseif ($row['type'] == "Manuscript")
+        $co["rft.genre"] = "preprint";
+      elseif ($row['type'] == "Report")
+        $co["rft.genre"] = "report"; // "report" is only supported by OpenURL v1.0 (but not v0.1)
+    }
+
+    // atitle, btitle, title (title, publication)
+    if (($row['type'] == "Journal Article") || ($row['type'] == "Book Chapter")) {
+      if (!empty($row['title']))
+        $co["rft.atitle"] = $row['title'];
+      if (!empty($row['publication'])) {
+        $co["rft.title"] = $row['publication'];
+        if ($row['type'] == "Book Chapter")
+          $co["rft.btitle"] = $row['publication'];
+      }
+    }
+    elseif (!empty($row['title']))
+      $co["rft.title"] = $row['title'];
+    if (($row['type'] == "Book Whole") && (!empty($row['title'])))
+      $co["rft.btitle"] = $row['title'];
+
+    // stitle (abbrev_journal)
+    if (!empty($row['abbrev_journal'])) {
+      $co["rft.stitle"] = $row['abbrev_journal'];
+      if (empty($row['publication']) && (!isset($co["rft.title"]))) {
+        // we duplicate the abbreviated journal name to 'rft.title' since the
+        // CrossRef resolver seems to require 'rft.title' (otherwise it aborts
+        // with an error: "No journal identifier supplied")
+        $co["rft.title"] = $row['abbrev_journal'];
+      }
+    }
+
+    // series (series_title)
+    if (!empty($row['series_title']))
+      $co["rft.series"] = $row['series_title'];
+
+    // issn
+    if (!empty($row['issn']))
+      $co["rft.issn"] = $row['issn'];
+
+    // isbn
+    if (!empty($row['isbn']))
+      $co["rft.isbn"] = $row['isbn'];
+
+    // date (year)
+    if (!empty($row['year']))
+      $co["rft.date"] = $row['year'];
+
+    // volume
+    if (!empty($row['volume']))
+      $co["rft.volume"] = $row['volume'];
+
+    // issue
+    if (!empty($row['issue']))
+      $co["rft.issue"] = $row['issue'];
+
+    // spage, epage, tpages (pages)
+    // NOTE: lifted from modsxml.inc.php--should throw some into a new include file
+    if (!empty($row['pages'])) {
+      if (preg_match("/[0-9] *- *[0-9]/", $row['pages'])) {
+        list($pagestart, $pageend) = preg_split('/\s*[-]\s*/', $row['pages']);
+        if ($pagestart < $pageend) {
+          $co["rft.spage"] = $pagestart;
+          $co["rft.epage"] = $pageend;
+        }
+      }
+      elseif ($row['type'] == "Book Whole") {
+        $pagetotal = preg_replace('/^(\d+)\s*pp?\.?$/', "\\1", $row['pages']);
+        $co["rft.tpages"] = $pagetotal;
+      }
+      else
+        $co["rft.spage"] = $row['pages'];
+    }
+
+    // aulast, aufirst, author (author)
+    if (!empty($row['author'])) {
+      $author = $row['author'];
+      $aulast = extractAuthorsLastName("/ *; */", "/ *, */", 1, $author);
+      $aufirst = extractAuthorsGivenName("/ *; */", "/ *, */", 1, $author);
+      if (!empty($aulast))
+        $co["rft.aulast"] = $aulast;
+      if (!empty($aufirst))
+        $co["rft.aufirst"] = $aufirst;
+      // TODO: cleanup and put this function in include.inc.php?
+      $authorcount = count(preg_split("/ *; */", $author));
+      for ($i=0; $i < $authorcount-1; $i++){
+        $aul = extractAuthorsLastName("/ *; */", "/ *, */", $i+2, $author);
+        $auf = extractAuthorsGivenName("/ *; */", "/ *, */", $i+2, $author);
+        if (!empty($aul)) {
+          $au = $aul;
+          if (!empty($auf))
+            $au .= ", ";
+        }
+        if (!empty($auf))
+          $au .= $auf;
+        if (!empty($au))
+          $co["rft.au".$i] = $au;
+      }
+    }
+
+    // pub (publisher)
+    if (!empty($row['publisher']))
+      $co["rft.pub"] = $row['publisher'];
+
+    // place
+    if (!empty($row['place']))
+      $co["rft.place"] = $row['place'];
+
+    // id (doi, url)
+    if (!empty($row['doi']))
+      $co["rft_id"] = "info:doi/" . $row['doi'];
+    elseif (!empty($row['url']))
+      $co["rft_id"] = $row['url'];
+
+    return $co;
+  }
+?>
