@@ -1,0 +1,459 @@
+#!/usr/bin/perl
+
+# Project:    Web Reference Database (refbase) <http://www.refbase.net>
+# Copyright:  Matthias Steffens <mailto:refbase@extracts.de> and the file's
+#             original author(s).
+#
+#             This code is distributed in the hope that it will be useful,
+#             but WITHOUT ANY WARRANTY. Please see the GNU General Public
+#             License for more details.
+#
+# File:       ./contrib/command_line/refbase_import
+# Repository: $HeadURL$
+# Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
+#
+# Created:    06-Jun-06, 18:00
+# Modified:   $Date$
+#             $Author$
+#             $Revision$
+
+# REFBASE_IMPORT -- a refbase command line interface
+
+# Purpose:    Perl script that allows to upload data in various formats to a refbase online database from the command line
+# Usage:      refbase_import [OPTIONS] [FILE]
+
+# Help:       For help with the syntax type 'refbase_import -h'
+#             To view some usage examples type 'refbase_import -X'
+#             Further information is available at <http://cli.refbase.net/>
+#             A list of supported import formats is given at <http://import.refbase.net/>
+
+# Version:    1.2
+
+# Requires:   - a shell with Perl execution capabilities
+#             - the Perl CPAN modules LWP::UserAgent, HTTP::Request::Common, HTTP::Response, HTTP::Cookies and URI::URL
+#             - access with import permissions to a refbase database (refbase-0.9.0 or greater)
+
+# Limits:     - The character encoding of your import data must match the encoding of your refbase database (i.e., 'latin1' or 'utf8')
+#             - The authentication mechanism is currently limited in that a given password will be transferred as parameter in the POST request
+
+# --------------------------------------------------------------------------------------------------------------
+
+$version = "1.2";
+
+# Configure variables:
+
+# Specify the full URLs to any refbase servers that shall be queried:
+# Notes: - the given hash keys will work as shortcuts, e.g. '--host=local' would upload
+#          data to your local refbase installation; one hash key must be named 'default',
+#          all other keys can be freely chosen
+#        - by default, data will be uploaded to the server labeled with key 'default'
+%hosts = (
+				'default' => 'http://beta.refbase.net/',
+				'local'   => 'http://localhost/refs/',
+				'beta'    => 'http://beta.refbase.net/',
+				'beta2'   => 'http://refbase.textdriven.com/beta/',
+				'demo'    => 'http://demo.refbase.net/',
+				'org'     => 'http://www.refbase.org/'
+);
+
+# Specify the default values for all options that are not explicitly specified:
+%params = (
+				# import options:
+				'skipBadRecords'      => '0',      # -b|--skipbad    -> must be '0' (don't skip records with unrecognized data format) or '1' (skip records with unrecognized data format)
+				'importRecordsRadio'  => 'all',    # -i|--import     -> must be 'all' (import all records) or 'only' (import only those records specified in 'importRecords')
+				'sourceIDs'           => '',       # -p|--pmid       -> this also applies for '--arxiv|--doi|--openurl' since they are essentially just aliases for '-p'
+				'importRecords'       => '1',      # -r|--records    -> must be a list of numbers and/or ranges (e.g., '1-5' will import the first five records; '1 3-5 7' will import records 1, 3, 4, 5 and 7)
+				'formType'            => 'data',   # -t|--type       -> must be 'data' (generic data import) or 'id' (import via ID)
+
+				# fixed parameters:
+				'client'              => "cli-refbase_import-" . $version # the client ID of this command line utility
+);
+
+%outputParams = (
+				# output options:
+				'citeStyle'           => '',        # -C|--style     => desired citation style, given name must match an entry within the database's MySQL table 'styles' (keep empty to use the database default)
+				'format'              => 'ascii',   # -F|--format    => output format must be 'html', 'rtf', 'pdf', 'latex', 'latex_bbl', 'markdown', 'ascii', 'ads', 'bibtex', 'endnote', 'isi', 'ris', 'atom', 'mods', 'oai_dc', 'odf', 'srw_dc', 'srw_mods', 'word' or '' (the empty string '' will produce the default 'ascii' output style)
+				'showLinks'           => '1',       # -L|--showlinks => hide/display links column in HTML output; must be '0', '1', or '' (the empty string '' will produce the default output style, i.e. print any links)
+				'citeOrder'           => 'author',  # -O|--order     => cite order must be 'author', 'year', 'type', 'type-year', 'creation-date' or '' (the empty string '' will produce the default 'author' sort order)
+				'viewType'            => 'web'      # -V|--view      => view type of HTML output; must be 'Web', 'Print', 'Mobile' or '' (the empty string '' will produce the default 'Web' output style)
+);
+
+# Specify the default login credentials for a refbase user account:
+# Imported data will get associated with this user account
+%loginParams = (
+				'loginEmail'     => '', # -U|--user     -> the login email address of an existing refbase user with import permissions
+				'loginPassword'  => ''  # -P|--password -> the password for the given user account
+);
+
+# Specify the location of the cookie jar file:
+# This file will be used to store & retrieve cookies
+$cookieJarFile = "$ENV{HOME}/.lwpcookies.txt";
+
+# --------------------------------------------------------------------------------
+
+# NOTE: You shouldn't need to change anything below this line
+
+# CPAN modules:
+use LWP::UserAgent; # more info: <http://search.cpan.org/~gaas/libwww-perl-5.805/lib/LWP/UserAgent.pm>
+use HTTP::Request::Common; # more info: <http://search.cpan.org/~gaas/libwww-perl-5.805/lib/HTTP/Request/Common.pm>
+use HTTP::Response; # more info: <http://search.cpan.org/~gaas/libwww-perl-5.805/lib/HTTP/Response.pm>
+use HTTP::Cookies; # more info: <http://search.cpan.org/~gaas/libwww-perl-5.805/lib/HTTP/Cookies.pm>
+use URI::URL; # more info: <http://search.cpan.org/~gaas/URI-1.35/URI/URL.pm>
+
+# initialize variables:
+$host = $hosts{'default'};
+$format = '';
+
+# Extract options:
+# TODO: use Getopt::Long
+
+# general options:
+if (($ARGV[0] eq '--help') or ($ARGV[0] eq '-h') or ($ARGV[0] eq '')) { &usage (0); } # if the user asked for --help/-h or didn't provide any input, call the 'usage' subroutine
+elsif (($ARGV[0] eq '--version') or ($ARGV[0] eq '-v')) { &version (0); } # show version information
+elsif (($ARGV[0] eq '--examples') or ($ARGV[0] eq '-X')) { &examples (0); } # print some usage examples
+
+else {
+	foreach (@ARGV) {
+		# extract import options:
+		if ($_ =~ /^(?:-b|--skipbad)=(.+)$/) { $params{'skipBadRecords'} = $1; }
+		elsif ($_ =~ /^(?:-i|--import)=(.+)$/) { $params{'importRecordsRadio'} = $1; }
+		elsif ($_ =~ /^(?:-p|--pmid|--arxiv|--doi|--openurl)=(.+)$/) { $params{'sourceIDs'} = $1; }
+		elsif ($_ =~ /^(?:-r|--records)=(.+)$/) { $params{'importRecords'} = $1; }
+		elsif ($_ =~ /^(?:-t|--type)=(.+)$/) { $params{'formType'} = $1; }
+
+		# extract output options:
+		elsif ($_ =~ /^(?:-C|--style)=(.+)$/) { $outputParams{'citeStyle'} = $1; }
+		elsif ($_ =~ /^(?:-F|--format)=(.+)$/) { $outputParams{'format'} = $1; }
+		elsif ($_ =~ /^(?:-L|--showlinks)=(.+)$/) { $outputParams{'showLinks'} = $1; }
+		elsif ($_ =~ /^(?:-O|--order)=(.+)$/) { $outputParams{'citeOrder'} = $1; }
+		elsif ($_ =~ /^(?:-V|--view)=(.+)$/) { $outputParams{'viewType'} = $1; }
+
+		# extract server options:
+		elsif ($_ =~ /^(?:-H|--host)=(.+)$/) { $host = $1; }
+		elsif ($_ =~ /^(?:-P|--password)=(.+)$/) { $loginParams{'loginPassword'} = $1; }
+		elsif ($_ =~ /^(?:-U|--user)=(.+)$/) { $loginParams{'loginEmail'} = $1; }
+
+		# extract file:
+		# (note that if multiple files were given, only the last given file will be honoured)
+		elsif ($_ =~ /^(?!(-[biprtCFLOVHPU]|--(?:skipbad|import|pmid|arxiv|doi|openurl|records|type|style|format|showlinks|order|view|host|password|user))=)([^ ]+)/) { @sourceFile = $2; }
+	}
+}
+
+# for '--type=data', check if a source file was specified:
+if (($params{'formType'} =~ /^data$/i) && (scalar @sourceFile == 0)) {
+	print "There were validation errors regarding the data you submitted:\n\n";
+	print "FILE: The file operand is missing! The generic data import feature ('--type=data')\n"
+		. "      requires a FILE to be specified. Type 'refbase_import -X' to see some usage\n"
+		. "      examples. For general help with the syntax type 'refbase_import -h'.\n\n";
+	exit;
+}
+# for '--type=id' (or, previously: --type=pmid), check if at least one PubMed ID, arXiv ID, DOI or OpenURL was given:
+# TODO: improve identification/verification of the given IDs
+elsif (($params{'formType'} =~ /^(pm)?id$/i) && ($params{'sourceIDs'} !~ /\d+/)) {
+	print "There were validation errors regarding the data you submitted:\n\n";
+	print "sourceIDs: You must specify at least one PubMed ID, arXiv ID, DOI or OpenURL! The 'import via ID'\n"
+		. "           feature ('--type=id') requires the '-p, --pmid' option or one of '--arxiv|--doi|--openurl'\n"
+		. "           to be specified. Type 'refbase_import -X' to see some usage examples. For general help\n"
+		. "           with the syntax type 'refbase_import -h'.\n\n";
+	exit;
+}
+
+# adjust form type value:
+if ($params{'formType'} =~ /^(pm)?id$/i) { # --type=id (or, previously: --type=pmid)
+	$params{'formType'} = "importID";
+}
+else { # --type=data
+	$params{'formType'} = "import";
+}
+
+# resolve any host shortcuts:
+if (exists($hosts{$host})) {
+	$host = $hosts{$host};
+}
+elsif ($host !~ /^https?:\/\//i) {
+	$host = $hosts{'default'}; # can't resolve given host, reset back to default
+}
+
+# assign correct URL params based on the '-F|--format' option:
+if (exists($outputParams{'format'})) {
+	$format = $outputParams{'format'};
+	if ($format =~ /^(html|rtf|pdf|latex|latex_bbl|markdown|ascii)$/i) {
+		$outputParams{'submit'} = "Cite";
+	}
+	if ($format =~ /^(html|rtf|pdf|latex|latex_bbl|markdown|ascii)$/i) {
+		$format =~ s/^latex_bbl$/LaTeX .bbl/i;
+		$outputParams{'citeType'} = $format;
+	}
+	elsif ($format =~ /^(ads|bibtex|endnote|isi|ris|atom|mods|oai_dc|odf|srw(_dc|_mods)?|word)$/i) {
+		$outputParams{'submit'} = "Export";
+		$outputParams{'exportType'} = "file";
+
+		if ($format =~ /^(ads|bibtex|endnote|isi|ris)$/i) {
+			$outputParams{'exportFormat'} = $format;
+		}
+		elsif ($format =~ /^(atom|mods|oai_dc|odf|srw(_dc|_mods)?|word)$/i) {
+			$outputParams{'exportFormat'} = $format . " xml";
+		}
+	}
+	else {
+		$outputParams{'citeType'} = "ascii";
+	}
+
+	delete($outputParams{'format'});
+}
+
+# construct URL:
+# (uses URI::URL)
+$importScript = "import_modify.php";
+$importURL = url($host . $importScript);
+
+# initialize new user agent:
+# (uses LWP::UserAgent)
+$userAgent = LWP::UserAgent->new;
+
+# set user agent string:
+$userAgent->agent("refbase_import/" . $version . " (http://cli.refbase.net/) ");
+
+# set cookie jar object:
+# LWP will collect cookies and respond to cookie requests via its cookie jar, thus
+# enabling the user agent to fetch a PHP session ID from the refbase login response
+# and automatically resend it upon next import request
+$userAgent->cookie_jar({ file => $cookieJarFile, autosave => 1 });
+
+# attempt to authenticate using the given login credentials:
+if (($loginParams{'loginEmail'} ne '') && ($loginParams{'loginPassword'} ne '')) {
+	$loginSuccessful = &login(0); # call the 'login' subroutine
+}
+else {
+	$loginSuccessful = 0;
+}
+
+if (!$loginSuccessful) {
+	print "Login failed! You provided an incorrect email address or password.\n\n";
+	exit;
+}
+
+# send POST request:
+# (uses HTTP::Request::Common & HTTP::Response)
+if ($params{'formType'} =~ /^importID$/i) { # --type=id (or, previously: --type=pmid)
+	$request = POST $importURL, \%params;
+}
+else { # --type=data
+	$params{'uploadFile'} = \@sourceFile;
+	$request = POST $importURL, Content_Type => 'form-data', Content => \%params;
+}
+
+$response = $userAgent->request($request);
+
+if ($response->is_error()) {
+	print STDERR $response->status_line, "\n";
+}
+else {
+	$location = $response->header('Location');
+
+	if ($location ne '') {
+		if ($location =~ /show.php/) {
+			# display imported records:
+			foreach $key (keys %outputParams) {
+				$location .= "&" . $key . "=" . $outputParams{$key};
+			}
+			if ($location =~ /&headerMsg=\D*(\d+)/i) {
+				$location .= "&showRows=" . $1;
+			}
+		}
+
+		# construct URL:
+		# (uses URI::URL)
+		$responseURL = url($host . $location);
+	
+		# send GET request:
+		# (uses HTTP::Request::Common & HTTP::Response)
+		$request = GET $responseURL;
+		$response = $userAgent->request($request); # or use: $response = $userAgent->get($responseURL);
+	}
+
+	binmode STDOUT;
+	print $response->content();
+}
+
+# --------------------------------------------------------------------------------
+
+# Login with login credentials given in '%loginParams':
+sub login
+{
+	local ($status) = @_;
+
+	# construct URL:
+	# (uses URI::URL)
+	$loginScript = "user_login.php";
+	$loginURL = url($host . $loginScript);
+
+	# send POST request:
+	# (uses HTTP::Request::Common & HTTP::Response)
+	$request = POST $loginURL, \%loginParams;
+
+	$response = $userAgent->request($request);
+	
+	if ($response->is_error()) {
+		print STDERR $response->status_line, "\n";
+		exit $status;
+	}
+	else {
+		$location = $response->header('Location');
+
+		# upon successful login, refbase will redirect to 'index.php'
+		if ($location =~ /index.php/) {
+			return 1; # login successful
+		}
+		else {
+			return 0; # login NOT successful
+		}
+	}
+}
+
+# --------------------------------------------------------------------------------
+
+# Print usage and exit:
+sub usage
+{
+	local ($status) = @_;
+
+	print "\nrefbase_import command line client, v" . $version . " by Matthias Steffens, http://cli.refbase.net/\n\n"
+
+		. "Usage:   refbase_import [OPTIONS] [FILE]\n\n"
+
+		. "Notes:   - Two import modes are supported:\n"
+		. "           1) '--type=data' requires an import FILE to be specified;\n"
+		. "              for supported import formats, see: http://import.refbase.net/\n"
+		. "           2) '--type=id' requires the '-p, --pmid' option or one of '--arxiv|--doi|--openurl' with\n"
+		. "              one or more whitespace-delimited PubMed IDs, arXiv IDs, DOIs or OpenURLs, respectively.\n"
+		. "         - Options syntax: [OPTION]=[VALUE], e.g. '-p=16351846' or '--pmid=\"16351846 16783713\"'.\n"
+		. "         - For each option, default values can be specified at the top of the script.\n"
+		. "           Current defaults are given in parentheses.\n\n"
+
+		. "General Options:   -h, --help        - display this help text\n"
+		. "                   -v, --version     - display version information\n"
+		. "                   -X, --examples    - display usage examples\n\n"
+
+		. "Import Options:    -b, --skipbad     - skip records with unrecognized data format ('" . $params{'skipBadRecords'} . "')\n"
+		. "                                       possible values: 0, 1\n"
+		. "                   -i, --import      - import all or only some records ('" . $params{'importRecordsRadio'} . "')\n"
+		. "                                       possible values: all, only\n"
+		. "                   -p, --pmid,       - IDs of records to import ('" . $params{'sourceIDs'} . "')\n"
+		. "                       --arxiv,        supported IDs: PubMed ID (PMID), arXiv ID, DOI, OpenURL\n"
+		. "                       --doi,          \n"
+		. "                       --openurl       \n"
+		. "                   -r, --records     - positional numbers and/or ranges of records to import ('" . $params{'importRecords'} . "')\n"
+		. "                                       requires the '--import=only' option\n"
+		. "                   -t, --type        - import type ('" . $params{'formType'} . "')\n"
+		. "                                       possible values: data, id\n\n"
+
+		. "Output Options:    -C, --style       - citation style ('" . $outputParams{'citeStyle'} . "')\n"
+		. "                   -F, --format      - output format ('" . $outputParams{'format'} . "')\n"
+		. "                                       possible values: html, rtf, pdf, latex, latex_bbl, markdown, ascii,\n"
+		. "                                                        ads, bibtex, endnote, isi, ris, atom, mods, oai_dc,\n"
+		. "                                                        odf, srw_dc, srw_mods, word\n"
+		. "                   -L, --showlinks   - hide/display links column in html output ('" . $outputParams{'showLinks'} . "')\n"
+		. "                                       possible values: 0, 1\n"
+		. "                   -O, --order       - sort order of returned records ('" . $outputParams{'citeOrder'} . "')\n"
+		. "                                       possible values: author, year, type, type-year, creation-date\n"
+		. "                   -V, --view        - view type of html output ('" . $outputParams{'viewType'} . "')\n"
+		. "                                       possible values: web, print, mobile\n\n"
+
+		. "Server Options:    -H, --host        - URL of the refbase database ('" . $host . "')\n"
+		. "                                       defined shortcuts: " . join(', ', sort keys(%hosts)) . "\n"
+		. "                   -P, --password    - password for given '-U, --user' account";
+
+	if ($loginParams{'loginPassword'} ne '') {
+		print "\n                                       (a default pwd has been defined)\n";
+	}
+	else {
+		print " ('')\n";
+	}
+
+	print "                   -U, --user        - login email address of an existing refbase user with\n"
+		. "                                       import permissions ('" . $loginParams{'loginEmail'} . "')\n\n";
+
+	exit $status;
+}
+
+# --------------------------------------------------------------------------------
+
+# Print version number and exit:
+sub version
+{
+	local ($status) = @_;
+	print "\nrefbase_import command line client, version " . $version
+		. "\ncheck for updates at http://cli.refbase.net/\n\n";
+	exit $status;
+}
+
+# --------------------------------------------------------------------------------
+
+# Print examples and exit:
+sub examples
+{
+	local ($status) = @_;
+	print <<'END_EXAMPLES';
+
+ --------------------------------------------------------------------------------
+ REFBASE_IMPORT USAGE EXAMPLES:
+ --------------------------------------------------------------------------------
+
+ 1) Import BibTeX records from file 'import.bib' using the defaults defined
+    within the refbase_import script:
+ 
+    refbase_import import.bib
+ 
+ --------------------------------------------------------------------------------
+
+ 2) Import all Endnote records given in file 'import.enw' into your default
+    refbase database:
+ 
+    refbase_import -t=data -i=all import.enw
+ 
+ --------------------------------------------------------------------------------
+
+ 3) Take RIS records from file 'import.ris' but import only the first three as
+    well as the fifth and the tenth record into your local refbase database:
+ 
+    refbase_import -H=local -t=data -i=only -r=1-3,5,10 import.ris
+ 
+ --------------------------------------------------------------------------------
+
+ 4) Import MODS XML records from file 'mods.xml' into the refbase demo database
+    using the defaults defined within the refbase_import script:
+ 
+    refbase_import -H=http://demo.refbase.net/ -U=user@refbase.net -P=user mods.xml
+ 
+ --------------------------------------------------------------------------------
+
+ 5) Fetch two records from PubMed.gov via their PMID (i.e. the unique PubMed
+    identifier, in this example, records with PMIDs 16351846 and 16783713) and
+    import them into your local refbase database:
+ 
+    refbase_import -H=local -t=id -p="16351846 16783713"
+ 
+ --------------------------------------------------------------------------------
+
+ 6) Fetch two records from CrossRef.org via their DOI (i.e. the unique Document
+    Object Identifier, in this example, records with DOIs 10.3354/meps251037 and
+    10.1103/PhysRev.47.777) and import them into your local refbase database:
+ 
+    refbase_import -H=local -t=id --doi="10.3354/meps251037 10.1103/PhysRev.47.777"
+ 
+ --------------------------------------------------------------------------------
+
+ 7) Fetch three records from arXiv.org via their arXiv ID (i.e. the unique arXiv
+    identifier, in this example, records with arXiv IDs astro-ph/0609768, 0806.1829
+    and 0802.0204v1) and import them into your local refbase database:
+ 
+    refbase_import -H=local -t=id --arxiv="astro-ph/0609768 0806.1829 0802.0204v1"
+ 
+ --------------------------------------------------------------------------------
+
+END_EXAMPLES
+	exit $status;
+}
+
+__END__
