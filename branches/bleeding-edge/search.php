@@ -414,6 +414,9 @@
 		if ((!isset($loginEmail)) OR ((isset($loginEmail)) AND ($loginEmail != $adminLoginEmail))) // if the user isn't logged in -OR- any normal user is logged in...
 		{
 				$all_fields = "author|author_count|online_citation|doi|online_publication|title|type|year|publication|abbrev_journal|volume|issue|pages|keywords|abstract|address|corporate_author|thesis|publisher|place|editor|language|summary_language|orig_title|series_editor|series_title|abbrev_series_title|series_volume|series_issue|edition|issn|isbn|medium|area|expedition|conference|notes|approved|contribution_id|online_publication|online_citation|created_date|created_time|created_by|modified_date|modified_time|modified_by|serial|call_number|marked|copy|selected|user_keys|user_notes|user_file|user_groups|cite_key|related";
+				if (isset($loginEmail))
+					$all_fields .= "|location";  
+
 			$tablesArray = array($tableAuth, $tableDeleted, $tableDepends, $tableFormats, $tableLanguages, $tableQueries, $tableRefs, $tableStyles, $tableTypes, $tableUserData, $tableUserFormats, $tableUserOptions, $tableUserPermissions, $tableUserStyles, $tableUserTypes, $tableUsers);
 			$forbiddenSQLCommandsArray = array("DROP DATABASE", "DROP TABLE"); // the refbase MySQL user shouldn't have permissions for these commands anyhow, but by listing & checking for them here, we can return a more appropriate error message
 
