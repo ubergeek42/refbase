@@ -1,0 +1,16 @@
+{
+    "@metadata": {
+        "authors": [
+            "thibault marin"
+        ]
+    },
+    "refbase-desc": "{{desc}}",
+    "refbase-error-tagtype"          : "Error message displayed when the tag type used is not supported.",
+    "refbase-error-outputttype"      : "Error message displayed when the output type used is not supported.",
+    "refbase-error-dbquery"          : "Error message displayed when refbase database query failed (followed by error message).",
+    "refbase-error-mysqlconn"        : "Error message displayed when mysql connection failed (using the mysql extension).",
+    "refbase-error-mysqldb"          : "Error message displayed when mysql database selection failed (using the mysql extension), error message follows",
+    "refbase-error-notfound"         : "Error message displayed when key was not gound in database",
+    "refbase-error-cite_journal-type": "Error message displayed when cite_journal is used with non-journal entry.",
+    "refbase-error-citation-type"    : "Error message displayed when trying to create a citation of an unsupported type."
+}

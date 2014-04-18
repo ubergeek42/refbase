@@ -11,13 +11,13 @@ if( !defined( 'MEDIAWIKI' ) )
 }
 
 $wgExtensionCredits['parserhook'][] = array(
-    'path' => __FILE__,
-    'name' => 'Refbase',
-    'author' => array( 'Richard Karnesky', 'Thibault Marin' ),
-    'url' => 'https://www.mediawiki.org/wiki/Extension:Refbase',
-    'description' => 'refbase-desc',
-    'version'  => 1.0,
-    'license-name' => "",   // Short name of the license, links LICENSE or COPYING file if existing - string, added in 1.23.0
+	'path'           => __FILE__,
+	'name'           => 'Refbase',
+	'author'         => array( 'Richard Karnesky', 'Thibault Marin' ),
+	'url'            => 'https://www.mediawiki.org/wiki/Extension:Refbase',
+	'descriptionmsg' => 'refbase-desc',
+	'version'        => '1.0',
+	'license-name'   => ''   // Short name of the license, links LICENSE or COPYING file if existing - string, added in 1.23.0
 );
 
 /**
@@ -26,20 +26,31 @@ $wgExtensionCredits['parserhook'][] = array(
 $wgAutoloadClasses['RefbaseHooks'] =
     dirname( __FILE__ ) . '/Refbase.Hooks.php';
 $wgAutoloadClasses['RefbaseRenderer'] =
-    dirname( __FILE__ ) . '/Refbase.Renderer.php';
+    dirname( __FILE__ ) . '/include/Refbase.Renderer.php';
+$wgAutoloadClasses['RefbaseRendererCitationTemplate'] =
+    dirname( __FILE__ ) . '/include/Refbase.Renderer.CitationTemplate.php';
+$wgAutoloadClasses['RefbaseRendererLink'] =
+    dirname( __FILE__ ) . '/include/Refbase.Renderer.Link.php';
+$wgAutoloadClasses['RefbaseRendererCite'] =
+    dirname( __FILE__ ) . '/include/Refbase.Renderer.Cite.php';
 $wgAutoloadClasses['RefbaseConnector'] =
-    dirname( __FILE__ ) . '/Refbase.Connector.php';
+    dirname( __FILE__ ) . '/include/Refbase.Connector.php';
+$wgAutoloadClasses['RefbaseCitationCreator'] =
+    dirname( __FILE__ ) . '/include/Refbase.CitationCreator.php';
+$wgAutoloadClasses['RefbaseCitationType'] =
+    dirname( __FILE__ ) . '/include/Refbase.CitationCreator.php';
+$wgAutoloadClasses['RefbaseTools'] =
+    dirname( __FILE__ ) . '/include/Refbase.Tools.php';
 
 /**
  * Register hooks
  */
-$wgHooks['ParserFirstCallInit'][] =
-    'RefbaseHooks::efRefbaseParserInit';
-$wgHooks['ParserAfterTidy'][] = 'RefbaseHooks::efRefbaseAfterTidy';
+$wgHooks['ParserFirstCallInit'][] = 'RefbaseHooks::efRefbaseParserInit';
 
 /**
  * Internationalization
  */
+$wgMessagesDirs['Refbase'] = __DIR__ . '/i18n';
 $wgExtensionMessagesFiles['Refbase'] =
     dirname( __FILE__ ) . '/Refbase.i18n.php';
 
@@ -68,6 +79,9 @@ $wgRefbaseDbRefTable = "refs";
 // Table with user data (cite key)
 $wgRefbaseDbUserDataTable = "user_data";
 
+// Extension to interface with database ('mysql' or 'PDO')
+$wgRefbaseDbAccessMethod = "mysql";
+
 // Host for refbase instance (used for url links).  This may differ from the
 // database host if using https for instance (requires a trailing slash)
 $wgRefbaseURL = "http://".$_SERVER['HTTP_HOST']."/refbase/";
@@ -76,6 +90,9 @@ $wgRefbaseURL = "http://".$_SERVER['HTTP_HOST']."/refbase/";
 // serial number ('serial' type) or the citation key ('citekey' type)
 $wgRefbaseDefaultTagType = "serial";
 
-// Default output type: may use cite_journal, ref or link
+// Default output type: may use cite_journal, cite or link
 $wgRefbaseDefaultOutputType = 'cite_journal';
+// Default citation type: 'minimal' or 'rb-default' (only for 'link' and 'cite' modes)
+//$wgRefbaseDefaultCitationType = 'minimal';
+$wgRefbaseDefaultCitationType = 'rb-default';
 

@@ -6,7 +6,7 @@
 class RefbaseHooks {
 
 	/**
-	 * Register <timelinetable> hook
+	 * Register <refbase> hook
 	 */
 	public static function efRefbaseParserInit( $parser ) {
 		$parser->setHook( 'refbase',
@@ -15,30 +15,10 @@ class RefbaseHooks {
 	}
 
 	/**
-	 * After tidy
-	 */
-	public static function efRefbaseAfterTidy( & $parser, & $text ) {
-		// find markers in $text
-		// replace markers with actual output
-		global $markerList;
-		for ( $i = 0; $i < count( $markerList ); $i++ ) {
-			$text = preg_replace( '/xx-marker'.$i.'-xx/',
-			                      $markerList[$i], $text );
-		}
-		return true;
-	}
-
-	/**
-	 * Define the html code as a marker, then change it back to text in
-	 * 'efTimelineAfterTidy'. This is done to prevent the html code from being
-	 * modified afterwards.
+	 * Define special formatting for this tag
 	 */
 	private static function makeOutputString ( $str ) {
-		global $markerList;
-		$makercount = count( $markerList );
-		$marker = "xx-marker" . $makercount . "-xx";
-		$markerList[$makercount] = $str;
-		return $marker;
+		return $str;
 	}
 
 	/**
@@ -46,7 +26,9 @@ class RefbaseHooks {
 	 */
 	private static function makeErrorOutputString ( $errMsg ) {
 		$errMsg = "Refbase: <br/>" . $errMsg;
-		return self::makeOutputString( "<pre>" . $errMsg . "</pre>" );
+		$preMsg = Html::openElement( 'pre' ) . $errMsg .
+		          Html::closeElement( 'pre' );
+		return self::makeOutputString( $preMsg );
 	}
 
 	/**
@@ -58,6 +40,7 @@ class RefbaseHooks {
 		// Global parameters
 		global $wgRefbaseDefaultTagType;
 		global $wgRefbaseDefaultOutputType;
+		global $wgRefbaseDefaultCitationType;
 
 		// Read arguments
 		if ( isset( $args['tagtype'] ) ) {
@@ -65,33 +48,64 @@ class RefbaseHooks {
 		} else {
 			$tagType = $wgRefbaseDefaultTagType;
 		}
-		if ( !strtolower( $tagType ) === 'serial' &&
-		     !strtolower( $tagType ) === 'citekey' ) {
-			$errStr = wfMessage( 'refbase-error-tagtype' );
+		if ( ! ( strtolower( $tagType ) === 'serial' ) &&
+		     ! ( strtolower( $tagType ) === 'citekey' ) ) {
+			$errStr = wfMessage( 'refbase-error-tagtype' )->text();
 			return self::makeErrorOutputString( $errStr );
 		}
-		if ( isset( $args['outputtype'] ) ) {
-			$outputType = $args['outputtype'];
+		if ( isset( $args['output'] ) ) {
+			$outputType = $args['output'];
 		} else {
 			$outputType = $wgRefbaseDefaultOutputType;
 		}
-		if ( !strtolower( $outputType ) === 'cite' &&
-		     !strtolower( $outputType ) === 'footnote' ) {
-			$errStr = wfMessage( 'refbase-error-outputtype' );
+		if ( ! ( strtolower( $outputType ) === 'cite_journal' ) &&
+		     ! ( strtolower( $outputType ) === 'link' ) &&
+		     ! ( strtolower( $outputType ) === 'cite' ) ) {
+			$errStr = wfMessage( 'refbase-error-outputtype' )->text();
 			return self::makeErrorOutputString( $errStr );
 		}
+		if ( isset( $args['citationtype'] ) ) {
+			$citationType = $args['citationtype'];
+		} else {
+			$citationType = $wgRefbaseDefaultCitationType;
+		}
+		if ( ! ( strtolower( $citationType ) === 'minimal' ) &&
+		     ! ( strtolower( substr( $citationType, 0, 3 ) ) === 'rb-' ) ) {
+			$errStr = wfMessage( 'refbase-error-citation-type' )->text();
+			return self::makeErrorOutputString( $errStr );
+		}
+
+		// Order tag types
+		switch ( strtolower( $tagType ) ) {
+		case 'serial':
+			$tagTypeList = array( 'serial', 'citekey' );
+			break;
+		case 'citekey':
+			$tagTypeList = array( 'citekey', 'serial' );
+			break;
+		}
+
+		// Instantiate renderer based on options
+		$refbaseRenderer = RefbaseRenderer::create( $outputType,
+		                                            $citationType );
+		// Request list of fields to extract
+		$fieldList = $refbaseRenderer->getFieldList();
 
 		// Perform database query to get entry
 		$refbaseDbConnector = new RefbaseConnector();
 		$entry = "";
-		if ( !$refbaseDbConnector->getEntry( $input, $tagType, $entry ) ) {
+		if ( !$refbaseDbConnector->getEntry( $input, $tagTypeList, $entry,
+		                                     $fieldList ) ) {
 			return self::makeErrorOutputString( $entry );
 		}
 
 		// Generate output
-		$refbaseRenderer = new RefbaseRenderer();
-		$citekey = ( strtolower( $tagType ) === 'citekey' ) ? $input : "";
-		$outputStr = $refbaseRenderer->render( $entry, $outputType, $citekey );
+		$citekey = $input;
+		$renderOpts = array( 'citekey' => $citekey );
+		$outputStr = "";
+		if ( !$refbaseRenderer->render( $entry, $outputStr, $renderOpts ) ) {
+			return self::makeErrorOutputString( $outputStr );
+		}
 
 		$outputStr = $parser->recursiveTagParse( $outputStr );
 		return self::makeOutputString( $outputStr );

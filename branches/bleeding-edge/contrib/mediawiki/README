@@ -1,31 +1,133 @@
 refbase extension for MediaWiki
 ===============================
 
-Author
-------
+Authors
+-------
   Richard Karnesky <karnesky@gmail.com>
+  Thibault Marin <thibault.marin at gmx dot com>
 
 About
 -----
   This is an extension to MediaWiki:
-    <http://www.mediawiki.org/>
-  It allows you to cite references by enclosing the serial in tags such as:
-    <refbase>17</refbase>
-  The output will use citation templates, as are used on Wikipedia:
-    <http://en.wikipedia.org/wiki/Wikipedia:Citation_templates>
-  To use, edit the 'refbase.php' file to reflect your database settings and
-  place in the 'extensions' directory of your MediaWiki installation.  Add:
-    require_once( "extensions/refbase.php" );
-  to your 'LocalSettings.php' file.
-  
-  Currently, only journal articles may be cited.  In the future, this extension
-  is likely to be modified.  'refbase' should be able to generate WP citation
-  templates as an export format & this extension should make use of that
-  functionality directly.
+    <https://www.mediawiki.org/>
+  It allows you to cite references by enclosing the serial or the citation key
+    in tags such as:
+    <refbase>17</refbase> or <refbase>Author2000</refbase>
 
+  To install the extension, download and extract the files in a directory called
+  Refbase in your mediawiki extensions/ folder.  Add the following code at the
+  bottom of your LocalSettings.php:
+    require_once( "$IP/extensions/Refbase/Refbase.php" );
+  To verify that the extension is successfully installed, go to the
+  "Special:Version" page on your wiki, you should see the Refbase extension in
+  the list of parser hook extensions.
+
+  To configure the extension, add the following lines (modified to match your
+  setup) after the 'require_once' line in your LocalSettings.php (omitted fields
+  take the default value indicated here):
+    $wgRefbaseDbHost          = "localhost";    // refbase database host
+    $wgRefbaseDbName          = "literature";   // Database name
+    $wgRefbaseDbUser          = "litwww";       // User name for database
+    $wgRefbaseDbPass          = "%l1t3ratur3?"; // Database password
+    $wgRefbaseDbCharset       = "utf8";         // Database charset
+    $wgRefbaseDbRefTable      = "refs";         // Table with references
+    $wgRefbaseDbUserDataTable = "user_data";    // Table with cite_key field
+    $wgRefbaseDbAccessMethod  = "mysql";        // Database access mode
+                                                // 'mysql' or 'PDO'
+    // Host for refbase instance (used for url links).  This may differ from the
+    //   database host (requires a trailing slash)
+    $wgRefbaseURL = "http://".$_SERVER['HTTP_HOST']."/refbase/";
+  A few options can also be set (see below for description):
+    // Tag type
+    $wgRefbaseDefaultTagType      = 'serial';       // 'serial' or 'citekey'
+    // Output type
+    $wgRefbaseDefaultOutputType   = 'cite_journal'; // 'cite_journal', 'cite'
+                                                    // or 'link'
+    // Citation type
+    $wgRefbaseDefaultCitationType = 'minimal';      // 'minimal' or 'rb-*'
+
+Options
+-------
+  0. Scope
+    All options are set globally (by the $wgRefbaseDefault* variables) for the
+    whole wiki.  Most can also be modified for individual instances of the
+    <refbase> tag by passing extra arguments to the tag, e.g. <refbase
+    tagtype='citekey' output='cite'>XXX</refbase>.
+
+  1. Tag type
+    Possible values: 'serial', 'citekey'
+    Global setting
+      $wgRefbaseDefaultTagType = 'serial';
+    Individual setting
+      <refbase tagtype='serial'>XXX</refbase>
+    This option controls the interpretation of the tag input:  when using the
+    refbase tag in wikipages, e.g. <refbase>XXX</refbase>, the input key (XXX)
+    can refer to the serial number ('serial' type) or the citation key
+    ('citekey' type).  Note that if no entry is found using the selected tag
+    type, a second search is performed with the other tag type.
+
+  2. Output type
+    Possible values: 'cite_journal', 'cite', 'link'
+    Global setting
+      $wgRefbaseDefaultOutputType = 'cite_journal';
+    Individual setting
+      <refbase output='cite_journal'>XXX</refbase>
+    This option determines the way citations are rendered in the wikipage.  There
+    are several modes:
+      .'cite_journal':  This is the default mode, used in version 0.9 of the
+        extension.  The output will use citation templates, as are used on
+        Wikipedia:
+          <https://en.wikipedia.org/wiki/Wikipedia:Citation_templates>
+        Currently, only journal articles may be cited with this output type.  In
+        the future, this extension is likely to be modified.  'refbase' should
+        be able to generate WP citation templates as an export format & this
+        extension should make use of that functionality directly.
+      .'cite':  This mode uses the Cite extension
+          <https://www.mediawiki.org/wiki/Extension:Cite>
+        A footnote is generated for each citation using the <ref> tag.  Multiple
+        references to the same entry are automatically combined using the <ref
+        name=YYY> option.  To see the list of references a <references/> tag
+        must be added to the wikipage where the bibliography should be
+        displayed.  See the  extension documentation for details.  The footnote
+        text is a citation following the 'citation type' option (see below).
+      .'link':  This is a simple renderer which does not require any installed
+        template/extension.  It simply writes the tag input (serial or citation
+        key) to the wikipage, adding a tooltip and a hyperlink to the refbase
+        entry.  The tooltip contains the citation text (controlled by the
+        citation type variable) and the hyperlink links to the refbase page (the
+        base refbase installation location is given by the $wgRefbaseURL
+        variable).
+
+  3. Citation type
+    Possible values: 'minimal, 'rb-default', 'rb-MLA', 'rb-APA', etc.
+    Global setting
+      $wgRefbaseDefaultCitationType = 'minimal;
+    Individual setting
+      <refbase citationtype='minimal>XXX</refbase>
+    This option determines how citations are rendered in the 'cite' and 'link'
+    output modes (it has no effect when using the 'cite_journal' output type).
+    The two possible modes are:
+      .'minimal':  This generates a simple citation with the authors, title,
+        publication and year.
+      .'rb-*':  This requests the citation text from the refbase web interface.
+        The * in 'rb-*' can be 'default' (i.e. 'rb-default') or any acceptable
+        citation style (defined in the 'styles' database).
+
+  4. Database connection mode
+    Possible values: 'mysql', 'PDO'
+    Global setting
+      $wgRefbaseDbAccessMethod = "mysql";
+    Individual setting
+      This option can only be set at the global level.
+    This option selects the way the extension connects to the mysql database.
+    The 'mysql' mode is getting deprecated in recent versions of php, but is
+    still available for older installations.
+
+Notes
+-----
   You may also be interested in the MonoBook skin, included in the
   'contrib/skins/mediawiki-monobook' directory from refbase.
-  
   An installation of MediaWiki that uses this extension is the Northwestern
-  University Center for Atom-Probe Tomography:
+    University Center for Atom-Probe Tomography:
     <http://arc.nucapt.northwestern.edu/#Literature>
+
