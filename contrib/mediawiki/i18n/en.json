@@ -1,0 +1,16 @@
+{
+    "@metadata": {
+        "authors": [
+            "thibault marin"
+        ]
+    },
+    "refbase-desc": "This extension allows inclusion of bibliographic references from a refbase installation.",
+    "refbase-error-tagtype"          : "Unsupported tag type (should be 'serial' or 'citekey').",
+    "refbase-error-outputtype"       : "Unsupported output type (should be 'cite_journal', 'cite' or 'link').",
+    "refbase-error-dbquery"          : "Error in database query: ",
+    "refbase-error-mysqlconn"        : "Could not connect to mysql database.",
+    "refbase-error-mysqldb"          : "Could not select mysql database: ",
+    "refbase-error-notfound"         : "Entry not found.",
+    "refbase-error-cite_journal-type": "cite_journal mode can only display journal articles.",
+    "refbase-error-citation-type"    : "Citation type unsupported (should be 'minimal' or 'rb-???')."
+}

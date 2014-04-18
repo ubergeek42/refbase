@@ -8,19 +8,19 @@ abstract class RefbaseCitationType {
 	// Minimal reference type (author, title, publication, year)
 	const CT_MINIMAL = 0;
 
-	// Request citation from refbase installation (using unAPI interface)
-	const CT_UNAPI     = 1;
+	// Request citation from refbase installation (using show.php interface)
+	const CT_RB = 1;
 
 	/**
 	 * Convert string to RefbaseCitationType
 	 */
-	static public function decodeCitationType ( $str ) {
-		switch ( strtolower( $str ) ) {
-		case "minimal":
+	static public function decodeCitationType ( $str, & $citeStyle ) {
+		if ( strtolower( $str ) == 'minimal' ) {
 			return self::CT_MINIMAL;
-		case "unapi":
-			return self::CT_UNAPI;
-		default:
+		} elseif ( preg_match( '/rb-(.*)/', strtolower( $str ),
+		                       $citeStyle ) ) {
+			return self::CT_RB;
+		} else {
 			return null;
 		}
 	}
@@ -35,6 +35,9 @@ class RefbaseCitationCreator {
 	/// Citation type
 	private $citationType;
 
+	/// Citation style (only with $citationType = CT_RB)
+	private $citationStyle = "";
+
 	/// Location of refbase installation (may differ from $dbHost if using https
 	/// for instance)
 	protected $refbaseURL = "";
@@ -45,7 +48,14 @@ class RefbaseCitationCreator {
 	public function __construct( $citationTypeStr ) {
 		global $wgRefbaseURL;
 		$this->refbaseURL = $wgRefbaseURL;
-		$this->citationType = RefbaseCitationType::decodeCitationType( $citationTypeStr );
+		$this->citationType =
+			RefbaseCitationType::decodeCitationType( $citationTypeStr,
+			                                         $citeStyle );
+		if ( !empty( $citeStyle ) ) {
+			$this->citationStyle = $citeStyle[1];
+		}
+		wfDebug('refbase-decode-in:' . $citationTypeStr . "\n");
+		wfDebug('refbase-decode:' . $this->citationType . ", " . var_export($this->citationStyle,true)."\n");
 	}
 
 	/**
@@ -60,14 +70,19 @@ class RefbaseCitationCreator {
 			         $entry['publication'] . ", " . $entry['year'] . ".";
 			break;
 
-		case RefbaseCitationType::CT_UNAPI:
-			$url = $this->refbaseURL . "unapi.php?id=" . $this->refbaseURL .
-			       "show.php?record=" . $entry['serial'] . "&format=text";
+		case RefbaseCitationType::CT_RB:
+			$url = $this->refbaseURL . "show.php?" .
+			       "record=" . $entry['serial'] .
+			       "&submit=Cite&exportType=text&citeType=ASCII";
+			if ( !empty( $this->citationStyle ) ) {
+				$url .= "&citeStyle=" . $this->citationStyle;
+			}
+			wfDebug('refbase-getcite:' . $url . "\n");
 			$cite = trim( file_get_contents( $url ) );
 			break;
 
 		default:
-			$cite = wfMessage( 'refbase-error-citation-type' );
+			$cite = wfMessage( 'refbase-error-citation-type' )->text();
 		}
 
 		return true;
@@ -87,7 +102,7 @@ class RefbaseCitationCreator {
 			                    'year' );
 			break;
 
-		case RefbaseCitationType::CT_UNAPI:
+		case RefbaseCitationType::CT_RB:
 			$fieldList = array( 'serial' );
 			break;
 

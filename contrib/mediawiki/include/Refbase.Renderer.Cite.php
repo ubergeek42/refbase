@@ -35,14 +35,13 @@ class RefbaseRendererCite extends RefbaseRenderer {
 		$cite = "";
 		// Simply link to refbase, and add tooltip
 		// (form string [URL <span title="CITATION"> KEY </span>] )
-		foreach ( $entry as $row ) {
 
-			$citation  = "";
-			$this->citationCreator->createCitation( $row, $citation );
+		$citation  = "";
+		$this->citationCreator->createCitation( $entry, $citation );
 
-			// Use #tag method to properly pass inputs to <ref>
-			$cite .= "{{#tag:ref|$citation|name=$citekey}}";
-		}
+		// Use #tag method to properly pass inputs to <ref>
+		$cite .= "{{#tag:ref|$citation|name=$citekey}}";
+
 		return true;
 	}
 

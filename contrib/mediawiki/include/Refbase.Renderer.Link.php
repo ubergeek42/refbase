@@ -31,27 +31,25 @@ class RefbaseRendererLink extends RefbaseRenderer {
 	public function render( $entry, & $cite, $options ) {
 
 		$citekey = $options['citekey'];
-
 		$cite = "";
 		// Simply link to refbase, and add tooltip
 		// (form string [URL <span title="CITATION"> KEY </span>] )
-		foreach ( $entry as $row ) {
 
-			// Display the key (cite_key or serial number as wiki text)
-			$wikiText = $citekey;
+		// Display the key (cite_key or serial number as wiki text)
+		$wikiText = $citekey;
 
-			// Add full citation as a tooltip
-			$toolTip  = "";
-			$this->citationCreator->createCitation( $row, $toolTip );
+		// Add full citation as a tooltip
+		$toolTip  = "";
+		$this->citationCreator->createCitation( $entry, $toolTip );
 
-			// Link to refbase page for current entry
-			$link = $this->refbaseURL . "show.php?record=" . $row['serial'];
+		// Link to refbase page for current entry
+		$link = $this->refbaseURL . "show.php?record=" . $entry['serial'];
 
-			// Build full string
-			$cite .= "[" . $link . " ";
-			$cite .= Html::openElement( 'span', array( 'title' => "\"" . $toolTip . "\"" ) );
-			$cite .= $wikiText . Html::closeElement( 'span' ) . "]";
-		}
+		// Build full string
+		$cite .= "[" . $link . " ";
+		$cite .= Html::openElement( 'span', array( 'title' => "\"" . $toolTip . "\"" ) );
+		$cite .= $wikiText . Html::closeElement( 'span' ) . "]";
+
 		return true;
 	}
 
