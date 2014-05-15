@@ -922,7 +922,7 @@
 				//  '$searchReplaceActionsArray'.)
 				$fieldSpecificSearchReplaceActionsArray = array(
 				                                                array(
-				                                                      'fields'  => array("thesis", "approved", "marked", "copy", "selected", "type"), // see also note for '$encodingExceptionsArray' below
+				                                                      'fields'  => array("thesis", "approved", "marked", "copy", "selected"), // see also note for '$encodingExceptionsArray' below
 				                                                      'actions' => array("/(.+)/e" => "\$loc['\\1']") // use localized field values (e.g., in case of german we display 'ja' instead of 'yes', etc)
 				                                                     ),
 																array(
