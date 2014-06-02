@@ -78,7 +78,35 @@ class RefbaseCitationCreator {
 				$url .= "&citeStyle=" . $this->citationStyle;
 			}
 			wfDebug('refbase-getcite:' . $url . "\n");
-			$cite = trim( file_get_contents( $url ) );
+
+			// Get citation from url (add http authentication if desired)
+			global $wgRefbaseURLAuth;
+
+			if ( !empty( $wgRefbaseURLAuth ) ) {
+				if ( strcmp( strtolower( $wgRefbaseURLAuth ),
+				             'default' ) == 0 ) {
+					if ( isset( $_SERVER['PHP_AUTH_USER'] ) &&
+					     isset( $_SERVER['PHP_AUTH_PW'] ) ) {
+						$username = $_SERVER['PHP_AUTH_USER'];
+						$password = $_SERVER['PHP_AUTH_PW'];
+						$authStr = "Authorization: Basic " .
+						           base64_encode( "$username:$password" );
+					} else {
+						$authStr = '';
+					}
+				} else {
+					preg_match( "/([^:]*):(.*)$/", $wgRefbaseURLAuth, $out);
+					$username = $out[1];
+					$password = $out[2];
+					$authStr = "Authorization: Basic " .
+					           base64_encode( "$username:$password" );
+				}
+				$param = array( 'http' => array( 'header'  => $authStr ) );
+				$context = stream_context_create( $param );
+				$cite = trim( file_get_contents( $url, false, $context ) );
+			} else {
+				$cite = trim( file_get_contents( $url ) );
+			}
 			break;
 
 		default:

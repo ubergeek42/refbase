@@ -96,3 +96,10 @@ $wgRefbaseDefaultOutputType = 'cite_journal';
 //$wgRefbaseDefaultCitationType = 'minimal';
 $wgRefbaseDefaultCitationType = 'rb-default';
 
+// Option to pass http authentication token when accessing the refbase web
+// interface (used for rb-* citation types).  If empty, authentication is
+// disabled.  If set to 'default', use the same token as the one used for the
+// mediawiki web site (if any).  If this option is set to 'user:pass', then
+// 'user' and 'pass' will be used to form the token (the colon character ':' is
+// not allowed in the username).
+$wgRefbaseURLAuth = '';

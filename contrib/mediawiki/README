@@ -37,6 +37,10 @@ About
     // Host for refbase instance (used for url links).  This may differ from the
     //   database host (requires a trailing slash)
     $wgRefbaseURL = "http://".$_SERVER['HTTP_HOST']."/refbase/";
+    // HTTP (basic) authentication mode when accessing refbase instance (only
+    //  used with 'cite' and 'link' output types, when using a 'rb-*' citation
+    //  type), see below for details.
+    $wgRefbaseURLAuth = '';                     // '', 'default' or 'user:pass'
   A few options can also be set (see below for description):
     // Tag type
     $wgRefbaseDefaultTagType      = 'serial';       // 'serial' or 'citekey'
@@ -88,8 +92,9 @@ Options
         references to the same entry are automatically combined using the <ref
         name=YYY> option.  To see the list of references a <references/> tag
         must be added to the wikipage where the bibliography should be
-        displayed.  See the  extension documentation for details.  The footnote
-        text is a citation following the 'citation type' option (see below).
+        displayed.  See the Cite extension documentation for details.  The
+        footnote text is a citation following the 'citation type' option (see
+        below).
       .'link':  This is a simple renderer which does not require any installed
         template/extension.  It simply writes the tag input (serial or citation
         key) to the wikipage, adding a tooltip and a hyperlink to the refbase
@@ -101,9 +106,9 @@ Options
   3. Citation type
     Possible values: 'minimal, 'rb-default', 'rb-MLA', 'rb-APA', etc.
     Global setting
-      $wgRefbaseDefaultCitationType = 'minimal;
+      $wgRefbaseDefaultCitationType = 'minimal';
     Individual setting
-      <refbase citationtype='minimal>XXX</refbase>
+      <refbase citationtype='minimal'>XXX</refbase>
     This option determines how citations are rendered in the 'cite' and 'link'
     output modes (it has no effect when using the 'cite_journal' output type).
     The two possible modes are:
@@ -116,12 +121,30 @@ Options
   4. Database connection mode
     Possible values: 'mysql', 'PDO'
     Global setting
-      $wgRefbaseDbAccessMethod = "mysql";
+      $wgRefbaseDbAccessMethod = 'mysql';
     Individual setting
       This option can only be set at the global level.
     This option selects the way the extension connects to the mysql database.
     The 'mysql' mode is getting deprecated in recent versions of php, but is
     still available for older installations.
+
+  5. HTTP authentication for requests to refbase instance
+    Possible values: '', 'default' or 'user:pass'
+    Global setting
+      $wgRefbaseURLAuth = '';
+    Individual setting
+      This option can only be set at the global level.
+    This option is used to pass an HTTP authentication token to the server
+    hosting the refbase installation (basic authentication e.g. from apache
+    server).  If $wgRefbaseURLAuth is empty (''), no authentication is passed.
+    If set to 'default', the current user/password token will be passed when
+    requesting data from the refbase web interface (this is useful when both
+    mediawiki and refbase are under the same basic server authentication).  To
+    specify an arbitrary user and password, set $wgRefbaseURLAuth to 'user:pass'
+    where 'user' is the username and 'pass' the password for that user (note
+    that the username cannot contain colon characters ':').  This option is
+    relevant only when using the 'cite' or 'link' output types along with one of
+    the 'rb-*' citation type.
 
 Notes
 -----
