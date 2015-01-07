@@ -31,7 +31,7 @@ CREATE TABLE `auth` (
   `email` varchar(50) NOT NULL default '',
   `password` varchar(15) NOT NULL default '',
   PRIMARY KEY  (`user_id`)
-) TYPE=MyISAM;
+) ENGINE=MyISAM;
 
 #
 # data for table `auth`
@@ -107,7 +107,7 @@ CREATE TABLE `deleted` (
   `deleted_time` time default NULL,
   `deleted_by` varchar(100) default NULL,
   PRIMARY KEY  (`serial`)
-) TYPE=MyISAM;
+) ENGINE=MyISAM;
 
 #
 # data for table `deleted`
@@ -126,7 +126,7 @@ CREATE TABLE `depends` (
   `depends_enabled` enum('true','false') NOT NULL default 'true',
   `depends_path` varchar(255) default NULL,
   PRIMARY KEY  (`depends_id`)
-) TYPE=MyISAM;
+) ENGINE=MyISAM;
 
 #
 # data for table `depends`
@@ -153,7 +153,7 @@ CREATE TABLE `formats` (
   `depends_id` mediumint(8) unsigned NOT NULL default '0',
   PRIMARY KEY  (`format_id`),
   KEY `format_name` (`format_name`)
-) TYPE=MyISAM;
+) ENGINE=MyISAM;
 
 #
 # data for table `formats`
@@ -209,7 +209,7 @@ CREATE TABLE `languages` (
   `order_by` varchar(25) default NULL,
   PRIMARY KEY  (`language_id`),
   KEY `language_name` (`language_name`)
-) TYPE=MyISAM;
+) ENGINE=MyISAM;
 
 #
 # data for table `languages`
@@ -245,7 +245,7 @@ CREATE TABLE `queries` (
   `last_execution` datetime default NULL,
   PRIMARY KEY  (`query_id`),
   KEY `user_id` (`user_id`,`query_name`)
-) TYPE=MyISAM;
+) ENGINE=MyISAM;
 
 #
 # data for table `queries`
@@ -321,7 +321,7 @@ CREATE TABLE `refs` (
   `modified_by` varchar(100) default NULL,
   `version` mediumint(8) unsigned default 1,
   PRIMARY KEY  (`serial`)
-) TYPE=MyISAM;
+) ENGINE=MyISAM;
 
 #
 # data for table `refs`
@@ -356,7 +356,7 @@ CREATE TABLE `styles` (
   `depends_id` mediumint(8) unsigned NOT NULL default '0',
   PRIMARY KEY  (`style_id`),
   KEY `style_name` (`style_name`)
-) TYPE=MyISAM;
+) ENGINE=MyISAM;
 
 #
 # data for table `styles`
@@ -394,7 +394,7 @@ CREATE TABLE `types` (
   `order_by` varchar(25) default NULL,
   PRIMARY KEY  (`type_id`),
   KEY `type_name` (`type_name`)
-) TYPE=MyISAM;
+) ENGINE=MyISAM;
 
 #
 # data for table `types`
@@ -439,7 +439,7 @@ CREATE TABLE `user_data` (
   `related` text,
   PRIMARY KEY  (`data_id`),
   KEY `user_id` (`user_id`,`record_id`)
-) TYPE=MyISAM;
+) ENGINE=MyISAM;
 
 #
 # data for table `user_data`
@@ -472,7 +472,7 @@ CREATE TABLE `user_formats` (
   `show_format` enum('true','false') NOT NULL default 'true',
   PRIMARY KEY  (`user_format_id`),
   KEY `format_id` (`format_id`,`user_id`)
-) TYPE=MyISAM;
+) ENGINE=MyISAM;
 
 #
 # data for table `user_formats`
@@ -560,7 +560,7 @@ CREATE TABLE `user_options` (
   `main_fields` text,
   PRIMARY KEY  (`option_id`),
   KEY `user_id` (`user_id`)
-) TYPE=MyISAM;
+) ENGINE=MyISAM;
 
 #
 # data for table `user_options`
@@ -601,7 +601,7 @@ CREATE TABLE `user_permissions` (
   `allow_edit_call_number` enum('no','yes') NOT NULL default 'no',
   PRIMARY KEY  (`user_permission_id`),
   KEY `user_id` (`user_id`)
-) TYPE=MyISAM;
+) ENGINE=MyISAM;
 
 #
 # data for table `user_permissions`
@@ -624,7 +624,7 @@ CREATE TABLE `user_styles` (
   `show_style` enum('true','false') NOT NULL default 'true',
   PRIMARY KEY  (`user_style_id`),
   KEY `style_id` (`style_id`,`user_id`)
-) TYPE=MyISAM;
+) ENGINE=MyISAM;
 
 #
 # data for table `user_styles`
@@ -669,7 +669,7 @@ CREATE TABLE `user_types` (
   `show_type` enum('true','false') NOT NULL default 'true',
   PRIMARY KEY  (`user_type_id`),
   KEY `type_id` (`type_id`,`user_id`)
-) TYPE=MyISAM;
+) ENGINE=MyISAM;
 
 #
 # data for table `user_types`
@@ -747,7 +747,7 @@ CREATE TABLE `users` (
   `modified_time` time default NULL,
   `modified_by` varchar(100) default NULL,
   PRIMARY KEY  (`user_id`)
-) TYPE=MyISAM;
+) ENGINE=MyISAM;
 
 #
 # data for table `users`
