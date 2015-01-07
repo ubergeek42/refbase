@@ -137,9 +137,14 @@
 	else
 		$rowOffset = ""; // if no value to the 'startRecord' parameter is given, we'll output records starting with the first record in the result set
 
-	if (isset($_REQUEST['stylesheet'])) // contains the desired stylesheet to be returned for transformation of XML data
-		$exportStylesheet = $_REQUEST['stylesheet']; // if the 'stylesheet' parameter was given in the query without a value, this will suppress the default stylesheet
-	else
+	if (isset($_REQUEST['stylesheet'])) { // contains the desired stylesheet to be returned for transformation of XML data
+    $stylesheet  = $REQUEST['stylesheet'];
+    $stylesheets = array("srwmods2html.xsl","srwExplainResponse2html.xsl","srwdc2html.xsl","DEFAULT");
+    if (in_array($stylesheet,$stylesheets))
+      $exportSylesheet = $stylesheet;
+    else
+      $exportStylesheet = "DEFAULT"; //invalid stylesheet specified
+  } else
 		$exportStylesheet = "DEFAULT"; // the special keyword "DEFAULT" causes a default stylesheet to be assigned below based on the requested operation and response format
 
 	// Note that PHP will translate dots ('.') in parameter names into substrings ('_'). This is so that the
