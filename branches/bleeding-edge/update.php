@@ -148,7 +148,7 @@
 		<td valign="top"><b>MySQL Admin User:</b></td>
 		<td valign="top"><?php echo fieldError("adminUserName", $errors); ?>
 
-			<input type="text" name="adminUserName" value="<?php echo $formVars["adminUserName"]; ?>" size="30">
+			<input type="text" name="adminUserName" value="<?php echo encodeHTML($formVars["adminUserName"]); ?>" size="30">
 		</td>
 		<td valign="top">Give the name of an administrative user that has full access to your MySQL database. Often, this is the <em>root</em> user.</td>
 	</tr>
