@@ -161,7 +161,7 @@
 		}
 
 		// Set the referrer:
-		if (isset($_REQUEST['referer']) AND !empty($_REQUEST['referer']))
+		if (isset($_REQUEST['referer']) AND !empty($_REQUEST['referer']) AND strpos($_REQUEST['referer'], '://')===false)
 			$referer = $_REQUEST['referer']; // get the referring URL from the superglobal '$_REQUEST' variable (if any)
 
 		elseif (isset($_SESSION['referer']) AND !empty($_SESSION['referer']))
