@@ -107,7 +107,7 @@
 	// SHOW ERROR MESSAGE:
 
 	echo "\n<table class=\"error\" align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"10\" width=\"95%\">\n<tr>\n\t<td valign=\"top\"> Error "
-	   . $errorNo . " : <b>" . encodeHTML($errorMsg) . "</b>" // function 'encodeHTML()' is defined in 'include.inc.php'
+	   . encodeHTML($errorNo) . " : <b>" . encodeHTML($errorMsg) . "</b>" // function 'encodeHTML()' is defined in 'include.inc.php'
 	   . "</td>\n</tr>"
 	   . $links
 	   . "\n</table>";
