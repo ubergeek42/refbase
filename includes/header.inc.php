@@ -202,7 +202,7 @@
 	</td>
 </tr>
 <tr>
-	<td><?php echo $HeaderString; ?></td>
+	<td><?php echo encodeHTML($HeaderString); ?></td>
 </tr>
 </table>
 <hr class="pageheader" align="center" width="95%"><?php
