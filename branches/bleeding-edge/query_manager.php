@@ -342,11 +342,11 @@
 <form action="query_modify.php" method="POST" name="saveQuery">
 <input type="hidden" name="formType" value="saveQuery">
 <input type="hidden" name="submit" value="<?php echo $pageTitle; ?>">
-<input type="hidden" name="queryAction" value="<?php echo $queryAction; ?>">
-<input type="hidden" name="queryID" value="<?php echo $queryID; ?>">
-<input type="hidden" name="displayType" value="<?php echo $displayType; ?>">
+<input type="hidden" name="queryAction" value="<?php echo encodeHTML($queryAction); ?>">
+<input type="hidden" name="queryID" value="<?php echo encodeHTML($queryID); ?>">
+<input type="hidden" name="displayType" value="<?php echo encodeHTML($displayType); ?>">
 <input type="hidden" name="citeStyle" value="<?php echo rawurlencode($citeStyle); ?>">
-<input type="hidden" name="citeOrder" value="<?php echo $citeOrder; ?>">
+<input type="hidden" name="citeOrder" value="<?php echo encodeHTML($citeOrder); ?>">
 <input type="hidden" name="origQueryName" value="<?php echo rawurlencode($origQueryName); ?>">
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds forms that enable you to manage your custom queries">
 <tr>
@@ -392,7 +392,7 @@
 	</td>
 	<td colspan="2"><?php echo fieldError("sqlQuery", $errors); ?>
 
-		<textarea name="sqlQuery" rows="6" cols="60"><?php echo $sqlQuery; ?>
+		<textarea name="sqlQuery" rows="6" cols="60"><?php echo encodeHTML($sqlQuery); ?>
 
 		</textarea>
 	</td>
@@ -406,7 +406,7 @@
 
 	</td>
 	<td valign="middle">
-		<?php echo $loc["ShowRecordsPerPage_Prefix"]; ?>&nbsp;&nbsp;&nbsp;<input type="text" name="showRows" value="<?php echo $showRows; ?>" size="4" title="<?php echo $loc["DescriptionShowRecordsPerPage"]; ?>">&nbsp;&nbsp;&nbsp;<?php echo $loc["ShowRecordsPerPage_Suffix"]; ?>
+		<?php echo $loc["ShowRecordsPerPage_Prefix"]; ?>&nbsp;&nbsp;&nbsp;<input type="text" name="showRows" value="<?php echo encodeHTML($showRows); ?>" size="4" title="<?php echo $loc["DescriptionShowRecordsPerPage"]; ?>">&nbsp;&nbsp;&nbsp;<?php echo $loc["ShowRecordsPerPage_Suffix"]; ?>
 
 	</td>
 </tr>
