@@ -380,9 +380,13 @@
 	else
 		$serialNo = "";
 
-	if (isset($formVars['typeName']))
-		$typeName = $formVars['typeName'];
-	else
+	if (isset($formVars['typeName'])) {
+    $types = array('Journal Article','Abstract','Book Chapter','Book Whole','Conference Article','Conference Volume','Journal','Magazine Article','Manual','Manuscript','Map','Miscellaneous','Newspaper Article','Patent','Report','Software');
+    if (in_array($formVars['typeName'],$types))
+      $typeName = $formVars['typeName'];
+    else
+		$typeName = "";
+  } else
 		$typeName = "";
 
 	if (isset($formVars['thesisName']))
