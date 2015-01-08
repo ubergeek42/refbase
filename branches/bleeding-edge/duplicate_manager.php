@@ -146,7 +146,7 @@
 
 <form action="duplicate_modify.php" method="POST">
 <input type="hidden" name="formType" value="flagDuplicates">
-<input type="hidden" name="viewType" value="<?php echo $viewType; ?>">
+<input type="hidden" name="viewType" value="<?php echo encodeHTML($viewType); ?>">
 <input type="hidden" name="submit" value="Flag Duplicates">
 <table align="center" border="0" cellpadding="0" cellspacing="10" width="95%" summary="This table holds a form that allows you to manage duplicate database entries">
 <tr>
