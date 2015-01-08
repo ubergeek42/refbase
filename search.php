@@ -1576,9 +1576,9 @@
 															$URLprefix = $filesBaseURL; // use the base URL of the standard files directory as prefix ('$filesBaseURL' is defined in 'ini.inc.php')
 
 														if (preg_match("/\.pdf$/i", $row["file"])) // if the 'file' field contains a link to a PDF file
-															$linkArray[] = $prefix . "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"" . $baseURL . "img/file_PDF.gif\" alt=\"" . $loc["pdf"] . "\" title=\"" . $loc["LinkTitle_DownloadPDFFile"] . "\" width=\"17\" height=\"17\" hspace=\"0\" border=\"0\"></a>"; // display a PDF file icon as download link
+															$linkArray[] = $prefix . "\n\t\t<a href=\"" . $URLprefix . encodeHTML($row["file"]) . "\"><img src=\"" . $baseURL . "img/file_PDF.gif\" alt=\"" . $loc["pdf"] . "\" title=\"" . $loc["LinkTitle_DownloadPDFFile"] . "\" width=\"17\" height=\"17\" hspace=\"0\" border=\"0\"></a>"; // display a PDF file icon as download link
 														else
-															$linkArray[] = $prefix . "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"><img src=\"" . $baseURL . "img/file.gif\" alt=\"" . $loc["file"] . "\" title=\"" . $loc["LinkTitle_DownloadFile"] . "\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link
+															$linkArray[] = $prefix . "\n\t\t<a href=\"" . $URLprefix . encodeHTML($row["file"]) . "\"><img src=\"" . $baseURL . "img/file.gif\" alt=\"" . $loc["file"] . "\" title=\"" . $loc["LinkTitle_DownloadFile"] . "\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link
 													}
 												}
 
@@ -5799,9 +5799,9 @@
 				}
 
 				if (preg_match("/\.pdf$/i", $row["file"])) // if the 'file' field contains a link to a PDF file
-					$links .= "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"" . $target . "><img src=\"" . $baseURL . "img/file_PDF.gif\" alt=\"" . $loc["pdf"] . "\" title=\"" . $loc["LinkTitle_DownloadPDFFile"] . "\" width=\"17\" height=\"17\" hspace=\"0\" border=\"0\"></a>"; // display a PDF file icon as download link
+					$links .= "\n\t\t<a href=\"" . $URLprefix . encodeHTML($row["file"]) . "\"" . $target . "><img src=\"" . $baseURL . "img/file_PDF.gif\" alt=\"" . $loc["pdf"] . "\" title=\"" . $loc["LinkTitle_DownloadPDFFile"] . "\" width=\"17\" height=\"17\" hspace=\"0\" border=\"0\"></a>"; // display a PDF file icon as download link
 				else
-					$links .= "\n\t\t<a href=\"" . $URLprefix . $row["file"] . "\"" . $target . "><img src=\"" . $baseURL . "img/file.gif\" alt=\"" . $loc["file"] . "\" title=\"" . $loc["LinkTitle_DownloadFile"] . "\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link
+					$links .= "\n\t\t<a href=\"" . $URLprefix . encodeHTML($row["file"]) . "\"" . $target . "><img src=\"" . $baseURL . "img/file.gif\" alt=\"" . $loc["file"] . "\" title=\"" . $loc["LinkTitle_DownloadFile"] . "\" width=\"11\" height=\"15\" hspace=\"0\" border=\"0\"></a>"; // display a generic file icon as download link
 			}
 		}
 
