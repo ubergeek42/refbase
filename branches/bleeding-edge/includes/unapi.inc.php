@@ -43,8 +43,8 @@
 
 		$unapiCollection = new XML("formats");
 
-		if (!empty($unapiID))
-			$unapiCollection->setTagAttribute("id", $unapiID);
+		if (!empty($unapiID)) //TODO: we may want to ensure the unapi we are using does, indeed, point back to a record or return an error.
+			$unapiCollection->setTagAttribute("id", encodeHTML($unapiID));
 
 		// Recommended format names are given at <http://unapi.stikipad.com/unapi/show/existing+formats>
 		// TODO: add 'ISI', 'ODF XML' and 'Word XML'
