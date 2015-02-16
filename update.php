@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./update.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: svn+ssh://karnesky@svn.code.sf.net/p/refbase/code/branches/bleeding-edge/update.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    01-Mar-05, 20:47
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2015-01-07 15:33:45 -0800 (Wed, 07 Jan 2015) $
+	//             $Author: karnesky $
+	//             $Revision: 1398 $
 
 	// This file will update any refbase MySQL database installation from v0.8.0 or greater to v0.9.6.
 	// (Note that this script currently doesn't offer any conversion from 'latin1' to 'utf8')
@@ -97,9 +97,9 @@
 		if (!isset($_SESSION['HeaderString']))
 		{
 			if (empty($errors)) // provide the default message:
-				$HeaderString = "To update refbase v0.8.0 or greater please fill out the form below and click the <em>Update</em> button:";
+				$HeaderString = "To update refbase v0.8.0 or greater please fill out the form below and click the Update button:";
 			else // -> there were errors when validating the fields
-				$HeaderString = "<b><span class=\"warning\">There were validation errors regarding the details you entered. Please check the comments above the respective fields:</span></b>";
+				$HeaderString = "There were validation errors regarding the details you entered. Please check the comments above the respective fields:";
 		}
 		else
 		{
@@ -881,7 +881,7 @@
 
 		if (empty($resultArray))
 		{
-			$HeaderString = "<b><span class=\"ok\">Nothing was changed! Your refbase installation is up-to-date.</span></b>";
+			$HeaderString = "Nothing was changed! Your refbase installation is up-to-date.";
 
 			// Write back session variables:
 			saveSessionVariable("HeaderString", $HeaderString);
@@ -897,7 +897,7 @@
 		// If there's no stored message available:
 		if (!isset($_SESSION['HeaderString'])) // provide a default message:
 		{
-			$HeaderString = "<b><span class=\"ok\">Update of the Web Reference Database was successful!</span></b>";
+			$HeaderString = "Update of the Web Reference Database was successful!";
 		}
 		else
 		{

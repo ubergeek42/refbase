@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./record.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: svn+ssh://karnesky@svn.code.sf.net/p/refbase/code/branches/bleeding-edge/record.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    29-Jul-02, 16:39
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2013-11-19 10:28:06 -0800 (Tue, 19 Nov 2013) $
+	//             $Author: pnault $
+	//             $Revision: 1384 $
 
 	// Form that offers to add
 	// records or edit/delete
@@ -115,13 +115,13 @@
 			{
 				$HeaderString = $loc["AddRecordHeaderText"];
 				if (isset($_REQUEST['source'])) // when importing data, we display the original source data if the 'source' parameter is present:
-					$HeaderString .= ". Original source data:\n<br>\n<br>\n<code>" . encodeHTML($_REQUEST['source']) . "</code>"; // the 'source' parameter gets passed by 'import.php' or 'import_csa.php'
+					$HeaderString .= ". Original source data:\n" . encodeHTML($_REQUEST['source']); // the 'source' parameter gets passed by 'import.php' or 'import_csa.php'
 				else
 					$HeaderString .= ":";
 			}
 		}
 		else // -> there were errors validating the data entered by the user
-			$HeaderString = "<b><span class=\"warning\">". $loc["Warning_InputDataError"]."</span></b>";
+			$HeaderString = $loc["Warning_InputDataError"];
 	}
 	else // there is already a stored message available
 	{

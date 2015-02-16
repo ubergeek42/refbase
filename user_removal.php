@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./user_removal.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: svn+ssh://karnesky@svn.code.sf.net/p/refbase/code/branches/bleeding-edge/user_removal.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    16-Apr-02, 10:54
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2008-08-19 09:57:47 -0700 (Tue, 19 Aug 2008) $
+	//             $Author: msteffens $
+	//             $Revision: 1195 $
 
 	// This script deletes a user from the 'users' and 'auth' tables.
 	// The script can be only called by the admin. If the removal succeeds, it redirects to 'users.php'.
@@ -42,7 +42,7 @@
 	if (!(isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail))) // ('$adminLoginEmail' is specified in 'ini.inc.php')
 	{
 		// save an error message:
-		$HeaderString = "<b><span class=\"warning\">You must be logged in as admin to remove any users!</span></b>";
+		$HeaderString = "You must be logged in as admin to remove any users!";
 
 		// save the URL of the currently displayed page:
 		$referer = $_SERVER['HTTP_REFERER'];
@@ -59,7 +59,7 @@
 	if (empty($userID))
 	{
 		// save an error message:
-		$HeaderString = "<b><span class=\"warning\">Incorrect parameters to script 'user_removal.php'!</span></b>";
+		$HeaderString = "Incorrect parameters to script 'user_removal.php'!";
 
 		// Write back session variables:
 		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
