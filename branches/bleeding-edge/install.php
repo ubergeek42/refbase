@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./install.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: svn+ssh://karnesky@svn.code.sf.net/p/refbase/code/branches/bleeding-edge/install.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    07-Jan-04, 22:00
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2012-02-28 16:30:18 -0800 (Tue, 28 Feb 2012) $
+	//             $Author: msteffens $
+	//             $Revision: 1353 $
 
 	// This file will install the literature database for you. Note that you must have
 	// an existing PHP and MySQL installation. Please see the readme for further information.
@@ -135,7 +135,7 @@
 			if (empty($errors)) // provide the default message:
 				$HeaderString = "To install the refbase package please fill out the form below and click the <em>Install</em> button:";
 			else // -> there were errors when validating the fields
-				$HeaderString = "<b><span class=\"warning\">There were validation errors regarding the details you entered. Please check the comments above the respective fields:</span></b>";
+				$HeaderString = "There were validation errors regarding the details you entered. Please check the comments above the respective fields:";
 		}
 		else
 		{
@@ -465,7 +465,7 @@
 			if (!empty($resultArray)) // if there were any execution errors
 				$HeaderString = "The following error occurred while trying to import the SQL data into the database:";
 			else // assume that the installation was successful
-				$HeaderString = "<b><span class=\"ok\">Installation of the Web Reference Database was successful!</span></b>";
+				$HeaderString = "Installation of the Web Reference Database was successful!";
 		}
 		else
 		{

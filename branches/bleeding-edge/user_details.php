@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./user_details.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: svn+ssh://karnesky@svn.code.sf.net/p/refbase/code/branches/bleeding-edge/user_details.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    16-Apr-02, 10:55
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2012-02-28 16:55:06 -0800 (Tue, 28 Feb 2012) $
+	//             $Author: msteffens $
+	//             $Revision: 1361 $
 
 	// This script shows the user a user <form>. It can be used both for INSERTing a new user and for UPDATE-ing an existing user.
 	// If the user is logged in, then it is an UPDATE; otherwise, an INSERT. The script also shows error messages above widgets that
@@ -80,7 +80,7 @@
 		if ($userID != getUserID($loginEmail)) // (function 'getUserID()' is defined in 'include.inc.php')
 		{
 			// save an error message:
-			$HeaderString = "<b><span class=\"warning\">You can only edit your own user data!</span></b>";
+			$HeaderString = "You can only edit your own user data!";
 
 			// Write back session variables:
 			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -94,7 +94,7 @@
 	if (!isset($_SESSION['loginEmail']) && ($userID != 0))
 	{
 		// save an error message:
-		$HeaderString = "<b><span class=\"warning\">You must login to view your user account details!</span></b>";
+		$HeaderString = "You must login to view your user account details!";
 
 		// save the URL of the currently displayed page:
 		$referer = $_SERVER['HTTP_REFERER'];
@@ -113,7 +113,7 @@
 	if (isset($_SESSION['loginEmail']) AND ($userID != 0) AND isset($_SESSION['user_permissions']) AND !preg_match("/allow_modify_options/", $_SESSION['user_permissions'])) // if a user is logged in but the 'user_permissions' session variable does NOT contain 'allow_modify_options'...
 	{
 		// save an error message:
-		$HeaderString = "<b><span class=\"warning\">You have no permission to modify your user account details!</span></b>";
+		$HeaderString = "You have no permission to modify your user account details!";
 
 		// Write back session variables:
 		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -131,17 +131,17 @@
 		if (empty($errors)) // provide one of the default messages:
 		{
 			if (isset($_SESSION['loginEmail']) && isset($userID) && !empty($userID)) // -> the user is logged in and views a user entry
-				$HeaderString = "Please amend your details below as required. Fields shown in <b>bold</b> are mandatory.";
+				$HeaderString = "Please amend your details below as required. Fields shown in bold are mandatory.";
 			else // -> the user is NOT logged in (OR: the admin is logged in and wants to add a new user, by calling 'user_details.php' w/o any 'userID')
 			{
 				if ((!isset($_SESSION['loginEmail']) && ($addNewUsers == "everyone") && ($userID == "")) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($userID == "")))
-					$HeaderString = "Add a new user. Fields shown in <b>bold</b> are mandatory.";
+					$HeaderString = "Add a new user. Fields shown in bold are mandatory.";
 				else // ask a user to submit its user details for approval by the database admin:
-					$HeaderString = "Please fill in the details below to join. Fields shown in <b>bold</b> are mandatory.";
+					$HeaderString = "Please fill in the details below to join. Fields shown in bold are mandatory.";
 			}
 		}
 		else // -> there were errors validating the user's details
-			$HeaderString = "<b><span class=\"warning\">There were validation errors regarding the details you entered. Please check the comments above the respective fields:</span></b>";
+			$HeaderString = "There were validation errors regarding the details you entered. Please check the comments above the respective fields:";
 	}
 	else
 	{
@@ -176,7 +176,7 @@
 		// (Since the admin is allowed to view and edit account data from other users, we have to provide a dynamic header message in that case)
 		if (($loginEmail == $adminLoginEmail) && ($userID != getUserID($loginEmail))) // ('$adminLoginEmail' is specified in 'ini.inc.php')
 			if (!isset($_SESSION['HeaderString']))
-				$HeaderString = "Edit account details for <b>" . encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . $row["email"] . ")</b>:";
+				$HeaderString = "Edit account details for " . encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . $row["email"] . "):";
 	}
 
 	// Show the login status:

@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./user_login.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: svn+ssh://karnesky@svn.code.sf.net/p/refbase/code/branches/bleeding-edge/user_login.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    05-Jan-03, 23:20
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2013-09-20 10:36:17 -0700 (Fri, 20 Sep 2013) $
+	//             $Author: cyclo68 $
+	//             $Revision: 1379 $
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -65,7 +65,7 @@
 //	if ((empty($_REQUEST["loginEmail"]) && !empty($_REQUEST["loginPassword"])) || (!empty($_REQUEST["loginEmail"]) && empty($_REQUEST["loginPassword"])))
 	{		 
 		// Save an error message:
-		$HeaderString = "<b><span class=\"warning\">" . $loc["InOrderToLoginYouMustSupplyBothEmailAddressAndPassword"] . "</span></b>";
+		$HeaderString = $loc["InOrderToLoginYouMustSupplyBothEmailAddressAndPassword"];
 
 		// Write back session variables:
 		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -231,7 +231,7 @@
 				deleteSessionVariable("loginEmail"); // function 'deleteSessionVariable()' is defined in 'include.inc.php'
 
 			// Save an error message:
-			$HeaderString = "<b><span class=\"warning\">" . $loc["LoginFailedYouProvidedAnIncorrectEmailAddressOrPassword"] . "</span></b>";
+			$HeaderString = $loc["LoginFailedYouProvidedAnIncorrectEmailAddressOrPassword"];
 
 			// Write back session variables:
 			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'

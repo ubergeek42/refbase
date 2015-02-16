@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./includes/include.inc.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: svn+ssh://karnesky@svn.code.sf.net/p/refbase/code/branches/bleeding-edge/includes/include.inc.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    16-Apr-02, 10:54
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2015-01-07 15:27:15 -0800 (Wed, 07 Jan 2015) $
+	//             $Author: karnesky $
+	//             $Revision: 1397 $
 
 	// This file contains important
 	// functions that are shared
@@ -447,12 +447,15 @@
 	function returnMsg($message, $class = "", $flavour = "", $sessionVariable = "", $prefix = "", $suffix = "")
 	{
 		global $client;
-
+  // Because we now sanitize the header message, we no longer output it as 
+  // HTML
+  /*
 		if (preg_match("/^cli/i", $client)) // if the query originated from a command line client such as the "refbase" CLI client ("cli-refbase-1.0")
-		{
+    {
+   */
 			$fullMsg = $message . "\n\n"; // for CLI clients, we just echo the message text
 			echo $fullMsg;
-		}
+  /*		}
 		else // return an HTML-formatted message:
 		{
 			$fullMsg = $prefix;
@@ -473,7 +476,7 @@
 			if (!empty($sessionVariable))
 				saveSessionVariable($sessionVariable, $fullMsg); // write message to session variable
 		}
-
+   */
 		return $fullMsg;
 	}
 

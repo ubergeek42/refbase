@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./user_logout.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: svn+ssh://karnesky@svn.code.sf.net/p/refbase/code/branches/bleeding-edge/user_logout.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    16-Apr-02, 10:54
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2008-11-05 13:54:22 -0800 (Wed, 05 Nov 2008) $
+	//             $Author: msteffens $
+	//             $Revision: 1297 $
 
 	// This script logs a user out and redirects 
 	// to the calling page. If the script is called
@@ -100,7 +100,7 @@
 	else
 	{
 		// save an error message:
-		$HeaderString = "<b><span class=\"warning\">You cannot logout since you are not logged in anymore!</span></b>";
+		$HeaderString = "You cannot logout since you are not logged in anymore!";
 
 		// Write back session variables:
 		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'

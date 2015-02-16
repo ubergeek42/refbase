@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./duplicate_manager.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: svn+ssh://karnesky@svn.code.sf.net/p/refbase/code/branches/bleeding-edge/duplicate_manager.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    27-Jan-07, 21:18
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2015-01-07 17:08:37 -0800 (Wed, 07 Jan 2015) $
+	//             $Author: karnesky $
+	//             $Revision: 1403 $
 
 	// This script enables you to manually manage duplicate records by entering their database serial numbers
 	// into the provided form. The form lets you flag (i.e. identify) an "original" record and its related
@@ -104,7 +104,7 @@
 			$HeaderString = "Flag records as original or duplicate entries:"; // Provide the default message
 		}
 		else // -> there were errors validating the data entered by the user
-			$HeaderString = "<b><span class=\"warning\">There were validation errors regarding the data you entered:</span></b>";
+			$HeaderString = "There were validation errors regarding the data you entered:";
 
 	}
 	else

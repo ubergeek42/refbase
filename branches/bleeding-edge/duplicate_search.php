@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./duplicate_search.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: svn+ssh://karnesky@svn.code.sf.net/p/refbase/code/branches/bleeding-edge/duplicate_search.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    28-Jan-07, 09:17
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2013-04-16 03:37:01 -0700 (Tue, 16 Apr 2013) $
+	//             $Author: msteffens $
+	//             $Revision: 1371 $
 
 	// This script provides a form that lets you search for duplicate records.
 	// 
@@ -92,7 +92,7 @@
 				$HeaderString = "Find duplicates:"; // Provide the default message
 		}
 		else // -> there were errors validating the data entered by the user
-			$HeaderString = "<b><span class=\"warning\">There were validation errors regarding the data you entered:</span></b>";
+			$HeaderString = "There were validation errors regarding the data you entered:";
 
 	}
 	else

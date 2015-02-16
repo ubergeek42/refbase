@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./user_receipt.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: svn+ssh://karnesky@svn.code.sf.net/p/refbase/code/branches/bleeding-edge/user_receipt.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    16-Apr-02, 10:54
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2012-02-27 12:25:30 -0800 (Mon, 27 Feb 2012) $
+	//             $Author: msteffens $
+	//             $Revision: 1337 $
 
 	// This script shows the user a receipt for their user UPDATE or INSERT.
 	// It carries out no database actions and can be bookmarked.
@@ -55,7 +55,7 @@
 	// Note: 'user_validation.php' uses the non-existing user ID '-1' as trigger to show the email notification receipt page (instead of the standard receipt page)
 	{
 		// save an error message:
-		$HeaderString = "<b><span class=\"warning\">You must login to view your user account details and options!</span></b>";
+		$HeaderString = "You must login to view your user account details and options!";
 
 		// save the URL of the currently displayed page:
 		$referer = $_SERVER['HTTP_REFERER'];
@@ -72,7 +72,7 @@
 	if ($userID == "")
 	{
 		// save an error message:
-		$HeaderString = "<b><span class=\"warning\">Incorrect parameters to script 'user_receipt.php'!</span></b>";
+		$HeaderString = "Incorrect parameters to script 'user_receipt.php'!";
 
 		// Write back session variables:
 		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -86,7 +86,7 @@
 	if (isset($_SESSION['loginEmail']) AND preg_match("/^\d+$/", $userID) AND isset($_SESSION['user_permissions']) AND !preg_match("/allow_modify_options/", $_SESSION['user_permissions'])) // if a user is logged in but the 'user_permissions' session variable does NOT contain 'allow_modify_options'...
 	{
 		// save an error message:
-		$HeaderString = "<b><span class=\"warning\">You have no permission to modify your user account details and options!</span></b>";
+		$HeaderString = "You have no permission to modify your user account details and options!";
 
 		// Write back session variables:
 		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -109,7 +109,7 @@
 		if ($userID != getUserID($loginEmail))
 		{
 			// otherwise save an error message:
-			$HeaderString = "<b><span class=\"warning\">You can only view your own user receipt!<span></b>";
+			$HeaderString = "You can only view your own user receipt!";
 
 			// Write back session variables:
 			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -133,7 +133,7 @@
 			if ($userID == getUserID($loginEmail)) // if the admin userID was passed to the script
 			{
 				// save an error message:
-				$HeaderString = "<b><span class=\"warning\">You cannot delete your own user data!<span></b>";
+				$HeaderString = "You cannot delete your own user data!";
 
 				// Write back session variables:
 				saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -243,11 +243,11 @@
 		// Build the correct header message:
 		if (!isset($_SESSION['HeaderString'])) // if there's no saved message
 			if ($userAction == "Delete") // provide an appropriate header message:
-				$HeaderString = "<b><span class=\"warning\">Delete user</span> " . encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . $row["email"] . ")</b>:";
+				$HeaderString = "Delete user " . encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . $row["email"] . "):";
 			elseif (empty($userID))
 				$HeaderString = "Account details and options for anyone who isn't logged in:";
 			else // provide the default message:
-				$HeaderString = "Account details and options for <b>" . encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . $row["email"] . ")</b>:";
+				$HeaderString = "Account details and options for " . encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . $row["email"] . "):";
 		else
 		{
 			$HeaderString = $_SESSION['HeaderString']; // extract 'HeaderString' session variable (only necessary if register globals is OFF!)

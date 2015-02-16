@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./users.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: svn+ssh://karnesky@svn.code.sf.net/p/refbase/code/branches/bleeding-edge/users.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    29-Jun-03, 00:25
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2012-02-27 12:25:30 -0800 (Mon, 27 Feb 2012) $
+	//             $Author: msteffens $
+	//             $Revision: 1337 $
   //
 	// This script shows the admin a list of all user entries available within the 'users' table.
 	// User data will be shown in the familiar column view, complete with links to show a user's
@@ -712,9 +712,9 @@
 				$updateSucceeded = updateUserPermissions($recordSerialsArray, $userPermissionsArray); // function 'updateUserPermissions()' is defined in 'include.inc.php'
 
 				if ($updateSucceeded) // save an informative message:
-					$HeaderString = returnMsg("User permission <code>$userPermission</code> was updated successfully!", "", "", "HeaderString"); // function 'returnMsg()' is defined in 'include.inc.php'
+					$HeaderString = returnMsg("User permission $userPermission was updated successfully!", "", "", "HeaderString"); // function 'returnMsg()' is defined in 'include.inc.php'
 				else // return an appropriate error message:
-					$HeaderString = returnMsg("User permission <code>$userPermission</code> could not be updated!", "warning", "strong", "HeaderString");
+					$HeaderString = returnMsg("User permission $userPermission could not be updated!", "warning", "strong", "HeaderString");
 			}
 		}
 

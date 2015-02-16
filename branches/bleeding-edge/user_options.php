@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./user_options.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: svn+ssh://karnesky@svn.code.sf.net/p/refbase/code/branches/bleeding-edge/user_options.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    24-Oct-04, 19:31
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2013-04-16 03:37:01 -0700 (Tue, 16 Apr 2013) $
+	//             $Author: msteffens $
+	//             $Revision: 1371 $
 
 	// This script provides options which are individual for each user.
 	// 
@@ -71,7 +71,7 @@
 	if (!isset($_SESSION['loginEmail']))
 	{
 		// save an error message:
-		$HeaderString = "<b><span class=\"warning\">You must login to view your user account options!</span></b>";
+		$HeaderString = "You must login to view your user account options!";
 
 		// save the URL of the currently displayed page:
 		$referer = $_SERVER['HTTP_REFERER'];
@@ -97,7 +97,7 @@
 		if ($userID != getUserID($loginEmail)) // (function 'getUserID()' is defined in 'include.inc.php')
 		{
 			// save an error message:
-			$HeaderString = "<b><span class=\"warning\">You can only edit your own user data!</span></b>";
+			$HeaderString = "You can only edit your own user data!";
 
 			// Write back session variables:
 			saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -111,7 +111,7 @@
 	if ($userID == "") // note that we can't use 'empty($userID)' here, since 'userID=0' must be allowed so that the admin can edit options for the default user (= no user logged in)
 	{
 		// save an error message:
-		$HeaderString = "<b><span class=\"warning\">Missing parameters for script 'user_options.php'!</span></b>";
+		$HeaderString = "Missing parameters for script 'user_options.php'!";
 
 		// Write back session variables:
 		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -127,7 +127,7 @@
 	if (isset($_SESSION['loginEmail']) AND preg_match("/^\d+$/", $userID) AND isset($_SESSION['user_permissions']) AND !preg_match("/allow_modify_options/", $_SESSION['user_permissions'])) // if a user is logged in but the 'user_permissions' session variable does NOT contain 'allow_modify_options'...
 	{
 		// save an error message:
-		$HeaderString = "<b><span class=\"warning\">You have no permission to modify your user account options!</span></b>";
+		$HeaderString = "You have no permission to modify your user account options!";
 
 		// Write back session variables:
 		saveSessionVariable("HeaderString", $HeaderString); // function 'saveSessionVariable()' is defined in 'include.inc.php'
@@ -145,7 +145,7 @@
 		if (empty($errors)) // provide the default messages:
 			$HeaderString = "Modify your account options:";
 		else // -> there were errors validating the user's options
-			$HeaderString = "<b><span class=\"warning\">There were validation errors regarding the options you selected. Please check the comments above the respective fields:</span></b>";
+			$HeaderString = "There were validation errors regarding the options you selected. Please check the comments above the respective fields:";
 	}
 	else
 	{
@@ -175,7 +175,7 @@
 	// If the admin is logged in AND the displayed user data are NOT his own, we overwrite the default header message:
 	// (Since the admin is allowed to view and edit account data from other users, we have to provide a dynamic header message in that case)
 	if (($loginEmail == $adminLoginEmail) && (!empty($userID)) && ($userID != getUserID($loginEmail))) // ('$adminLoginEmail' is specified in 'ini.inc.php')
-		$HeaderString = "Edit account options for <b>" . encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . $row["email"] . ")</b>:";
+		$HeaderString = "Edit account options for " . encodeHTML($row["first_name"]) . " " . encodeHTML($row["last_name"]) . " (" . $row["email"] . "):";
 	elseif (empty($userID))
 		$HeaderString = "Edit account options for anyone who isn't logged in:";
 
