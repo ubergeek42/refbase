@@ -77,7 +77,7 @@ class RefbaseConnector {
 				$queryStr = "SELECT $fieldPref " .
 					"FROM " . $this->dbRefTable . " r " .
 					"INNER JOIN " . $this->dbUserDataTable . " u " .
-					"ON r.serial = u.data_id " .
+					"ON r.serial = u.record_id " .
 					"WHERE u.cite_key='$input'";
 			} else {
 				$queryStr = "SELECT $fieldPref " .
