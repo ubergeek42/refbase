@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./user_login.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: http://svn.code.sf.net/p/refbase/code/trunk/user_login.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    05-Jan-03, 23:20
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2013-09-20 10:36:17 -0700 (Fri, 20 Sep 2013) $
+	//             $Author: cyclo68 $
+	//             $Revision: 1379 $
 
 	// This script manages the login process. It should only be called when the user is not logged in.
 	// If the user is logged in, it will redirect back to the calling page.
@@ -121,10 +121,10 @@
 		$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		// (4) EXTRACT results:
-		if (mysql_num_rows($result) == 1) // Interpret query result: Do we have exactly one row?
+		if (mysqli_num_rows($result) == 1) // Interpret query result: Do we have exactly one row?
 		{
 			$foundUser = true; // then we have found the user
-			$row = mysql_fetch_array($result); // fetch the one row into the array '$row'
+			$row = mysqli_fetch_array($result); // fetch the one row into the array '$row'
 		}
 		else
 			$foundUser = false;
@@ -146,7 +146,7 @@
 			// Now we need to get the user's first name and last name (e.g., in order to display them within the login welcome message)
 			$query = "SELECT user_id, first_name, last_name, abbrev_institution, language, last_login FROM $tableUsers WHERE user_id = " . quote_smart($userID); // CONSTRUCT SQL QUERY
 			$result = queryMySQLDatabase($query); // RUN the query on the database through the connection (function 'queryMySQLDatabase()' is defined in 'include.inc.php')
-			$row2 = mysql_fetch_array($result); // EXTRACT results: fetch the one row into the array '$row2'
+			$row2 = mysqli_fetch_array($result); // EXTRACT results: fetch the one row into the array '$row2'
 
 			// Save the fetched user details to the session file:
 
