@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./includes/include.inc.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: http://svn.code.sf.net/p/refbase/code/trunk/includes/include.inc.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    16-Apr-02, 10:54
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2013-04-16 03:37:01 -0700 (Tue, 16 Apr 2013) $
+	//             $Author: msteffens $
+	//             $Revision: 1371 $
 
 	// This file contains important
 	// functions that are shared
@@ -224,8 +224,8 @@
 		{
 			// (1) OPEN the database connection:
 			//      (variables are set by include file 'db.inc.php'!)
-			if (!($connection = @ mysql_connect($hostName, $username, $password)))
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+			if (!($connection = @ mysqli_connect($hostName, $username, $password)))
+				if (mysqli_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 					showErrorMsg("The following error occurred while trying to connect to the host:");
 
 			//     Get the MySQL version and save it to a session variable:
@@ -245,8 +245,8 @@
 
 			// (3) SELECT the database:
 			//      (variables are set by include file 'db.inc.php'!)
-			if (!(mysql_select_db($databaseName, $connection)))
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+			if (!(mysqli_select_db($databaseName, $connection)))
+				if (mysqli_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 					showErrorMsg("The following error occurred while trying to connect to the database:");
 		}
 	}
@@ -262,8 +262,8 @@
 		global $client;
 
 		// (3) RUN the query on the database through the connection:
-		if (!($result = @ mysql_query($query, $connection)))
-			if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+		if (!($result = @ mysqli_query($query, $connection)))
+			if (mysqli_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 			{
 				if (isset($client) AND preg_match("/^cli/i", $client)) // if the query originated from a command line client such as the "refbase" CLI client ("cli-refbase-1.0")
 					// note that we also HTML encode the query for CLI clients since a malicious user could use the client parameter to perform a cross-site scripting (XSS) attack
@@ -285,8 +285,8 @@
 
 		if (isset($connection))
 			// (5) CLOSE the database connection:
-			if (!(mysql_close($connection)))
-				if (mysql_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
+			if (!(mysqli_close($connection)))
+				if (mysqli_errno() != 0) // this works around a stupid(?) behaviour of the Roxen webserver that returns 'errno: 0' on success! ?:-(
 					showErrorMsg("The following error occurred while trying to disconnect from the database:");
 	}
 
@@ -301,7 +301,7 @@
 
 		$result = queryMySQLDatabase($query); // RUN the query on the database through the connection
 
-		$row = mysql_fetch_row($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
+		$row = mysqli_fetch_row($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
 		$mysqlVersionString = $row[0]; // extract the contents of the first (and only) row (returned version string will be something like "4.0.20-standard" etc.)
 		$mysqlVersion = preg_replace("/^(\d+\.\d+).+/", "\\1", $mysqlVersionString); // extract main version number (e.g. "4.0") from version string
 
@@ -319,7 +319,7 @@
 		$fieldInfoArray = array();
 
 		// Get field (column) metadata:
-		$fieldInfo = mysql_fetch_field($result, (int)$fieldOffset); // returns an object containing the field information
+		$fieldInfo = mysqli_fetch_field($result, (int)$fieldOffset); // returns an object containing the field information
 
 		// Copy object properties to an array:
 		$fieldInfoArray["name"]         = $fieldInfo->name;         // column name
@@ -351,7 +351,7 @@
 	function seekInMySQLResultsToOffset($result, $rowOffset, $showRows, $displayType, $citeType)
 	{
 		// Find out how many rows are available:
-		$rowsFound = @ mysql_num_rows($result);
+		$rowsFound = @ mysqli_num_rows($result);
 		if ($rowsFound > 0) // If there were rows found ...
 		{
 			// ... setup variables in order to facilitate "previous" & "next" browsing:
@@ -396,7 +396,7 @@
 			$nextOffset = $rowOffset + $showRows;
 
 			// d) Seek to the current offset
-			mysql_data_seek($result, $rowOffset); // move internal result pointer to the row number given in '$rowOffset'
+			mysqli_data_seek($result, $rowOffset); // move internal result pointer to the row number given in '$rowOffset'
 		}
 		else // set variables to zero in order to prevent 'Undefined variable...' messages when nothing was found ('$rowsFound = 0'):
 		{
@@ -422,8 +422,8 @@
 	{
 		global $client;
 
-		$errorNo = mysql_errno();
-		$errorMsg = mysql_error();
+		$errorNo = mysqli_errno();
+		$errorMsg = mysqli_error();
 
 		if (preg_match("/^cli/i", $client)) // if the query originated from a command line client such as the "refbase" CLI client ("cli-refbase-1.0")
 			// note that we also HTML encode the '$errorMsg' for CLI clients since a malicious user could use the client parameter to perform a cross-site scripting (XSS) attack
@@ -631,7 +631,7 @@
 		$query = "SELECT user_id FROM $tableAuth WHERE email = " . quote_smart($emailAddress);
 
 		$result = queryMySQLDatabase($query); // RUN the query on the database through the connection
-		$row = mysql_fetch_array($result);
+		$row = mysqli_fetch_array($result);
 
 		return($row["user_id"]);
 	}
@@ -662,7 +662,7 @@
 	//                 ['author']   =>  "Matthias Steffens" // optional; the name of the person who developed the script/importer and/or who can be contacted in case of problems
 	//                 ['contact']  =>  "refbase@extracts.de" // optional; the contact address of the person specified under 'author', use an email address if possible
 	//                 ['options']  =>  array( // optional; array with settings that control the behaviour of the 'addRecords()' function, currently there's only one option:
-	//                                         [prefix_call_number] => "true" // if "true", any 'call_number' string will be prefixed with the correct call number prefix of the currently logged-in user (e.g. 'IPÖ @ msteffens @ ')
+	//                                         [prefix_call_number] => "true" // if "true", any 'call_number' string will be prefixed with the correct call number prefix of the currently logged-in user (e.g. 'IPÃ– @ msteffens @ ')
 	//                                       )
 	//               )
 	function addRecords($importDataArray)
@@ -871,10 +871,10 @@
 						// we only honour the 'call_number' string if some other record data were passed as well:
 						// 
 						// if the 'prefix_call_number' option is set to "true", any 'call_number' string will be prefixed with
-						// the correct call number prefix of the currently logged-in user (e.g. 'IPÖ @ msteffens @ '):
+						// the correct call number prefix of the currently logged-in user (e.g. 'IPÃ– @ msteffens @ '):
 						if ((isset($_SESSION['loginEmail'])) AND (isset($importDataArray['options']['prefix_call_number'])) AND ($importDataArray['options']['prefix_call_number'] == "true"))
 						{
-							$callNumberPrefix = getCallNumberPrefix(); // build a correct call number prefix for the currently logged-in user (e.g. 'IPÖ @ msteffens')
+							$callNumberPrefix = getCallNumberPrefix(); // build a correct call number prefix for the currently logged-in user (e.g. 'IPÃ– @ msteffens')
 
 							if (!empty($recordData['call_number']))
 								$queryRefs .= "call_number = " . quote_smart($callNumberPrefix . " @ " . $recordData['call_number']) . ", "; // add call number prefix to 'call_number' string
@@ -944,7 +944,7 @@
 						$result = queryMySQLDatabase($queryRefs);
 
 						// Get the record id that was created:
-						$serialNo = @ mysql_insert_id($connection); // find out the unique ID number of the newly created record (Note: this function should be called immediately after the
+						$serialNo = @ mysqli_insert_id($connection); // find out the unique ID number of the newly created record (Note: this function should be called immediately after the
 						                                            // SQL INSERT statement! After any subsequent query it won't be possible to retrieve the auto_increment identifier value for THIS record!)
 
 						// ADD USER DATA:
@@ -3736,10 +3736,10 @@ EOF;
 
 		$foundSerialsArray = array(); // initialize array variable (which will hold the serial numbers of all found records)
 
-		$rowsFound = @ mysql_num_rows($result);
+		$rowsFound = @ mysqli_num_rows($result);
 		if ($rowsFound > 0) // If there were rows found ...
 		{
-			while ($row = @ mysql_fetch_array($result)) // for all rows found
+			while ($row = @ mysqli_fetch_array($result)) // for all rows found
 			{
 				$recordID = $row["record_id"]; // get the serial number of the current record
 				$foundSerialsArray[] = $recordID; // add this record's serial to the array of found serial numbers
@@ -3835,10 +3835,10 @@ EOF;
 
 		$userGroupsArray = array(); // initialize array variable
 
-		$rowsFound = @ mysql_num_rows($result);
+		$rowsFound = @ mysqli_num_rows($result);
 		if ($rowsFound > 0) // If there were rows found ...
 		{
-			while ($row = @ mysql_fetch_array($result)) // for all rows found
+			while ($row = @ mysqli_fetch_array($result)) // for all rows found
 			{
 				// remove any meaningless delimiter(s) from the beginning or end of a field string:
 				$rowUserGroupsString = trimTextPattern($row["user_groups"], "( *; *)+", true, true);
@@ -3893,10 +3893,10 @@ EOF;
 
 		$userQueriesArray = array(); // initialize array variable
 
-		$rowsFound = @ mysql_num_rows($result);
+		$rowsFound = @ mysqli_num_rows($result);
 		if ($rowsFound > 0) // If there were rows found ...
 		{
-			while ($row = @ mysql_fetch_array($result)) // for all rows found
+			while ($row = @ mysqli_fetch_array($result)) // for all rows found
 				$userQueriesArray[] = $row["query_name"]; // append this row's query name to the array of found user queries
 
 			// join array of unique user queries with '; ' as separator:
@@ -3928,10 +3928,10 @@ EOF;
 
 		$userCiteKeysArray = array(); // initialize array variable
 
-		$rowsFound = @ mysql_num_rows($result);
+		$rowsFound = @ mysqli_num_rows($result);
 		if ($rowsFound > 0) // If there were rows found ...
 		{
-			while ($row = @ mysql_fetch_array($result)) // for all rows found
+			while ($row = @ mysqli_fetch_array($result)) // for all rows found
 			{
 				// If this row's cite key already exists in the global array of found cite keys ('$citeKeysArray'),
 				// we'll uniquify it, otherwise we'll take it as is
@@ -4005,9 +4005,9 @@ EOF;
 
 		$availableFormatsStylesTypesArray = array(); // initialize array variable
 
-		$rowsFound = @ mysql_num_rows($result);
+		$rowsFound = @ mysqli_num_rows($result);
 		if ($rowsFound > 0) // If there were rows found ...
-			while ($row = @ mysql_fetch_array($result)) // for all rows found
+			while ($row = @ mysqli_fetch_array($result)) // for all rows found
 				$availableFormatsStylesTypesArray[$row[$dataType . "_id"]] = $row[$dataType . "_name"]; // append this row's format/style/type name to the array of found user formats/styles/types
 
 		return $availableFormatsStylesTypesArray;
@@ -4036,9 +4036,9 @@ EOF;
 
 		$enabledFormatsStylesTypesArray = array(); // initialize array variable
 
-		$rowsFound = @ mysql_num_rows($result);
+		$rowsFound = @ mysqli_num_rows($result);
 		if ($rowsFound > 0) // If there were rows found ...
-			while ($row = @ mysql_fetch_array($result)) // for all rows found
+			while ($row = @ mysqli_fetch_array($result)) // for all rows found
 			{
 				if ($returnIDsAsValues) // return format/style/type IDs as element values:
 					$enabledFormatsStylesTypesArray[] = $row[$dataType . "_id"]; // append this row's format/style/type ID to the array of found user formats/styles/types
@@ -4101,10 +4101,10 @@ EOF;
 		else
 			$sessionVariableName = "user_" . $dataType . "s"; // yields 'user_styles' or 'user_types'
 
-		$rowsFound = @ mysql_num_rows($result);
+		$rowsFound = @ mysqli_num_rows($result);
 		if ($rowsFound > 0) // If there were rows found ...
 		{
-			while ($row = @ mysql_fetch_array($result)) // for all rows found
+			while ($row = @ mysqli_fetch_array($result)) // for all rows found
 				$userFormatsStylesTypesArray[] = $row[$dataType . "_name"]; // append this row's format/style/type name to the array of found user formats/styles/types
 
 			// we'll only update the appropriate session variable if either a normal user is logged in -OR- the admin is logged in and views his own user options page
@@ -4182,7 +4182,7 @@ EOF;
 		$query = "SELECT style_spec FROM $tableStyles WHERE style_name = " . quote_smart($citeStyle);
 
 		$result = queryMySQLDatabase($query); // RUN the query on the database through the connection
-		$row = mysql_fetch_array($result);
+		$row = mysqli_fetch_array($result);
 
 		return($row["style_spec"]);
 	}
@@ -4201,7 +4201,7 @@ EOF;
 		$query = "SELECT format_spec FROM $tableFormats WHERE format_name = " . quote_smart($formatName) . " AND format_type = " . quote_smart($formatType);
 
 		$result = queryMySQLDatabase($query); // RUN the query on the database through the connection
-		$row = mysql_fetch_array($result);
+		$row = mysqli_fetch_array($result);
 
 		return($row["format_spec"]);
 	}
@@ -4220,7 +4220,7 @@ EOF;
 		$query = "SELECT depends_path FROM $tableDepends WHERE depends_external = " . quote_smart($externalUtilityName);
 
 		$result = queryMySQLDatabase($query); // RUN the query on the database through the connection
-		$row = mysql_fetch_array($result);
+		$row = mysqli_fetch_array($result);
 
 		return($row["depends_path"]);
 	}
@@ -4249,14 +4249,14 @@ EOF;
 
 		$result = queryMySQLDatabase($query); // RUN the query on the database through the connection
 
-		if (mysql_num_rows($result) == 1) // interpret query result: Do we have exactly one row?
+		if (mysqli_num_rows($result) == 1) // interpret query result: Do we have exactly one row?
 		{
 			$userPermissionsArray = array(); // initialize array variables
 			$userPermissionsFieldNameArray = array();
 
-			$row = mysql_fetch_array($result); // fetch the one row into the array '$row'
+			$row = mysqli_fetch_array($result); // fetch the one row into the array '$row'
 
-			$fieldsFound = mysql_num_fields($result); // count the number of fields
+			$fieldsFound = mysqli_num_fields($result); // count the number of fields
 
 			for ($i=0; $i<$fieldsFound; $i++)
 			{
@@ -4314,10 +4314,10 @@ EOF;
 
 		$languagesArray = array(); // initialize array variable
 
-		$rowsFound = @ mysql_num_rows($result);
+		$rowsFound = @ mysqli_num_rows($result);
 		if ($rowsFound > 0) // If there were rows found ...
 		{
-			while ($row = @ mysql_fetch_array($result)) // for all rows found
+			while ($row = @ mysqli_fetch_array($result)) // for all rows found
 				$languagesArray[] = $row["language_name"]; // append this row's language name to the array of found languages
 		}
 
@@ -4366,9 +4366,9 @@ EOF;
 
 		$userOptionsArray = array(); // initialize array variable
 
-		$rowsFound = @ mysql_num_rows($result);
+		$rowsFound = @ mysqli_num_rows($result);
 		if ($rowsFound == 1) // Interpret query result: Do we have exactly one row?
-			$userOptionsArray = @ mysql_fetch_array($result); // fetch the one row into the array '$userOptionsArray'
+			$userOptionsArray = @ mysqli_fetch_array($result); // fetch the one row into the array '$userOptionsArray'
 
 		return $userOptionsArray;
 	}
@@ -4429,7 +4429,7 @@ EOF;
 
 	// --------------------------------------------------------------------
 
-	// Build a correct call number prefix for the currently logged-in user (e.g. 'IPÖ @ msteffens'):
+	// Build a correct call number prefix for the currently logged-in user (e.g. 'IPÃ– @ msteffens'):
 	function getCallNumberPrefix()
 	{
 		global $loginEmail;
@@ -4495,7 +4495,7 @@ EOF;
 
 		$result = queryMySQLDatabase($query); // RUN the query on the database through the connection
 
-		$row = mysql_fetch_row($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
+		$row = mysqli_fetch_row($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
 		$numberOfRecords = $row[0]; // extract the contents of the first (and only) row
 
 		return $numberOfRecords;
@@ -4586,7 +4586,7 @@ EOF;
 
 		$result = queryMySQLDatabase($query); // RUN the query on the database through the connection
 
-		$row = mysql_fetch_row($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
+		$row = mysqli_fetch_row($result); // fetch the current row into the array $row (it'll be always *one* row, but anyhow)
 		$lastModifiedDateTime = $row[0] . " " . $row[1];
 
 		return $lastModifiedDateTime;
@@ -4974,7 +4974,7 @@ EOF;
 		$i = 0;
 		$resultBuffer = array();
 
-		while ($row = @ mysql_fetch_array($resultId))
+		while ($row = @ mysqli_fetch_array($resultId))
 		{
 			if ($SplitValues) // if desired, split field contents into substrings
 			{
@@ -5089,10 +5089,10 @@ EOF;
 
 		$fieldContentsArray = array(); // initialize array variable
 
-		$rowsFound = @ mysql_num_rows($result);
+		$rowsFound = @ mysqli_num_rows($result);
 		if ($rowsFound > 0) // If there were rows found ...
 		{
-			while ($row = @ mysql_fetch_array($result)) // for all rows found
+			while ($row = @ mysqli_fetch_array($result)) // for all rows found
 				$fieldContentsArray[] = $row[$columnName]; // append this row's field value to the array of extracted field values
 		}
 
@@ -6034,7 +6034,7 @@ EOF;
 	//   for queries (e.g., the newline character is replaced with the litteral string '\n')
 	function escapeSQL($sourceString)
 	{
-		$sourceString = mysql_real_escape_string($sourceString);
+		$sourceString = mysqli_real_escape_string($sourceString);
 
 		return $sourceString;
 	}
@@ -6408,7 +6408,7 @@ EOF;
 		          . "\n\t\t</image>";
 
 		// fetch results: upto the limit specified in '$showRows', fetch a row into the '$row' array and write out a RSS item:
-		for ($rowCounter=0; (($rowCounter < $showRows) && ($row = @ mysql_fetch_array($result))); $rowCounter++)
+		for ($rowCounter=0; (($rowCounter < $showRows) && ($row = @ mysqli_fetch_array($result))); $rowCounter++)
 		{
 			$origTitle = $row['title']; // save the original title contents before applying any search & replace actions
 
@@ -6494,7 +6494,7 @@ EOF;
 		$fieldValuesArray = array(); // initialize array variable which will hold the splitted sub-items
 
 		// split field values on the given delimiter:
-		for ($i=0; $row = @ mysql_fetch_array($result); $i++)
+		for ($i=0; $row = @ mysqli_fetch_array($result); $i++)
 		{
 			$fieldSubValuesArray = preg_split($delim, $row[$fieldName]); // split field contents on '$delim' (which is interpreted as perl-style regular expression!)
 			foreach ($fieldSubValuesArray as $fieldSubValue)
