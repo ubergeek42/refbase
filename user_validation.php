@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./user_validation.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: http://svn.code.sf.net/p/refbase/code/trunk/user_validation.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    16-Apr-02, 10:54
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2012-02-27 12:25:30 -0800 (Mon, 27 Feb 2012) $
+	//             $Author: msteffens $
+	//             $Revision: 1337 $
 
 	// This script validates user data entered into the form that is provided by 'user_details.php'.
 	// If validation succeeds, it INSERTs or UPDATEs a user and redirects to a receipt page;
@@ -203,7 +203,7 @@
 			// (3) RUN the query on the database through the connection:
 			$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
-			if (mysql_num_rows($result) == 1) // (4) Interpret query result: Is it taken?
+			if (mysqli_num_rows($result) == 1) // (4) Interpret query result: Is it taken?
 				$errors["email"] = "A user already exists with this email address as login name.\n\t\t<br>\n\t\tPlease enter a different one:";
 		}
 	}
@@ -353,7 +353,7 @@
 		// (3a) RUN the query on the database through the connection:
 		$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
-		$row = mysql_fetch_array($result); // (3b) EXTRACT results: fetch the current row into the array $row
+		$row = mysqli_fetch_array($result); // (3b) EXTRACT results: fetch the current row into the array $row
 
 		// 1) Mail feedback to user, i.e., send the person who wants to be added as new user a notification email:
 		$emailRecipient = $formVars["firstName"] . " " . $formVars["lastName"] . " <" . $formVars["email"] . ">";
@@ -448,7 +448,7 @@
 	elseif ((!isset($_SESSION['loginEmail']) && ($addNewUsers == "everyone") && ($_REQUEST['userID'] == "")) | (isset($_SESSION['loginEmail']) && ($loginEmail == $adminLoginEmail) && ($_REQUEST['userID'] == ""))) // -> perform an insert:
 	{
 		// Get the user id that was created
-		$userID = @ mysql_insert_id($connection);
+		$userID = @ mysqli_insert_id($connection);
 
 		// Use the first two characters of the email as a salt for the password
 		$salt = substr($formVars["email"], 0, 2);
@@ -477,7 +477,7 @@
 			// get the 'format_id' for the record entry in table 'formats' whose 'format_name' matches that in '$defaultUserExportFormats' (defined in 'ini.inc.php'):
 			$query = "SELECT format_id FROM $tableFormats WHERE format_name = " . quote_smart($defaultUserExportFormat) . " AND format_type = 'export'";
 			$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
-			$row = mysql_fetch_array($result);
+			$row = mysqli_fetch_array($result);
 
 			// Insert a row with the found format ID for this new user into the 'user_formats' table:
 			$queryArray[] = "INSERT INTO $tableUserFormats VALUES (NULL, " . quote_smart($row["format_id"]) . ", " . quote_smart($userID) . ", \"true\")";
@@ -488,7 +488,7 @@
 			// get the 'format_id' for the record entry in table 'formats' whose 'format_name' matches that in '$defaultUserCiteFormats' (defined in 'ini.inc.php'):
 			$query = "SELECT format_id FROM $tableFormats WHERE format_name = " . quote_smart($defaultUserCiteFormat) . " AND format_type = 'cite'";
 			$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
-			$row = mysql_fetch_array($result);
+			$row = mysqli_fetch_array($result);
 
 			// Insert a row with the found format ID for this new user into the 'user_formats' table:
 			$queryArray[] = "INSERT INTO $tableUserFormats VALUES (NULL, " . quote_smart($row["format_id"]) . ", " . quote_smart($userID) . ", \"true\")";
@@ -499,7 +499,7 @@
 			// get the 'style_id' for the record entry in table 'styles' whose 'style_name' matches that in '$defaultUserStyles' (defined in 'ini.inc.php'):
 			$query = "SELECT style_id FROM $tableStyles WHERE style_name = " . quote_smart($defaultUserStyle);
 			$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
-			$row = mysql_fetch_array($result);
+			$row = mysqli_fetch_array($result);
 
 			// Insert a row with the found style ID for this new user into the 'user_styles' table:
 			$queryArray[] = "INSERT INTO $tableUserStyles VALUES (NULL, " . quote_smart($row["style_id"]) . ", " . quote_smart($userID) . ", \"true\")";
@@ -510,7 +510,7 @@
 			// get the 'type_id' for the record entry in table 'types' whose 'type_name' matches that in '$defaultUserTypes' (defined in 'ini.inc.php'):
 			$query = "SELECT type_id FROM $tableTypes WHERE type_name = " . quote_smart($defaultUserType);
 			$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
-			$row = mysql_fetch_array($result);
+			$row = mysqli_fetch_array($result);
 
 			// Insert a row with the found type ID for this new user into the 'user_types' table:
 			$queryArray[] = "INSERT INTO $tableUserTypes VALUES (NULL, " . quote_smart($row["type_id"]) . ", " . quote_smart($userID) . ", \"true\")";
