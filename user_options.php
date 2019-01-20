@@ -170,7 +170,7 @@
 	$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 	// (3b) EXTRACT results:
-	$row = mysql_fetch_array($result); // fetch the current row into the array $row
+	$row = mysqli_fetch_array($result); // fetch the current row into the array $row
 
 	// If the admin is logged in AND the displayed user data are NOT his own, we overwrite the default header message:
 	// (Since the admin is allowed to view and edit account data from other users, we have to provide a dynamic header message in that case)
