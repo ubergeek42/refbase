@@ -8,13 +8,13 @@
 	//             License for more details.
 	//
 	// File:       ./user_receipt.php
-	// Repository: $HeadURL$
+	// Repository: $HeadURL: http://svn.code.sf.net/p/refbase/code/trunk/user_receipt.php $
 	// Author(s):  Matthias Steffens <mailto:refbase@extracts.de>
 	//
 	// Created:    16-Apr-02, 10:54
-	// Modified:   $Date$
-	//             $Author$
-	//             $Revision$
+	// Modified:   $Date: 2012-02-27 12:25:30 -0800 (Mon, 27 Feb 2012) $
+	//             $Author: msteffens $
+	//             $Revision: 1337 $
 
 	// This script shows the user a receipt for their user UPDATE or INSERT.
 	// It carries out no database actions and can be bookmarked.
@@ -238,7 +238,7 @@
 		$result = queryMySQLDatabase($query); // function 'queryMySQLDatabase()' is defined in 'include.inc.php'
 
 		// (4) EXTRACT results (since 'user_id' is the unique primary key for the 'users' table, there will be only one matching row)
-		$row = @ mysql_fetch_array($result);
+		$row = @ mysqli_fetch_array($result);
 
 		// Build the correct header message:
 		if (!isset($_SESSION['HeaderString'])) // if there's no saved message
@@ -294,7 +294,7 @@
 
 			echo "\n\t\t<tr>\n\t\t\t<td align=\"left\"><b>Account Details:</b></td>";
 
-			if (mysql_num_rows($result) == 1) // If there's a user associated with this user ID
+			if (mysqli_num_rows($result) == 1) // If there's a user associated with this user ID
 			{
 				// Add edit/delete button:
 				echo "\n\t\t\t<td align=\"left\">";
@@ -404,7 +404,7 @@
 				echo "\n\t\t<tr>\n\t\t\t<td align=\"left\"><b>Display Options:</b></td>"
 				   . "\n\t\t\t<td align=\"right\">";
 
-				if ((mysql_num_rows($result) == 1) OR ($userID == 0)) // If there's a user associated with this user ID (or if we're supposed to display options/permissions for anyone who isn't logged in)
+				if ((mysqli_num_rows($result) == 1) OR ($userID == 0)) // If there's a user associated with this user ID (or if we're supposed to display options/permissions for anyone who isn't logged in)
 					echo "<a href=\"user_options.php?userID=" . $userID . "\"><img src=\"img/options.gif\" alt=\"" . $loc["options"] . "\" title=\"" . $loc["LinkTitle_EditOptions"] . "\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
 
 				echo "</td>\n\t\t</tr>";
@@ -413,7 +413,7 @@
 				echo "\n\t\t<tr valign=\"top\">"
 				   . "\n\t\t\t<td>Use language:</td>";
 
-				if (mysql_num_rows($result) == 1) // If there's a user associated with this user ID
+				if (mysqli_num_rows($result) == 1) // If there's a user associated with this user ID
 					echo "\n\t\t\t<td>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>" . $row["language"] . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>";
 				else // no user exists with this user ID
 					echo "\n\t\t\t<td>\n\t\t\t\t<ul>\n\t\t\t\t\t<li>" . $defaultLanguage . "</li>\n\t\t\t\t</ul>\n\t\t\t</td>";
@@ -596,7 +596,7 @@
 					echo "\n\t\t<tr>\n\t\t\t<td align=\"left\"><b>User Permissions:</b></td>"
 					   . "\n\t\t\t<td align=\"right\">";
 
-					if ((mysql_num_rows($result) == 1) OR ($userID == 0)) // If there's a user associated with this user ID (or if we're supposed to display options/permissions for anyone who isn't logged in)
+					if ((mysqli_num_rows($result) == 1) OR ($userID == 0)) // If there's a user associated with this user ID (or if we're supposed to display options/permissions for anyone who isn't logged in)
 						echo "<a href=\"user_options.php?userID=" . $userID . "#permissions\"><img src=\"img/options.gif\" alt=\"" . $loc["permissions"] . "\" title=\"" . $loc["LinkTitle_EditPermissions"] . "\" width=\"11\" height=\"17\" hspace=\"0\" border=\"0\"></a>";
 
 					echo "</td>\n\t\t</tr>";
